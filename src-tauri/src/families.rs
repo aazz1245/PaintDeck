@@ -69,11 +69,14 @@ pub fn label(family: &str) -> &'static str {
 struct Info {
     family: &'static str,
     sub: Option<&'static str>,
+    /// LTX 影片模型／LoRA（family 是 other）
+    ltx: bool,
 }
 
 const NO_INFO: Info = Info {
     family: OTHER,
     sub: None,
+    ltx: false,
 };
 
 static CACHE: Mutex<Option<HashMap<(PathBuf, SystemTime), Info>>> = Mutex::new(None);
@@ -104,6 +107,8 @@ struct Meta {
     score9: bool,
     /// GGUF 的 general.architecture
     gguf_arch: String,
+    /// LTX 的 IC-LoRA（要配參考影片）：檔頭有 reference_downscale_factor
+    ic_lora: bool,
 }
 
 #[derive(Default)]
@@ -132,6 +137,7 @@ fn meta_from_obj(o: &serde_json::Map<String, Value>) -> Meta {
             .and_then(Value::as_str)
             .is_some_and(|t| t.contains("score_9")),
         gguf_arch: String::new(),
+        ic_lora: o.keys().any(|k| k.ends_with("reference_downscale_factor")),
     }
 }
 
@@ -502,6 +508,11 @@ impl Probe {
         (self.wan && !self.anima_strong) || self.ltx || (self.attn12 && !self.unet_ctx && !self.depth2 && self.dit_family().is_none())
     }
 
+    /// 影片模型裡的 LTX（LTX-Video／LTX-2）：有 LTX 自己的名稱，或 transformer_blocks.N.attn1／attn2 又不是 Wan
+    fn is_ltx(&self) -> bool {
+        self.ltx || (self.is_video() && self.attn12 && !self.wan)
+    }
+
     /// Flux／SD3（DiT）
     fn dit_family(&self) -> Option<&'static str> {
         if self.hunyuan || self.flux2 {
@@ -667,6 +678,7 @@ fn info_of(path: &Path) -> Info {
         } else {
             None
         },
+        ltx: family == OTHER && !h.meta.ic_lora && is_ltx_keys(&h.keys),
     }
 }
 
@@ -699,6 +711,11 @@ pub fn is_video_keys(keys: &[String]) -> bool {
     Probe::new(keys).is_video()
 }
 
+/// 這些權重名稱是不是 LTX（影片 LoRA 下拉只列這種）
+pub fn is_ltx_keys(keys: &[String]) -> bool {
+    Probe::new(keys).is_ltx()
+}
+
 /// 檔案屬於哪個家族：anima／qwen21／moss／sdxl／sd15／flux／sd3／other。
 /// 看 .safetensors、.sft 的檔頭或 .gguf 的張量名稱，不載入權重；結果依（路徑、修改時間）快取
 pub fn detect(path: &Path) -> &'static str {
@@ -719,6 +736,11 @@ pub fn resolve(roots: &[PathBuf], name: &str) -> Option<PathBuf> {
 
 pub fn family_of(roots: &[PathBuf], name: &str) -> &'static str {
     resolve(roots, name).map(|p| detect(&p)).unwrap_or(OTHER)
+}
+
+/// 這個名稱的檔案是不是 LTX 影片模型／LoRA（看檔頭、有快取）
+pub fn is_ltx_of(roots: &[PathBuf], name: &str) -> bool {
+    resolve(roots, name).is_some_and(|p| cached(&p).ltx)
 }
 
 /// 同 [`family_of`]，回子標籤
@@ -1493,6 +1515,20 @@ mod tests {
     }
 
     #[test]
+    fn is_ltx_of_reads_file_headers() {
+        let ltx = Tmp::new("ltx_move.safetensors", &safetensors(&["diffusion_model.transformer_blocks.4.attn1.to_q.lora_A.weight"], None));
+        let h3 = Tmp::new("h3.safetensors", &safetensors(&["diffusion_model.blocks.0.attn.qkv_proj.lora_A.weight"], None));
+        let root = |t: &Tmp| vec![t.path().parent().unwrap().to_path_buf()];
+        assert!(is_ltx_of(&root(&ltx), "ltx_move.safetensors"));
+        assert!(!is_ltx_of(&root(&h3), "h3.safetensors"));
+        assert!(!is_ltx_of(&root(&ltx), "missing.safetensors"));
+        // IC-LoRA（要配參考影片才有用，檔頭有 reference_downscale_factor）：不算一般的影片 LoRA
+        let ic = Tmp::new("ic.safetensors", &safetensors(&["diffusion_model.transformer_blocks.0.attn1.to_k.lora_A.weight"],
+            Some(json!({"model_version": "2.3.0", "reference_downscale_factor": "2"}))));
+        assert!(!is_ltx_of(&root(&ic), "ic.safetensors"));
+    }
+
+    #[test]
     fn detect_reads_headers_and_metadata() {
         let sdxl_lora = Tmp::new(
             "x.safetensors",
@@ -1793,6 +1829,21 @@ mod tests {
         );
         // LTX 的 LoRA：只有 transformer_blocks.N.attn1／attn2、沒有 UNet 的結構
         assert_eq!(classify(&s(&["diffusion_model.transformer_blocks.4.attn1.to_q.lora_A.weight", "diffusion_model.transformer_blocks.4.ff.net.2.lora_B.weight"])), OTHER);
+    }
+
+    /// 影片 LoRA 下拉只列 LTX 的：LTX 認得出來，Wan、MiniMax H3、生圖家族都不算
+    #[test]
+    fn ltx_keys_only_for_ltx() {
+        assert!(is_ltx_keys(&s(&["diffusion_model.transformer_blocks.4.attn1.to_q.lora_A.weight", "diffusion_model.transformer_blocks.4.audio_attn1.to_k.lora_B.weight"])));
+        assert!(is_ltx_keys(&s(&["model.diffusion_model.adaln_single.linear.weight", "model.diffusion_model.transformer_blocks.0.attn1.to_k.weight"])));
+        // Wan：self_attn.q、ffn.0
+        assert!(!is_ltx_keys(&s(&["diffusion_model.blocks.0.self_attn.q.lora_A.weight", "diffusion_model.blocks.0.ffn.0.lora_B.weight"])));
+        // MiniMax H3：blocks.N.attn.qkv_proj（真實檔頭 minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16）
+        assert!(!is_ltx_keys(&s(&["diffusion_model.blocks.0.attn.qkv_proj.lora_A.weight", "diffusion_model.blocks.0.attn.out_proj.lora_B.weight"])));
+        // Qwen-Image：transformer_blocks.N.attn（不是 attn1）
+        assert!(!is_ltx_keys(&s(&["transformer_blocks.0.attn.to_q.weight", "transformer_blocks.0.img_mlp.net.0.proj.weight"])));
+        // SDXL 的 UNet 也有 attn1／attn2，但有 input_blocks
+        assert!(!is_ltx_keys(&s(&["lora_unet_input_blocks_4_1_transformer_blocks_0_attn1_to_q.lora_down.weight", "lora_unet_label_emb_0_0.lora_down.weight"])));
     }
 
     /// 影片模型的排除條件不能誤傷：Anima、Qwen、SDXL／SD1.5 的 UNet（也有 attn1／attn2）、SD3.5（transformer_blocks.N.attn2）照舊

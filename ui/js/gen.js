@@ -1341,9 +1341,40 @@ function pinOverrides() {
   return Object.keys(o).length ? o : undefined;
 }
 
+// 內建 LTX 的影片 LoRA：打勾＋強度，記在這個瀏覽器（{檔名: 強度}，沒勾的不記）
+const LTX_LORA_MAX = 4;
+const ltxLoras = () => (app.state?.models?.loras || []).filter((x) => x.ltx);
+function vidLoraOn() { return !!vidEng?.builtin && !vidH3Model(); }
+function paintVidLoras() {
+  const on = vidLoraOn(), list = ltxLoras(), mine = store.get("vidLoras", {});
+  F("vidLoraBox").hidden = !on;
+  F("vidLoraNone").hidden = !!list.length;
+  F("vidLoras").replaceChildren(...list.map((l) => {
+    const chk = el("input", { type: "checkbox", checked: l.name in mine });
+    const num = el("input", { type: "number", step: "0.05", min: "-2", max: "2", value: mine[l.name] ?? 1, "aria-label": "強度" });
+    const put = () => {
+      const all = store.get("vidLoras", {});
+      if (!chk.checked) delete all[l.name];
+      else if (!(l.name in all) && Object.keys(all).length >= LTX_LORA_MAX) { chk.checked = false; return toast(`影片 LoRA 最多同時掛 ${LTX_LORA_MAX} 個`, "err"); }
+      else all[l.name] = num.value === "" ? 1 : +num.value;
+      store.set("vidLoras", all);
+    };
+    chk.onchange = num.onchange = put;
+    return el("div", { class: "wf-f" }, el("label", { class: "check", title: l.name, translate: "no" }, chk, " ", l.title || l.name.replace(/\.safetensors$/i, "")), num);
+  }));
+}
+/** 這次要送的影片 LoRA（只送目前還在的） */
+function vidLoraParams() {
+  if (!vidLoraOn()) return undefined;
+  const have = new Set(ltxLoras().map((l) => l.name));
+  const v = Object.entries(store.get("vidLoras", {})).filter(([n]) => have.has(n)).map(([name, strength]) => ({ name, strength }));
+  return v.length ? v : undefined;
+}
+
 // 選 H3：沒有預覽挑種子（LTX 專用）、說明換成 H3 的
 function paintVidModel() {
   paintPins();
+  paintVidLoras();
   const m = vidH3Model();
   if (!m) return paintVidEngine();
   F("vidResBox").hidden = F("vidSecsBox").hidden = false;
@@ -1367,6 +1398,7 @@ async function openVideo(rec) {
   F("vidEngine").textContent = "";
   try { vidEng = await videoEngine(); } catch (e) { F("vidEngine").textContent = "讀不到影片模型的設定：" + e.message; return; }
   paintVidEngine();
+  paintVidLoras();
   // 本機有 H3 模型就多一個選項（讀不到就只有設定裡的）
   try { vidH3 = ((await api("/api/h3/info")).local?.models) || []; } catch { vidH3 = []; }
   fillVidModel();
@@ -1397,10 +1429,11 @@ F("vidGo").onclick = async () => {
   try {
     const r = await api("/api/to_input", { json: { id: vidRec.id } });
     const preview = F("vidPreview").checked && !F("vidPreviewBox").hidden;
-    const h3 = vidH3Model(), ov = pinOverrides();
+    const h3 = vidH3Model(), ov = pinOverrides(), vl = vidLoraParams();
     const res = await api("/api/generate", { json: { count: preview ? 3 : 1, params: {
       mode: "video", init_image: r.name, prompt, seed: -1, video_seconds: +F("vidSecs").value, video_res: F("vidRes").value,
-      video_preview: preview, idea: vidRec.idea || "", model: "", ...(h3 ? { video_engine: "h3", h3_model: h3 } : {}), ...(ov ? { wf_overrides: ov } : {}) } } });
+      video_preview: preview, idea: vidRec.idea || "", model: "", ...(h3 ? { video_engine: "h3", h3_model: h3 } : {}), ...(ov ? { wf_overrides: ov } : {}),
+      ...(vl ? { video_loras: vl } : {}) } } });
     for (const j of res.jobs) S.pending.set(j.job, { seed: j.seed });
     renderStrip();
     closeModal("#vidModal");

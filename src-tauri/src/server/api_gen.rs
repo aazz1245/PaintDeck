@@ -74,6 +74,10 @@ pub async fn state(State(app): State<Shared>) -> ApiResult {
                 m.extend(x.clone());
             }
             m.insert("family".into(), json!(lfam[n.as_str()]));
+            // 影片（LTX）LoRA：家族是 other，「動起來」的 LoRA 下拉只列這種
+            if lfam[n.as_str()] == families::OTHER && families::is_ltx_of(&lora_roots, n) {
+                m.insert("ltx".into(), json!(true));
+            }
             Value::Object(m)
         })
         .collect();
@@ -474,7 +478,31 @@ fn prepare(app: &Shared, mut p: Map<String, Value>) -> Result<Prepared, super::A
         }
     }
     p.insert("loras".into(), json!(kept));
+    // 影片 LoRA：只有內建 LTX 用得到，而且只留 LTX 的（其他家族掛上去 ComfyUI 會整串報錯）
+    if let Some(vl) = p.shift_remove("video_loras") {
+        if video && flow.is_none() {
+            let (keep, skip) = split_video_loras(&lora_roots, &vl);
+            skipped.extend(skip);
+            if !keep.is_empty() {
+                p.insert("video_loras".into(), json!(keep));
+            }
+        }
+    }
     Ok(Prepared { p, video, flow, fam, skipped })
+}
+
+/// 影片 LoRA 清單分成（LTX 能用的、要略過的檔名）
+fn split_video_loras(roots: &[std::path::PathBuf], list: &Value) -> (Vec<Value>, Vec<String>) {
+    let (mut keep, mut skip) = (vec![], vec![]);
+    for l in list.as_array().into_iter().flatten() {
+        let Some(name) = l.get("name").and_then(Value::as_str) else { continue };
+        if families::is_ltx_of(roots, name) {
+            keep.push(l.clone());
+        } else {
+            skip.push(name.to_string());
+        }
+    }
+    (keep, skip)
 }
 
 /// 同 submit，回傳 [{"job": 任務編號, "seed": 種子}]（導演台自己等任務跑完）。

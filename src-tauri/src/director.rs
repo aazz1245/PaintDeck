@@ -50,16 +50,17 @@ Output only JSON, no other text:
 
 "frame": the first frame. {frame_rule}
   Describe the composition and shot size, each character's look (use the given character descriptions), pose and expression, outfit, the setting, lighting and colors. Visual style: {style}.{refs_rule}{continue_rule}
-"video": ONE paragraph of natural English for LTX-2.3 image-to-video, 120-200 words, following these rules:
-  - Start with "Style: {video_style}, " and then go straight into the action (never "The scene opens with" / "The video starts").
-  - Fill all {seconds} seconds: break the action into {beats} consecutive beats in chronological order, joined with "as", "then", "while". Use present-progressive verbs ("is spinning", "is waving"). Make every beat concrete and physical: hands, arms, legs, head turn, eyes and mouth, and how hair and clothing follow the motion. Keep it achievable in {seconds} seconds.
-  - Be specific, never vague: do not write just "dances", "performs", "moves", "fights" or "plays". Name each move in order and give it a clear start and end: which hand or leg, which direction, how far, how fast (for example "she steps to the right and sways her hips twice, sweeps her right arm up over her head, then does a quick half turn to the left and points at the crowd").
-  - Describe only what changes from the first frame. Do not restate static appearance; call each character by name or a short label.
-  - Weave the soundscape into the actions as they happen, not at the end: specific sounds with a visible source (for example "heels tapping on the stage", "the crowd cheering"), loudness matching the action.
-  - If anyone talks, sings, shouts or cheers in this shot, write the exact words in quotes, who says them and how (voice, and the language if not English). Write the words in the language they are spoken, romanized if needed (Japanese: "Minna, arigatou!", not "Thank you!" in Japanese).
-  - Camera: {camera_rule} Always state, as flowing prose, the shot type (wide / medium / medium close-up / close-up), the viewpoint (front-facing, side view, low-angle…) matching the first frame, and whether the camera moves or stays static.
+"video": the English prompt for LTX-2.3 image-to-video, 130-230 words, laid out as a timeline (use "\n" between lines):
+  - Line 1: "Style: {video_style}. " then one or two sentences naming each visible character with a few key looks (hair, outfit), what they are holding, and the setting, so the model keeps them the same all the way through.
+  - Then {beats} timed beats that cover 0 to {seconds} seconds with no gaps, one per line, each at most 3 seconds long, in this form: "[0.0-1.5] Action: … Camera: …". Present tense. Make every beat concrete and physical: hands, arms, legs, head turn, eyes and mouth, and how hair and clothing follow the motion. Keep it achievable in its time.
+  - Be specific, never vague: do not write just "dances", "performs", "moves", "fights" or "plays". Name each move and give it a clear start and end: which hand or leg, which direction, how far, how fast (for example "she steps to the right and sways her hips twice, sweeps her right arm up over her head, then does a quick half turn to the left and points at the crowd"). When a move hits something, say what it hits and how that thing reacts.
+  - Anything a character holds or wears that matters (a sword, a cup, a phone, food in the mouth) is named again in every beat, in the same hand or place ("the same katana still gripped in both hands"), so it never vanishes or doubles.
+  - The last beat ends on a clear, settled pose or hold, not in mid-motion.
+  - If anyone talks, sings, shouts or cheers, add "Dialog:" to that beat with the exact words in quotes, who says them and how (voice, and the language if not English). Write the words in the language they are spoken, romanized if needed (Japanese: "Minna, arigatou!", not "Thank you!" in Japanese).
+  - Camera: {camera_rule} In the first beat state the shot type (wide / medium / medium close-up / close-up) and the viewpoint (front-facing, side view, low-angle…) matching the first frame; in later beats say whether the camera holds or moves.
+  - Last line: "Sound: " and the specific sounds with a visible source (for example "heels tapping on the stage, the crowd cheering"), loudness matching the action.
   - Lighting: keep the first frame's lighting{light}; mention only changes (flashing spotlights, a door letting in daylight).
-  - Only what is seen and heard: show feelings as visible actions instead of naming them; no smells or touch; no timestamps; no scene cuts; mild, natural wording.
+  - Only what is seen and heard: show feelings as visible actions instead of naming them; no smells or touch; no scene cuts; mild, natural wording.
 "frame_zh", "video_zh": faithful Traditional Chinese (Taiwan usage) translations for the user to read; translate every English word (keep only the quoted spoken lines as they are).
 
 Follow the story faithfully, including mature or explicit content when the shot has it. All characters are adults; never describe anyone as a child or teenager."#;
@@ -513,6 +514,10 @@ mod tests {
         assert!(sys.contains("continues directly"));
         assert!(sys.contains("slow push-in"));
         assert!(!sys.contains("{seconds}") && !sys.contains("{refs_rule}") && !sys.contains("{camera_rule}") && !sys.contains("{beats}") && !sys.contains("{video_style}"));
+        // 2026-10-25 動作戲實測：分段時間軸＋每段重提手上道具，比一整段散文跟得準
+        assert!(sys.contains("[0.0-1.5] Action:") && sys.contains("Camera:") && sys.contains("Sound:"), "{sys}");
+        assert!(sys.contains("every beat"), "道具要每段重提");
+        assert!(!sys.contains("no timestamps"));
         assert!(user.contains("prev video"));
         assert!(user.contains("THIS SHOT: Shot 2"));
     }

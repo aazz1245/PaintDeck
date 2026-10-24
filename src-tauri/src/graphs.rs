@@ -739,12 +739,15 @@ fn mask_bbox(path: &Path) -> R<Option<(i64, i64, i64, i64)>> {
 pub const VIDEO_CKPT: &str = "10Eros_v1.5_DMD_INT8_checkpoint.safetensors";
 pub const VIDEO_TE: &str = "gemma-3-12b-it-ablit-norms-biproj-fp8mixed.safetensors";
 pub const VIDEO_UPSCALER: &str = "ltx-2.3-spatial-upscaler-x2-1.1.safetensors";
-/// 10Eros 作者 V5 DMD 工作流程的 sigma：第一段（半解析度）9 步、第二段（放大後）3 步
-const VIDEO_SIGMAS_1: &str = "1.000, 0.955, 0.893, 0.812, 0.715, 0.603, 0.482, 0.241, 0.121, 0.0";
-const VIDEO_SIGMAS_2: &str = "0.92, 0.725, 0.421875, 0.0";
+/// LTX-2.3 官方兩段式蒸餾的 sigma 和取樣器：第一段（半解析度）8 步、第二段（放大後）3 步。
+/// 2026-10-25 動作戲實測（HANDOFF 第一百一十二筆）比原本 10Eros 作者 V5 的 euler_ancestral 組劍、踢腿穩，慢約 15%
+const VIDEO_SIGMAS_1: &str = "1.0, 0.99375, 0.9875, 0.98125, 0.975, 0.909375, 0.725, 0.421875, 0.0";
+const VIDEO_SIGMAS_2: &str = "0.85, 0.7250, 0.4219, 0.0";
+const VIDEO_SAMPLER_1: &str = "euler_cfg_pp";
+const VIDEO_SAMPLER_2: &str = "euler_ancestral_cfg_pp";
 pub const VIDEO_FPS: i64 = 24;
 
-/// 影片的節點圖：有 init_image＝圖生影片，沒有＝文生影片。兩段式：半解析度 9 步 → 潛空間放大 2 倍 → 3 步，
+/// 影片的節點圖：有 init_image＝圖生影片，沒有＝文生影片。兩段式：半解析度 8 步 → 潛空間放大 2 倍 → 3 步，
 /// VAE 分塊 512（8GB 顯卡最快；不分塊或更大塊會爆顯存）。另外存一張封面（第一格）到 AnimaWeb/_poster/<poster>，給縮圖用。
 fn build_video(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Value>, Value)> {
     let seed = i(p.get("seed"), 0) + seed_offset;
@@ -775,7 +778,22 @@ fn build_video(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, 
     };
     let mut g = Graph::new("ltx23");
     let ck = g.add("CheckpointLoaderSimple", json!({"ckpt_name": VIDEO_CKPT}));
-    let model = ck.clone();
+    // 影片 LoRA（動作、鏡頭…）：接在 checkpoint 後面，兩段取樣共用同一個 guider 都吃得到
+    let loras: Vec<Value> = p
+        .get("video_loras")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter(|l| l.get("name").and_then(Value::as_str).is_some_and(|n| !n.is_empty()))
+        .map(|l| json!({"name": l["name"], "strength": f(l.get("strength"), 1.0)}))
+        .collect();
+    let mut model = ck.clone();
+    for l in &loras {
+        model = g.add(
+            "LoraLoaderModelOnly",
+            json!({"model": model, "lora_name": l["name"], "strength_model": l["strength"]}),
+        );
+    }
     let vae = Graph::slot(&ck, 2);
     let clip = g.add(
         "LTXAVTextEncoderLoader",
@@ -801,7 +819,7 @@ fn build_video(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, 
         "LTXVDualCFGGuider",
         json!({"model": model, "positive": cond, "negative": Graph::slot(&cond, 1), "video_cfg": 1.0, "audio_cfg": 1.0}),
     );
-    let sampler = g.add("KSamplerSelect", json!({"sampler_name": "euler_ancestral"}));
+    let sampler = g.add("KSamplerSelect", json!({"sampler_name": VIDEO_SAMPLER_1}));
     let mut v1 = vlat.clone();
     let mut pre = None;
     if let Some(name) = &init {
@@ -856,9 +874,10 @@ fn build_video(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, 
         );
         let sig2 = g.add("ManualSigmas", json!({"sigmas": VIDEO_SIGMAS_2}));
         let n2 = g.add("RandomNoise", json!({"noise_seed": seed.wrapping_add(1)}));
+        let sampler2 = g.add("KSamplerSelect", json!({"sampler_name": VIDEO_SAMPLER_2}));
         let run2 = g.add(
         "SamplerCustomAdvanced",
-        json!({"noise": n2, "guider": guider, "sampler": sampler, "sigmas": sig2, "latent_image": av2}),
+        json!({"noise": n2, "guider": guider, "sampler": sampler2, "sigmas": sig2, "latent_image": av2}),
     );
         g.add("LTXVSeparateAVLatent", json!({"av_latent": run2}))
     };
@@ -900,8 +919,11 @@ fn build_video(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, 
         }
     }
     let (ow, oh) = if preview { (w / 2, h / 2) } else { (w, h) };
-    let info = json!({"prompt": prompt, "negative": "", "seed": seed, "width": ow, "height": oh, "mode": "video", "family": "ltx23",
+    let mut info = json!({"prompt": prompt, "negative": "", "seed": seed, "width": ow, "height": oh, "mode": "video", "family": "ltx23",
                       "frames": frames, "fps": VIDEO_FPS, "preview": preview});
+    if !loras.is_empty() {
+        info["video_loras"] = json!(loras);
+    }
     Ok((g.nodes, info))
 }
 
@@ -1601,6 +1623,52 @@ mod tests {
             info["width"].as_i64().unwrap()
         );
         let _ = std::fs::remove_file(img);
+    }
+
+    #[test]
+    fn video_graph_loras() {
+        let dir = std::env::temp_dir();
+        // 影片 LoRA 接在 checkpoint 後面串起來，兩段取樣用同一個 guider（都吃到 LoRA）；強度沒給是 1
+        let (n, info) = build(&json!({"mode": "video", "prompt": "a cat blinks", "seed": 7,
+            "video_loras": [{"name": "ltx\\camera_dolly.safetensors", "strength": 0.8}, {"name": "motion.safetensors"}]}), &dir, 0).unwrap();
+        let ls: Vec<&Value> = n.values().filter(|v| v["class_type"] == "LoraLoaderModelOnly").collect();
+        assert_eq!(ls.len(), 2);
+        let ck = n.iter().find(|(_, v)| v["class_type"] == "CheckpointLoaderSimple").map(|(k, _)| k.clone()).unwrap();
+        let first = ls.iter().find(|v| v["inputs"]["lora_name"] == "ltx\\camera_dolly.safetensors").unwrap();
+        assert_eq!(first["inputs"]["model"], json!([ck, 0]));
+        assert_eq!(first["inputs"]["strength_model"], 0.8);
+        let second = ls.iter().find(|v| v["inputs"]["lora_name"] == "motion.safetensors").unwrap();
+        assert_eq!(second["inputs"]["strength_model"], 1.0);
+        let second_id = n.iter().find(|(_, v)| v["inputs"]["lora_name"] == "motion.safetensors").map(|(k, _)| k.clone()).unwrap();
+        let guider = n.values().find(|v| v["class_type"] == "LTXVDualCFGGuider").unwrap();
+        assert_eq!(guider["inputs"]["model"], json!([second_id, 0]));
+        assert_eq!(info["video_loras"].as_array().unwrap().len(), 2);
+        // 沒有 LoRA：guider 直接接 checkpoint，也沒有 LoraLoader
+        let (n, info) = build(&json!({"mode": "video", "prompt": "a cat blinks"}), &dir, 0).unwrap();
+        assert!(!n.values().any(|v| v["class_type"] == "LoraLoaderModelOnly"));
+        let guider = n.values().find(|v| v["class_type"] == "LTXVDualCFGGuider").unwrap();
+        assert_eq!(n[guider["inputs"]["model"][0].as_str().unwrap()]["class_type"], "CheckpointLoaderSimple");
+        assert!(info.get("video_loras").is_none());
+    }
+
+    #[test]
+    fn video_graph_official_sampling() {
+        // 2026-10-25 起照 LTX-2.3 官方兩段式：第一段 euler_cfg_pp＋8 步，第二段 euler_ancestral_cfg_pp 從 0.85 起
+        let (n, _) = build(&json!({"mode": "video", "prompt": "a cat blinks", "seed": 7}), &std::env::temp_dir(), 0).unwrap();
+        let runs: Vec<&Value> = n.values().filter(|v| v["class_type"] == "SamplerCustomAdvanced").collect();
+        assert_eq!(runs.len(), 2);
+        let mut got: Vec<(String, String)> = runs
+            .iter()
+            .map(|r| {
+                let at = |slot: &str| &n[r["inputs"][slot][0].as_str().unwrap()]["inputs"];
+                (at("sampler")["sampler_name"].as_str().unwrap().to_string(), at("sigmas")["sigmas"].as_str().unwrap().to_string())
+            })
+            .collect();
+        got.sort();
+        assert_eq!(got, vec![
+            ("euler_ancestral_cfg_pp".to_string(), "0.85, 0.7250, 0.4219, 0.0".to_string()),
+            ("euler_cfg_pp".to_string(), "1.0, 0.99375, 0.9875, 0.98125, 0.975, 0.909375, 0.725, 0.421875, 0.0".to_string()),
+        ]);
     }
 
     /// 測試用的輸入資料夾：一張 w×h 的圖＋（可選）幾張遮罩（白色矩形）
