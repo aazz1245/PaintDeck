@@ -119,6 +119,13 @@
           <h2>要下載哪些生圖模型？</h2>
           <p class="muted">模型從官方來源（Hugging Face、GitHub、Civitai）下載到 ComfyUI 的 models 資料夾。已經有的會跳過，網路斷掉之後再按一次會接著下載。</p>
           <div class="note">
+            <label class="lbl" for="wizCivitaiKey">Civitai API 金鑰（選填）</label>
+            <input type="password" id="wizCivitaiKey" autocomplete="new-password" spellcheck="false" maxlength="4096" aria-describedby="wizCivitaiHint" style="width:100%;margin-top:6px">
+            <div class="muted sm" id="wizCivitaiHint">按「開始安裝」時會先加密儲存，再用來下載模型。留空會沿用既有金鑰。</div>
+            <div class="muted sm" id="wizCivitaiSaved" aria-live="polite"></div>
+            <a href="https://civitai.com/user/account" target="_blank" rel="noopener">到 Civitai 帳號設定取得 API 金鑰</a>
+          </div>
+          <div class="note">
             <b>這台電腦已經有模型了？</b>
             <div class="muted sm">別的 ComfyUI、A1111／Forge 裡已經有的模型可以原地使用，不用再下載一份，也不會搬動檔案。進到這頁會自動掃描每顆硬碟，大概要一兩分鐘。</div>
             <div class="row gap wrap" style="margin-top:6px"><button class="akey sm" id="mdScan" type="button">重新掃描這台電腦已有的模型</button></div>
@@ -129,7 +136,7 @@
             <div class="row gap wrap" id="packQuick"><button class="akey sm" type="button" data-set="anima">只裝動漫（Anima）</button><button class="akey sm" type="button" data-set="basic">基本版</button><button class="akey sm" type="button" data-set="full">完整版（全部）</button><button class="akey sm" type="button" data-set="none">全不選（先不下載）</button></div>
           </div>
           <div class="opts" id="modelOpts"></div>
-          <div class="note sm">全不選的話，只裝 ComfyUI、節點、反推模型，之後隨時可以回來這頁補勾。常用 LoRA 裡有些在 Civitai 上要登入才能下載：沒填 Civitai API key 的話，那幾個會顯示「要登入」，其他照常下載；之後到「設定」填好 key，再回來這裡按一次安裝就會補上。</div>
+          <div class="note sm">全不選的話，只裝 ComfyUI、節點、反推模型，之後隨時可以回來這頁補勾。常用 LoRA 裡有些需要 Civitai 金鑰；可以在上方先填，也可以之後到「設定」填好，再回來補下載。</div>
           <div id="diskWarn"></div>
         </div>
 

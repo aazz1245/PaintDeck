@@ -254,11 +254,23 @@ ComfyUI 只讀它自己 input 資料夾裡的檔：
 
 - `GET /api/system`：版本、顯示卡、顯存、記憶體、硬碟。`GET /api/state`：`anima_status` 的原始資料。
 - 設定：`GET /api/state` 的 `settings`（不含金鑰）；改設定 `POST /api/settings`（要確認，不要動預設負面詞、預設值）。
+- 快取：`GET /api/cache` 回六類可清理項目與位元組數；`POST /api/cache/clear {confirm:true, parts?:["thumbnails","rewrite","downloads","archives","unpack","studio"]}` 清理指定項目，省略 parts 清全部。先向使用者確認；生成、改寫、下載、安裝忙碌或剪輯台開著時拒絕。保留原圖、影片、模型、LoRA 預覽、專案、設定、金鑰、恢復原廠備份；不接受任意刪除路徑。不會清除模型資料夾中的未完成下載、共用 ComfyUI temp／input／output，或瀏覽器個人資料。
+- 安裝精靈的生圖模型頁可輸入 Civitai 金鑰，開始安裝前加密儲存於所選資料位置。留空沿用舊金鑰；不要把使用者金鑰讀出、回傳或放進紀錄。
 - 雲端（給生圖助手和 H3 用）：`GET /api/agent/cloud`。開機、關機、改設定都要確認。
 - 雲端選卡：`GET /api/agent/cloud` 的 `gpus` 是能選的卡（推薦三張＋RunPod 目錄自動抓的 48GB 以上 NVIDIA 卡；`stock` High／Medium／Low，空字串＝現在租光；`preset:false` 的還沒實測）。`GET /api/agent/cloud/gpus` 馬上重抓（平常每 10 分鐘自動）。開機帶 `{confirm:true, gpu:<key>}`。
 - websocket `ws://…/ws` 會推送進度（type：image、finish、progress、queue、director、comic、h3、agent…）；MCP 不需要，輪詢 API 就好。
 
 ## 已知的坑
+
+### 程式本體更新（26.1024.1 起，公開版）
+
+- `GET /api/app/update`：目前完整版本、channel、enabled、自動檢查開關、進度、更新說明及 busy_reason。
+- `POST /api/app/update/check {}`：手動查 GitHub 新版；離線只回 offline，不彈錯誤視窗。
+- `POST /api/app/update/preferences {auto_check: true|false}`：自動檢查開關。修改前須使用者同意。
+- `POST /api/app/update/install {version: "查到的完整版本", confirm: true}`：使用者看過新版說明、同意下載安裝並重開後才呼叫；MCP 頂層也要 `confirm:true`。後端會重新查版本、檢查工作與驗證簽章；正在生圖、拍影片、改寫、下載模型、安裝或準備雲端時會擋住。
+- 私人版及沒有桌面外殼的測試站 `enabled=false`，後端拒絕安裝公開版。不要改頻道或繞過保護，私人版請使用私人安裝檔。
+- 日期版號為 `年.月日.包次`（例如 26.1024.1、26.1024.2），狀態列仍顯示 V261024；完整版本看設定頁。26.10.24 等舊版要先手動安裝支援更新的版本一次。
+- 若改寫提示「找不到 pe_t2i_heretic／pe_i2i_heretic」，先確認提示詞改寫語言模型已下載：在「安裝與修復」勾「AI 改寫、生圖助手」。已有模型可加入 LLM 外部資料夾，不必重新下載；模型與讀圖檔會逐一搜尋所有 LLM 來源及子資料夾。
 
 - 參數缺了不會報錯的：txt2img 缺 width 會變 256、缺 steps 會變 0（`anima_generate` 會補，`anima_api` 直接打 /api/generate 時要自己給）。
 - LoRA 家族不合、`control` 用在非 anima、`pose_control` 用在非 qwen21、`count` 超過 32：都不會報錯，只是沒效果。

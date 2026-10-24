@@ -1,5 +1,6 @@
 //! 繪匣 PaintDeck 2.0 的核心（給 main.rs 和測試共用）
 pub mod agent;
+pub mod cache;
 pub mod charsheet;
 pub mod civitai;
 pub mod comic;
@@ -34,3 +35,4 @@ pub mod tagger;
 pub mod tags;
 pub mod video_wf;
 pub mod wf_import;
+pub mod updater;

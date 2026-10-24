@@ -737,6 +737,9 @@ fn sealed(m: &Map<String, Value>) -> Result<Map<String, Value>, String> {
 }
 
 impl Cloud {
+    pub fn preparing(&self) -> bool {
+        matches!(self.st().phase, "starting" | "stopping")
+    }
     pub fn new(dir: &Path) -> Cloud {
         let pod = std::fs::read(dir.join("pod.json")).ok().and_then(|b| serde_json::from_slice::<Value>(&b).ok()).and_then(|v| Pod::from_value(&v));
         let left = pod.as_ref().map(|p| p.kind.clone());

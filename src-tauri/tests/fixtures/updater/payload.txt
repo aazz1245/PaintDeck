@@ -1,0 +1,1 @@
+PaintDeck isolated updater signature fixture; this is not an installer.

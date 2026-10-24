@@ -228,6 +228,8 @@ function liveText(raw) {
 
 function status(msg, kind = "") {
   F("peStatus").textContent = msg || "";
+  const fix = peModelFix(msg);
+  if (fix) F("peStatus").append(" ", fix);
   F("peStatus").className = "pe-status " + kind;
 }
 
@@ -485,6 +487,7 @@ function mmPaint() {
 }
 
 export function mmprojFix(text) {
+  if (/找不到 pe_(?:t2i|i2i)_heretic/.test(text || "")) return peModelFix(text);
   if (!/下載讀圖檔/.test(text || "")) return null;
   const btn = el("button", { class: "akey go", type: "button" }, "下載讀圖檔");
   const box = el("div", { class: "mmproj-fix" }, btn, " ", el("span", { class: "note muted" }, mm.text));
@@ -523,4 +526,9 @@ export function mmprojFix(text) {
     }
   };
   return box;
+}
+
+export function peModelFix(text) {
+  if (!/找不到 pe_(?:t2i|i2i)_heretic/.test(text || "")) return null;
+  return el("a", { class: "akey sm go", href: "/setup#models" }, "去補改寫模型");
 }

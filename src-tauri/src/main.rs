@@ -36,6 +36,7 @@ fn main() {
         .expect("網址格式");
 
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![hide_window, quit_app])
         .setup(move |app| {
             app.manage(Comfy(Mutex::new(None)));
@@ -272,6 +273,22 @@ async fn start_main(
     let shared = server::start(paths.clone(), &comfy_url)
         .await
         .unwrap_or_else(|e| fail(&e));
+    handle.manage(shared.updates.clone());
+    let h = handle.clone();
+    shared.updates.bind(handle.clone(), move || {
+        if let Some(p) = h.state::<Comfy>().0.lock().unwrap_or_else(|e| e.into_inner()).take() { p.stop(); }
+    });
+    anima_app::server::attach_setup(&shared, wizard.clone());
+    let weak = Arc::downgrade(&shared);
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(Duration::from_secs(8)).await;
+        loop {
+            let Some(a) = weak.upgrade() else { break };
+            if a.updates.auto_check() { a.updates.check().await; }
+            drop(a);
+            tokio::time::sleep(Duration::from_secs(12 * 60 * 60)).await;
+        }
+    });
     let h = handle.clone();
     let _ = shared.show_window.set(Box::new(move || show_main(&h)));
     // 精靈完成：位置沒換＝回主畫面；換了＝重開程式（伺服器要用新的資料夾）
@@ -348,7 +365,9 @@ async fn start_main(
             Err(e) => anima_app::launcher::set_note(Some(format!("ComfyUI 沒開起來：{e}"))),
         },
     );
-    let router = server::router(shared).merge(setup::router(wizard, &web));
+    let setup_router = setup::router(wizard, &web)
+        .layer(axum::middleware::from_fn_with_state(shared.clone(), server::update_gate));
+    let router = server::router(shared).merge(setup_router);
     let listener = tokio::net::TcpListener::from_std(listener)
         .unwrap_or_else(|e| fail(&format!("內建伺服器啟動失敗：{e}")));
     tauri::async_runtime::spawn(async move {

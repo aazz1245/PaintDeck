@@ -804,6 +804,9 @@ pub struct Core {
     pub dir: PathBuf,
     pub prompts: PathBuf,
     pub models: PathBuf,
+    /// 正式服務逐檔搜尋所有 LLM 來源；with_dirs 的隔離測試只搜尋指定位置。
+    model_dirs: Vec<PathBuf>,
+    search_external: bool,
     pub bin: PathBuf,
     state: PathBuf,
     lock: PathBuf,
@@ -830,20 +833,10 @@ impl Core {
         let models = std::env::var_os("ANIMA_PE_MODELS")
             .filter(|v| !v.is_empty())
             .map(PathBuf::from)
-            .unwrap_or_else(|| {
-                // ComfyUI\models\LLM 沒有語言模型、外部模型資料夾（設定 → 模型與工作流）有：用外部的
-                let own = node_dir.join("..").join("..").join("models").join("LLM");
-                let has_gguf = |d: &Path| {
-                    std::fs::read_dir(d).is_ok_and(|rd| {
-                        rd.flatten().any(|e| e.path().extension().is_some_and(|x| x.eq_ignore_ascii_case("gguf")))
-                    })
-                };
-                if has_gguf(&own) {
-                    return own;
-                }
-                crate::model_dirs::roots("LLM").into_iter().find(|d| has_gguf(d)).unwrap_or(own)
-            });
-        Core::with_dirs(node_dir, &node_dir.join("prompts"), &models)
+            .unwrap_or_else(|| node_dir.join("..").join("..").join("models").join("LLM"));
+        let mut core = Core::with_dirs(node_dir, &node_dir.join("prompts"), &models);
+        core.search_external = std::env::var_os("ANIMA_PE_MODELS").filter(|v| !v.is_empty()).is_none();
+        core
     }
 
     pub fn with_dirs(node_dir: &Path, prompts: &Path, models: &Path) -> Core {
@@ -851,6 +844,8 @@ impl Core {
             dir: node_dir.to_path_buf(),
             prompts: prompts.to_path_buf(),
             models: models.to_path_buf(),
+            model_dirs: vec![],
+            search_external: false,
             bin: node_dir.join("bin").join("llama-server.exe"),
             state: node_dir.join("server_state.json"),
             lock: node_dir.join("server.lock"),
@@ -869,6 +864,35 @@ impl Core {
     }
 
     // ---------------------------------------------------------------- 模型檔
+    fn model_roots(&self) -> Vec<PathBuf> {
+        let mut roots = vec![self.models.clone()];
+        roots.extend(self.model_dirs.iter().cloned());
+        // 設定頁新加入的 LLM 路徑立即生效，不必重開程式。
+        if self.search_external { roots.extend(crate::model_dirs::roots("LLM")); }
+        roots.dedup();
+        roots
+    }
+
+    /// 只列語言模型檔；不讀圖庫，不追子資料夾連結（避免循環）。
+    fn model_candidates(&self) -> Vec<PathBuf> {
+        fn collect(dir: &Path, depth: usize, out: &mut Vec<PathBuf>) {
+            let Ok(rd) = std::fs::read_dir(dir) else { return };
+            let mut entries: Vec<_> = rd.flatten().collect();
+            entries.sort_by_key(|e| e.file_name());
+            for e in entries {
+                let Ok(ft) = e.file_type() else { continue };
+                if ft.is_dir() && depth < 4 {
+                    collect(&e.path(), depth + 1, out);
+                } else if e.path().is_file() && e.path().extension().is_some_and(|x| x.eq_ignore_ascii_case("gguf")) {
+                    out.push(e.path());
+                }
+            }
+        }
+        let mut out = vec![];
+        for root in self.model_roots() { collect(&root, 0, &mut out); }
+        out
+    }
+
     /// (模型路徑, mmproj 路徑)；找不到就是錯誤
     pub fn model_files(
         &self,
@@ -888,13 +912,7 @@ impl Core {
         if kind == "adult" || kind == "adult_vision" {
             // 通用版去審查模型：Qwen3.6-35B-A3B heretic 或 Qwen3.5-9B abliterated。
             // adult 只寫文字、不載 mmproj；adult_vision（導演台看角色圖）同一個模型加上它的 mmproj
-            let all: Vec<PathBuf> = std::fs::read_dir(&self.models)
-                .into_iter()
-                .flatten()
-                .flatten()
-                .map(|e| e.path())
-                .filter(|p| file_name(p).to_lowercase().ends_with(".gguf"))
-                .collect();
+            let all = self.model_candidates();
             let (mmprojs, files): (Vec<PathBuf>, Vec<PathBuf>) = all
                 .into_iter()
                 .partition(|p| file_name(p).to_lowercase().contains("mmproj"));
@@ -933,18 +951,18 @@ impl Core {
                 None => err(self.mmproj_missing_msg(&model, fam)),
             };
         }
+        let all = self.model_candidates();
         for q in order {
-            let p = self.models.join(format!("pe_{kind}_heretic-{q}.gguf"));
-            if p.exists() {
-                let mm =
-                    (kind == "i2i").then(|| self.models.join("pe_i2i_heretic.mmproj-bf16.gguf"));
-                if let Some(m) = mm.as_ref().filter(|m| !m.exists()) {
-                    return err(format!("找不到讀圖用的 {}（放在 {dir}）", file_name(m)));
-                }
-                return Ok((p, mm));
+            let name = format!("pe_{kind}_heretic-{q}.gguf");
+            if let Some(p) = all.iter().find(|p| file_name(p).eq_ignore_ascii_case(&name)) {
+                let mm = if kind == "i2i" {
+                    Some(all.iter().find(|m| file_name(m).eq_ignore_ascii_case("pe_i2i_heretic.mmproj-bf16.gguf"))
+                        .cloned().ok_or_else(|| PeError(format!("找不到讀圖用的 pe_i2i_heretic.mmproj-bf16.gguf（放在 {dir}；到「安裝與修復」勾「AI 改寫、生圖助手」補下載，再重試）")))?)
+                } else { None };
+                return Ok((p.clone(), mm));
             }
         }
-        err(format!("找不到 pe_{kind}_heretic-*.gguf（放在 {dir}）"))
+        err(format!("找不到 pe_{kind}_heretic-*.gguf（放在 {dir}）。到「安裝與修復」勾「AI 改寫、生圖助手」補下載，再重試；這是提示詞改寫用的語言模型，只有生圖模型還不夠。若已下載，請在「設定 → 外部模型資料夾」加入它的 LLM 資料夾。"))
     }
 
     /// 缺讀圖用的 mmproj：講清楚去哪下載、放哪裡、檔名怎麼取。安裝清單裡有這個系列的（9B）就給網址，
@@ -988,7 +1006,7 @@ impl Core {
         };
         let fam = if file_name(&model).to_lowercase().contains("qwen3.6") { "qwen3.6" } else { "qwen3.5" };
         match self.res.as_deref().and_then(|r| crate::setup::mmproj_source(r, fam)) {
-            Some((name, size, url, sha)) => Ok(Some((self.models.join(name), url, size, sha))),
+            Some((name, size, url, sha)) => Ok(Some((model.parent().unwrap_or(&self.models).join(name), url, size, sha))),
             None => err(self.mmproj_missing_msg(&model, fam)),
         }
     }
@@ -1162,6 +1180,19 @@ impl Core {
             [],
         )?;
         Ok(con)
+    }
+
+    pub fn clear_cache(&self) -> Result<u64, String> {
+        let _guard = self.cache_lock.lock().unwrap_or_else(|e| e.into_inner());
+        if !self.cache.exists() { return Ok(0); }
+        let size = || [self.cache.clone(), PathBuf::from(format!("{}-wal", self.cache.display())), PathBuf::from(format!("{}-shm", self.cache.display()))]
+            .iter().filter_map(|p| std::fs::metadata(p).ok()).map(|m| m.len()).sum::<u64>();
+        let before = size();
+        let con = self.cache_con().map_err(|e| format!("讀取改寫快取失敗：{e}"))?;
+        con.execute("DELETE FROM cache", []).map_err(|e| format!("清理改寫快取失敗：{e}"))?;
+        con.execute_batch("VACUUM; PRAGMA wal_checkpoint(TRUNCATE);").map_err(|e| format!("壓縮改寫快取失敗：{e}"))?;
+        drop(con);
+        Ok(before.saturating_sub(size()))
     }
 
     pub fn cache_get(&self, key: &str) -> Option<Map<String, Value>> {
@@ -1880,6 +1911,10 @@ impl Service {
     }
 
     /// 「下載讀圖檔」按鈕：見 Core::mmproj_download。brain＝9b／35b（不給就照設定頁的通用模型）
+    pub fn clear_cache(&self) -> Result<u64, String> {
+        self.core.as_ref().map(|c| c.clear_cache()).unwrap_or_else(|| Err("AI 改寫尚未就緒，暫時無法清理改寫快取".into()))
+    }
+
     pub fn mmproj_download(&self, brain: Option<&str>) -> Result<Option<MmprojGet>, String> {
         let Some(core) = &self.core else {
             return Err(self.error.clone().unwrap_or_else(|| "AI 改寫沒裝好".into()));
@@ -3207,6 +3242,45 @@ async fn run_blocking<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static)
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn clearing_rewrite_cache_compacts_and_next_request_can_cache_again() {
+        let base = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../待刪除").join(format!("pe-cache-{}-{}", std::process::id(),
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        std::fs::create_dir_all(&base).unwrap();
+        let core = Core::with_dirs(&base, &base, &base);
+        core.cache_put("fixture", &json!({"prompt":"x".repeat(100_000)}));
+        assert!(core.cache_get("fixture").is_some());
+        assert!(core.clear_cache().unwrap() > 0);
+        assert!(core.cache_get("fixture").is_none());
+        core.cache_put("again", &json!({"prompt":"works"}));
+        assert_eq!(core.cache_get("again").unwrap()["prompt"], "works");
+    }
+    #[test]
+    fn pe_models_search_every_llm_root_and_subfolder() {
+        let base = std::env::temp_dir().join(format!("anima_pe_roots_{}", std::process::id()));
+        let own = base.join("own");
+        let extra = base.join("extra").join("PE");
+        std::fs::create_dir_all(&own).unwrap();
+        std::fs::create_dir_all(&extra).unwrap();
+        std::fs::write(own.join("Huihui-Qwen3.5-9B-abliterated.Q4_K_M.gguf"), b"test").unwrap();
+        std::fs::write(extra.join("PE_T2I_HERETIC-Q4_K_M.GGUF"), b"test").unwrap();
+        std::fs::write(extra.join("pe_i2i_heretic-Q6_K.gguf"), b"test").unwrap();
+        std::fs::write(own.join("pe_i2i_heretic.mmproj-bf16.gguf"), b"test").unwrap();
+        let mut c = Core::with_dirs(&base, &base, &own);
+        // 未下載：回覆要能直接告訴朋友補哪個功能包。
+        let e = c.model_files("t2i", None).unwrap_err().0;
+        assert!(e.contains("安裝與修復") && e.contains("AI 改寫、生圖助手"));
+        c.model_dirs.push(base.join("extra"));
+        assert_eq!(c.model_files("t2i", None).unwrap().0, extra.join("PE_T2I_HERETIC-Q4_K_M.GGUF"));
+        let (m, mm) = c.model_files("i2i", None).unwrap();
+        assert_eq!(m, extra.join("pe_i2i_heretic-Q6_K.gguf"));
+        assert_eq!(mm.unwrap(), own.join("pe_i2i_heretic.mmproj-bf16.gguf"));
+        assert!(c.model_files("t2i", Some("Q8_0")).is_err());
+        // with_dirs 的獨立環境不會拿其他位置的模型冒充已安裝。
+        assert!(Core::with_dirs(&base, &base, &own).model_files("t2i", None).is_err());
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
     /// 提示詞檔是 CRLF（git 在 Windows checkout）也讀成 \n，跟 Python 版一致（GitHub CI 抓到的）
     #[test]
     fn default_prompt_normalizes_crlf() {

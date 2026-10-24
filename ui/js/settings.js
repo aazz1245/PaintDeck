@@ -8,6 +8,8 @@ import { mountNet } from "./net.js";
 import { mountComfyOpts } from "./comfyopts.js";
 import { openAi } from "./studio.js";
 import * as vidmap from "./vidmap.js";
+import * as updates from "./updates.js";
+import * as cache from "./cache.js";
 
 // 恢復原廠預設勾選：圖庫、上傳暫存、預設組（LoRA 備註和設定預設不勾，免得連 Civitai 存好的觸發詞也清掉）
 const DEFAULT_PARTS = ["gallery", "uploads", "presets"];
@@ -15,6 +17,8 @@ const DEFAULT_PARTS = ["gallery", "uploads", "presets"];
 const BROWSER_KEYS = ["form", "pe", "recent", "snippets", "snippetsMoved", "libView", "theme", "galFilters", "notify"];  // 介面語言（lang）恢復原廠也保留
 
 export function init() {
+  updates.init();
+  cache.init();
   $("#setAiOpen").onclick = openAi;
   models.init();
   // 介面語言（i18n.js）：存起來、重新整理頁面

@@ -423,11 +423,13 @@ function packLine(p) {
   const m = p.missing;
   let s = m.missing ? `還缺 ${m.missing} 個檔，約 ${gb(m.bytes)}` : `還缺約 ${gb(m.bytes)}`;
   // Civitai 那段另外包一層：英文介面一段一段查字典比較準
-  if (m.civitai) s += `<span>${chk.data.has_key ? `（其中 ${m.civitai} 個來自 Civitai）` : `（其中 ${m.civitai} 個來自 Civitai，要先填 API key）`}</span>`;
+  if (m.civitai) s += `<span>${(chk.data.has_key || F("wizCivitaiKey").value.trim()) ? `（其中 ${m.civitai} 個來自 Civitai）` : `（其中 ${m.civitai} 個來自 Civitai，要先填 API key）`}</span>`;
   return s;
 }
 
 function renderModels() {
+  F("wizCivitaiSaved").textContent = chk.data.has_key ? "這個資料位置已儲存金鑰；留空即可沿用。" : "尚未儲存 Civitai 金鑰；沒有金鑰也可以繼續安裝其他項目。";
+  F("wizCivitaiKey").oninput = renderModels;
   const packs = chk.packs, basic = chk.basic_packs;
   // 沒有能用的顯示卡：預設全不選，免得白下載好幾十 GB（沿用老手的 ZLUDA／DirectML 版就照常：舊 A 卡靠它們也能畫）
   // 選「用我自己的 ComfyUI」也照常（生圖站不會替它加 --cpu）
@@ -577,7 +579,10 @@ async function startRun() {
   // 正式畫面裡重新打開、安裝本來就在跑：scan 可能沒有（檢查失敗），不用再送一次，直接接著看進度
   if (scan) {
     try {
-      await api("/api/setup/run", { json: { ...chosen(), packs: [...(pick.packs || [])] } });
+      const key = F("wizCivitaiKey").value.trim();
+      await api("/api/setup/run", { json: { ...chosen(), packs: [...(pick.packs || [])], ...(key ? {civitai_key:key} : {}) } });
+      if (key && chk?.data) chk.data.has_key = true;
+      F("wizCivitaiKey").value = "";
     } catch (e) {
       if (!/已經在安裝/.test(e.message)) {
         // 送不出去（例如路徑填錯）：按鈕換成「重試」，上一步可以回去改

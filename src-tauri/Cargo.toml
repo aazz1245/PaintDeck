@@ -1,6 +1,6 @@
 [package]
 name = "anima-app"
-version = "26.10.24"
+version = "26.1024.1"
 description = "繪匣 PaintDeck：本機 AI 生圖（ComfyUI 前端）"
 edition = "2021"
 default-run = "anima-app"
@@ -45,6 +45,12 @@ ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "
 # raw-window-handle 本來就在（tauri 用的），這裡直接用來把視窗掛在生圖站上面
 rfd = { version = "0.17.2", default-features = false }
 raw-window-handle = "0.6.2"
+tauri-plugin-updater = { version = "~2.14", default-features = false, features = ["native-tls"] }
+semver = "1"
+
+[dev-dependencies]
+tower = { version = "0.5.3", features = ["util"] }
+tauri = { version = "2", features = ["test"] }
 
 # 開發版的套件也要最佳化：沒最佳化的 LZMA 解壓（ComfyUI 的 7z）、反推的影像處理會慢幾十倍
 [profile.dev.package."*"]

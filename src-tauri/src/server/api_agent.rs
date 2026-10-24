@@ -47,6 +47,7 @@ impl Agent {
     }
     pub fn any_running(&self) -> bool {
         !self.runs.lock().unwrap_or_else(|e| e.into_inner()).is_empty()
+            || self.learn.lock().unwrap_or_else(|e| e.into_inner()).is_some()
     }
 }
 

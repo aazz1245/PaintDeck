@@ -2,6 +2,7 @@
 import { $, el, api, toast, store, fmtBytes, GB, typing, openModal } from "./util.js";
 import { app } from "./state.js";
 import { setComfyNote, restartComfy } from "./deck.js";
+import { displayVersion } from "./updates.js";
 
 const F = (id) => $("#" + id);
 let sys = null;
@@ -106,8 +107,8 @@ function paintMore() {
   F("diskText").textContent = sys?.disk ? `${sys.disk.path} ${fmtBytes(sys.disk.free).replace(" ", "")}` : "—";
   F("diskText").classList.toggle("w", !!sys?.disk && sys.disk.free < 10e9);
   // 2026-10-21 起版號用日期：26.10.21 顯示成 V261021（年.月.日，主版號 24 以上就是日期）；舊的 1.1.3 這種照舊只顯示主、次版號
-  const ver = (sys?.version || "1.1").split(".");
-  F("verText").textContent = +ver[0] >= 24 && ver.length === 3 ? `V${ver[0]}${ver[1].padStart(2, "0")}${ver[2].padStart(2, "0")}` : `V${ver.slice(0, 2).join(".")}`;
+  F("verText").textContent = displayVersion(sys?.version);
+  F("verText").title = sys?.version || "";
 }
 
 function meter(label, used, total, note) {

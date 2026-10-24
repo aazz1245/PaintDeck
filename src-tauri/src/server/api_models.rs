@@ -524,6 +524,10 @@ pub async fn downloads() -> ApiResult {
     ok(json!({"downloads": g.iter().rev().take(30).cloned().collect::<Vec<_>>()}))
 }
 
+pub(super) fn any_downloading() -> bool {
+    DLS.lock().unwrap_or_else(|e| e.into_inner()).iter().any(|d| d["status"] == "run")
+}
+
 // ---------------------------------------------------------------- 重開 ComfyUI
 pub async fn restart_comfy(State(app): State<Shared>) -> ApiResult {
     let Some(f) = app.restart_comfy.get() else {

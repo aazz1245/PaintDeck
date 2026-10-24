@@ -22,6 +22,7 @@ async fn main() {
     let r = match std::env::var_os("ANIMA_SETUP_CONFIG").filter(|p| !p.is_empty()) {
         Some(cfg) => {
             let wizard = anima_app::setup::Setup::new(std::path::Path::new(&cfg), &app.paths.res);
+            anima_app::server::attach_setup(&app, wizard.clone());
             let web = app.paths.web.clone();
             anima_app::server::router(app).merge(anima_app::setup::router(wizard, &web))
         }

@@ -24,6 +24,8 @@ mod api_video;
 mod api_voice;
 mod api_wf;
 mod api_models;
+mod api_update;
+mod api_cache;
 
 use crate::civitai::Civitai;
 use crate::comfy::Comfy;
@@ -50,6 +52,9 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const APP_ID: &str = "anima-2";
 
 pub struct App {
+    pub cache: Arc<crate::cache::Control>,
+    pub setup: OnceLock<Arc<crate::setup::Setup>>,
+    pub updates: Arc<crate::updater::Service>,
     pub paths: Paths,
     pub db: Arc<Db>,
     pub hub: Hub,
@@ -62,7 +67,7 @@ pub struct App {
     /// 背景載入完才有（約一兩秒）；載入前自動完成回傳空清單
     pub tags: OnceLock<TagIndex>,
     /// 設定檔「讀 → 改 → 寫」要排隊，免得兩個請求互相蓋掉
-    pub settings_lock: tokio::sync::Mutex<()>,
+    pub settings_lock: Arc<tokio::sync::Mutex<()>>,
     /// 資產庫：加檔、拿檔、刪資產要排隊（免得兩個請求同時加檔撞號、互相蓋掉 data）
     pub assets_lock: tokio::sync::Mutex<()>,
     /// 導演台（專案、角色卡、背景工作）
@@ -304,6 +309,13 @@ async fn only_local(req: Request, next: Next) -> Response {
     next.run(req).await
 }
 
+pub fn attach_setup(app: &Shared, setup: Arc<crate::setup::Setup>) {
+    setup.bind_runtime(app.cache.clone(), app.settings_lock.clone());
+    let w = setup.clone();
+    let _ = app.updates.setup_busy.set(Box::new(move || w.busy()));
+    let _ = app.setup.set(setup);
+}
+
 pub fn router(app: Shared) -> Router {
     let web = app.paths.web.clone();
     Router::new()
@@ -312,6 +324,8 @@ pub fn router(app: Shared) -> Router {
         // 狀態、設定
         .route("/api/state", get(api_gen::state))
         .route("/api/settings", post(api_gen::set_settings))
+        .route("/api/cache", get(api_cache::status))
+        .route("/api/cache/clear", post(api_cache::clear))
         .route("/api/settings/export", get(api_gen::settings_export))
         .route("/api/settings/import", post(api_gen::settings_import))
         // 影片模型（內建 LTX-2.3 或匯入的 ComfyUI 工作流）
@@ -519,12 +533,61 @@ pub fn router(app: Shared) -> Router {
         .route("/api/studio/frames/{sid}/delete", post(api_studio::frames_delete))
         // 桌面版
         .route("/api/app/show", post(app_show))
+        .route("/api/app/update", get(api_update::status))
+        .route("/api/app/update/check", post(api_update::check))
+        .route("/api/app/update/preferences", post(api_update::preferences))
+        .route("/api/app/update/install", post(api_update::install))
         .nest_service(static_prefix(), ServeDir::new(web.clone()))
         .nest_service("/static", ServeDir::new(web))
         .layer(middleware::from_fn(no_stale_static))
         .layer(middleware::from_fn(only_local))
+        .layer(middleware::from_fn_with_state(app.clone(), update_gate))
         .layer(DefaultBodyLimit::max(64 * 1024 * 1024))
         .with_state(app)
+}
+
+/// 更新中擋住新的修改請求；取得寫鎖後，先前已進入 handler 的請求也已經結束。
+pub async fn update_gate(State(app): State<Shared>, req: Request, next: Next) -> Response {
+    use std::sync::atomic::Ordering;
+    let mutation = !matches!(*req.method(), axum::http::Method::GET | axum::http::Method::HEAD | axum::http::Method::OPTIONS);
+    let _cache_guard = if (mutation && req.uri().path() != "/api/cache/clear") || req.uri().path().starts_with("/thumb/") {
+        if app.cache.cleaning.load(Ordering::SeqCst) { return (StatusCode::CONFLICT, Json(json!({"error":"正在清理快取，請稍後再操作"}))).into_response(); }
+        let guard = app.cache.gate.read().await;
+        if app.cache.cleaning.load(Ordering::SeqCst) { return (StatusCode::CONFLICT, Json(json!({"error":"正在清理快取，請稍後再操作"}))).into_response(); }
+        Some(guard)
+    } else { None };
+    if matches!(*req.method(), axum::http::Method::GET | axum::http::Method::HEAD | axum::http::Method::OPTIONS)
+        || req.uri().path().starts_with("/api/app/update") {
+        return next.run(req).await;
+    }
+    let blocked = || (StatusCode::CONFLICT, Json(json!({"error": "正在更新程式，請稍後再操作"}))).into_response();
+    if app.updates.installing.load(Ordering::SeqCst) { return blocked(); }
+    let _guard = app.updates.gate.read().await;
+    if app.updates.installing.load(Ordering::SeqCst) { return blocked(); }
+    next.run(req).await
+}
+
+/// 除了生圖佇列，也涵蓋兩段生圖之間的助手／漫畫／影片背景工作，以及各種下載。
+pub async fn update_idle(app: &Shared) -> Result<(), String> {
+    let live = app.comfy.live();
+    let pe = app.pe.status();
+    let civitai = app.civitai.downloads.lock().unwrap_or_else(|e| e.into_inner())
+        .values().any(|d| matches!(d["status"].as_str(), Some("starting" | "downloading")));
+    let busy = live.running.is_some() || live.queue_remaining > 0
+        || !app.db.open_jobs().map_err(|_| "無法確認任務狀態，請稍後再更新")?.is_empty()
+        || app.h3.any_running() || app.agent.any_running() || app.agent.cloud.preparing() || app.director.any_running() || app.comic.any_running()
+        || pe["busy"] == true || pe["waiting"].as_i64().unwrap_or(0) > 0
+        || civitai || api_models::any_downloading()
+        || app.updates.setup_busy.get().is_some_and(|f| f());
+    if busy { return Err("生圖、影片、改寫或模型下載還沒完成，請等工作結束再更新".into()); }
+    if live.online {
+        let q = app.comfy.get("/queue").await.map_err(|_| "無法確認 ComfyUI 佇列，請稍後再更新")?;
+        for key in ["queue_running", "queue_pending"] {
+            let a = q[key].as_array().ok_or("無法確認 ComfyUI 佇列，請稍後再更新")?;
+            if !a.is_empty() { return Err("ComfyUI 還有工作，請等佇列完成再更新".into()); }
+        }
+    }
+    Ok(())
 }
 
 /// 建立資料夾、開資料庫、連 ComfyUI、背景載入 tag 索引並匯入既有圖片
@@ -592,6 +655,9 @@ pub async fn start(paths: Paths, comfy_url: &str) -> Result<Shared, String> {
     let data_dir = paths.data.clone();
     let studio = crate::studio::Studio::new(&paths.res, &paths.data);
     let app = Arc::new(App {
+        cache: Arc::new(crate::cache::Control::default()),
+        setup: OnceLock::new(),
+        updates: Arc::new(crate::updater::Service::new(&data_dir)),
         paths,
         db,
         hub,
@@ -600,7 +666,7 @@ pub async fn start(paths: Paths, comfy_url: &str) -> Result<Shared, String> {
         pe,
         tagger,
         tags: OnceLock::new(),
-        settings_lock: tokio::sync::Mutex::new(()),
+        settings_lock: Arc::new(tokio::sync::Mutex::new(())),
         assets_lock: tokio::sync::Mutex::new(()),
         director: api_director::Director::new(&data_dir),
         comic: api_comic::Comic::new(&data_dir),

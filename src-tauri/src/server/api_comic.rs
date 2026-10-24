@@ -27,6 +27,9 @@ pub struct Comic {
 }
 
 impl Comic {
+    pub fn any_running(&self) -> bool {
+        !self.runs.lock().unwrap_or_else(|e| e.into_inner()).is_empty()
+    }
     pub fn new(data: &Path) -> Comic {
         Comic { store: Store::new(data), lock: tokio::sync::Mutex::new(()), runs: Mutex::new(HashMap::new()) }
     }

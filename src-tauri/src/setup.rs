@@ -1472,6 +1472,9 @@ fn speed_push(samples: &mut std::collections::VecDeque<(Instant, u64)>, now: Ins
 }
 
 pub struct Setup {
+    activity: std::sync::OnceLock<Arc<crate::cache::Control>>,
+    settings_lock: std::sync::OnceLock<Arc<tokio::sync::Mutex<()>>>,
+    local_settings_lock: Arc<tokio::sync::Mutex<()>>,
     pub config_path: PathBuf,
     pub res: PathBuf,
     http: reqwest::Client,
@@ -1489,6 +1492,9 @@ type FinishFn = Box<dyn Fn(&Config) -> &'static str + Send + Sync>;
 type HookFn = Box<dyn Fn() + Send + Sync>;
 
 impl Setup {
+    pub fn busy(&self) -> bool {
+        self.prog.lock().unwrap_or_else(|e| e.into_inner()).running
+    }
     pub fn new(config_path: &Path, res: &Path) -> Arc<Setup> {
         // 代理和下載來源設定：config.json 旁邊的 net.json（net.rs）
         crate::net::init(&config_path.with_file_name("net.json"));
@@ -1505,6 +1511,9 @@ impl Setup {
             .build()
             .expect("建立 HTTP client");
         Arc::new(Setup {
+            activity: std::sync::OnceLock::new(),
+            settings_lock: std::sync::OnceLock::new(),
+            local_settings_lock: Arc::new(tokio::sync::Mutex::new(())),
             config_path: config_path.to_path_buf(),
             res: res.to_path_buf(),
             http,
@@ -1516,6 +1525,11 @@ impl Setup {
     }
 
     /// 正式畫面設定：stop＝關掉生圖站開的 ComfyUI、start＝再開一次（換 PyTorch 用）
+    pub fn bind_runtime(&self, activity: Arc<crate::cache::Control>, settings_lock: Arc<tokio::sync::Mutex<()>>) {
+        let _ = self.activity.set(activity);
+        let _ = self.settings_lock.set(settings_lock);
+    }
+
     pub fn set_comfy_hooks(&self, stop: impl Fn() + Send + Sync + 'static, start: impl Fn() + Send + Sync + 'static) {
         *self.comfy_hooks.lock().unwrap_or_else(|e| e.into_inner()) = Some((Box::new(stop), Box::new(start)));
     }
@@ -2472,6 +2486,11 @@ impl Setup {
         self.phase("解壓縮 ComfyUI（約 3～5 分鐘）");
         self.set_status("comfy.unpack", "run", None);
         let out = unpack_dir(&p.comfy_dir, &parent);
+        let ownership = p.data_root.join("data").join("installer_cache.json");
+        let temporary = ownership.with_extension("json.tmp");
+        let recorded = std::fs::write(&temporary, settings::to_text(&json!({"comfy_dir":p.comfy_dir, "unpack":out})))
+            .and_then(|_| std::fs::rename(&temporary, &ownership));
+        if recorded.is_err() { self.say("無法記錄解壓暫存的位置，之後可能需要手動清理"); }
         let (a, o) = (archive.clone(), out.clone());
         let (me, stop) = (self.prog_handle("comfy.unpack"), self.cancel.clone());
         let r = tokio::task::spawn_blocking(move || {
@@ -3180,13 +3199,18 @@ async fn api_run(State(s): S, Json(body): Json<Value>) -> Response {
         Ok(v) => v,
         Err(e) => return bad(e),
     };
-    let comfy_dir = p.comfy_dir.clone();
-    let chosen = tokio::task::spawn_blocking(move || save_gpu_choice(&body, &comfy_dir)).await.unwrap_or_else(|e| Err(e.to_string()));
+    if let Err(e) = install_key(&body) { return bad(e); }
+    if !s.begin() { return bad("已經在安裝了"); }
+    let lock = s.settings_lock.get().unwrap_or(&s.local_settings_lock).clone();
+    let _settings = lock.lock().await;
+    let (comfy_dir, data_root) = (p.comfy_dir.clone(), p.data_root.clone());
+    let chosen = tokio::task::spawn_blocking(move || {
+        save_gpu_choice(&body, &comfy_dir)?;
+        save_install_key(&data_root, &body)
+    }).await.unwrap_or_else(|_| Err("準備安裝設定失敗".into()));
     if let Err(e) = chosen {
+        s.with(|p| p.running = false);
         return bad(e);
-    }
-    if !s.begin() {
-        return bad("已經在安裝了");
     }
     tokio::spawn(s.clone().run(p, Some(packs)));
     reply(json!({"ok": true}))
@@ -3194,6 +3218,23 @@ async fn api_run(State(s): S, Json(body): Json<Value>) -> Response {
 
 /// 第二頁的顯示卡選擇 {gpu?, amd_gfx?} 存到 comfy.json（重跑精靈、安裝與修復都照它）；
 /// 裝的是 CPU 版（沒有能用的顯示卡）就記下「啟動時加 --cpu」。還沒有 ComfyUI、又不知道該下載哪一版的，先擋下來
+fn install_key(body: &Value) -> Result<Option<&str>, String> {
+    let Some(value) = body.get("civitai_key") else { return Ok(None); };
+    let key = value.as_str().ok_or("Civitai 金鑰必須是文字")?.trim();
+    if key.len() > 4096 || key.chars().any(char::is_control) { return Err("Civitai 金鑰格式不正確".into()); }
+    Ok((!key.is_empty()).then_some(key))
+}
+
+fn save_install_key(root: &Path, body: &Value) -> Result<(), String> {
+    let Some(key) = install_key(body)? else { return Ok(()); };
+    let data = root.join("data");
+    std::fs::create_dir_all(&data).map_err(|_| "無法建立資料資料夾，金鑰尚未儲存")?;
+    let file = data.join("settings.json");
+    let mut current = settings::load(&file);
+    current.insert(settings::KEY.into(), json!(key));
+    settings::save(&file, &current).map_err(|_| "金鑰儲存失敗，請確認資料位置可以寫入".into())
+}
+
 fn save_gpu_choice(body: &Value, comfy_dir: &Path) -> Result<(), String> {
     let cur = gpu::prefs();
     // python、external：精靈第二頁「自己指定」才會送；沒送就維持原本的（沒送 python 代表這次不是自己指定的，網頁會送空字串清掉）
@@ -3317,12 +3358,12 @@ pub fn router(setup: Arc<Setup>, web: &Path) -> Router {
         .route("/api/setup/net", get(api_net).post(api_net_set))
         .route("/api/setup/net/test", post(api_net_test))
         .route("/api/setup/comfy_opts", get(api_comfy_opts).post(api_comfy_opts_set))
-        .route_layer(axum::middleware::from_fn(only_own_page))
+        .route_layer(axum::middleware::from_fn_with_state(setup.clone(), only_own_page))
         .with_state(setup)
 }
 
 /// 精靈的 API 只給自己的網頁用：Host 要是本機（擋 DNS rebinding），POST 要帶 X-Anima-Setup（別的網站的表單送不出自訂標頭）
-async fn only_own_page(req: axum::extract::Request, next: axum::middleware::Next) -> Response {
+async fn only_own_page(State(s): S, req: axum::extract::Request, next: axum::middleware::Next) -> Response {
     let local = crate::server::local_request(&req);
     let marked =
         req.method() != axum::http::Method::POST || req.headers().contains_key("x-anima-setup");
@@ -3333,6 +3374,15 @@ async fn only_own_page(req: axum::extract::Request, next: axum::middleware::Next
         )
             .into_response();
     }
+    let control = s.activity.get();
+    let _activity = if req.method() == axum::http::Method::POST {
+        if let Some(c) = control {
+            if c.cleaning.load(Ordering::SeqCst) { return bad("正在清理快取，請稍後再操作"); }
+            let guard = c.gate.read().await;
+            if c.cleaning.load(Ordering::SeqCst) { return bad("正在清理快取，請稍後再操作"); }
+            Some(guard)
+        } else { None }
+    } else { None };
     next.run(req).await
 }
 
@@ -3352,6 +3402,29 @@ pub async fn setup_page(page: PathBuf) -> Response {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn install_key_is_encrypted_blank_preserves_and_invalid_input_never_echoes() {
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../待刪除")
+            .join(format!("setup-key-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        let file = root.join("data/settings.json");
+        super::save_install_key(&root, &serde_json::json!({"civitai_key":"  TEST-ONLY-INSTALL-KEY  "})).unwrap();
+        let mut current = crate::settings::load(&file);
+        assert_eq!(crate::settings::civitai_key(&current), "TEST-ONLY-INSTALL-KEY");
+        current.insert("negative".into(), serde_json::json!("keep my setting"));
+        crate::settings::save(&file, &current).unwrap();
+        let before = std::fs::read(&file).unwrap();
+        super::save_install_key(&root, &serde_json::json!({"civitai_key":"  "})).unwrap();
+        super::save_install_key(&root, &serde_json::json!({})).unwrap();
+        assert_eq!(std::fs::read(&file).unwrap(), before);
+        #[cfg(windows)] assert!(!String::from_utf8_lossy(&before).contains("TEST-ONLY-INSTALL-KEY"));
+        let view = crate::settings::public_view(&crate::settings::load(&file));
+        assert_eq!(view["has_civitai_key"], true);
+        assert!(!view.to_string().contains("TEST-ONLY-INSTALL-KEY"));
+        assert_eq!(view["negative"], "keep my setting");
+        assert!(super::install_key(&serde_json::json!({"civitai_key":12})).is_err());
+        let error = super::install_key(&serde_json::json!({"civitai_key":"TEST-ONLY\nKEY"})).unwrap_err();
+        assert!(!error.contains("TEST-ONLY"));
+    }
     use super::*;
 
     #[test]

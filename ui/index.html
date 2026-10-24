@@ -1253,6 +1253,12 @@
       <div id="mdFeat" class="wf-feat"></div>
       <details class="fold" id="mdInvBox"><summary>模型總覽（生圖站看得到的所有模型）</summary><div id="mdInv"></div></details>
     </section>
+    <section class="box" id="setUpdates">
+      <h3>程式更新</h3>
+      <div class="row gap"><span>目前版本：</span><b id="updateVersion">—</b><button class="akey" type="button" id="updateCheck" disabled>檢查更新</button><button class="akey go" type="button" id="updateDetails" hidden>查看更新說明</button></div>
+      <label class="check"><input type="checkbox" id="updateAuto" disabled>自動檢查更新</label>
+      <p class="muted sm" id="updateHint"></p>
+    </section>
     <section class="box" id="setAiBox">
       <label>給 AI 操作（MCP）</label>
       <div class="muted sm">讓 Claude、Codex 這類 AI 程式直接操作整個生圖站：生圖、看圖庫、漫畫台、導演台、H3 影片、剪片、修幀。會花錢、刪東西、改設定的操作，AI 一定要先問過你才會做。</div>
@@ -1279,6 +1285,14 @@
       <div class="muted sm">把設定、提示詞庫、LoRA 觸發詞與備註、生圖工作流組、影片工作流、改過的 AI 改寫提示詞存成一個檔，換電腦或重灌後匯入就全部還原。<b>不含 Civitai API key</b>、代理設定和模型資料夾位置；工作流裡像金鑰的欄位會清空。匯入時同名但內容不同的舊檔會先搬進「待刪除」，不會直接蓋掉。</div>
       <div class="row gap"><a class="akey sm" href="/api/settings/export" download data-ic="floppy">匯出設定檔</a><button class="akey sm" id="setImport" type="button">匯入設定檔…</button>
         <input type="file" id="setImportFile" accept=".json,application/json" hidden></div>
+    </section>
+    <section class="box" id="cacheBox">
+      <label>清理快取</label>
+      <div class="muted sm">清除可重建的縮圖、改寫快取、安裝暫存、安裝壓縮檔與剪輯預覽。原圖、影片、模型、專案、設定與金鑰會保留。正在安裝、下載或生成時無法清理；剪輯台請先關閉。</div>
+      <div class="row gap wrap" style="margin-top:8px"><button class="akey sm" type="button" id="cacheScan">查看快取大小</button><button class="akey sm warn" type="button" id="cacheClear" disabled>清理全部快取</button></div>
+      <div class="muted sm" id="cacheSummary" aria-live="polite"></div>
+      <div id="cacheGroups"></div>
+      <div class="muted sm" id="cacheResult" aria-live="polite"></div>
     </section>
     <section class="box danger-zone" id="resetBox">
       <label>恢復原廠（清空重來）</label>
@@ -1310,7 +1324,7 @@
     <span class="st-ram">記憶體 <span class="a" id="ramText">—</span></span><span class="sep"></span>
     <span class="st-disk"><span class="a" id="diskText">—</span></span><span class="sep"></span>
     <span class="st-pe" id="peText">AI 改寫 待機</span>
-    <span class="r a" id="qtxt">佇列 0</span><span class="sep"></span><span id="verText">V1.1</span>
+    <span class="r a" id="qtxt">佇列 0</span><span class="sep"></span><span id="verText">V1.1</span><button type="button" class="akey sm" id="updateNotice" hidden></button>
   </footer>
 </div>
 
@@ -1835,5 +1849,14 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <input type="file" id="filePick" accept="image/*" hidden>
 <script type="module" src="/static/js/main.js"></script>
+<div class="modal" id="updateModal" hidden>
+  <div class="win" style="width:min(680px,94vw);max-height:85vh;overflow:auto">
+    <div class="row between"><h3>更新程式</h3><button type="button" class="akey" data-close>關閉</button></div>
+    <p>新版：<b id="updateTarget"></b></p>
+    <pre id="updateNotes" style="white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit"></pre>
+    <p class="muted sm" id="updateReason"></p><p id="updateProgress" aria-live="polite"></p>
+    <button type="button" class="akey go" id="updateInstall" disabled>下載並更新</button>
+  </div>
+</div>
 </body>
 </html>

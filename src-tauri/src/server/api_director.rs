@@ -28,6 +28,9 @@ pub struct Director {
 }
 
 impl Director {
+    pub fn any_running(&self) -> bool {
+        !self.runs.lock().unwrap_or_else(|e| e.into_inner()).is_empty()
+    }
     pub fn new(data: &Path) -> Director {
         Director {
             store: Store::new(data),
