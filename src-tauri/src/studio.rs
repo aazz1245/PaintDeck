@@ -668,6 +668,8 @@ pub fn first_frame(t: &Tools, video: &Path, png: &Path) -> Result<(), String> {
 }
 
 // ---------------------------------------------------------------- 拆幀台
+mod cleanup;
+
 pub struct Frames {
     /// <資料>\data\frames
     root: PathBuf,
@@ -727,6 +729,8 @@ pub struct SplitOpts {
     pub max_h: Option<u32>,
     /// 每秒只取幾幀（長片先粗看用；None＝每一幀都拆）
     pub fps: Option<f64>,
+    /// true＝只用 CPU；預設優先要求 CUDA，失敗後改 CPU。
+    pub cpu: bool,
 }
 
 /// 拆 frames 幀（原片 w×h，max_h＝縮小後最高幾像素）放得下嗎：
@@ -792,6 +796,7 @@ fn split_args(src: &Path, d: &Path, opts: &SplitOpts, start: f64, len: f64, dura
         if f.is_empty() { vec![] } else { vec![os("-vf"), os(f.join(","))] }
     };
     let mut a = vec![os("-hide_banner"), os("-v"), os("error"), os("-y")];
+    if !opts.cpu { a.extend([os("-hwaccel"), os("cuda")]); }
     a.extend(cut_args(start, len, duration));
     a.extend([os("-i"), src.as_os_str().to_os_string()]);
     a.extend([os("-map"), os("0:v:0")]);
@@ -806,6 +811,23 @@ fn split_args(src: &Path, d: &Path, opts: &SplitOpts, start: f64, len: f64, dura
     a
 }
 
+fn split_decode(opts: &SplitOpts, root: &Path, d: &Path, mut attempt: impl FnMut(&SplitOpts) -> Result<Vec<u8>, String>) -> Result<&'static str, String> {
+    Ok(match attempt(opts) {
+        Ok(_) => if opts.cpu { "cpu" } else { "cuda_preferred" },
+        Err(gpu_error) if !opts.cpu => {
+            // 先清掉這次嘗試留下的幀，避免回退後混入殘留的尾幀。
+            for sub in ["f", "t"] {
+                cleanup::remove_tree(root, &d.join(sub))?;
+                std::fs::create_dir(d.join(sub)).map_err(|e| e.to_string())?;
+            }
+            let cpu = SplitOpts { cpu: true, ..opts.clone() };
+            attempt(&cpu).map_err(|e| format!("CUDA 解碼失敗：{gpu_error}；CPU 重試也失敗：{e}"))?;
+            "cpu_fallback"
+        }
+        Err(e) => return Err(e),
+    })
+}
+
 impl Frames {
     pub fn new(data: &Path) -> Frames {
         Frames {
@@ -818,7 +840,7 @@ impl Frames {
             return Err("拆幀編號不對".into());
         }
         let d = self.root.join(sid);
-        if d.join("meta.json").is_file() {
+        if crate::cache::safe_path(&self.root, &d.join("meta.json")) && d.join("meta.json").is_file() {
             Ok(d)
         } else {
             Err("找不到這次拆幀（可能移到待刪除了）".into())
@@ -884,14 +906,16 @@ impl Frames {
         let sid = format!(
             "{}_{}",
             source["id"].as_i64().map(|i| i.to_string()).unwrap_or_else(|| "ext".into()),
-            chrono::Local::now().format("%Y%m%d_%H%M%S")
+            chrono::Local::now().format("%Y%m%d_%H%M%S_%f")
         );
         let d = self.root.join(&sid);
+        std::fs::create_dir_all(&self.root).map_err(|e| e.to_string())?;
+        std::fs::create_dir(&d).map_err(|e| e.to_string())?;
         for sub in ["f", "t"] {
-            std::fs::create_dir_all(d.join(sub)).map_err(|e| format!("建立 {} 失敗：{e}", d.display()))?;
+            std::fs::create_dir(d.join(sub)).map_err(|e| format!("建立 {} 失敗：{e}", d.display()))?;
         }
         let res = (|| -> Result<Value, String> {
-            run(&ffmpeg, &split_args(src, &d, opts, start, len, p.duration))?;
+            let decode = split_decode(opts, &self.root, &d, |o| run(&ffmpeg, &split_args(src, &d, o, start, len, p.duration)))?;
             let mut audio = false;
             if p.audio {
                 let mut a = vec![os("-hide_banner"), os("-v"), os("error"), os("-y")];
@@ -917,13 +941,13 @@ impl Frames {
                 "width": w, "height": h, "fps": p.fps, "fps_r": p.fps_r,
                 "frames": frames, "duration": frames as f64 / p.fps, "audio": audio,
                 "range": {"start": start, "end": start + len, "of": p.duration, "src_w": p.width, "src_h": p.height, "src_fps": full_fps, "sampled": opts.fps.is_some()},
-                "edited": {}, "rev": {}, "builds": [],
+                "edited": {}, "rev": {}, "builds": [], "decode": decode,
             });
             self.save_meta(&sid, &m)?;
             Ok(m)
         })();
         if res.is_err() {
-            let _ = std::fs::remove_dir_all(&d); // 這次自己建的、拆到一半的資料夾
+            let _ = cleanup::remove_tree(&self.root, &d); // 只清這次新建的資料夾，不跟隨連結
         }
         res
     }
@@ -1173,13 +1197,63 @@ mod tests {
         assert_eq!(s(cut_args(170.0, 60.0, 480.0)), "-ss 170.000 -t 60.000");
         assert_eq!(s(cut_args(450.0, 30.0, 480.0)), "-ss 450.000");
         // 縮小只套在原圖（第一個輸出）；-ss／-t 在 -i 前面
-        let a = s(split_args(Path::new("in.mp4"), Path::new("d"), &SplitOpts { start: 5.0, end: Some(10.0), max_h: Some(960), fps: None }, 5.0, 5.0, 480.0));
+        let a = s(split_args(Path::new("in.mp4"), Path::new("d"), &SplitOpts { start: 5.0, end: Some(10.0), max_h: Some(960), fps: None, cpu: false }, 5.0, 5.0, 480.0));
+        assert!(a.contains("-hwaccel cuda"));
+        let cpu = s(split_args(Path::new("in.mp4"), Path::new("d"), &SplitOpts { cpu: true, ..Default::default() }, 0.0, 5.0, 5.0));
+        assert!(!cpu.contains("-hwaccel"));
         assert!(a.contains("-ss 5.000 -t 5.000 -i in.mp4"), "{a}");
         assert_eq!(a.matches("scale=-2:'min(ih,960)'").count(), 1, "{a}");
         assert!(!s(split_args(Path::new("in.mp4"), Path::new("d"), &SplitOpts::default(), 0.0, 480.0, 480.0)).contains("min(ih"));
         // 抽樣：兩個輸出都套 fps=，不用 passthrough
         let a = s(split_args(Path::new("in.mp4"), Path::new("d"), &SplitOpts { fps: Some(2.0), max_h: Some(480), ..Default::default() }, 0.0, 480.0, 480.0));
         assert!(a.contains("fps=2,scale=-2:'min(ih,480)'") && a.contains("fps=2,scale=-2:160") && !a.contains("passthrough"), "{a}");
+    }
+
+    #[test]
+    fn cuda_failure_clears_partial_frames_before_cpu_retry() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../待刪除").join(format!("decode-fallback-{}", chrono::Utc::now().timestamp_nanos_opt().unwrap()));
+        let d = root.join("new");
+        for sub in ["f", "t"] { std::fs::create_dir_all(d.join(sub)).unwrap(); }
+        let mut calls = 0;
+        let result = split_decode(&SplitOpts::default(), &root, &d, |opts| {
+            calls += 1;
+            if !opts.cpu {
+                std::fs::write(d.join("f/000003.png"), b"partial").unwrap();
+                std::fs::write(d.join("t/000003.jpg"), b"partial").unwrap();
+                Err("CUDA unavailable".into())
+            } else {
+                assert!(!d.join("f/000003.png").exists());
+                assert!(!d.join("t/000003.jpg").exists());
+                Ok(vec![])
+            }
+        }).unwrap();
+        assert_eq!(result, "cpu_fallback"); assert_eq!(calls, 2);
+        calls = 0;
+        assert!(split_decode(&SplitOpts { cpu: true, ..Default::default() }, &root, &d, |_| { calls += 1; Err("bad video".into()) }).is_err());
+        assert_eq!(calls, 1);
+    }
+
+    /// 僅使用自行產生的測試影片；由開發者提供 FFmpeg，不依賴使用者資料。
+    #[test]
+    #[ignore = "需設定 ANIMA_TEST_FFMPEG 指向 FFmpeg 執行檔"]
+    fn ffmpeg_split_smoke() {
+        let ffmpeg = PathBuf::from(std::env::var_os("ANIMA_TEST_FFMPEG").expect("ANIMA_TEST_FFMPEG"));
+        let ffprobe = ffmpeg.with_file_name(if cfg!(windows) { "ffprobe.exe" } else { "ffprobe" });
+        let t = Tools { node: None, ffmpeg: Some(ffmpeg.clone()), ffprobe: Some(ffprobe) };
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../待刪除").join(format!("frames-smoke-{}", chrono::Utc::now().timestamp_nanos_opt().unwrap()));
+        std::fs::create_dir_all(&root).unwrap();
+        let src = root.join("synthetic.mp4");
+        run(&ffmpeg, &[os("-hide_banner"), os("-v"), os("error"), os("-f"), os("lavfi"), os("-i"), os("testsrc2=size=640x360:rate=24:duration=3"), os("-c:v"), os("libx264"), src.clone().into_os_string()]).unwrap();
+        let f = Frames::new(&root);
+        for cpu in [true, false] {
+            let m = f.split(&t, &src, json!({"filename":"synthetic.mp4"}), &SplitOpts { cpu, start: 1.0, end: Some(2.0), fps: Some(6.0), max_h: Some(180) }).unwrap();
+            assert_eq!(m["frames"], 6); assert_eq!(m["height"], 180); assert_eq!(m["width"], 320);
+            assert_eq!(m["fps"], 6.0); assert_eq!(m["duration"], 1.0); assert_eq!(m["range"]["start"], 1.0);
+            assert_eq!(image::image_dimensions(f.frame_path(m["id"].as_str().unwrap(), 1, true).unwrap()).unwrap().1, 160);
+            if cpu { assert_eq!(m["decode"], "cpu"); } else { assert!(["cuda_preferred", "cpu_fallback"].contains(&m["decode"].as_str().unwrap())); }
+            eprintln!("synthetic split: cpu={cpu}, decode={}, frames={}", m["decode"], m["frames"]);
+        }
+        assert!(src.is_file());
     }
 
     /// 沒有固定 3600 幀上限了：只看檔名能編到幾號（%06d）和硬碟夠不夠

@@ -313,7 +313,7 @@ async fn run_seg(app: &Shared, id: &str, i: usize, token: &CancellationToken) ->
 async fn check_video(app: &Shared, label: String, video: &Path) -> Value {
     let (t, f, v) = (studio::tools(&app.paths.data), studio::Frames::new(&app.paths.data), video.to_path_buf());
     let source = json!({"id": Value::Null, "filename": label, "path": video, "external": true, "prompt": ""});
-    let r = blocking(move || -> Result<Value, String> {
+    let r = super::api_studio::frame_work(app, move || -> Result<Value, String> {
         let m = f.split(&t, &v, source, &studio::SplitOpts { max_h: Some(480), ..Default::default() })?;
         let sid = tx(&m["id"]);
         let a = f.analyze(&t, &sid)?;

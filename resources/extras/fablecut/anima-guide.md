@@ -278,3 +278,9 @@ ComfyUI 只讀它自己 input 資料夾裡的檔：
 - 影片生成前會自動釋放顯存，第一次載入模型比較久（幾十秒到幾分鐘）。
 - AI 改寫的 llama-server 吃 5～6GB 顯存，按生成前生圖站會自動關掉它。
 - 9B 小模型分不清左右、會漏看，精細的判斷用 35B 或你自己看圖。
+
+
+### 拆幀解碼與空間清理
+拆幀 `POST /api/studio/frames/split` 的 JSON、`split_file` 的 query 可加 `cpu:true`（query 為 `cpu=true`）強制 CPU；預設要求 `-hwaccel cuda`，失敗清除本次部分輸出後改 CPU 重試。meta 的 `decode` 為 `cuda_preferred`、`cpu` 或 `cpu_fallback`，前者表示已要求 CUDA，不保證每種 codec 都由 GPU 解碼或更快。
+`GET /api/studio/frames/storage?sid=<id>` 回傳這份 `session` 及已移除 `trash` 的 path、bytes、sessions、skipped。不給 sid 只查看待刪除。
+`POST /api/studio/frames/clear`：`{scope:"session",sid:"<id>",confirm:true}` 永久刪除這份拆幀及修改；`{scope:"trash",confirm:true}` 清空已移除的拆幀。透過 anima_api 呼叫時還要提供工具層 confirm:true。回傳 bytes（實際釋放）、removed（份數）、skipped（未清除數）。使用者必須明確同意這個範圍，不能把拆幀編輯成果當一般可重建快取。原影片與接回後的影片不受影響。處理中會拒絕清理；不追蹤 junction/symlink。

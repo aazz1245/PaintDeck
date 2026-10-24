@@ -70,6 +70,7 @@ pub struct App {
     pub settings_lock: Arc<tokio::sync::Mutex<()>>,
     /// 資產庫：加檔、拿檔、刪資產要排隊（免得兩個請求同時加檔撞號、互相蓋掉 data）
     pub assets_lock: tokio::sync::Mutex<()>,
+    pub frames_lock: Arc<tokio::sync::Mutex<()>>,
     /// 導演台（專案、角色卡、背景工作）
     pub director: api_director::Director,
     /// 漫畫台（作品、背景工作）
@@ -517,6 +518,8 @@ pub fn router(app: Shared) -> Router {
         .route("/api/studio/exports/save", post(api_studio::export_save))
         .route("/api/studio/ai", get(api_studio::ai))
         .route("/api/studio/frames", get(api_studio::frames_list))
+        .route("/api/studio/frames/storage", get(api_studio::frames_storage))
+        .route("/api/studio/frames/clear", post(api_studio::frames_clear))
         .route("/api/studio/frames/split", post(api_studio::frames_split))
         .route("/api/studio/frames/split_file", post(api_studio::frames_split_file).layer(DefaultBodyLimit::disable()))
         .route("/api/studio/frames/{sid}/analyze", get(api_studio::frames_analyze))
@@ -569,6 +572,7 @@ pub async fn update_gate(State(app): State<Shared>, req: Request, next: Next) ->
 
 /// 除了生圖佇列，也涵蓋兩段生圖之間的助手／漫畫／影片背景工作，以及各種下載。
 pub async fn update_idle(app: &Shared) -> Result<(), String> {
+    if app.frames_lock.try_lock().is_err() { return Err("拆幀台正在處理，請稍後再試".into()); }
     let live = app.comfy.live();
     let pe = app.pe.status();
     let civitai = app.civitai.downloads.lock().unwrap_or_else(|e| e.into_inner())
@@ -668,6 +672,7 @@ pub async fn start(paths: Paths, comfy_url: &str) -> Result<Shared, String> {
         tags: OnceLock::new(),
         settings_lock: Arc::new(tokio::sync::Mutex::new(())),
         assets_lock: tokio::sync::Mutex::new(()),
+        frames_lock: Arc::new(tokio::sync::Mutex::new(())),
         director: api_director::Director::new(&data_dir),
         comic: api_comic::Comic::new(&data_dir),
         last_family: std::sync::Mutex::new(String::new()),

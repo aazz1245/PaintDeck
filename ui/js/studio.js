@@ -234,6 +234,9 @@ function initFrames() {
   F("frFilePick").onchange = () => { const f = F("frFilePick").files[0]; if (f) splitFile(f); };
   F("frSess").onchange = () => openSess(F("frSess").value);
   F("frDel").onclick = delSess;
+  F("frGpu").checked = store.get("frGpu", true);
+  F("frGpu").onchange = () => store.set("frGpu", F("frGpu").checked);
+  F("frStorage").onclick = showFrameStorage;
   F("frPrev").onclick = () => go(cur - 1);
   F("frNext").onclick = () => go(cur + 1);
   F("frPlay").onclick = togglePlay;
@@ -308,7 +311,8 @@ function renderInfo() {
   const o = [...F("frSess").options].find((x) => x.value === sess.id);
   if (o) o.textContent = sessLabel({ ...sess, edited: k });
   F("frInfo").textContent = `${sess.frames} 幀・${fmtFps(sess.fps)}fps・${(+sess.duration || 0).toFixed(1)} 秒・${sess.audio ? "有聲音（接回時照原樣放回去）" : "沒有聲音"}・改了 ${k} 幀` +
-    (sess.builds?.length ? `・已接回 ${sess.builds.length} 次（圖庫 #${sess.builds.join("、#")}）` : "");
+    (sess.builds?.length ? `・已接回 ${sess.builds.length} 次（圖庫 #${sess.builds.join("、#")}）` : "") +
+    (sess.decode === "cpu_fallback" ? "・CUDA 無法使用，已改 CPU 完成" : sess.decode === "cpu" ? "・CPU 解碼" : sess.decode === "cuda_preferred" ? "・GPU 解碼優先" : "");
 }
 
 function go(n, thumb = false) {
@@ -418,7 +422,7 @@ function renderPending() {
 
 /** 範圍／抽樣／縮小欄位 → {start, end, fps, max_h}（空白的不送） */
 function splitOpts() {
-  const o = {};
+  const o = { cpu: !F("frGpu").checked };
   for (const [k, id] of [["start", "frStart"], ["end", "frEnd"], ["fps", "frFps"], ["max_h", "frMaxH"]]) {
     const v = parseFloat(F(id).value);
     if (Number.isFinite(v) && v > 0) o[k] = v;
@@ -473,6 +477,48 @@ export async function openFrames(rec) {
   store.set("dirTab", "frames");
   app.showPage("director");
   await splitRec(rec);
+}
+
+async function showFrameStorage() {
+  stopPlay();
+  const sid = sess?.id || "";
+  const opener = F("frStorage");
+  opener.disabled = true;
+  try {
+    const info = await api(`/api/studio/frames/storage?sid=${encodeURIComponent(sid)}`);
+    const box = F("frStorageInfo");
+    box.replaceChildren();
+    for (const [scope, label] of [["session", "這份拆幀"], ["trash", "已移除拆幀"]]) {
+      const data = info[scope];
+      const button = F(scope === "session" ? "frClearSession" : "frClearTrash");
+      button.disabled = !data?.sessions || data.skipped > 0;
+      if (!data) continue;
+      box.append(el("p", {}, `${label}：${fmtBytes(data.bytes)}（${data.sessions} 份）`), el("p", { class: "muted sm" }, data.path));
+      if (data.skipped) box.append(el("p", { class: "muted" }, "含連結或無法讀取的檔案，暫不清除。"));
+      button.onclick = async () => {
+        if (button.disabled) return;
+        if (!confirm(`永久清除「${label}」？約 ${fmtBytes(data.bytes)}。\n包含拆幀圖片、聲音及所有修幀紀錄，無法復原。原影片和接回後的影片會保留。`)) return;
+        F("frClearSession").disabled = F("frClearTrash").disabled = true;
+        F("frStorage").disabled = true;
+        try {
+          const result = await api("/api/studio/frames/clear", { json: { scope, sid, confirm: true }, timeout: 15 * 60 * 1000 });
+          toast(`已釋放 ${fmtBytes(result.bytes)}`, "ok");
+          if (result.skipped) toast("部分檔案未清除，可能正在使用；請稍後重試。", "err");
+          if (scope === "session" && result.removed) {
+            if (store.get("frPending", null)?.sid === sid) store.set("frPending", null);
+            if (sess?.id === sid) { stopPlay(); sess = null; renderSess(); }
+          }
+          closeModal("#frStorageModal");
+          await framesShow();
+        } catch (e) {
+          toast(e.message, "err");
+          closeModal("#frStorageModal");
+        } finally { F("frStorage").disabled = false; }
+      };
+    }
+    openModal("#frStorageModal");
+  } catch (e) { toast(e.message, "err"); }
+  finally { opener.disabled = false; }
 }
 
 async function delSess() {

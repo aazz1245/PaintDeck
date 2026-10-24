@@ -703,6 +703,8 @@
         <input id="frFps" class="sm" type="number" min="0.1" step="0.5" placeholder="每秒幾幀" aria-label="每秒只取幾幀" style="width:76px">
         <input id="frMaxH" class="sm" type="number" min="160" step="10" placeholder="最高（像素）" aria-label="原圖最高幾像素" style="width:92px">
       </span>
+      <label class="row gap sm" title="優先要求 NVIDIA CUDA 解碼；失敗自動改 CPU。PNG 壓縮和寫入仍由 CPU 處理，不保證每支影片更快。"><input id="frGpu" type="checkbox" checked>GPU 解碼優先</label>
+      <button class="akey sm" id="frStorage" type="button">空間與清理…</button>
       <button class="akey sm warn" id="frDel" data-ic="eject" type="button">移到待刪除</button>
       <span class="grow"></span>
       <span class="vfd g dir-status" id="frStatus" role="status" aria-live="polite">待機</span>
@@ -1671,6 +1673,18 @@
     <div class="muted sm">接了 MCP 的 AI 會自己讀說明，這步可以跳過。沒辦法接 MCP 的 AI，把這段貼給它：裡面有全站每個功能的網址和用法。</div>
     <textarea id="stAiGuide" rows="10" readonly spellcheck="false"></textarea>
     <div class="row gap wrap"><button class="akey sm go" id="stAiCopyGuide" type="button">複製說明</button><span class="muted sm" id="stAiNote"></span></div>
+  </div>
+</div>
+
+<div class="modal" id="frStorageModal" hidden>
+  <div class="dialog">
+    <div class="row between"><b>拆幀空間與清理</b><button class="minikey red" data-close data-ic="power" type="button" aria-label="關閉"></button></div>
+    <p class="muted">拆幀包含圖片、縮圖、聲音與修幀紀錄。「移到待刪除」仍占空間；以下清除會永久刪除，原影片和接回後的影片會保留。</p>
+    <div id="frStorageInfo" style="overflow-wrap:anywhere"></div>
+    <div class="row gap wrap">
+      <button class="akey sm warn" id="frClearSession" type="button">清除這份拆幀</button>
+      <button class="akey sm warn" id="frClearTrash" type="button">清空已移除拆幀</button>
+    </div>
   </div>
 </div>
 

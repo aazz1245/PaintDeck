@@ -174,6 +174,28 @@ pub async fn ai(State(app): State<Shared>, headers: HeaderMap) -> ApiResult {
 }
 
 // ---------------------------------------------------------------- 拆幀台
+
+/// 背景工作持有鎖，網頁斷線不會讓清理搶先刪檔。
+pub(super) async fn frame_work<T: Send + 'static>(app: &Shared, work: impl FnOnce() -> Result<T, String> + Send + 'static) -> Result<T, String> {
+    let guard = app.frames_lock.clone().try_lock_owned().map_err(|_| "拆幀台正在處理，請稍後再試".to_string())?;
+    blocking(move || { let _guard = guard; work() }).await
+}
+
+pub async fn frames_storage(State(app): State<Shared>, Query(q): Query<HashMap<String, String>>) -> ApiResult {
+    let f = studio::Frames::new(&app.paths.data);
+    let root = app.paths.root.clone();
+    let sid = q.get("sid").cloned().unwrap_or_default();
+    ok(frame_work(&app, move || f.storage(&root, &sid)).await.map_err(bad)?)
+}
+
+pub async fn frames_clear(State(app): State<Shared>, Body(b): Body) -> ApiResult {
+    if b["confirm"].as_bool() != Some(true) { return Err(bad("清除拆幀會永久刪除圖片及修幀紀錄，請先確認")); }
+    let (scope, sid) = (tx(&b["scope"]), tx(&b["sid"]));
+    let f = studio::Frames::new(&app.paths.data);
+    let root = app.paths.root.clone();
+    ok(frame_work(&app, move || f.clear(&root, &scope, &sid)).await.map_err(bad)?)
+}
+
 /// 幀的圖片網址帶 ?v=<rev>（換過才變），所以可以放心快取
 const FRAME_CACHE: &str = "private, max-age=86400";
 
@@ -183,8 +205,9 @@ pub async fn frames_list(State(app): State<Shared>) -> ApiResult {
 }
 
 /// start／end（秒）、max_h（原圖最高幾像素）、fps（每秒只取幾幀）：JSON 或網址參數都用這個讀
-fn split_opts(get: impl Fn(&str) -> Option<f64>) -> studio::SplitOpts {
+fn split_opts(get: impl Fn(&str) -> Option<f64>, cpu: bool) -> studio::SplitOpts {
     studio::SplitOpts {
+        cpu,
         start: get("start").unwrap_or(0.0),
         end: get("end").filter(|e| *e > 0.0),
         max_h: get("max_h").filter(|h| *h > 0.0).map(|h| h as u32),
@@ -199,7 +222,7 @@ fn external_source(path: &std::path::Path, name: &str) -> Value {
 /// {id} 圖庫的影片，或 {path} 電腦裡任何影片檔（不用是生圖站做的；原檔不動）；可加 start、end、max_h。
 /// 10 秒 24fps 約 240 張，要幾秒到十幾秒；沒有固定幀數上限，硬碟不夠才擋（studio::split_room）
 pub async fn frames_split(State(app): State<Shared>, Body(b): Body) -> ApiResult {
-    let opts = split_opts(|k| b[k].as_f64().or_else(|| b[k].as_str().and_then(|s| s.trim().parse().ok())));
+    let opts = split_opts(|k| b[k].as_f64().or_else(|| b[k].as_str().and_then(|s| s.trim().parse().ok())), b["cpu"].as_bool().unwrap_or(false));
     let (src, source) = if let Some(id) = int(&b["id"]) {
         let r = app.db.image(id)?.ok_or_else(|| not_found("圖庫裡沒有這一支"))?;
         if !is_video(&tx(&r["filename"])) {
@@ -218,7 +241,7 @@ pub async fn frames_split(State(app): State<Shared>, Body(b): Body) -> ApiResult
         return Err(not_found(format!("影片檔不在硬碟上：{}", src.display())));
     }
     let (t, f) = (tools(&app), studio::Frames::new(&app.paths.data));
-    let m = blocking(move || f.split(&t, &src, source, &opts)).await.map_err(bad)?;
+    let m = frame_work(&app, move || f.split(&t, &src, source, &opts)).await.map_err(bad)?;
     ok(m)
 }
 
@@ -238,7 +261,7 @@ pub async fn frames_split_file(
     if !is_video(&name) {
         return Err(bad(format!("看不出是影片檔：「{name}」（要 mp4、webm、mov、mkv 這類）")));
     }
-    let opts = split_opts(|k| q.get(k).and_then(|v| v.trim().parse().ok()));
+    let opts = split_opts(|k| q.get(k).and_then(|v| v.trim().parse().ok()), q.get("cpu").is_some_and(|v| v == "true"));
     let dir = app.paths.data.join("frames").join("_incoming");
     tokio::fs::create_dir_all(&dir).await.map_err(internal)?;
     let tmp = dir.join(format!("{}_{name}", chrono::Local::now().format("%H%M%S%3f")));
@@ -272,7 +295,11 @@ pub async fn frames_split_file(
     }
     let (t, fr, src) = (tools(&app), studio::Frames::new(&app.paths.data), tmp.clone());
     let source = json!({"id": Value::Null, "filename": name, "external": true, "uploaded": true, "prompt": ""});
-    let r = blocking(move || fr.split(&t, &src, source, &opts)).await;
+    let r = frame_work(&app, move || {
+        let result = fr.split(&t, &src, source, &opts);
+        let _ = std::fs::remove_file(&src);
+        result
+    }).await;
     let _ = tokio::fs::remove_file(&tmp).await;
     ok(r.map_err(bad)?)
 }
@@ -319,13 +346,13 @@ pub async fn frames_sheet(
         crop: crop_q(&q)?,
     };
     let f = studio::Frames::new(&app.paths.data);
-    image_reply("image/jpeg", blocking(move || f.sheet_ex(&sid, &o)).await.map_err(bad)?)
+    image_reply("image/jpeg", frame_work(&app, move || f.sheet_ex(&sid, &o)).await.map_err(bad)?)
 }
 
 /// 每幀變化量、硬剪接、小跳動、重複幀、鏡頭段落、每幀音量（第一次要幾秒，之後用快取）
 pub async fn frames_analyze(State(app): State<Shared>, UrlPath(sid): UrlPath<String>, Query(q): Query<HashMap<String, String>>) -> ApiResult {
     let (t, f) = (tools(&app), studio::Frames::new(&app.paths.data));
-    let mut v = blocking(move || f.analyze(&t, &sid)).await.map_err(bad)?;
+    let mut v = frame_work(&app, move || f.analyze(&t, &sid)).await.map_err(bad)?;
     // 預設不回每幀的長陣列（太長）；要的話 ?full=1
     if q.get("full").map(String::as_str) != Some("1") {
         if let Some(o) = v.as_object_mut() {
@@ -343,7 +370,7 @@ pub async fn frames_diff(State(app): State<Shared>, UrlPath(sid): UrlPath<String
     let a = num("a").filter(|n| *n > 0).ok_or_else(|| bad("缺少 a（第幾幀）"))?;
     let (b, h, crop) = (num("b").unwrap_or(a + 1), num("h").unwrap_or(480) as u32, crop_q(&q)?);
     let f = studio::Frames::new(&app.paths.data);
-    image_reply("image/jpeg", blocking(move || f.diff(&sid, a, b, h, crop)).await.map_err(bad)?)
+    image_reply("image/jpeg", frame_work(&app, move || f.diff(&sid, a, b, h, crop)).await.map_err(bad)?)
 }
 
 /// ?from=&to=&w= ：時間軸圖（變化量長條、剪接點、重複幀、音量、原片秒數）
@@ -351,7 +378,7 @@ pub async fn frames_graph(State(app): State<Shared>, UrlPath(sid): UrlPath<Strin
     let num = |k: &str, d: u64| q.get(k).and_then(|v| v.trim().parse().ok()).unwrap_or(d);
     let (from, to, w) = (num("from", 1), num("to", u64::MAX), num("w", 1800) as u32);
     let (t, f) = (tools(&app), studio::Frames::new(&app.paths.data));
-    image_reply("image/png", blocking(move || f.graph(&t, &sid, from, to, w)).await.map_err(bad)?)
+    image_reply("image/png", frame_work(&app, move || f.graph(&t, &sid, from, to, w)).await.map_err(bad)?)
 }
 
 /// {n, op: gallery|copy|blend|restore, image_id?, from?}
@@ -366,7 +393,7 @@ pub async fn frames_edit(State(app): State<Shared>, UrlPath(sid): UrlPath<String
                 return Err(bad("要選圖片，不是影片"));
             }
             let src = file_of(&app.paths, &r);
-            blocking(move || {
+            frame_work(&app, move || {
                 let im = image::open(&src).map_err(|e| format!("讀不到這張圖：{e}"))?;
                 f.replace(&sid, n, im, &format!("圖庫 #{id}"))
             })
@@ -374,10 +401,10 @@ pub async fn frames_edit(State(app): State<Shared>, UrlPath(sid): UrlPath<String
         }
         "copy" => {
             let from = int(&b["from"]).filter(|n| *n > 0).ok_or_else(|| bad("缺少 from（用第幾幀蓋）"))? as u64;
-            blocking(move || f.copy_frame(&sid, n, from)).await
+            frame_work(&app, move || f.copy_frame(&sid, n, from)).await
         }
-        "blend" => blocking(move || f.blend(&sid, n)).await,
-        "restore" => blocking(move || f.restore(&sid, n)).await,
+        "blend" => frame_work(&app, move || f.blend(&sid, n)).await,
+        "restore" => frame_work(&app, move || f.restore(&sid, n)).await,
         _ => return Err(bad("op 只能是 gallery、copy、blend、restore")),
     }
     .map_err(bad)?;
@@ -393,7 +420,7 @@ pub async fn frames_upload(
 ) -> ApiResult {
     let n: u64 = q.get("n").and_then(|v| v.parse().ok()).filter(|n| *n > 0).ok_or_else(|| bad("缺少 n（第幾幀）"))?;
     let f = studio::Frames::new(&app.paths.data);
-    let m = blocking(move || {
+    let m = frame_work(&app, move || {
         let im = image::load_from_memory(&body).map_err(|e| format!("看不懂這個圖檔：{e}"))?;
         f.replace(&sid, n, im, "上傳的圖")
     })
@@ -412,9 +439,9 @@ pub async fn frames_to_input(State(app): State<Shared>, UrlPath(sid): UrlPath<St
     }
     let name = format!("aw_frame_{sid}_{n:06}.png");
     let dst = app.paths.input.join(&name);
-    let (w, h) = blocking(move || -> std::io::Result<(u32, u32)> {
-        std::fs::copy(&src, &dst)?;
-        image::image_dimensions(&dst).map_err(std::io::Error::other)
+    let (w, h) = frame_work(&app, move || -> Result<(u32, u32), String> {
+        std::fs::copy(&src, &dst).map_err(|e| e.to_string())?;
+        image::image_dimensions(&dst).map_err(|e| e.to_string())
     })
     .await
     .map_err(internal)?;
@@ -428,7 +455,9 @@ pub async fn frames_build(State(app): State<Shared>, UrlPath(sid): UrlPath<Strin
     let stem = format!("frames_{sid}_{}", chrono::Local::now().format("%H%M%S"));
     let tmp = app.paths.output.join("AnimaWeb").join(format!("{stem}_00001_.mp4"));
     let (t, s2, out) = (tools(&app), sid.clone(), tmp.clone());
-    blocking(move || f.build(&t, &s2, &out)).await.map_err(bad)?;
+    let guard = std::sync::Arc::new(app.frames_lock.clone().try_lock_owned().map_err(|_| bad("拆幀台正在處理，請稍後再試"))?);
+    let worker_guard = guard.clone();
+    blocking(move || { let _guard = worker_guard; f.build(&t, &s2, &out) }).await.map_err(bad)?;
     let edited = m["edited"].as_object().map(|o| o.len()).unwrap_or(0);
     let src_id = m["source"]["id"].clone();
     let from = match src_id.as_i64() {
@@ -453,6 +482,6 @@ pub async fn frames_build(State(app): State<Shared>, UrlPath(sid): UrlPath<Strin
 pub async fn frames_delete(State(app): State<Shared>, UrlPath(sid): UrlPath<String>) -> ApiResult {
     let f = studio::Frames::new(&app.paths.data);
     let root = app.paths.root.clone();
-    blocking(move || f.trash(&sid, &root)).await.map_err(bad)?;
+    frame_work(&app, move || f.trash(&sid, &root)).await.map_err(bad)?;
     ok(json!({"ok": true}))
 }

@@ -21,6 +21,12 @@ pub struct Group {
     targets: Vec<(PathBuf, PathBuf)>,
 }
 impl Group {
+    pub(crate) fn tree(anchor: &Path, path: &Path, filter: fn(&Path) -> bool) -> Self {
+        let mut group = Self::new("frames", "拆幀檔案");
+        group.add(anchor, path, filter);
+        group
+    }
+
     fn new(id: &'static str, label: &'static str) -> Self {
         Self { id, label, bytes: 0, files: 0, skipped: 0, targets: vec![] }
     }
