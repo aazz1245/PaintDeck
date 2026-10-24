@@ -1027,8 +1027,9 @@ impl Core {
                 p = b;
             }
         }
+        // 換行統一成 \n（跟 Python 文字模式讀檔一樣）：git 在 Windows checkout 可能把 .txt 換成 CRLF
         std::fs::read_to_string(&p)
-            .map(|s| strip(&s).to_string())
+            .map(|s| strip(&s).replace("\r\n", "\n"))
             .map_err(|e| PeError(format!("讀不到系統提示詞 {}：{e}", p.display())))
     }
 
@@ -1037,7 +1038,7 @@ impl Core {
         let p = self.overrides.as_ref()?.join(format!("{id}.txt"));
         std::fs::read_to_string(p)
             .ok()
-            .map(|s| strip(&s).to_string())
+            .map(|s| strip(&s).replace("\r\n", "\n"))
             .filter(|s| !s.is_empty())
     }
 
@@ -3206,6 +3207,18 @@ async fn run_blocking<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static)
 
 #[cfg(test)]
 mod tests {
+    /// 提示詞檔是 CRLF（git 在 Windows checkout）也讀成 \n，跟 Python 版一致（GitHub CI 抓到的）
+    #[test]
+    fn default_prompt_normalizes_crlf() {
+        let base = std::env::temp_dir().join(format!("anima_pe_crlf_{}", std::process::id()));
+        std::fs::create_dir_all(&base).unwrap();
+        let (file, _) = task_info("caption").unwrap();
+        std::fs::write(base.join(file), "line one\r\n\r\nline two\r\n").unwrap();
+        let c = Core::with_dirs(&base, &base, &base);
+        assert_eq!(c.default_prompt("caption").unwrap(), "line one\n\nline two");
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
     /// 9B 缺讀圖用的 mmproj：訊息要有下載網址、整理過的資料夾（沒有 ..）、按鈕名字；有了就不算缺；35B 沒有來源就不給按鈕
     #[test]
     fn mmproj_missing_tells_where() {
