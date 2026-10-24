@@ -2233,5 +2233,175 @@
     "role": "上一支影片（會接它最後一小段的畫面和聲音）"
    }
   ]
+ },
+ {
+  "id": "adult_i2v",
+  "name_zh": "成人：讓這張圖動起來",
+  "group_zh": "成人",
+  "mode": "i2v",
+  "adult": true,
+  "desc_zh": "一張成人圖當首幀，寫動作、聲音、台詞，做成有聲影片（10Eros 無審核）。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫風",
+    "hint_zh": "",
+    "default_en": "2.5D anime style with soft warm lighting"
+   },
+   {
+    "key": "who",
+    "label_zh": "人物（長相、身材、穿著或全裸）",
+    "hint_zh": "",
+    "default_en": "a petite adult woman with long orange hair, orange eyes and small breasts, fully naked"
+   },
+   {
+    "key": "act",
+    "label_zh": "在做什麼（直接寫）",
+    "hint_zh": "例：riding the man's penis in cowgirl position",
+    "default_en": "rides the man's penis in cowgirl position, bouncing up and down at a steady rhythm"
+   },
+   {
+    "key": "camera",
+    "label_zh": "鏡頭",
+    "hint_zh": "",
+    "default_en": "a POV shot from the man lying below, the camera steady"
+   },
+   {
+    "key": "line",
+    "label_zh": "台詞或呻吟（可空白）",
+    "hint_zh": "",
+    "default_en": "嗯…好深…"
+   },
+   {
+    "key": "sound",
+    "label_zh": "聲音",
+    "hint_zh": "具體寫：skin slapping、soft wet sliding",
+    "default_en": "rhythmic skin slapping, soft wet sliding sounds and her heavy breathing"
+   }
+  ],
+  "media": {
+   "images": 1,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "圖 1＝首幀（臉要在畫面裡）"
+  },
+  "seconds": 5,
+  "template_en": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] {style}. Starting from <Picture 1>, {who} {act}, in {camera}. Her breasts sway with every movement and her face stays in frame, flushed with pleasure. The woman (S1) moans softly: <d>[Chinese] {line}</d>\n\noverall_soundscape: {sound}.\n\nnon_diegetic_music: N/A",
+  "tips_zh": "聲音要寫具體的（skin slapping、soft wet sliding），不要寫含糊的口腔音，會變成咕嚕聲。",
+  "icon": "rec",
+  "slots": [
+   {
+    "slot": "first",
+    "kind": "image",
+    "role": "首幀（臉要在畫面裡）"
+   }
+  ]
+ },
+ {
+  "id": "adult_fl2v",
+  "name_zh": "成人：首尾幀做愛片段",
+  "group_zh": "成人",
+  "mode": "fl2v",
+  "adult": true,
+  "desc_zh": "兩張成人圖當開頭和結尾，中間的動作自己補（用 Anima 畫首尾幀最穩）。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫風",
+    "hint_zh": "",
+    "default_en": "2.5D anime style with soft warm lighting"
+   },
+   {
+    "key": "who",
+    "label_zh": "人物",
+    "hint_zh": "",
+    "default_en": "a petite adult woman with long orange hair and orange eyes, fully naked"
+   },
+   {
+    "key": "act",
+    "label_zh": "從首幀到尾幀的動作",
+    "hint_zh": "",
+    "default_en": "keeps riding the man's penis faster and faster until she arches back and trembles in climax"
+   },
+   {
+    "key": "sound",
+    "label_zh": "聲音",
+    "hint_zh": "",
+    "default_en": "skin slapping speeding up, wet sliding sounds and her rising moans"
+   }
+  ],
+  "media": {
+   "images": 2,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "圖 1＝首幀、圖 2＝尾幀（構圖接近、臉都在畫面裡）"
+  },
+  "seconds": 5,
+  "template_en": "How the reference pictures align with the target video — Picture 1 (from Shot 1) aligns with the 0.00-second mark of the target video; Picture 2 (from Shot 1) aligns with the {secs}-second mark of the target video.\n\nintegrated_multimodal_description: [Shot 1] {style}. Starting from Picture 1, {who} {act}, the motion flowing continuously until the frame lands exactly on Picture 2. Her face stays in frame the whole time.\n\noverall_soundscape: {sound}.\n\nnon_diegetic_music: N/A",
+  "tips_zh": "首尾兩張不要差太多（同一個體位、同一個角度），中間才接得順。",
+  "icon": "rec",
+  "slots": [
+   {
+    "slot": "first",
+    "kind": "image",
+    "role": "首幀"
+   },
+   {
+    "slot": "last",
+    "kind": "image",
+    "role": "尾幀（構圖接近、臉都在畫面裡）"
+   }
+  ]
+ },
+ {
+  "id": "adult_t2v",
+  "name_zh": "成人：純文字生成",
+  "group_zh": "成人",
+  "mode": "t2v",
+  "adult": true,
+  "desc_zh": "不用素材，直接寫成人場景。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫風",
+    "hint_zh": "",
+    "default_en": "2.5D anime style with soft warm lighting"
+   },
+   {
+    "key": "who",
+    "label_zh": "人物",
+    "hint_zh": "",
+    "default_en": "a petite adult woman with long orange hair, orange eyes and small breasts"
+   },
+   {
+    "key": "place",
+    "label_zh": "場景",
+    "hint_zh": "",
+    "default_en": "a dim bedroom with warm lamp light and messy white sheets"
+   },
+   {
+    "key": "act",
+    "label_zh": "在做什麼",
+    "hint_zh": "",
+    "default_en": "kneels on the bed and gives the man a slow blowjob, looking up at the camera"
+   },
+   {
+    "key": "sound",
+    "label_zh": "聲音",
+    "hint_zh": "",
+    "default_en": "soft wet sucking sounds, quiet breathing and sheets rustling"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材"
+  },
+  "seconds": 5,
+  "template_en": "integrated_multimodal_description: [Shot 1] {style}, {place}. {who} {act}, in a close POV shot from the man standing in front of her, the camera steady.\n\noverall_soundscape: {sound}.\n\nnon_diegetic_music: N/A",
+  "tips_zh": "長相、身材要寫清楚，每段都重寫。",
+  "icon": "rec",
+  "slots": []
  }
 ]

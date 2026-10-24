@@ -63,11 +63,284 @@
     "note": null
   },
   {
+    "path": "loras/anima-base-1-flat-color-v3.safetensors",
+    "size": 138662176,
+    "sha256": "532ae5ec6ae5e2fc51abdcdde92a02562b4e3b63a5bfb5bfa713cf8c9f5dd964",
+    "url": "https://civitai.com/api/download/models/2947255?fileId=2826524",
+    "note": "Flat Color - Style"
+  },
+  {
+    "path": "loras/anima-base-1-light-concepts-v31.safetensors",
+    "size": 148902616,
+    "sha256": "98afa7627640814006b5b1cc1c2ee024deba411e2810bbb9620f076d6282db41",
+    "url": "https://civitai.com/api/download/models/2952873?fileId=2832150",
+    "note": "Light Concepts"
+  },
+  {
+    "path": "loras/anima-base-1-masterpiece-v51.safetensors",
+    "size": 138662176,
+    "sha256": "b330b46df1c71e4409d7b60ecf45df4ee26310fa914c398226c7800cc2912936",
+    "url": "https://civitai.com/api/download/models/2961717?fileId=2841058",
+    "note": "Aesthetic Quality Modifiers - Masterpiece"
+  },
+  {
+    "path": "loras/anima-base-1-painterly-v2.safetensors",
+    "size": 148902616,
+    "sha256": "4cf69120fe0a6fbeff2c331f3d46ea8a0d6b5aa8144df8fd8b97e5571b6bcdb1",
+    "url": "https://civitai.com/api/download/models/2955844?fileId=2835227",
+    "note": "Impasto, Impressionism, Chiaroscuro - Painterly Styles"
+  },
+  {
+    "path": "loras/anima-base-1-photo-background-v4.safetensors",
+    "size": 138662176,
+    "sha256": "1cfe54c1df5670cce395249cde0235094693bb84c150f24b7fc5ad0ce6d30f39",
+    "url": "https://civitai.com/api/download/models/2959007?fileId=2838381",
+    "note": "Photo Background - 2d Compositing｜写真背景・二次元合成"
+  },
+  {
+    "path": "loras/anima-greg-rutkowski-style.safetensors",
+    "size": 138662176,
+    "sha256": "3251ae0bf2771d7957b3aad251827dc5de716fd3c5911444d981045af5c82e11",
+    "url": "https://civitai.com/api/download/models/2850290?fileId=2736405",
+    "note": "Greg Rutkowski Style - Anima"
+  },
+  {
+    "path": "loras/anima-highres-aesthetic-boost.safetensors",
+    "size": 138662176,
+    "sha256": "db5b2dcc4e1afa215058b7a85fb9377124c2e9aabd48c25e595af7199207c299",
+    "url": "https://civitai.com/api/download/models/2855073?fileId=2741162",
+    "note": "Anima Highres/Aesthetic Boost"
+  },
+  {
+    "path": "loras/anima-rl-v0.1.safetensors",
+    "size": 148902616,
+    "sha256": "a5594421702cb50696b8ac9422273110eaaaa050aa7d98cc4fbbf5918aa5064f",
+    "url": "https://civitai.com/api/download/models/2901967?fileId=2779870",
+    "note": "Anima RL"
+  },
+  {
     "path": "loras/anima-turbo-lora-v0.2.safetensors",
     "size": 148902616,
     "sha256": "1b55e40bdb1d0e5a78cb498f245fccfdaae97823265db957d2aabdcf4cd3caf1",
     "url": "https://huggingface.co/circlestone-labs/Anima-Official-LoRAs/resolve/218b5466a07e8a79328dd8b73ff810706d73cb86/anima-turbo-lora-v0.2.safetensors",
     "note": null
+  },
+  {
+    "path": "loras/anima_base_slider_step800.safetensors",
+    "size": 55131384,
+    "sha256": "4a0dc474d26f9ebbae8bf9315da0ae9488f6428f696e21fe8f9db7f970246c82",
+    "url": "https://civitai.com/api/download/models/2945328?fileId=2824501",
+    "note": "Anima Quality Enhance Slider"
+  },
+  {
+    "path": "loras/Anima_colorfix_v1_by_Volnovik.safetensors",
+    "size": 76547336,
+    "sha256": "771624de5d6af2b63909fce982f030e7abdc5e5d44e9e148c79c282c7230ae70",
+    "url": "https://civitai.com/api/download/models/2974168?fileId=2853795",
+    "note": "Anima Colorfix"
+  },
+  {
+    "path": "loras/anima_context_detailer_base10.safetensors",
+    "size": 91851400,
+    "sha256": "aaaca6107e97bf98d03482464583a0d89fbf14acec8e01685682f11a02915d22",
+    "url": "https://civitai.com/api/download/models/2945421?fileId=2824598",
+    "note": "Anima Detail Tweaker"
+  },
+  {
+    "path": "loras/Anima_in_real_update_v2_epoch_20.safetensors",
+    "size": 277207608,
+    "sha256": "f517e791fadba65eaa6e90fcb29984c26f11d1ce094c5ed38c14cb2aec043d82",
+    "url": "https://civitai.com/api/download/models/3202009?fileId=3083294",
+    "note": "Anime in real"
+  },
+  {
+    "path": "loras/Anima_NIJI_SWEET_SPOT_v5.safetensors",
+    "size": 183692926,
+    "sha256": "21e04a939834f6f70feb49216ea24eea857f66f51d76236dfd0cacf8305d2996",
+    "url": "https://civitai.com/api/download/models/3256481?fileId=3139648",
+    "note": "Niji Sweet Spot"
+  },
+  {
+    "path": "loras/anime_shiny_skin_v2.5.safetensors",
+    "size": 69504272,
+    "sha256": "e39dcccf12eada780baf37d30ed1bd6834039d39da5a6fb31356dd275243a3c7",
+    "url": "https://civitai.com/api/download/models/3142637?fileId=3022930",
+    "note": "Anime Shiny Skin Style - Anima & Illustrious"
+  },
+  {
+    "path": "loras/Body-WeightSliderAnimaCaut.safetensors",
+    "size": 12885424,
+    "sha256": "dd3e842eda139ed5cfc4bd5b4c511c1622fc99697321fbeb13753e64f1029c1c",
+    "url": "https://civitai.com/api/download/models/3014212?fileId=2893226",
+    "note": "Body weight slider. (Skinny ===> Fat slider)"
+  },
+  {
+    "path": "loras/Breasts_Size_SliderAnima6.safetensors",
+    "size": 12885424,
+    "sha256": "e6649d8d971bc9d08c8fb166d1111be61eea5c0d3cf828526440afa0396b1113",
+    "url": "https://civitai.com/api/download/models/2974098?fileId=2853710",
+    "note": "Breasts slider"
+  },
+  {
+    "path": "loras/Dark_Slider_Anima.safetensors",
+    "size": 12885616,
+    "sha256": "758456bf2af11088ab94cf49d369817a51854946aa35e9c0ec0e63e0b902301c",
+    "url": "https://civitai.com/api/download/models/3078972?fileId=2958183",
+    "note": "Lighting / darkness slider"
+  },
+  {
+    "path": "loras/deadpurityv2anima_v1_1-step00004000.safetensors",
+    "size": 132327736,
+    "sha256": "cd9f157d7a8ceaee9944eeb0dc5f3fdd28e72956a6043e1ea1990edba8fb6723",
+    "url": "https://civitai.com/api/download/models/2961237?fileId=2840584",
+    "note": "Deadpurity | Style"
+  },
+  {
+    "path": "loras/Eop_anima_anima_3253810_epoch_20.safetensors",
+    "size": 277207608,
+    "sha256": "cec3c6f4f942cb8395073b23ec9fc36fa1c7ca3c0574d30f3b1e7da77cb9e4bd",
+    "url": "https://civitai.com/api/download/models/3273180?fileId=3157098",
+    "note": "Niji oil painting drawing"
+  },
+  {
+    "path": "loras/firedotinc_old-dataset_anima-b1_v6.safetensors",
+    "size": 46007824,
+    "sha256": "0660e1dcb25c9cfd8eb510b0a1d227a7a3544cf3fc754688ca12d1fa4ae6e286",
+    "url": "https://civitai.com/api/download/models/2965829?fileId=2845218",
+    "note": "Firedotinc style (Anima/Newbie-0.1)"
+  },
+  {
+    "path": "loras/Flar_ANIMA_BASE.safetensors",
+    "size": 91879600,
+    "sha256": "4f40e5cf2d8c3093f7a5e105a51afebc679dff519743118f897e289275effede",
+    "url": "https://civitai.com/api/download/models/2985705?fileId=2865253",
+    "note": "Anime Flat Style"
+  },
+  {
+    "path": "loras/gpt-image-2_anima-base1_v1-1.safetensors",
+    "size": 23037256,
+    "sha256": "6ecff93984c1b084950f4535ff71293299dc1ee2225d267b79e5186fc7d38a99",
+    "url": "https://civitai.com/api/download/models/2998634?fileId=2878107",
+    "note": "Style > gpt-image-2"
+  },
+  {
+    "path": "loras/hinaAnimaBase_R_Tweaker_v4.safetensors",
+    "size": 138665432,
+    "sha256": "c1de8bbd045dadba532fc3b74745e78fa4cfaba60bcd8b3372c5204aefa1a3ef",
+    "url": "https://civitai.com/api/download/models/2963594?fileId=3027487",
+    "note": "[Anima] R Tweaker Lora"
+  },
+  {
+    "path": "loras/Hips-slider-AnimaV2_5cap1000-x2.safetensors",
+    "size": 12885424,
+    "sha256": "5576b84c8ff80fa35510ca29c6ce1f9659512309b5a8bf3f088c77b83dd14100",
+    "url": "https://civitai.com/api/download/models/3246403?fileId=3129172",
+    "note": "Hips slider"
+  },
+  {
+    "path": "loras/Hyperrealistic_Anima.safetensors",
+    "size": 277207600,
+    "sha256": "192488b999ae432db3dc9940f286ef3bf7ef7677e2a3fabf233187186eea557b",
+    "url": "https://civitai.com/api/download/models/3047431?fileId=2926486",
+    "note": "Hyperrealistic [Pony | Illustrious | Anima]"
+  },
+  {
+    "path": "loras/lenovo_ultrareal_anima_base1.safetensors",
+    "size": 138746864,
+    "sha256": "5d68598ea9bcdf3a1ae120e622c125f98ce116e32e8b63c4859d30d41d39d7f8",
+    "url": "https://civitai.com/api/download/models/2973386?fileId=2852982",
+    "note": "Lenovo UltraReal"
+  },
+  {
+    "path": "loras/lighting_slider-step00000300.safetensors",
+    "size": 91852248,
+    "sha256": "33a8b47c668c64c783dc487287b2f3087127b6868bc542cfe21d182b7207483d",
+    "url": "https://civitai.com/api/download/models/3082260?fileId=2961551",
+    "note": "Anima Lighting Atmosphere Enhancer"
+  },
+  {
+    "path": "loras/MatureFemaleSliderAnima.safetensors",
+    "size": 12885424,
+    "sha256": "b5d0cf524f47e16abeae3239a3ef17cb3bd996217589ae628f0239ed142ed116",
+    "url": "https://civitai.com/api/download/models/2979797?fileId=2859336",
+    "note": "Mature slider"
+  },
+  {
+    "path": "loras/Meion_anima_style_lokr_2-000034.safetensors",
+    "size": 251359716,
+    "sha256": "c19f00638bb342aae1579ee3b38c73b7d69550dfa7948b66e9c1e8733362678e",
+    "url": "https://civitai.com/api/download/models/3011314?fileId=2890331",
+    "note": "铭音 meion style 【krea2&anima&il】"
+  },
+  {
+    "path": "loras/MeMaAni V2 C.safetensors",
+    "size": 277276624,
+    "sha256": "c67628076e7a5228480779764823c136e002d38e71824cb516a18093815862ff",
+    "url": "https://civitai.com/api/download/models/3309374?fileId=3194584",
+    "note": "MeMaAni Flat Anime Style - Anima"
+  },
+  {
+    "path": "loras/mixed_styles_anima-base1_v6.safetensors",
+    "size": 186308744,
+    "sha256": "ccf58878bfee78582039c4f35b5e2da033ca009545ae167b3c3549dd5647a287",
+    "url": "https://civitai.com/api/download/models/3334415?fileId=3220828",
+    "note": "AI styles dump (Anima/Illustrious/RouWei/Noob)"
+  },
+  {
+    "path": "loras/nicegirls_anima.safetensors",
+    "size": 277271728,
+    "sha256": "9660a676bad643d6b290fd4ac117c8e6c0776227c4017c53961dd1ce79db909a",
+    "url": "https://civitai.com/api/download/models/2882216?fileId=2762348",
+    "note": "NiceGirls UltraReal"
+  },
+  {
+    "path": "loras/qwen21/Anime2Real _Alpha.safetensors",
+    "size": 159436376,
+    "sha256": "f76c427d53257c0b1e375735abe406c0f368712692e49c91447e8b24a5e9a013",
+    "url": "https://civitai.com/api/download/models/3368916?fileId=3256977",
+    "note": "Anime2Real（Qwen 2.1）"
+  },
+  {
+    "path": "loras/qwen21/FlatAnime_Qwen_2.1.safetensors",
+    "size": 159436392,
+    "sha256": "60dc37ab59460425a1ab740d033c740239cd958df87f78565a2a108349ee3bd5",
+    "url": "https://civitai.com/api/download/models/3361221?fileId=3248997",
+    "note": "Anime Flat Style（Qwen 2.1）"
+  },
+  {
+    "path": "loras/qwen21/fwaun-style_qwen_image_2_1_v50.safetensors",
+    "size": 653422224,
+    "sha256": "b6b21f87f955184a4c521e067ebd345e13a12b300edf6d66f490c03c16b79f49",
+    "url": "https://civitai.com/api/download/models/3373050?fileId=3261190",
+    "note": "Fwaun Style"
+  },
+  {
+    "path": "loras/qwen21/lenovo_qwen21.safetensors",
+    "size": 79743896,
+    "sha256": "7f1e95c3ec1e9c7cea197f7b6f80f601af8e6b479f6ead78ab16df542f447c0e",
+    "url": "https://civitai.com/api/download/models/3349565?fileId=3236680",
+    "note": "Lenovo UltraReal（Qwen 2.1）"
+  },
+  {
+    "path": "loras/qwen21/niceasians_qwen21.safetensors",
+    "size": 79743888,
+    "sha256": "57d622238be975469d51309bf4f6835ffa8efd74557edd2cd6c3fe26cd9841b2",
+    "url": "https://civitai.com/api/download/models/3349898?fileId=3237014",
+    "note": "NiceAsians（Qwen 2.1）"
+  },
+  {
+    "path": "loras/qwen21/nicegirls_v2_qwen21.safetensors",
+    "size": 79743896,
+    "sha256": "8ea63de359194c1fdb9b99bfd05bd6f2aaa19da4667711f40c58bf3505fc7bce",
+    "url": "https://civitai.com/api/download/models/3352079?fileId=3239364",
+    "note": "NiceGirls v2（Qwen 2.1）"
+  },
+  {
+    "path": "loras/qwen21/NSFW Qwen by TheseAlpacas V2.safetensors",
+    "size": 79744352,
+    "sha256": "83aba822ad8ee10a1e836828f5088259d93bce7b5f3419b46dbc0258c2be46a9",
+    "url": "https://civitai.com/api/download/models/3357315?fileId=3244894",
+    "note": "NSFW（Qwen 2.1）"
   },
   {
     "path": "loras/qwen21/p_qwen_image_2.1_5step_v0.1.safetensors",
@@ -84,6 +357,27 @@
     "note": "Pruna 加速 8 步（Qwen 2.1）"
   },
   {
+    "path": "loras/qwen21/Pornmaster_QI2.1_Breasts_Slider_V1.safetensors",
+    "size": 3301944,
+    "sha256": "b73b79deeffc4de8157c1db10532b5db775aab5e703fa85166f2c9fe89c3caae",
+    "url": "https://civitai.com/api/download/models/3346363?fileId=3233286",
+    "note": "胸部大小滑桿（Pornmaster）"
+  },
+  {
+    "path": "loras/qwen21/pussyV2.safetensors",
+    "size": 83943904,
+    "sha256": "403121922c6dd013504e126baafa42e5afee49d85422c0cd122b29696063fa61",
+    "url": "https://civitai.com/api/download/models/3377365?fileId=3265734",
+    "note": "qwen 2.1 阴道|vagina"
+  },
+  {
+    "path": "loras/qwen21/qwen-image-2.1-consistency.safetensors",
+    "size": 159436496,
+    "sha256": "4f44ada1be2189cc23b3d010f9603543403f48454e2f76842a3d30109b20bd63",
+    "url": "https://civitai.com/api/download/models/3364470?fileId=3252343",
+    "note": "Consistency 不跑位（Qwen 2.1）"
+  },
+  {
     "path": "loras/qwen21/Qwen-Image-2.1-viggle-turbo-4step-lora-r64.safetensors",
     "size": 339832808,
     "sha256": "5c494dce662a95898d0988831af733b203ceced9116a82aa099c997f96ea1a3a",
@@ -91,11 +385,53 @@
     "note": "[ Accelerator LoRAs ] Applicable to QW21 | Minimax H3 | HYVideo TURBO/LIGHTNING/DMD/FAST"
   },
   {
+    "path": "loras/qwen21/Qwen2.1_Anything2RealCharacters.safetensors",
+    "size": 318820200,
+    "sha256": "5db4dd2376e6017812bf1189b2fc46e52aaa2c0b7e688faac75e83e1c4dce849",
+    "url": "https://civitai.com/api/download/models/3363600?fileId=3251418",
+    "note": "Anything2RealCharacters（Qwen 2.1）"
+  },
+  {
+    "path": "loras/qwen21/qwen21_v2_000002750.safetensors",
+    "size": 79744256,
+    "sha256": "71d8edbfbb693da3b1acdfe3a48c1c61942974cb1dfa864e5f0862630a0a3c4c",
+    "url": "https://civitai.com/api/download/models/3354330?fileId=3241739",
+    "note": "女性私處細節（Qwen 2.1）"
+  },
+  {
     "path": "loras/qwen21/qwen_image_2.1_turbo_lora_avg_rank_178_bf16.safetensors",
     "size": 913314512,
     "sha256": "208dd43250e1e01467ba190572ae2e7107a7870ec1ff026bc65f791fa1e80e95",
     "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/a8342359c61979b06a8dafb1a47991fe1f30e994/loras/qwen_image_2.1_turbo_lora_avg_rank_178_bf16.safetensors",
     "note": null
+  },
+  {
+    "path": "loras/qwen21/samsung_qwen21.safetensors",
+    "size": 79743880,
+    "sha256": "d5b75fbd0a78c7642f0af49f11834d7217e3b7441ac86f2da2f598d4e0b370ee",
+    "url": "https://civitai.com/api/download/models/3354434?fileId=3241845",
+    "note": "SamsungCam UltraReal（Qwen 2.1）"
+  },
+  {
+    "path": "loras/S1_Dramatic Lighting Anima_V2.safetensors",
+    "size": 138663784,
+    "sha256": "d27d2c74bf32222fb3df4515e14a45ab996a59cff3d53e4abfa0f8ed5922399a",
+    "url": "https://civitai.com/api/download/models/3126711?fileId=3007170",
+    "note": "S1 Dramatic Lighting"
+  },
+  {
+    "path": "loras/sky02v6.safetensors",
+    "size": 37840684,
+    "sha256": "c4547dcc96b979a3b4c5148f1b437a874822decb6d4613762498f7e9312a8ac6",
+    "url": "https://civitai.com/api/download/models/3340256?fileId=3226886",
+    "note": "sky02 Light and shadow Style [Anima]"
+  },
+  {
+    "path": "loras/Thigh-Anima-protect-x1.5.safetensors",
+    "size": 12885424,
+    "sha256": "8fa4b8f73166d6cf93ca3c1d380f31e30f015a43c4609527a4403153cdc0825b",
+    "url": "https://civitai.com/api/download/models/3264980?fileId=3148583",
+    "note": "Thighs slider"
   },
   {
     "path": "loras/Turbo-ANIMA-v2.9.safetensors",
@@ -110,6 +446,20 @@
     "sha256": "aa198376f2f31159ba3f60dce19924b27411cdd93e7252543e5c45249ca89048",
     "url": "https://civitai.com/api/download/models/3334160?fileId=3220708",
     "note": "TURBO for ANIMA (less steps)"
+  },
+  {
+    "path": "loras/zoda_v3_anima.safetensors",
+    "size": 69441344,
+    "sha256": "ecfbc656b6dc58355089522ada330741d9d581f24391a6c12b325457aa01969c",
+    "url": "https://civitai.com/api/download/models/3130764?fileId=3011322",
+    "note": "Zoda 🥤 – NSFW Detailer"
+  },
+  {
+    "path": "loras/zodaplus_v2_anima.safetensors",
+    "size": 34803536,
+    "sha256": "5c8fb914d092c60586494a06f7dd6f9208fb717c9066deb2e97a0484b091fa49",
+    "url": "https://civitai.com/api/download/models/3201207?fileId=3291837",
+    "note": "ZodaPlus 🍾 – Detailer"
   },
   {
     "path": "model_patches/anima-lllite-any-test-like-v2.safetensors",

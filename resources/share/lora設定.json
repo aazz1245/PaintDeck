@@ -41,6 +41,1028 @@
    "strength": 0.8,
    "note": "【加速】同作者較舊的配方，為了「疊其他 LoRA 時不吃掉效果」而做。12 步、CFG 1。實測跟 V4 幾乎一樣；若某個 LoRA 搭 V4 效果變弱再換這個。"
   },
+  "anima-highres-aesthetic-boost.safetensors": {
+   "title": "Anima Highres/Aesthetic Boost",
+   "modelId": 2540444,
+   "versionId": 2855073,
+   "version": "v1.0",
+   "triggers": [],
+   "tags": [
+    "style",
+    "anime"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2540444",
+   "preview": "anima-highres-aesthetic-boost.jpg",
+   "strength": 0.6,
+   "note": "【畫質】官方。讓 1536～2048 的大圖不崩，美感略升。一般尺寸幾乎看不出差別，畫大圖、開高解析修復時才有感。建議 0.5～0.7。"
+  },
+  "anima-rl-v0.1.safetensors": {
+   "title": "Anima RL",
+   "modelId": 2583128,
+   "versionId": 2901967,
+   "version": "v0.1",
+   "triggers": [],
+   "tags": [
+    "style",
+    "detail",
+    "aesthetic",
+    "anime"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2583128",
+   "preview": "anima-rl-v0.1.jpg",
+   "strength": 1.0,
+   "note": "【畫質】官方強化學習美感 LoRA。臉部和光影稍細緻，構圖不變，效果溫和，最安全的增強。建議 1.0。"
+  },
+  "anima-base-1-masterpiece-v51.safetensors": {
+   "title": "Aesthetic Quality Modifiers - Masterpiece",
+   "modelId": 929497,
+   "versionId": 2961717,
+   "version": "v5.1 [anima-base-1]",
+   "triggers": [
+    "very aesthetic"
+   ],
+   "tags": [
+    "styles",
+    "anime",
+    "aesthetic",
+    "concept"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/929497",
+   "preview": "anima-base-1-masterpiece-v51.jpg",
+   "strength": 1.0,
+   "note": "【畫質】只用標記為 masterpiece 的高品質圖訓練。觸發：提示詞開頭寫 masterpiece, best quality, very aesthetic。實測：人物更自然、偏寫實比例，構圖會變。建議 0.8～1.0。"
+  },
+  "anima_context_detailer_base10.safetensors": {
+   "title": "Anima Detail Tweaker",
+   "modelId": 2620171,
+   "versionId": 2945421,
+   "version": "context_detailer_base10",
+   "triggers": [],
+   "tags": [
+    "enhancer",
+    "concept",
+    "detail"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2620171",
+   "preview": "anima_context_detailer_base10.jpg",
+   "strength": 0.5,
+   "note": "【細節滑桿】正數加細節、負數減細節，畫風和構圖幾乎不變。作者建議 -0.75～0.75。實測 +0.75 細節略增、變化很小。想要乾淨簡潔就給負數。",
+   "min": -1,
+   "max": 1,
+   "slider": true
+  },
+  "anima_base_slider_step800.safetensors": {
+   "title": "Anima Quality Enhance Slider",
+   "modelId": 2612570,
+   "versionId": 2945328,
+   "version": "basev10",
+   "triggers": [],
+   "tags": [
+    "quality",
+    "concept",
+    "optimizer"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2612570",
+   "preview": "anima_base_slider_step800.jpg",
+   "strength": 2.0,
+   "note": "【品質滑桿】作者說能改善構圖合理性和手部穩定，同種子畫面幾乎不變。建議 1～3。實測 +2 畫面跟原圖幾乎一樣，主要是預防崩手。",
+   "min": 0,
+   "max": 3,
+   "slider": true
+  },
+  "Anima_colorfix_v1_by_Volnovik.safetensors": {
+   "title": "Anima Colorfix",
+   "modelId": 2435207,
+   "versionId": 2974168,
+   "version": "v1.0",
+   "triggers": [],
+   "tags": [
+    "colorfix",
+    "tool",
+    "anima",
+    "detailer"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2435207",
+   "preview": "Anima_colorfix_v1_by_Volnovik.jpg",
+   "strength": 1.0,
+   "note": "【色彩修正】增加顏色變化、讓背景不糊、略增細節。會稍微偏卡通／繪畫感，不想要就在負面提示詞加 toon \\(style\\), painterly。負數＝顏色更統一、細節更少。偶爾會弄壞手和文字。建議 1.0。",
+   "min": -1,
+   "max": 2
+  },
+  "gpt-image-2_anima-base1_v1-1.safetensors": {
+   "title": "Style > gpt-image-2",
+   "modelId": 2564225,
+   "versionId": 2998634,
+   "version": "Anima-base1 v1.1",
+   "triggers": [
+    "@gpt-image-2"
+   ],
+   "tags": [
+    "texture",
+    "details",
+    "gpt",
+    "style",
+    "anime",
+    "light",
+    "shade"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2564225",
+   "preview": "gpt-image-2_anima-base1_v1-1.jpg",
+   "strength": 0.8,
+   "note": "【細節／質感】往 GPT 圖像模型的質感靠：紋理、光影明顯增加。觸發詞 @gpt-image-2（可省略）。會順手改服裝細節；強度高可能出現重複紋理、看起來髒，想乾淨降到 0.5。"
+  },
+  "zodaplus_v2_anima.safetensors": {
+   "title": "ZodaPlus 🍾 – Detailer",
+   "modelId": 2632704,
+   "versionId": 3201207,
+   "version": "v2 - anima",
+   "triggers": [],
+   "tags": [
+    "style"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2632704",
+   "preview": "zodaplus_v2_anima.jpg",
+   "strength": 1.5,
+   "note": "【強烈風格】名為細節增強，實際是高對比、戲劇化、偏時尚性感的風格，會改姿勢和服裝（常變絲襪高跟）。作者建議 1.2～1.8。"
+  },
+  "zoda_v3_anima.safetensors": {
+   "title": "Zoda 🥤 – NSFW Detailer",
+   "modelId": 1879987,
+   "versionId": 3130764,
+   "version": "v3_anima",
+   "triggers": [],
+   "tags": [
+    "style"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/1879987",
+   "preview": "zoda_v3_anima.jpg",
+   "strength": 1.0,
+   "note": "【成人細節】作者明說是 NSFW 用的細節與表情增強。即使寫 safe 也會往色氣方向推（俯角特寫、臉紅、肌膚光澤）。一般圖不要開。建議 1.0～1.2，作者建議 30～45 步。"
+  },
+  "lighting_slider-step00000300.safetensors": {
+   "title": "Anima Lighting Atmosphere Enhancer",
+   "modelId": 2628200,
+   "versionId": 3082260,
+   "version": "sliderv1",
+   "triggers": [],
+   "tags": [
+    "enhancer",
+    "concept",
+    "quality"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2628200",
+   "preview": "lighting_slider-step00000300.jpg",
+   "strength": 0.5,
+   "note": "【光影氛圍滑桿】正數＝畫面變亮、陰影減少、氛圍光增強；負數＝變暗、陰影加深。作者建議 0～0.7。偶爾會改構圖或出現模糊直線。實測 +0.7 整體明亮柔和。",
+   "min": -1,
+   "max": 1,
+   "slider": true
+  },
+  "Dark_Slider_Anima.safetensors": {
+   "title": "Lighting / darkness slider",
+   "modelId": 1280702,
+   "versionId": 3078972,
+   "version": "Anima",
+   "triggers": [],
+   "tags": [
+    "slider",
+    "women",
+    "tool",
+    "dark",
+    "lighting",
+    "brightness"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/1280702",
+   "preview": "Dark_Slider_Anima.jpg",
+   "strength": -0.7,
+   "note": "【明暗滑桿】控制光源亮度，負數＝更暗。一定要搭配夜晚類的詞才有效（例如 night, dark, dimly lit；作者推薦自然語言 late night、blue hour）。實測白天場景給 -1 幾乎沒變化。暗場景可能讓眼睛變藍，記得指定眼睛顏色。",
+   "min": -4,
+   "max": 2,
+   "slider": true
+  },
+  "anima-base-1-light-concepts-v31.safetensors": {
+   "title": "Light Concepts",
+   "modelId": 2459979,
+   "versionId": 2952873,
+   "version": "v3.1 [anima-base-1]",
+   "triggers": [
+    "caustics",
+    "refraction"
+   ],
+   "tags": [
+    "ultraviolet light",
+    "bioluminescence",
+    "translucent",
+    "caustics",
+    "refraction",
+    "subsurface scattering",
+    "dispersion",
+    "light"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2459979",
+   "preview": "anima-base-1-light-concepts-v31.jpg",
+   "strength": 1.0,
+   "note": "【光學效果】焦散、折射、色散、次表面散射、透光、生物螢光、紫外光等。可用概念詞：caustics, refraction, dispersion, subsurface scattering, translucent, bioluminescence, ultraviolet light, dappled moonlight（dispersion 等不是 Danbooru tag，只靠這個 LoRA 生效）。作者建議用自然語言描述光源。實測：地面積水反光、陽光光暈，效果很搶眼。"
+  },
+  "S1_Dramatic Lighting Anima_V2.safetensors": {
+   "title": "S1 Dramatic Lighting",
+   "modelId": 661736,
+   "versionId": 3126711,
+   "version": "Anima V2",
+   "triggers": [
+    "s1_dram"
+   ],
+   "tags": [
+    "dramatic light",
+    "neon",
+    "style",
+    "lighting",
+    "lighting concept"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/661736",
+   "preview": "S1_Dramatic Lighting Anima_V2.jpg",
+   "strength": 1.0,
+   "note": "【戲劇光影】觸發詞 s1_dram。可加 dappled sunlight（作者寫的 dappled light 不是正式 tag），負面提示詞可加 3d。實測：強烈明暗對比、橘色邊緣光，人物畫風和外型也會被大幅改變。"
+  },
+  "sky02v6.safetensors": {
+   "title": "sky02 Light and shadow Style [Anima]",
+   "modelId": 2652568,
+   "versionId": 3340256,
+   "version": "v6.0 [Test]",
+   "triggers": [
+    "@sk02v6"
+   ],
+   "tags": [
+    "light",
+    "style",
+    "light and shadow"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2652568",
+   "preview": "sky02v6.jpg",
+   "strength": 0.9,
+   "note": "【光與影畫風】觸發詞 @sk02v6，建議 0.8～1。實測：柔和通透的空氣感光影、風吹髮絲裙擺，夢幻感強，會改服裝。⚠ 作者聲明禁止任何商業用途。"
+  },
+  "Flar_ANIMA_BASE.safetensors": {
+   "title": "Anime Flat Style",
+   "modelId": 1952560,
+   "versionId": 2985705,
+   "version": "Anima-Base",
+   "triggers": [],
+   "tags": [
+    "anime",
+    "style",
+    "flat color",
+    "zimageturbo",
+    "qwen",
+    "anime screencaps",
+    "ltx-2.3",
+    "anima"
+   ],
+   "nsfw": true,
+   "url": "https://civitai.com/models/1952560",
+   "preview": "Flar_ANIMA_BASE.jpg",
+   "strength": 1.0,
+   "note": "【扁平動畫】像電視動畫截圖的賽璐璐風，色塊平塗、陰影少，色調偏冷。不需觸發詞。"
+  },
+  "anima-base-1-flat-color-v3.safetensors": {
+   "title": "Flat Color - Style",
+   "modelId": 1132089,
+   "versionId": 2947255,
+   "version": "v3.0 [anima-preview-3]",
+   "triggers": [
+    "flat color",
+    "no lineart"
+   ],
+   "tags": [
+    "anime",
+    "flat",
+    "style",
+    "wan",
+    "flat color",
+    "no lineart"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/1132089",
+   "preview": "anima-base-1-flat-color-v3.jpg",
+   "strength": 1.0,
+   "note": "【平塗無線稿】觸發：flat color, no lineart（作者另推薦 blending, negative space, 某色 background）。實測：無線稿、色塊簡潔、偏可愛卡通。作者說也能降低 Anima 偏高的飽和與對比。"
+  },
+  "mixed_styles_anima-base1_v6.safetensors": {
+   "title": "AI styles dump (Anima/Illustrious/RouWei/Noob)",
+   "modelId": 723360,
+   "versionId": 3334415,
+   "version": "MIO-anima-b1_v6",
+   "triggers": [],
+   "tags": [
+    "2d",
+    "ecchi",
+    "artstyle",
+    "anime",
+    "style",
+    "hentai"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/723360",
+   "preview": "mixed_styles_anima-base1_v6.jpg",
+   "strength": 1.0,
+   "note": "【混合畫風包】81 種畫師／AI 風格，用 @風格名 切換（例：@firedotinc、@kyomu、@uniunimikan）。實測 @firedotinc：扁平淡色可愛風。"
+  },
+  "firedotinc_old-dataset_anima-b1_v6.safetensors": {
+   "title": "Firedotinc style (Anima/Newbie-0.1)",
+   "modelId": 2256925,
+   "versionId": 2965829,
+   "version": "fdi_anima-b1_old-ds_v6",
+   "triggers": [
+    "@firedotinc-old"
+   ],
+   "tags": [
+    "anime",
+    "2d",
+    "style",
+    "artstyle"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2256925",
+   "preview": "firedotinc_old-dataset_anima-b1_v6.jpg",
+   "strength": 1.0,
+   "note": "【畫風】Firedotinc 單一畫風，觸發詞 @firedotinc-old。簡潔、色塊平塗、頭身比偏可愛、背景簡化。"
+  },
+  "MeMaAni V2 C.safetensors": {
+   "title": "MeMaAni Flat Anime Style - Anima",
+   "modelId": 2483826,
+   "versionId": 3309374,
+   "version": "v2.0 C [Anima-v1]",
+   "triggers": [],
+   "tags": [
+    "megami magazine",
+    "cute",
+    "sexy",
+    "screenshot",
+    "anime",
+    "woman",
+    "girls",
+    "2d anime"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2483826",
+   "preview": "MeMaAni V2 C.jpg",
+   "strength": 1.0,
+   "note": "【畫風】Megami 雜誌插畫風（去掉日文字訓練），眼睛偏吊眼圓瞳、色彩鮮豔。用 1792 解析度訓練，適合畫大圖（作者用 1600×1984）。實測：乾淨明亮的動畫雜誌插畫感。"
+  },
+  "Anima_NIJI_SWEET_SPOT_v5.safetensors": {
+   "title": "Niji Sweet Spot",
+   "modelId": 2554999,
+   "versionId": 3256481,
+   "version": "Anima_v5.0",
+   "triggers": [
+    "@NJSW33T"
+   ],
+   "tags": [
+    "semi-realistic",
+    "style",
+    "niji",
+    "anime"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2554999",
+   "preview": "Anima_NIJI_SWEET_SPOT_v5.jpg",
+   "strength": 0.7,
+   "note": "【半寫實】仿 Midjourney Niji v7：電影光、發光的眼睛、淺景深、材質細膩，特寫／半身最好看。觸發詞 @NJSW33T，作者建議 0.6～0.8（1.0 有時太強）。實測：暖色半寫實、臉部精緻。"
+  },
+  "Eop_anima_anima_3253810_epoch_20.safetensors": {
+   "title": "Niji oil painting drawing",
+   "modelId": 1188058,
+   "versionId": 3273180,
+   "version": "v3.5 - Anima (EOP)",
+   "triggers": [
+    "@EOP4niji"
+   ],
+   "tags": [
+    "anime",
+    "style",
+    "niji",
+    "styles",
+    "hyperrealistic",
+    "cartoon",
+    "woman",
+    "oil painting"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/1188058",
+   "preview": "Eop_anima_anima_3253810_epoch_20.jpg",
+   "strength": 1.0,
+   "note": "【油畫半寫實】Niji 風油畫／素描，觸發詞 @EOP4niji。可加 semi-realistic、oil painting 調方向。實測：暖色調半寫實、秋日逆光，人物比例接近真人。"
+  },
+  "anima-base-1-painterly-v2.safetensors": {
+   "title": "Impasto, Impressionism, Chiaroscuro - Painterly Styles",
+   "modelId": 1478417,
+   "versionId": 2955844,
+   "version": "v2.0 [anima-base-1]",
+   "triggers": [
+    "painterly"
+   ],
+   "tags": [
+    "oil painting",
+    "style",
+    "chiaroscuro",
+    "impressionism",
+    "impasto",
+    "painterly"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/1478417",
+   "preview": "anima-base-1-painterly-v2.jpg",
+   "strength": 1.0,
+   "note": "【油畫筆觸】印象派、厚塗（impasto）、明暗對照（chiaroscuro）。可用詞：painterly, brushstroke, impasto, oil painting \\(medium\\), impressionism, chiaroscuro。實測：寫實油畫肖像感，筆觸明顯，人物會變寫實。"
+  },
+  "anima-greg-rutkowski-style.safetensors": {
+   "title": "Greg Rutkowski Style - Anima",
+   "modelId": 2536147,
+   "versionId": 2850290,
+   "version": "v1.0",
+   "triggers": [
+    "@greg rutkowski"
+   ],
+   "tags": [
+    "painting",
+    "fantasy",
+    "digital art",
+    "style",
+    "art"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2536147",
+   "preview": "anima-greg-rutkowski-style.jpg",
+   "strength": 1.0,
+   "note": "【奇幻厚塗】官方，Greg Rutkowski 風格。提示詞開頭寫「@greg rutkowski. 」，後面用自然語言描述效果最好。臉和身材變寫實、色調偏暗，適合奇幻題材。"
+  },
+  "Anima_in_real_update_v2_epoch_20.safetensors": {
+   "title": "Anime in real",
+   "modelId": 1979448,
+   "versionId": 3202009,
+   "version": "v1.5 - Anima",
+   "triggers": [
+    "@Ani3rel"
+   ],
+   "tags": [
+    "style",
+    "man",
+    "depth of field",
+    "woman",
+    "solo",
+    "blurry background",
+    "boy",
+    "real"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/1979448",
+   "preview": "Anima_in_real_update_v2_epoch_20.jpg",
+   "strength": 1.0,
+   "note": "【動漫角色＋真實背景】觸發詞 @Ani3rel 一定要加。搭配 solo, depth of field, blurry background。實測：寫實公園背景＋夕陽逆光，角色偏半寫實。"
+  },
+  "anima-base-1-photo-background-v4.safetensors": {
+   "title": "Photo Background - 2d Compositing｜写真背景・二次元合成",
+   "modelId": 1252497,
+   "versionId": 2959007,
+   "version": "v4.0 [anima-base-1]",
+   "triggers": [
+    "photo background"
+   ],
+   "tags": [
+    "rotoscoping",
+    "background",
+    "nature",
+    "anime",
+    "photo background",
+    "compositing",
+    "scenery"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/1252497",
+   "preview": "anima-base-1-photo-background-v4.jpg",
+   "strength": 1.0,
+   "note": "【照片背景合成】二次元角色疊在真實照片背景上的效果。可加 photo background（Danbooru 正式 tag）。實測：背景變得像照片、角色維持動畫風，效果比 Anime in real 自然但較輕微。"
+  },
+  "anime_shiny_skin_v2.5.safetensors": {
+   "title": "Anime Shiny Skin Style - Anima & Illustrious",
+   "modelId": 2597738,
+   "versionId": 3142637,
+   "version": "v2.5 - Anima",
+   "triggers": [
+    "@anime_shiny_skin"
+   ],
+   "tags": [
+    "style",
+    "anime",
+    "shiny_skin"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2597738",
+   "preview": "anime_shiny_skin_v2.5.jpg",
+   "strength": 1.0,
+   "note": "【光澤肌膚】觸發詞 @anime_shiny_skin，建議 1.0，顏色太濃就降低。實測全身遠景差異不大、整體偏柔和動畫風；近景、露膚多的圖效果較明顯。"
+  },
+  "MatureFemaleSliderAnima.safetensors": {
+   "title": "Mature slider",
+   "modelId": 2118055,
+   "versionId": 2979797,
+   "version": "Anima",
+   "triggers": [],
+   "tags": [
+    "illustrious",
+    "nsfw",
+    "lora",
+    "mature slider",
+    "tool"
+   ],
+   "nsfw": true,
+   "url": "https://civitai.com/models/2118055",
+   "preview": "MatureFemaleSliderAnima.jpg",
+   "strength": 1.5,
+   "min": 0,
+   "max": 3,
+   "slider": true,
+   "note": "【成熟度滑桿】臉型五官與身材更成熟，只能往上調。建議 1～2。"
+  },
+  "Breasts_Size_SliderAnima6.safetensors": {
+   "title": "Breasts slider",
+   "modelId": 2100839,
+   "versionId": 2974098,
+   "version": "Anima",
+   "triggers": [],
+   "tags": [
+    "illustrious",
+    "lora",
+    "tool",
+    "breasts slider",
+    "nsfw"
+   ],
+   "nsfw": true,
+   "url": "https://civitai.com/models/2100839",
+   "preview": "Breasts_Size_SliderAnima6.jpg",
+   "strength": 1.0,
+   "min": -2,
+   "max": 4,
+   "slider": true,
+   "note": "【胸部滑桿】正數變大、負數變小。作者範圍 -2～5，超過 2 容易比例怪異。"
+  },
+  "Hips-slider-AnimaV2_5cap1000-x2.safetensors": {
+   "title": "Hips slider",
+   "modelId": 2546450,
+   "versionId": 3246403,
+   "version": "AnimaV2",
+   "triggers": [],
+   "tags": [
+    "hips slider",
+    "slider",
+    "illustrious",
+    "wide hips",
+    "concept"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2546450",
+   "preview": "Hips-slider-AnimaV2_5cap1000-x2.jpg",
+   "strength": 1.0,
+   "min": -1,
+   "max": 2.5,
+   "slider": true,
+   "note": "【臀部滑桿】正數變寬。建議 0.5～1.5。"
+  },
+  "Body-WeightSliderAnimaCaut.safetensors": {
+   "title": "Body weight slider. (Skinny ===> Fat slider)",
+   "modelId": 2513759,
+   "versionId": 3014212,
+   "version": "Anima",
+   "triggers": [],
+   "tags": [
+    "slider",
+    "concept",
+    "illustrious",
+    "fat",
+    "weight slider",
+    "body weight slider",
+    "skinny"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2513759",
+   "preview": "Body-WeightSliderAnimaCaut.jpg",
+   "strength": 1.0,
+   "min": -3,
+   "max": 3,
+   "slider": true,
+   "note": "【體重滑桿】正數變豐腴、負數變瘦。作者範圍 -3～3。"
+  },
+  "Meion_anima_style_lokr_2-000034.safetensors": {
+   "title": "铭音 meion style 【krea2&anima&il】",
+   "modelId": 2533943,
+   "versionId": 3011314,
+   "version": "anima base v2.0",
+   "triggers": [
+    "@meionANIMAstyle"
+   ],
+   "tags": [
+    "style"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2533943",
+   "preview": "Meion_anima_style_lokr_2-000034.jpg",
+   "strength": 0.8,
+   "note": "【畫風】繪師銘音，觸發詞 @meionANIMAstyle。精緻手遊立繪風，會主動改髮型和服裝。風格很強，疊其他 LoRA 時降強度。已知問題：提示詞同時有 green eyes 和 underwear 時角色會被換成原神的草神，避開這組合。",
+   "fav": false
+  },
+  "Thigh-Anima-protect-x1.5.safetensors": {
+   "title": "Thighs slider",
+   "modelId": 2535632,
+   "versionId": 3264980,
+   "version": "AnimaV2",
+   "triggers": [
+    "thighs"
+   ],
+   "tags": [
+    "concept",
+    "thighs",
+    "thighs slider",
+    "illustrious",
+    "slider"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2535632",
+   "preview": "Thigh-Anima-protect-x1.5.jpg",
+   "strength": 0.3,
+   "min": -1,
+   "max": 2.5,
+   "slider": true,
+   "note": "【大腿滑桿】正數變粗，觸發詞 thighs。建議 0.5～1.5。"
+  },
+  "Hyperrealistic_Anima.safetensors": {
+   "title": "Hyperrealistic [Pony | Illustrious | Anima]",
+   "modelId": 626603,
+   "versionId": 3047431,
+   "version": "v5.0 - Anima",
+   "triggers": [
+    "@Hype4realistic"
+   ],
+   "tags": [
+    "style",
+    "realistic",
+    "lora",
+    "girls",
+    "game character",
+    "anime",
+    "video game",
+    "cartoon"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/626603",
+   "preview": "Hyperrealistic_Anima.jpg",
+   "strength": 1.0,
+   "note": "【寫實】觸發詞 @Hype4realistic，作者說特寫／半身效果最好。實測（圖生圖＋深度控制）：在 CFG 4 下最像真實照片，構圖和服裝也保留得好。要真的像照片：模型用 aesthetic 不加速（30 步、CFG 4），負面提示詞寫 anime, cartoon, illustration。turbo／加速 LoRA 的 CFG 是 1，負面詞無效，只會停在 2.5D。可直接載入預設「轉寫實」。"
+  },
+  "hinaAnimaBase_R_Tweaker_v4.safetensors": {
+   "title": "[Anima] R Tweaker Lora",
+   "modelId": 2399952,
+   "versionId": 2963594,
+   "version": "v4.0 - Base",
+   "triggers": [
+    "asian woman"
+   ],
+   "tags": [
+    "style",
+    "realistic",
+    "2.5d"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2399952",
+   "preview": "hinaAnimaBase_R_Tweaker_v4.jpg",
+   "strength": 1.0,
+   "note": "【寫實・亞洲臉】觸發詞 asian woman，偏亞洲面孔的寫實／2.5D。作者說可搭 Turbo LoRA，但肢體可能不穩。實測 CFG 4 下臉部很寫實、構圖保留好；CFG 1 偏 2.5D。要真的像照片：模型用 aesthetic 不加速（30 步、CFG 4），負面提示詞寫 anime, cartoon, illustration。turbo／加速 LoRA 的 CFG 是 1，負面詞無效，只會停在 2.5D。可直接載入預設「轉寫實」。"
+  },
+  "nicegirls_anima.safetensors": {
+   "title": "NiceGirls UltraReal",
+   "modelId": 1862761,
+   "versionId": 2882216,
+   "version": "v0.5 Anima",
+   "triggers": [],
+   "tags": [
+    "photorealistic",
+    "beauty",
+    "character"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/1862761",
+   "preview": "nicegirls_anima.jpg",
+   "strength": 1.0,
+   "note": "【寫實・照片感最強】實測最像真人照片（連 CFG 1 都是），但會大幅改掉原圖的身材、服裝和臉，比較像「照構圖重拍一位模特兒」，不適合要保留角色特徵時。要真的像照片：模型用 aesthetic 不加速（30 步、CFG 4），負面提示詞寫 anime, cartoon, illustration。turbo／加速 LoRA 的 CFG 是 1，負面詞無效，只會停在 2.5D。可直接載入預設「轉寫實」。"
+  },
+  "lenovo_ultrareal_anima_base1.safetensors": {
+   "title": "Lenovo UltraReal",
+   "modelId": 1662740,
+   "versionId": 2973386,
+   "version": "v1.0 Anima_base1",
+   "triggers": [],
+   "tags": [
+    "realistic",
+    "girls",
+    "dramatic",
+    "photorealistic",
+    "style"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/1662740",
+   "preview": "lenovo_ultrareal_anima_base1.jpg",
+   "strength": 1.0,
+   "note": "【寫實】實測在 Anima 上效果很弱，CFG 1 幾乎沒變化、CFG 4 也只到半寫實 CG。保留備用，優先用 Hyperrealistic 或 R Tweaker。"
+  },
+  "deadpurityv2anima_v1_1-step00004000.safetensors": {
+   "title": "Deadpurity | Style",
+   "modelId": 2505374,
+   "versionId": 2961237,
+   "version": "Anima Base V1",
+   "triggers": [
+    "@deadpuritystyle"
+   ],
+   "tags": [
+    "girls",
+    "anime",
+    "style",
+    "women",
+    "woman"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2505374",
+   "preview": "deadpurityv2anima_v1_1-step00004000.jpg",
+   "strength": 0.8
+  },
+  "jgdxstyle\\jgdxstyle_e1.safetensors": {
+   "triggers": [
+    "jgdxstyle"
+   ],
+   "strength": 0.8,
+   "note": "2026-10-09 在 Civitai 用 Anima-Base v1.0 訓練（62 張 ChatGPT 生的圖、1500 步）。觸發詞 jgdxstyle。第 1 版（較早的存檔，畫風較弱）。只在 aesthetic 上測過；turbo 目前不在電腦裡，還沒測。",
+   "title": "jgdxstyle 鋸齒卡通畫風 第1版"
+  },
+  "jgdxstyle\\jgdxstyle_e2.safetensors": {
+   "triggers": [
+    "jgdxstyle"
+   ],
+   "strength": 0.8,
+   "note": "2026-10-09 在 Civitai 用 Anima-Base v1.0 訓練（62 張 ChatGPT 生的圖、1500 步）。觸發詞 jgdxstyle。第 2 版（較早的存檔，畫風較弱）。只在 aesthetic 上測過；turbo 目前不在電腦裡，還沒測。",
+   "title": "jgdxstyle 鋸齒卡通畫風 第2版"
+  },
+  "jgdxstyle\\jgdxstyle_e3.safetensors": {
+   "triggers": [
+    "jgdxstyle"
+   ],
+   "strength": 0.8,
+   "note": "2026-10-09 在 Civitai 用 Anima-Base v1.0 訓練（62 張 ChatGPT 生的圖、1500 步）。觸發詞 jgdxstyle。第 3 版（較早的存檔，畫風較弱）。只在 aesthetic 上測過；turbo 目前不在電腦裡，還沒測。",
+   "title": "jgdxstyle 鋸齒卡通畫風 第3版"
+  },
+  "jgdxstyle\\jgdxstyle_e4.safetensors": {
+   "triggers": [
+    "jgdxstyle"
+   ],
+   "strength": 0.8,
+   "note": "2026-10-09 在 Civitai 用 Anima-Base v1.0 訓練（62 張 ChatGPT 生的圖、1500 步）。觸發詞 jgdxstyle。第 4 版（較早的存檔，畫風較弱）。只在 aesthetic 上測過；turbo 目前不在電腦裡，還沒測。",
+   "title": "jgdxstyle 鋸齒卡通畫風 第4版"
+  },
+  "jgdxstyle\\jgdxstyle_e5.safetensors": {
+   "triggers": [
+    "jgdxstyle"
+   ],
+   "strength": 0.8,
+   "note": "【推薦】2026-10-09 在 Civitai 用 Anima-Base v1.0 訓練（62 張 ChatGPT 生的圖、1500 步）。觸發詞 jgdxstyle。實測：turbo 用 0.8 就很明顯（1.0 背景也會變成鋸齒色塊）；aesthetic 用 0.8～1.0。對照圖存在本機",
+   "title": "jgdxstyle 鋸齒卡通畫風 第5版"
+  },
+  "qwen21\\Anime2Real _Alpha.safetensors": {
+   "title": "Anime2Real（Qwen 2.1）",
+   "modelId": 2960136,
+   "versionId": 3368916,
+   "version": "Real - Alpha",
+   "triggers": [],
+   "tags": [
+    "anime2real",
+    "style"
+   ],
+   "nsfw": true,
+   "url": "https://civitai.com/models/2960136",
+   "preview": "Anime2Real _Alpha.jpg",
+   "strength": 0.8,
+   "note": "【轉真人・推薦】作者建議強度 0.8，不需要觸發詞。實測最忠於原角色：臉型、表情、身材比例都保留，變成亞洲面孔的真實照片。不加這個 LoRA 時臉常換成另一個人。只能用在 Qwen 2.1 模型（Noct Q）上。轉真人：圖生圖、重繪幅度 1.0，提示詞開頭寫 Transform the image to a realistic photograph，後面用英文句子描述人物。"
+  },
+  "qwen21\\Qwen2.1_Anything2RealCharacters.safetensors": {
+   "title": "Anything2RealCharacters（Qwen 2.1）",
+   "modelId": 2808492,
+   "versionId": 3363600,
+   "version": "Qwen2.1",
+   "triggers": [
+    "photorealistic",
+    "transform the image to realistic photograph"
+   ],
+   "tags": [
+    "anything2real",
+    "style",
+    "krea2",
+    "real",
+    "coser",
+    "anime2real"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2808492",
+   "preview": "Qwen2.1_Anything2RealCharacters.jpg",
+   "strength": 1.0,
+   "note": "【轉真人】觸發詞 photorealistic, transform the image to realistic photograph，強度 0.75～1.0。實測也很忠於原角色，但偏精修廣告照（皮膚較光滑、光線較暖）。想要更自然就換 Anime2Real。只能用在 Qwen 2.1 模型（Noct Q）上。轉真人：圖生圖、重繪幅度 1.0，提示詞開頭寫 Transform the image to a realistic photograph，後面用英文句子描述人物。"
+  },
+  "qwen21\\NSFW Qwen by TheseAlpacas V2.safetensors": {
+   "title": "NSFW（Qwen 2.1）",
+   "modelId": 2958918,
+   "versionId": 3357315,
+   "version": "v2.0",
+   "triggers": [],
+   "tags": [
+    "licking",
+    "buttplug",
+    "deepthroat",
+    "dildo",
+    "missionary",
+    "anus",
+    "vagina",
+    "tits"
+   ],
+   "nsfw": true,
+   "url": "https://civitai.com/models/2958918",
+   "preview": "NSFW Qwen by TheseAlpacas V2.jpg",
+   "strength": 0.9,
+   "note": "【成人】加強成人內容的身體細節與姿勢。作者建議：Base 模型 25 步以上、CFG 3～6、強度 0.8～1，取樣器 er_sde＋beta（用 euler 效果差）。Noct Q 本身就不擋成人內容，畫不出來或結構怪時再加。"
+  },
+  "qwen21\\FlatAnime_Qwen_2.1.safetensors": {
+   "title": "Anime Flat Style（Qwen 2.1）",
+   "modelId": 1952560,
+   "versionId": 3361221,
+   "version": "Qwen2.1",
+   "triggers": [],
+   "tags": [
+    "anime",
+    "style",
+    "flat color",
+    "zimageturbo",
+    "qwen",
+    "anime screencaps",
+    "ltx-2.3",
+    "anima"
+   ],
+   "nsfw": true,
+   "url": "https://civitai.com/models/1952560",
+   "preview": "FlatAnime_Qwen_2.1.jpg",
+   "strength": 1.0,
+   "note": "【動漫・平塗】賽璐璐動畫風：顏色更亮、陰影更少、更平。搭 Noct Q Anime 用，提示詞開頭寫 An anime illustration of…。實測（Noct Q Anime 25 步）：整體變亮、髮絲和光暈更明顯，效果看得出來但不誇張，強度 0.7～1.0。"
+  },
+  "qwen21\\lenovo_qwen21.safetensors": {
+   "title": "Lenovo UltraReal（Qwen 2.1）",
+   "modelId": 1662740,
+   "versionId": 3349565,
+   "version": "v1.0 Qwen2.1",
+   "triggers": [],
+   "tags": [
+    "realistic",
+    "girls",
+    "dramatic",
+    "photorealistic",
+    "style"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/1662740",
+   "preview": "lenovo_qwen21.jpg",
+   "strength": 1.0,
+   "note": "【寫實・自然感】Qwen 2.1 下載數第一的寫實 LoRA。實測（Turbo 1.0）：最不像 AI 精修照，構圖像隨手拍（鏡頭會拉遠一點）、光線自然，人物偏西方臉。作者建議用 Base 模型、CFG 3～4、排程 beta；畫面太油膩時 CFG 降到 1。可以和其他 LoRA 一起疊。"
+  },
+  "qwen21\\nicegirls_v2_qwen21.safetensors": {
+   "title": "NiceGirls v2（Qwen 2.1）",
+   "modelId": 1862761,
+   "versionId": 3352079,
+   "version": "v2 Qwen2.1",
+   "triggers": [],
+   "tags": [
+    "photorealistic",
+    "beauty",
+    "character"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/1862761",
+   "preview": "nicegirls_v2_qwen21.jpg",
+   "strength": 0.8,
+   "note": "【寫實・歐美美女】美女人像 v2（新資料集）。實測（Turbo 0.8）：偏歐美（斯拉夫）臉、模特兒感、像雜誌照的歪頭角度。要亞洲臉改用 NiceAsians。作者說可以和其他 LoRA 一起用，搭 SamsungCam 很穩。"
+  },
+  "qwen21\\niceasians_qwen21.safetensors": {
+   "title": "NiceAsians（Qwen 2.1）",
+   "modelId": 1862761,
+   "versionId": 3349898,
+   "version": "v1.0 Qwen2.1 Asians",
+   "triggers": [],
+   "tags": [
+    "photorealistic",
+    "beauty",
+    "character"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/1862761",
+   "preview": "niceasians_qwen21.jpg",
+   "strength": 0.8,
+   "note": "【寫實・亞洲美女】NiceGirls 的亞洲版，作者說目前亞洲版比較好。實測（Turbo 0.8）：亞洲臉、模特兒感，比不加 LoRA 更有雜誌照的氣質。可以和 SamsungCam、NSFW 類 LoRA 一起疊。"
+  },
+  "qwen21\\samsung_qwen21.safetensors": {
+   "title": "SamsungCam UltraReal（Qwen 2.1）",
+   "modelId": 1551668,
+   "versionId": 3354434,
+   "version": "v1.0 Qwen2.1",
+   "triggers": [],
+   "tags": [
+    "digital",
+    "candid",
+    "modern",
+    "samsung",
+    "iphone",
+    "style",
+    "highres"
+   ],
+   "nsfw": true,
+   "url": "https://civitai.com/models/1551668",
+   "preview": "samsung_qwen21.jpg",
+   "strength": 0.7,
+   "note": "【寫實・手機隨手拍】用 Galaxy S25 Ultra 拍的照片訓練，作者建議強度 0.7。實測：光線比較平、像朋友用手機幫你拍的生活照，沒有攝影棚感。作者說搭 NiceGirls／NiceAsians 和 NSFW LoRA 都穩。"
+  },
+  "qwen21\\qwen-image-2.1-consistency.safetensors": {
+   "title": "Consistency 不跑位（Qwen 2.1）",
+   "modelId": 2969143,
+   "versionId": 3364470,
+   "version": "v1.0",
+   "triggers": [],
+   "tags": [
+    "consistency",
+    "comfyui",
+    "lora",
+    "alignment",
+    "qwen",
+    "image editing",
+    "qwen image 2.1",
+    "tool"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2969143",
+   "preview": "qwen-image-2.1-consistency.jpg",
+   "strength": 1.0,
+   "note": "【改圖・對齊原圖】圖生圖（重繪幅度 1.0 的改圖）時，結果和原圖的位置對齊，不會變高、往旁邊偏；局部修改時也比較不會亂改沒要求的地方。不需要觸發詞，強度 1.0。作者是用 Base 25 步、CFG 1 測的；實測搭 Turbo 轉真人差異很小（本來就對得很準）。適合要和原圖疊合比對、做前後對照的時候。大範圍移除東西（例如移除前景的人）時要關掉，否則會留下半透明殘影。"
+  },
+  "qwen21\\Pornmaster_QI2.1_Breasts_Slider_V1.safetensors": {
+   "title": "胸部大小滑桿（Pornmaster）",
+   "modelId": 2954355,
+   "versionId": 3346363,
+   "version": "V1",
+   "triggers": [],
+   "tags": [
+    "breasts",
+    "pornmaster",
+    "small breasts",
+    "large breasts",
+    "tool"
+   ],
+   "nsfw": true,
+   "url": "https://civitai.com/models/2954355",
+   "preview": "Pornmaster_QI2.1_Breasts_Slider_V1.jpg",
+   "strength": 5.0,
+   "note": "【滑桿・胸部大小】強度範圍 -20～+20：正值變大（提示詞加 large breasts.），負值變小（加 small breasts.）。實測（Turbo）：+5 就很明顯（領口也會跟著敞開），+10 非常大；-5／-10 會變小，但幅度比正值溫和。按 ⇆ 會一次畫 -10／-5／0／+5／+10 五張比較。",
+   "min": -20,
+   "max": 20,
+   "slider": true
+  },
+  "qwen21\\qwen21_v2_000002750.safetensors": {
+   "title": "女性私處細節（Qwen 2.1）",
+   "modelId": 2960871,
+   "versionId": 3354330,
+   "version": "v1.0",
+   "triggers": [],
+   "tags": [
+    "concept"
+   ],
+   "nsfw": true,
+   "url": "https://civitai.com/models/2960871",
+   "preview": "qwen21_v2_000002750.jpg",
+   "strength": 0.8,
+   "note": "【成人・解剖細節】加強女性私處的細節與正確度（作者說明只有一句 improves qwen 2.1 vagina）。只在畫裸體時開，強度 0.6～1.0。已確認能完整載入；Noct Q 本身就畫得出來，細節不對時再加。"
+  },
   "qwen21\\p_qwen_image_2.1_8step_v0.1.safetensors": {
    "title": "Pruna 加速 8 步（Qwen 2.1）",
    "modelId": 2958738,
@@ -77,6 +1099,29 @@
    "strength": 1.0,
    "note": "【加速・更快】8 步版的 5 步版本，步數設 5。Pruna 加速 LoRA 的設定：步數 8（5 步版用 5）、CFG 1、取樣器 er_sde、排程 beta；負面提示詞會失效。實測比 8 步更灰、更霧，只建議拿來試構圖。"
   },
+  "qwen21\\fwaun-style_qwen_image_2_1_v50.safetensors": {
+   "title": "Fwaun Style",
+   "modelId": 2593831,
+   "versionId": 3373050,
+   "version": "qwen_image_2.1_v5.0",
+   "triggers": [
+    "fwaun style",
+    "semi-chibi style",
+    "photorealistic background",
+    "monochrome"
+   ],
+   "tags": [
+    "flat color",
+    "chibi",
+    "deformed",
+    "no lineart",
+    "style"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2593831",
+   "preview": "fwaun-style_qwen_image_2_1_v50.jpg",
+   "strength": 0.8
+  },
   "qwen21\\Qwen-Image-2.1-viggle-turbo-4step-lora-r64.safetensors": {
    "title": "[ Accelerator LoRAs ] Applicable to QW21 | Minimax H3 | HYVideo TURBO/LIGHTNING/DMD/FAST",
    "modelId": 1063735,
@@ -95,6 +1140,21 @@
    "nsfw": false,
    "url": "https://civitai.com/models/1063735",
    "preview": "Qwen-Image-2.1-viggle-turbo-4step-lora-r64.jpg",
+   "strength": 0.8
+  },
+  "qwen21\\pussyV2.safetensors": {
+   "title": "qwen 2.1 阴道|vagina",
+   "modelId": 2976277,
+   "versionId": 3377365,
+   "version": "v2.0",
+   "triggers": [],
+   "tags": [
+    "concept",
+    "vagina"
+   ],
+   "nsfw": true,
+   "url": "https://civitai.com/models/2976277",
+   "preview": "pussyV2.jpg",
    "strength": 0.8
   }
  },
