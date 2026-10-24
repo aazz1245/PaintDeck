@@ -43,7 +43,7 @@
 
 ## 安裝（一般使用者）
 
-到 [Releases](https://github.com/sressky12-ux/PaintDeck/releases) 下載安裝檔 `繪匣 PaintDeck_<版本>_x64-setup.exe` 雙擊安裝。安裝檔沒有付費簽章，Windows 可能跳出「Windows 已保護您的電腦」：按「其他資訊」→「仍要執行」。第一次打開會進安裝精靈，照畫面選資料放哪裡、要下載哪些模型就好。
+到 [Releases](https://github.com/sressky12-ux/PaintDeck/releases) 下載安裝檔 `PaintDeck_<版本>_x64-setup.exe` 雙擊安裝。安裝檔沒有付費簽章，Windows 可能跳出「Windows 已保護您的電腦」：按「其他資訊」→「仍要執行」。第一次打開會進安裝精靈，照畫面選資料放哪裡、要下載哪些模型就好。
 
 完整版有幾個模型放在 Civitai，要先在「設定」填 Civitai API key 才下載得到（手冊第 01 章有申請步驟）。
 
