@@ -3486,7 +3486,7 @@ mod tests {
     fn packs_cover_manifests() {
         let res = crate::paths::default_res();
         let full = manifest(&res, "full");
-        assert!(full.len() > 50);
+        assert!(full.len() > 25); // 公開版拿掉收藏 LoRA 後約 33 個，私人版 80 多個
         let other: Vec<&str> = full.iter().map(|m| m.rel.as_str()).filter(|r| pack_of(r) == "other").collect();
         assert!(other.is_empty(), "沒歸包的檔：{other:?}");
         let mut basic: Vec<String> = manifest(&res, "basic").into_iter().map(|m| m.rel).collect();
@@ -3541,7 +3541,8 @@ mod tests {
     #[test]
     fn adopted_newer_version_counts_as_installed() {
         let res = crate::paths::default_res();
-        let zoda = manifest(&res, "full").into_iter().find(|m| m.rel == "loras/zodaplus_v2_anima.safetensors").expect("清單有 ZodaPlus");
+        // 拿清單裡最小的檔來測（測試要寫一個差不多大的假檔）；公開版沒有收藏 LoRA，不能指定 ZodaPlus
+        let zoda = manifest(&res, "full").into_iter().filter(|m| m.size > 10_000).min_by_key(|m| m.size).expect("清單有檔");
         let models = std::env::temp_dir().join(format!("anima_adopt_test_{}", std::process::id()));
         let f = rel_path(&models, &zoda.rel);
         std::fs::create_dir_all(f.parent().unwrap()).unwrap();
