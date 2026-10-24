@@ -1,0 +1,21 @@
+{
+ "in": "淡入",
+ "out": "淡出",
+ "extract": "擷取",
+ "lift": "提取",
+ "video": "影片",
+ "audio": "音訊",
+ "text": "文字",
+ "image": "圖片",
+ "title": "標題",
+ "shape": "圖形",
+ "clip": "片段",
+ "clips": "片段",
+ "track": "軌道",
+ "tracks": "軌道",
+ "a video": "影片",
+ "an audio": "音訊",
+ "an image": "圖片",
+ "a": "",
+ "an": ""
+}

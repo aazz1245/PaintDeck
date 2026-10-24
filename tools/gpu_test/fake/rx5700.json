@@ -1,0 +1,1 @@
+{"vc":[{"name":"AMD Radeon RX 5700","pnp":"PCI\\VEN_1002&DEV_731F&SUBSYS_E4111DA2&REV_C4\\6&3B1E2A0C&0&00000019","vendor":"Advanced Micro Devices, Inc.","driver":"31.0.24033.1003","ram":4293918720}],"reg":[{"id":"pci\\ven_1002&dev_731f&rev_c4","desc":"AMD Radeon RX 5700","qw":8573157376,"mem":null,"radeon":"24.9.1"}]}

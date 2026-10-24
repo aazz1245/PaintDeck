@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gummy Bears</title>
+<!-- 軟糖小熊試玩頁：調手感用（觀景窗裡用的是同一個 js/gummy.js）。網址：/static/gummy.html -->
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }
+</script>
+<style>
+  :root { --ink: #18161a; --mute: #8b867f; --line: #ebe8e3; --soft: #f6f5f3; --acc: #e9b500; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #f3f2f0; color: var(--ink); overflow: hidden;
+    font: 14px/1.5 "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif; cursor: none; }
+  #stage { position: fixed; inset: 0; }
+  .mono { font: 500 11px/1 Consolas, "Cascadia Mono", monospace; letter-spacing: .16em; text-transform: uppercase; }
+  header { position: fixed; left: 56px; top: 44px; pointer-events: none; }
+  header .mono { color: #6f6a64; display: flex; align-items: center; gap: 8px; }
+  header .mono::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--acc); }
+  h1 { margin: 14px 0 0; font: italic 400 clamp(54px, 7.4vw, 96px)/.92 Georgia, "Times New Roman", "Noto Serif TC", serif; letter-spacing: -.035em; }
+  h1 em { font-style: italic; color: #b9b3ab; font-weight: 300; }
+  header p { margin: 22px 0 0; max-width: 360px; color: #5f5a55; font-size: 14.5px; line-height: 1.6; }
+  .card { position: fixed; right: 52px; top: 50%; transform: translateY(-50%); width: 300px; padding: 22px 24px 24px; border-radius: 22px;
+    background: rgba(255,255,255,.86); backdrop-filter: blur(14px); box-shadow: 0 20px 60px rgba(40,30,20,.08), 0 1px 0 rgba(255,255,255,.9) inset; cursor: default; }
+  .row { display: flex; justify-content: space-between; align-items: center; }
+  .row .mono { color: var(--mute); }
+  .row b { font: 600 11px/1 Consolas, monospace; letter-spacing: .06em; }
+  .flavors { display: flex; justify-content: space-between; margin: 16px 0 24px; }
+  .flavors button { width: 40px; height: 40px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; transition: transform .15s;
+    box-shadow: inset 0 -5px 8px rgba(0,0,0,.18), inset 0 4px 6px rgba(255,255,255,.65), 0 3px 8px rgba(0,0,0,.1); }
+  .flavors button:hover { transform: translateY(-2px); }
+  .flavors button.on { outline: 2.5px solid var(--ink); outline-offset: 3px; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; margin: 18px 0 22px; background: var(--line); cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--ink); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+  .reads { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .reads div { background: var(--soft); border-radius: 12px; padding: 12px 14px 10px; }
+  .reads b { display: block; margin-top: 8px; font: italic 400 34px/1 Georgia, serif; letter-spacing: -.02em; }
+  .reads .mono { color: var(--mute); font-size: 10px; }
+  #pour { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border: 0; border-radius: 14px; background: var(--ink); color: #fff;
+    font: 600 14px/1 "Segoe UI", "Microsoft JhengHei", sans-serif; cursor: pointer; transition: transform .15s; }
+  #pour i { font: italic 15px/1 Georgia, serif; opacity: .7; }
+  #pour:hover { transform: translateY(-1px); }
+  #pour:active { transform: scale(.98); }
+  .chips { position: fixed; left: 56px; bottom: 36px; display: grid; grid-template-columns: auto auto; gap: 10px 12px; pointer-events: none; }
+  .chips span { padding: 7px 12px; border-radius: 999px; background: rgba(255,255,255,.8); font: 12px/1 Consolas, "Microsoft JhengHei", monospace; color: var(--mute); }
+  .chips b { color: var(--ink); font-weight: 600; margin-right: 6px; }
+  #cur { position: fixed; left: 0; top: 0; width: 20px; height: 20px; margin: -10px 0 0 -10px; border: 1.5px solid rgba(24,22,26,.5); border-radius: 50%;
+    pointer-events: none; transition: width .18s, height .18s, margin .18s, background .18s, border-color .18s; z-index: 9; }
+  #cur.hover { width: 34px; height: 34px; margin: -17px 0 0 -17px; border-color: rgba(24,22,26,.85); }
+  #cur.grab { width: 56px; height: 56px; margin: -28px 0 0 -28px; background: rgba(24,22,26,.06); border-color: var(--ink); }
+  body:has(.card:hover) #cur { opacity: 0; }
+  #err { position: fixed; inset: 0; display: none; place-items: center; color: #b00; font-size: 15px; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<header>
+  <div class="mono">Confectionery physics · No. 05</div>
+  <h1>Gummy<em>/</em><br>Bears.</h1>
+  <p>半透明的 metaball 軟糖，用有彈性的糖膠做成。抓住耳朵、手腳、吻部或頭就能拉長；往下壓變煎餅；用力一甩丟過桌面。</p>
+</header>
+<aside class="card">
+  <div class="row"><span class="mono">Flavor 口味</span><b id="flname">Mixed 綜合</b></div>
+  <div class="flavors" id="flavors"></div>
+  <div class="row"><span class="mono">Wobble 搖晃</span><b id="wobv">50%</b></div>
+  <input type="range" id="wob" min="0" max="100" value="50">
+  <div class="reads">
+    <div><span class="mono">Stretch 拉伸</span><b id="rs">1.00×</b></div>
+    <div><span class="mono">Bounces 彈跳</span><b id="rb">0</b></div>
+  </div>
+  <button id="pour" type="button"><span>Pour more bears 倒更多熊</span><i>+5</i></button>
+</aside>
+<div class="chips">
+  <span><b>拉手腳／耳朵</b>拉長、晃動</span><span><b>往上拉頭</b>脖子拉長、跳起來</span>
+  <span><b>往下壓頭</b>壓扁、彈飛</span><span><b>甩</b>丟出去、撞散</span>
+</div>
+<div id="cur"></div>
+<div id="err"></div>
+<script type="module">
+  import { GummyWorld, FLAVORS } from "./js/gummy.js";
+  const $ = (s) => document.querySelector(s);
+  const qs = new URLSearchParams(location.search);
+  try {
+    const cur = $("#cur");
+    const world = new GummyWorld($("#stage"), {
+      table: true, viewHeight: +qs.get("vh") || 4.4, elevation: +qs.get("elev") || 14, floorNdc: +(qs.get("fn") ?? -0.5), blend: +qs.get("blend") || 30, res: +qs.get("res") || 40,
+      pixelRatio: 2, transmissionScale: 1, preserve: qs.has("sim"), onCursor: (s) => (cur.className = s),
+    });
+    // 口味：點一個＝之後只倒這個口味，再點一次＝回到綜合
+    let pick = null;
+    for (const f of FLAVORS) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.title = `${f.name} ${f.zh}`;
+      b.style.background = `radial-gradient(circle at 38% 32%, ${f.base}, ${f.deep} 75%)`;
+      b.onclick = () => {
+        pick = pick === f ? null : f;
+        for (const x of $("#flavors").children) x.classList.toggle("on", x === b && pick === f);
+        $("#flname").textContent = pick ? `${pick.name} ${pick.zh}` : "Mixed 綜合";
+      };
+      $("#flavors").append(b);
+    }
+    addEventListener("pointermove", (e) => { cur.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`; });
+    $("#wob").oninput = (e) => { world.wobble = e.target.value / 100; $("#wobv").textContent = e.target.value + "%"; };
+    $("#pour").onclick = () => world.pour(5, pick);
+
+    // 測試用：?sim=步數[&do=head|press|hand|ear|throw][&n=熊數] → 固定亂數、同步跑完、畫一張就停（給無頭瀏覽器截圖）
+    if (qs.has("sim")) {
+      let s = 12345;
+      Math.random = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+      world.kScale = +qs.get("k") || 1;
+      if (qs.has("wob")) world.wobble = +qs.get("wob");
+      world.pour(+qs.get("n") || 6);
+      world.stop();
+      if (world.bears.length === 1) { const b = world.bears[0], c = b.com(); for (let i = 0; i < b.x.length; i += 3) { b.x[i] -= c[0]; b.x[i + 2] -= c[2]; } }
+      for (let i = 0; i < +qs.get("sim"); i++) world.step();
+      const act = qs.get("do");
+      if (act) {
+        const b = world.bears[+qs.get("b") || 0], X = b.x;
+        const part = { head: 4, press: 4, hand: 8, ear: 6, throw: 4 }[act];
+        const p0 = [X[part * 3], X[part * 3 + 1], X[part * 3 + 2]];
+        const up = +qs.get("up") || 1.2;
+        const goal = { head: [p0[0], p0[1] + up, p0[2]], press: [p0[0], 0, p0[2]], hand: [p0[0] - 1, p0[1] + 0.4, p0[2]], ear: [p0[0] - 0.4, p0[1] + 0.8, p0[2]],
+          throw: [p0[0] + 2.5, p0[1] + 1.5, p0[2]] }[act];
+        world.grab = { bear: b, i: part, target: [...p0] };
+        const n = +qs.get("hold") || 30;
+        for (let k = 1; k <= n; k++) {
+          for (let a = 0; a < 3; a++) world.grab.target[a] = p0[a] + (goal[a] - p0[a]) * Math.min(1, k / (n * 0.6));
+          world.step();
+        }
+        if (qs.has("release")) { world.grab = null; for (let i = 0; i < +qs.get("release"); i++) world.step(); }
+      }
+      world.bears.forEach((b) => b.draw());
+      world.renderer.render(world.scene, world.camera);
+      // 無頭瀏覽器截圖拍不到 WebGL 畫布：轉成圖片蓋在上面
+      const im = new Image();
+      im.src = world.renderer.domElement.toDataURL("image/png");
+      im.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none";
+      $("#stage").append(im);
+      document.title = "done";
+    } else world.pour(7);
+    setInterval(() => {
+      $("#rs").textContent = world.stats.stretch.toFixed(2) + "×";
+      $("#rb").textContent = world.stats.bounces;
+    }, 100);
+    window.world = world;
+  } catch (e) {
+    $("#err").style.display = "grid";
+    $("#err").textContent = "畫不出來：" + e.message;
+    throw e;
+  }
+</script>
+</body>
+</html>

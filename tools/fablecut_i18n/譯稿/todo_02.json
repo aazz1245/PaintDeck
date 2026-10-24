@@ -1,0 +1,1402 @@
+[
+ {
+  "en": "Replace file…",
+  "ctx": "index.html:576"
+ },
+ {
+  "en": "— a new file for every clip that uses it",
+  "ctx": "index.html:576"
+ },
+ {
+  "en": "Right-click a bin video",
+  "ctx": "index.html:577"
+ },
+ {
+  "en": "Create proxy",
+  "ctx": "index.html:577"
+ },
+ {
+  "en": "— a light copy to edit with (right-click the Project tab for all of them) ·",
+  "ctx": "index.html:577"
+ },
+ {
+  "en": "above the monitor plays proxies on / off; export always uses the originals",
+  "ctx": "index.html:577"
+ },
+ {
+  "en": "Comp clip / bin comp",
+  "ctx": "index.html:578"
+ },
+ {
+  "en": "Double-click to open it on the timeline · drag a bin comp onto the timeline to place it · the breadcrumb above the timeline steps back out",
+  "ctx": "index.html:578"
+ },
+ {
+  "en": "Right-click clips",
+  "ctx": "index.html:579"
+ },
+ {
+  "en": "Precompose",
+  "ctx": "index.html:579"
+ },
+ {
+  "en": "— move the selection into a new comp",
+  "ctx": "index.html:579"
+ },
+ {
+  "en": "inside a comp",
+  "ctx": "index.html:580"
+ },
+ {
+  "en": "Back out one level (once nothing is selected)",
+  "ctx": "index.html:580"
+ },
+ {
+  "en": "Drag a lower third, logo animation or social layout onto the timeline (or click ＋) · fill in its fields in the Inspector's",
+  "ctx": "index.html:581"
+ },
+ {
+  "en": "Template",
+  "ctx": "index.html:581"
+ },
+ {
+  "en": "section · right-click a comp →",
+  "ctx": "index.html:581"
+ },
+ {
+  "en": "Save as template",
+  "ctx": "index.html:581"
+ },
+ {
+  "en": "Color workspace",
+  "ctx": "index.html:585"
+ },
+ {
+  "en": "Colour wheel",
+  "ctx": "index.html:587"
+ },
+ {
+  "en": "Drag to tint (",
+  "ctx": "index.html:587"
+ },
+ {
+  "en": "= fine) · double-click resets the colour · double-click a label or slider name to reset it",
+  "ctx": "index.html:587"
+ },
+ {
+  "en": "WB pick / Pick",
+  "ctx": "index.html:588"
+ },
+ {
+  "en": "Click the monitor to balance, to mark a colour on the curves, or to select it in a layer's qualifier ·",
+  "ctx": "index.html:588"
+ },
+ {
+  "en": "Curves",
+  "ctx": "index.html:589"
+ },
+ {
+  "en": "Click adds a point on the curve · drag moves it · double-click removes it",
+  "ctx": "index.html:589"
+ },
+ {
+  "en": "Layer mask on monitor",
+  "ctx": "index.html:590"
+ },
+ {
+  "en": "Drag inside to move · handles resize · the knob rotates (",
+  "ctx": "index.html:590"
+ },
+ {
+  "en": "snaps to 15°) · poly / bezier:",
+  "ctx": "index.html:590"
+ },
+ {
+  "en": "+click adds a point, double-click removes one ·",
+  "ctx": "index.html:590"
+ },
+ {
+  "en": "Draw",
+  "ctx": "index.html:590"
+ },
+ {
+  "en": ": drag a free-hand outline",
+  "ctx": "index.html:590"
+ },
+ {
+  "en": "Masks",
+  "ctx": "index.html:594"
+ },
+ {
+  "en": "Inspector → Masks",
+  "ctx": "index.html:594"
+ },
+ {
+  "en": "Pen",
+  "ctx": "index.html:596"
+ },
+ {
+  "en": "Click to place points, drag while placing to pull curve handles · click the first point or",
+  "ctx": "index.html:596"
+ },
+ {
+  "en": "closes ·",
+  "ctx": "index.html:596"
+ },
+ {
+  "en": "removes the last point,",
+  "ctx": "index.html:596"
+ },
+ {
+  "en": "puts it back ·",
+  "ctx": "index.html:596"
+ },
+ {
+  "en": "Drag a free-hand outline — it becomes an editable bezier",
+  "ctx": "index.html:597"
+ },
+ {
+  "en": "Mask on monitor",
+  "ctx": "index.html:598"
+ },
+ {
+  "en": "Drag inside to move · edge handles resize · the knob rotates (",
+  "ctx": "index.html:598"
+ },
+ {
+  "en": "snaps to 15°) · drag a point or its handles (",
+  "ctx": "index.html:598"
+ },
+ {
+  "en": "breaks the pair) ·",
+  "ctx": "index.html:598"
+ },
+ {
+  "en": "+drag a point pulls new handles ·",
+  "ctx": "index.html:598"
+ },
+ {
+  "en": "+click the outline adds a point · double-click a point removes it ·",
+  "ctx": "index.html:598"
+ },
+ {
+  "en": "Shapes and transforms",
+  "ctx": "index.html:602"
+ },
+ {
+  "en": "bin → Shapes · Inspector",
+  "ctx": "index.html:602"
+ },
+ {
+  "en": "Shape item on monitor",
+  "ctx": "index.html:604"
+ },
+ {
+  "en": "Drag inside to move · corners resize (",
+  "ctx": "index.html:604"
+ },
+ {
+  "en": "keeps the proportions) · the knob rotates (",
+  "ctx": "index.html:604"
+ },
+ {
+  "en": "snaps to 15°) · line / path: drag a point or its handles (",
+  "ctx": "index.html:604"
+ },
+ {
+  "en": "breaks the pair),",
+  "ctx": "index.html:604"
+ },
+ {
+  "en": "+drag a point pulls new handles · path:",
+  "ctx": "index.html:604"
+ },
+ {
+  "en": "+click the outline adds a point, double-click a point removes it ·",
+  "ctx": "index.html:604"
+ },
+ {
+  "en": "Shape / text-path pen",
+  "ctx": "index.html:605"
+ },
+ {
+  "en": "Click to place points, drag while placing to pull curve handles · click the first point closes the path ·",
+  "ctx": "index.html:605"
+ },
+ {
+  "en": "keeps it open ·",
+  "ctx": "index.html:605"
+ },
+ {
+  "en": "Motion path",
+  "ctx": "index.html:606"
+ },
+ {
+  "en": "Drag a key square to move it · drag a handle to bend the path (",
+  "ctx": "index.html:606"
+ },
+ {
+  "en": "+drag a key pulls new handles · double-click a key makes it a corner again",
+  "ctx": "index.html:606"
+ },
+ {
+  "en": "Anchor ✥ Move",
+  "ctx": "index.html:607"
+ },
+ {
+  "en": "Drag on the monitor to move the anchor point; the picture stays put (",
+  "ctx": "index.html:607"
+ },
+ {
+  "en": "snaps to its centre) ·",
+  "ctx": "index.html:607"
+ },
+ {
+  "en": "turns it off",
+  "ctx": "index.html:607"
+ },
+ {
+  "en": "Tracking",
+  "ctx": "index.html:611"
+ },
+ {
+  "en": "Inspector → Tracking · a mask’s Track buttons",
+  "ctx": "index.html:611"
+ },
+ {
+  "en": "Track point",
+  "ctx": "index.html:613"
+ },
+ {
+  "en": "Click the spot to follow on the monitor — it tracks from the playhead to the clip's end ·",
+  "ctx": "index.html:613"
+ },
+ {
+  "en": "cancels the pick, or stops a running track (what was tracked so far is kept)",
+  "ctx": "index.html:613"
+ },
+ {
+  "en": "No shortcut matches that.",
+  "ctx": "index.html:616"
+ },
+ {
+  "en": "use strict",
+  "ctx": "loudness.js:14: \"use strict\";"
+ },
+ {
+  "en": "EQ (3-band)",
+  "ctx": "audio-fx.js:29: label: \"EQ (3-band)\","
+ },
+ {
+  "en": "Hz",
+  "ctx": "audio-fx.js:31: lowFreq: P(120, 20, 1000, 1, \"Hz\", \"Low freq\"), lowGain: P(0, -18, 18, 0.5, \"dB\", \"Low\"),"
+ },
+ {
+  "en": "Low freq",
+  "ctx": "audio-fx.js:31: lowFreq: P(120, 20, 1000, 1, \"Hz\", \"Low freq\"), lowGain: P(0, -18, 18, 0.5, \"dB\", \"Low\"),"
+ },
+ {
+  "en": "Low",
+  "ctx": "audio-fx.js:31: lowFreq: P(120, 20, 1000, 1, \"Hz\", \"Low freq\"), lowGain: P(0, -18, 18, 0.5, \"dB\", \"Low\"),"
+ },
+ {
+  "en": "Mid freq",
+  "ctx": "audio-fx.js:32: midFreq: P(1000, 100, 8000, 10, \"Hz\", \"Mid freq\"), midGain: P(0, -18, 18, 0.5, \"dB\", \"Mid\"),"
+ },
+ {
+  "en": "Mid",
+  "ctx": "audio-fx.js:32: midFreq: P(1000, 100, 8000, 10, \"Hz\", \"Mid freq\"), midGain: P(0, -18, 18, 0.5, \"dB\", \"Mid\"),"
+ },
+ {
+  "en": "Mid Q",
+  "ctx": "audio-fx.js:33: midQ: P(1, 0.1, 10, 0.1, \"\", \"Mid Q\"),"
+ },
+ {
+  "en": "High freq",
+  "ctx": "audio-fx.js:34: highFreq: P(8000, 1000, 18000, 100, \"Hz\", \"High freq\"), highGain: P(0, -18, 18, 0.5, \"dB\", \"High\"),"
+ },
+ {
+  "en": "High",
+  "ctx": "audio-fx.js:34: highFreq: P(8000, 1000, 18000, 100, \"Hz\", \"High freq\"), highGain: P(0, -18, 18, 0.5, \"dB\", \"High\"),"
+ },
+ {
+  "en": "Cutoff",
+  "ctx": "audio-fx.js:37: highpass: { label: \"High-pass\", params: { freq: P(80, 20, 2000, 1, \"Hz\", \"Cutoff\"), q: P(0.71, 0.1, 10, 0.01, \"\", \"Q\") } },"
+ },
+ {
+  "en": "Compressor",
+  "ctx": "audio-fx.js:40: label: \"Compressor\","
+ },
+ {
+  "en": "Threshold",
+  "ctx": "audio-fx.js:42: threshold: P(-20, -60, 0, 0.5, \"dB\", \"Threshold\"), ratio: P(4, 1, 20, 0.1, \":1\", \"Ratio\"),"
+ },
+ {
+  "en": "Ratio",
+  "ctx": "audio-fx.js:42: threshold: P(-20, -60, 0, 0.5, \"dB\", \"Threshold\"), ratio: P(4, 1, 20, 0.1, \":1\", \"Ratio\"),"
+ },
+ {
+  "en": "Attack",
+  "ctx": "audio-fx.js:43: attack: P(10, 0, 1000, 1, \"ms\", \"Attack\"), release: P(200, 10, 1000, 5, \"ms\", \"Release\"),"
+ },
+ {
+  "en": "Release",
+  "ctx": "audio-fx.js:43: attack: P(10, 0, 1000, 1, \"ms\", \"Attack\"), release: P(200, 10, 1000, 5, \"ms\", \"Release\"),"
+ },
+ {
+  "en": "Knee",
+  "ctx": "audio-fx.js:44: knee: P(6, 0, 40, 1, \"dB\", \"Knee\"), makeup: P(0, 0, 24, 0.5, \"dB\", \"Makeup\"),"
+ },
+ {
+  "en": "Makeup",
+  "ctx": "audio-fx.js:44: knee: P(6, 0, 40, 1, \"dB\", \"Knee\"), makeup: P(0, 0, 24, 0.5, \"dB\", \"Makeup\"),"
+ },
+ {
+  "en": "Limiter",
+  "ctx": "audio-fx.js:48: label: \"Limiter\","
+ },
+ {
+  "en": "Ceiling",
+  "ctx": "audio-fx.js:49: params: { ceiling: P(-1, -24, 0, 0.1, \"dB\", \"Ceiling\"), release: P(80, 5, 1000, 5, \"ms\", \"Release\") },"
+ },
+ {
+  "en": "Noise gate",
+  "ctx": "audio-fx.js:52: label: \"Noise gate\","
+ },
+ {
+  "en": "Delay",
+  "ctx": "audio-fx.js:60: label: \"Delay\","
+ },
+ {
+  "en": "Time",
+  "ctx": "audio-fx.js:61: params: { time: P(0.3, 0.01, 2, 0.01, \"s\", \"Time\"), feedback: P(0.35, 0, 0.9, 0.01, \"\", \"Feedback\"), mix: P(0.25, 0, 1, 0.01, \"\", \"Mix\") },"
+ },
+ {
+  "en": "Feedback",
+  "ctx": "audio-fx.js:61: params: { time: P(0.3, 0.01, 2, 0.01, \"s\", \"Time\"), feedback: P(0.35, 0, 0.9, 0.01, \"\", \"Feedback\"), mix: P(0.25, 0, 1, 0.01, \"\", \"Mix\") },"
+ },
+ {
+  "en": "Mix",
+  "ctx": "audio-fx.js:61: params: { time: P(0.3, 0.01, 2, 0.01, \"s\", \"Time\"), feedback: P(0.35, 0, 0.9, 0.01, \"\", \"Feedback\"), mix: P(0.25, 0, 1, 0.01, \"\", \"Mix\") },"
+ },
+ {
+  "en": "Reverb",
+  "ctx": "audio-fx.js:64: label: \"Reverb\","
+ },
+ {
+  "en": "Decay",
+  "ctx": "audio-fx.js:65: params: { decay: P(2, 0.2, 8, 0.1, \"s\", \"Decay\"), predelay: P(20, 0, 200, 1, \"ms\", \"Pre-delay\"), mix: P(0.25, 0, 1, 0.01, \"\", \"Mix\") },"
+ },
+ {
+  "en": "Distortion",
+  "ctx": "audio-fx.js:68: label: \"Distortion\","
+ },
+ {
+  "en": "Drive",
+  "ctx": "audio-fx.js:69: params: { drive: P(0.3, 0, 1, 0.01, \"\", \"Drive\"), mix: P(1, 0, 1, 0.01, \"\", \"Mix\") },"
+ },
+ {
+  "en": "Stereo width",
+  "ctx": "audio-fx.js:72: label: \"Stereo width\","
+ },
+ {
+  "en": "Pitch shift",
+  "ctx": "audio-fx.js:76: label: \"Pitch shift\","
+ },
+ {
+  "en": "Pitch",
+  "ctx": "audio-fx.js:77: params: { semitones: P(0, -12, 12, 0.5, \"st\", \"Pitch\"), mix: P(1, 0, 1, 0.01, \"\", \"Mix\") },"
+ },
+ {
+  "en": "{0} keys: {1}",
+  "ctx": "audio-fx.js:110: const bad = (msg) => { if (strict) throw new Error(`${type} keys: ${msg}`); };"
+ },
+ {
+  "en": "must be an object of param → [{t, v}]",
+  "ctx": "audio-fx.js:111: if (typeof raw !== \"object\" || Array.isArray(raw)) { bad(\"must be an object of param → [{t, v}]\"); return undefined; }"
+ },
+ {
+  "en": "unknown parameter {0} (known: {1})",
+  "ctx": "audio-fx.js:115: if (!d) { bad(`unknown parameter ${JSON.stringify(k)} (known: ${Object.keys(FX_DEFS[type].params).join(\", \")})`); continue; }"
+ },
+ {
+  "en": "{0} cannot be automated",
+  "ctx": "audio-fx.js:116: if (d.fixed) { bad(`${k} cannot be automated`); continue; }"
+ },
+ {
+  "en": "{0} must be an array of {t, v}",
+  "ctx": "audio-fx.js:118: if (!Array.isArray(list)) { bad(`${k} must be an array of {t, v}`); continue; }"
+ },
+ {
+  "en": "{0}: every key needs t ≥ 0 and a numeric v",
+  "ctx": "audio-fx.js:122: if (!Number.isFinite(t) || t < 0 || !Number.isFinite(v)) { bad(`${k}: every key needs t ≥ 0 and a numeric v`); continue; }"
+ },
+ {
+  "en": "{0}: ease must be one of {1}",
+  "ctx": "audio-fx.js:126: else bad(`${k}: ease must be one of ${EASES.join(\", \")}`);"
+ },
+ {
+  "en": "fx must be an array of effects",
+  "ctx": "audio-fx.js:162: if (strict) throw new Error(\"fx must be an array of effects\");"
+ },
+ {
+  "en": "fx[{0}]: unknown effect {1} (known: {2})",
+  "ctx": "audio-fx.js:169: else if (strict) throw new Error(`fx[${i}]: unknown effect ${JSON.stringify(raw && raw.type)} (known: ${FX_TYPES.join(\", \")})`);"
+ },
+ {
+  "en": "Voice",
+  "ctx": "audio-fx.js:177: \"clean-voice\": { group: \"Voice\", label: \"Clean voice\", fx: ["
+ },
+ {
+  "en": "Clean voice",
+  "ctx": "audio-fx.js:177: \"clean-voice\": { group: \"Voice\", label: \"Clean voice\", fx: ["
+ },
+ {
+  "en": "Podcast",
+  "ctx": "audio-fx.js:183: podcast: { group: \"Voice\", label: \"Podcast\", fx: ["
+ },
+ {
+  "en": "Radio",
+  "ctx": "audio-fx.js:190: radio: { group: \"Voice\", label: \"Radio\", fx: ["
+ },
+ {
+  "en": "Deep voice",
+  "ctx": "audio-fx.js:197: \"deep-voice\": { group: \"Voice\", label: \"Deep voice\", fx: ["
+ },
+ {
+  "en": "Telephone",
+  "ctx": "audio-fx.js:204: telephone: { group: \"Voice\", label: \"Telephone\", fx: ["
+ },
+ {
+  "en": "Music",
+  "ctx": "audio-fx.js:212: cinematic: { group: \"Music\", label: \"Cinematic\", fx: ["
+ },
+ {
+  "en": "Cinematic",
+  "ctx": "audio-fx.js:212: cinematic: { group: \"Music\", label: \"Cinematic\", fx: ["
+ },
+ {
+  "en": "Wide",
+  "ctx": "audio-fx.js:218: wide: { group: \"Music\", label: \"Wide\", fx: [{ type: \"widener\", width: 1.6 }] },"
+ },
+ {
+  "en": "Muffled (next room)",
+  "ctx": "audio-fx.js:219: muffled: { group: \"Music\", label: \"Muffled (next room)\", fx: ["
+ },
+ {
+  "en": "unknown preset {0} (known: {1})",
+  "ctx": "audio-fx.js:228: if (!p) throw new Error(`unknown preset ${JSON.stringify(id)} (known: ${PRESET_IDS.join(\", \")})`);"
+ },
+ {
+  "en": "(off)",
+  "ctx": "audio-fx.js:233: return (list || []).map((e) => e.type + (e.on === false ? \"(off)\" : \"\") +"
+ },
+ {
+  "en": "masks must be a list of masks",
+  "ctx": "mask.js:73: if (!Array.isArray(list)) { if (strict) throw new Error(\"masks must be a list of masks\"); return null; }"
+ },
+ {
+  "en": "masks has {0} masks (at most {1})",
+  "ctx": "mask.js:75: if (strict) throw new Error(`masks has ${list.length} masks (at most ${MAX_MASKS})`);"
+ },
+ {
+  "en": "masks[{0}]",
+  "ctx": "mask.js:78: const out = list.map((m, i) => normalizeMask(m, strict, `masks[${i}]`)).filter(Boolean);"
+ },
+ {
+  "en": "{0} must be 3…{1} points [dx, dy] or [dx, dy, inX, inY, outX, outY] (fractions of the picture)",
+  "ctx": "mask.js:84: bad(`${label} must be 3…${MAX_POINTS} points [dx, dy] or [dx, dy, inX, inY, outX, outY] (fractions of the picture)`);"
+ },
+ {
+  "en": "must be an object like {shape:'ellipse', x:0.5, y:0.5, w:0.4, h:0.6}",
+  "ctx": "mask.js:96: if (!isObj(m)) return bad(\" must be an object like {shape:'ellipse', x:0.5, y:0.5, w:0.4, h:0.6}\");"
+ },
+ {
+  "en": "mask must be an object",
+  "ctx": "mask.js:161: if (!isObj(set)) { if (strict) throw new Error(\"mask must be an object\"); return base || null; }"
+ },
+ {
+  "en": "blur({0}px)",
+  "ctx": "mask.js:384: tmp2.filter = `blur(${(f / 2).toFixed(2)}px)`;"
+ },
+ {
+  "en": "{0} mask{1}:",
+  "ctx": "mask.js:405: return `${list.length} mask${list.length > 1 ? \"s\" : \"\"}: ` + list.map((m) => {"
+ },
+ {
+  "en": "feather {0}",
+  "ctx": "mask.js:408: m.feather ? ` feather ${m.feather}` : \"\", m.expand ? ` expand ${m.expand}` : \"\", m.keys ? ` ${m.keys.length} keys` : \"\"];"
+ },
+ {
+  "en": "expand {0}",
+  "ctx": "mask.js:408: m.feather ? ` feather ${m.feather}` : \"\", m.expand ? ` expand ${m.expand}` : \"\", m.keys ? ` ${m.keys.length} keys` : \"\"];"
+ },
+ {
+  "en": "{0} keys",
+  "ctx": "mask.js:408: m.feather ? ` feather ${m.feather}` : \"\", m.expand ? ` expand ${m.expand}` : \"\", m.keys ? ` ${m.keys.length} keys` : \"\"];"
+ },
+ {
+  "en": "blend must be {0}",
+  "ctx": "mask.js:452: if (props.blend != null && !BLENDS.includes(props.blend)) { bad(`blend must be ${BLENDS.join(\" | \")}`); delete props.blend; }"
+ },
+ {
+  "en": "matte must be {0} (or null for none)",
+  "ctx": "mask.js:453: if (props.matte != null && !MATTES.includes(props.matte)) { bad(`matte must be ${MATTES.join(\" | \")} (or null for none)`); delete props.matt"
+ },
+ {
+  "en": "matteTrack must be a video track ({0})",
+  "ctx": "mask.js:456: if (typeof props.matteTrack !== \"string\" || !ids.includes(props.matteTrack)) { bad(`matteTrack must be a video track (${ids.join(\", \")})`); "
+ },
+ {
+  "en": "matteTrack must be another track than the clip's own",
+  "ctx": "mask.js:457: else if (props.matteTrack === ownTrack) { bad(\"matteTrack must be another track than the clip's own\"); delete props.matteTrack; }"
+ },
+ {
+  "en": "tracks must be a list",
+  "ctx": "tracker.js:156: if (!Array.isArray(list)) { bad(\"tracks must be a list\"); return null; }"
+ },
+ {
+  "en": "tracks: at most {0}",
+  "ctx": "tracker.js:157: if (list.length > MAX_TRACKS) bad(`tracks: at most ${MAX_TRACKS}`);"
+ },
+ {
+  "en": "tracks[{0}]",
+  "ctx": "tracker.js:160: const where = `tracks[${i}]`;"
+ },
+ {
+  "en": "{0} must be an object",
+  "ctx": "tracker.js:161: if (!isObj(tr)) { bad(`${where} must be an object`); return; }"
+ },
+ {
+  "en": "Track {0}",
+  "ctx": "tracker.js:162: const name = typeof tr.name === \"string\" && tr.name.trim() ? tr.name.trim().slice(0, 60) : `Track ${i + 1}`;"
+ },
+ {
+  "en": "{0}: the name \"{1}\" is used twice",
+  "ctx": "tracker.js:163: if (names.has(name)) { bad(`${where}: the name \"${name}\" is used twice`); return; }"
+ },
+ {
+  "en": "{0}.kind must be {1}",
+  "ctx": "tracker.js:164: if (tr.kind != null && !KINDS.includes(tr.kind)) bad(`${where}.kind must be ${KINDS.join(\" | \")}`);"
+ },
+ {
+  "en": "{0}.samples: each is [t, x, y, s?, r?, q?]",
+  "ctx": "tracker.js:167: if (!Array.isArray(sm) || sm.length < 3 || !sm.slice(0, 3).every(isNum)) { bad(`${where}.samples: each is [t, x, y, s?, r?, q?]`); continue;"
+ },
+ {
+  "en": "{0} has no samples",
+  "ctx": "tracker.js:173: if (!dedup.length) { bad(`${where} has no samples`); return; }"
+ },
+ {
+  "en": "\"{0}\" {1} {2}–{3} s ({4} samples)",
+  "ctx": "tracker.js:248: return `\"${tr.name}\" ${tr.kind} ${a.toFixed(2)}–${b.toFixed(2)} s (${S.length} samples)`;"
+ },
+ {
+  "en": "{0} must be {1} points [x, y] or [x, y, inX, inY, outX, outY] (px around the item's x, y)",
+  "ctx": "motion.js:123: bad(`${label} must be ${type === \"line\" ? \"exactly 2\" : `2…${MAX_POINTS}`} points [x, y] or [x, y, inX, inY, outX, outY] (px around the item"
+ },
+ {
+  "en": "exactly 2",
+  "ctx": "motion.js:123: bad(`${label} must be ${type === \"line\" ? \"exactly 2\" : `2…${MAX_POINTS}`} points [x, y] or [x, y, inX, inY, outX, outY] (px around the item"
+ },
+ {
+  "en": "shapes must be a list of shape items",
+  "ctx": "motion.js:135: if (!Array.isArray(list)) { if (strict) throw new Error(\"shapes must be a list of shape items\"); return null; }"
+ },
+ {
+  "en": "shapes[{0}]",
+  "ctx": "motion.js:137: const out = list.map((it, i) => normalizeItem(it, strict, `shapes[${i}]`, 0, count)).filter(Boolean);"
+ },
+ {
+  "en": "must be an object like {type:'rect', w:300, h:120, fill:'#ffd166'}",
+  "ctx": "motion.js:144: if (!isObj(it)) return bad(\" must be an object like {type:'rect', w:300, h:120, fill:'#ffd166'}\");"
+ },
+ {
+  "en": ": a shape layer has at most {0} items",
+  "ctx": "motion.js:145: if (++count.n > MAX_ITEMS) return bad(`: a shape layer has at most ${MAX_ITEMS} items`);"
+ },
+ {
+  "en": ": groups nest at most {0} deep",
+  "ctx": "motion.js:148: if (type === \"group\" && depth >= MAX_DEPTH) return bad(`: groups nest at most ${MAX_DEPTH} deep`);"
+ },
+ {
+  "en": "{0}.items[{1}]",
+  "ctx": "motion.js:176: out.items = (Array.isArray(it.items) ? it.items : []).map((c, i) => normalizeItem(c, strict, `${where}.items[${i}]`, depth + 1, count)).filt"
+ },
+ {
+  "en": "shape must be an object",
+  "ctx": "motion.js:233: if (!isObj(set)) { if (strict) throw new Error(\"shape must be an object\"); return base || null; }"
+ },
+ {
+  "en": "stroke {0}/{1}",
+  "ctx": "motion.js:535: (it.stroke && it.stroke !== \"none\" ? ` stroke ${it.stroke}/${it.strokeWidth}` : \"\") +"
+ },
+ {
+  "en": "trim {0}-{1}",
+  "ctx": "motion.js:536: ((it.trimStart || 0) > 0 || (it.trimEnd ?? 100) < 100 ? ` trim ${it.trimStart || 0}-${it.trimEnd ?? 100}` : \"\") +"
+ },
+ {
+  "en": "{0} shape{1}:",
+  "ctx": "motion.js:539: return `${n} shape${n > 1 ? \"s\" : \"\"}: ` + list.map(one).join(\", \");"
+ },
+ {
+  "en": "must be an object like {type:'path', points:[[-300, 0], [300, 0]], closed:false}",
+  "ctx": "motion.js:780: if (!isObj(v)) return bad(\" must be an object like {type:'path', points:[[-300, 0], [300, 0]], closed:false}\");"
+ },
+ {
+  "en": "Exposure",
+  "ctx": "color.js:65: exposure: R(0, -5, 5, 0.01, \"Exposure\"),"
+ },
+ {
+  "en": "Temp",
+  "ctx": "color.js:66: temp: R(0, -100, 100, 1, \"Temp\"),"
+ },
+ {
+  "en": "Tint",
+  "ctx": "color.js:67: tint: R(0, -100, 100, 1, \"Tint\"),"
+ },
+ {
+  "en": "Gamma",
+  "ctx": "color.js:69: gamma: R(0, -1, 1, 0.005, \"Gamma\"),"
+ },
+ {
+  "en": "Gain",
+  "ctx": "color.js:70: gain: R(0, -1, 1, 0.005, \"Gain\"),"
+ },
+ {
+  "en": "Offset",
+  "ctx": "color.js:71: offset: R(0, -1, 1, 0.005, \"Offset\"),"
+ },
+ {
+  "en": "Contrast",
+  "ctx": "color.js:72: contrast: R(1, 0, 3, 0.01, \"Contrast\"),"
+ },
+ {
+  "en": "Pivot",
+  "ctx": "color.js:73: pivot: R(0.435, 0.05, 0.95, 0.005, \"Pivot\"),"
+ },
+ {
+  "en": "Blacks",
+  "ctx": "color.js:74: blacks: R(0, -100, 100, 1, \"Blacks\"),"
+ },
+ {
+  "en": "Shadows",
+  "ctx": "color.js:75: shadows: R(0, -100, 100, 1, \"Shadows\"),"
+ },
+ {
+  "en": "Midtones",
+  "ctx": "color.js:76: midtones: R(0, -100, 100, 1, \"Midtones\"),"
+ },
+ {
+  "en": "Highlights",
+  "ctx": "color.js:77: highlights: R(0, -100, 100, 1, \"Highlights\"),"
+ },
+ {
+  "en": "Whites",
+  "ctx": "color.js:78: whites: R(0, -100, 100, 1, \"Whites\"),"
+ },
+ {
+  "en": "Low rolloff",
+  "ctx": "color.js:79: lowSoft: R(0, 0, 100, 1, \"Low rolloff\"),"
+ },
+ {
+  "en": "High rolloff",
+  "ctx": "color.js:80: highSoft: R(0, 0, 100, 1, \"High rolloff\"),"
+ },
+ {
+  "en": "Saturation",
+  "ctx": "color.js:81: saturation: R(100, 0, 200, 1, \"Saturation\"),"
+ },
+ {
+  "en": "Hue vs Hue",
+  "ctx": "color.js:86: hueHue: { label: \"Hue vs Hue\", xMax: 360, min: -180, max: 180, neutral: 0, periodic: true },"
+ },
+ {
+  "en": "Hue vs Sat",
+  "ctx": "color.js:87: hueSat: { label: \"Hue vs Sat\", xMax: 360, min: 0, max: 2, neutral: 1, periodic: true },"
+ },
+ {
+  "en": "Hue vs Luma",
+  "ctx": "color.js:88: hueLuma: { label: \"Hue vs Luma\", xMax: 360, min: -0.5, max: 0.5, neutral: 0, periodic: true },"
+ },
+ {
+  "en": "Sat vs Luma",
+  "ctx": "color.js:89: satLuma: { label: \"Sat vs Luma\", xMax: 1, min: -0.5, max: 0.5, neutral: 0, periodic: false },"
+ },
+ {
+  "en": "grade must be an object like {exposure: 0.5, lift: [0, 0, 0.05, 0]}",
+  "ctx": "color.js:115: if (strict) throw new Error(\"grade must be an object like {exposure: 0.5, lift: [0, 0, 0.05, 0]}\");"
+ },
+ {
+  "en": "unknown grade key {0} (known: on, {1}, curves, {2}{3})",
+  "ctx": "color.js:138: if (strict) throw new Error(`unknown grade key ${JSON.stringify(k)} (known: on, ${GRADE_KEYS.join(\", \")}, curves, ${HUE_KEYS.join(\", \")}${ne"
+ },
+ {
+  "en": ", layers",
+  "ctx": "color.js:138: if (strict) throw new Error(`unknown grade key ${JSON.stringify(k)} (known: on, ${GRADE_KEYS.join(\", \")}, curves, ${HUE_KEYS.join(\", \")}${ne"
+ },
+ {
+  "en": "grade.{0} must be [r, g, b, master], four numbers {1}…{2}",
+  "ctx": "color.js:143: if (strict) throw new Error(`grade.${k} must be [r, g, b, master], four numbers ${def.min}…${def.max}`);"
+ },
+ {
+  "en": "grade.{0} must be a number {1}…{2}",
+  "ctx": "color.js:151: if (strict) throw new Error(`grade.${k} must be a number ${def.min}…${def.max}`);"
+ },
+ {
+  "en": "grade.{0} {1}",
+  "ctx": "color.js:163: const bad = (msg) => { if (strict) throw new Error(`grade.${name} ${msg}`); return null; };"
+ },
+ {
+  "en": "must be a list of [x, value] points",
+  "ctx": "color.js:164: if (!Array.isArray(v)) return bad(`must be a list of [x, value] points`);"
+ },
+ {
+  "en": "has {0} points (at most {1})",
+  "ctx": "color.js:165: if (v.length > MAX_POINTS) return bad(`has ${v.length} points (at most ${MAX_POINTS})`);"
+ },
+ {
+  "en": "points must be [x, value] number pairs (x 0…{0}, value {1}…{2})",
+  "ctx": "color.js:169: return bad(`points must be [x, value] number pairs (x 0…${xMax}, value ${min}…${max})`);"
+ },
+ {
+  "en": "grade.curves must be {y?, r?, g?, b?}, each a list of [x, y] points on 0…1",
+  "ctx": "color.js:178: if (strict) throw new Error(\"grade.curves must be {y?, r?, g?, b?}, each a list of [x, y] points on 0…1\");"
+ },
+ {
+  "en": "grade.curves.{0}: unknown curve (y, r, g, b)",
+  "ctx": "color.js:184: if (strict) throw new Error(`grade.curves.${ch}: unknown curve (y, r, g, b)`);"
+ },
+ {
+  "en": "grade.layers must be a list of layers",
+  "ctx": "color.js:442: if (!Array.isArray(v)) { if (strict) throw new Error(\"grade.layers must be a list of layers\"); return null; }"
+ },
+ {
+  "en": "grade.layers has {0} layers (at most {1})",
+  "ctx": "color.js:443: if (v.length > MAX_LAYERS) { if (strict) throw new Error(`grade.layers has ${v.length} layers (at most ${MAX_LAYERS})`); v = v.slice(0, MAX_"
+ },
+ {
+  "en": "grade.layers[{0}]",
+  "ctx": "color.js:448: const where = `grade.layers[${i}]`;"
+ },
+ {
+  "en": "{0} must be an object like {qualifier:{hue:[25, 40, 20]}, saturation: 90}",
+  "ctx": "color.js:450: if (strict) throw new Error(`${where} must be an object like {qualifier:{hue:[25, 40, 20]}, saturation: 90}`);"
+ },
+ {
+  "en": "{0}: layers do not nest",
+  "ctx": "color.js:453: if (\"layers\" in l && strict) throw new Error(`${where}: layers do not nest`);"
+ },
+ {
+  "en": "{0}.name must be a string",
+  "ctx": "color.js:459: else if (l.name != null && strict) throw new Error(`${where}.name must be a string`);"
+ },
+ {
+  "en": "{0}.qualifier{1}",
+  "ctx": "color.js:471: const bad = (msg) => { if (strict) throw new Error(`${where}.qualifier${msg}`); return null; };"
+ },
+ {
+  "en": "must be {hue?, sat?, luma?, invert?}",
+  "ctx": "color.js:472: if (typeof q !== \"object\" || Array.isArray(q)) return bad(\" must be {hue?, sat?, luma?, invert?}\");"
+ },
+ {
+  "en": "{0}.mask{1}",
+  "ctx": "color.js:494: const bad = (msg) => { if (strict) throw new Error(`${where}.mask${msg}`); return null; };"
+ },
+ {
+  "en": "must be {shape, x, y, w, h, rotation?, feather?, invert?}",
+  "ctx": "color.js:495: if (typeof m !== \"object\" || Array.isArray(m)) return bad(\" must be {shape, x, y, w, h, rotation?, feather?, invert?}\");"
+ },
+ {
+  "en": "qualifier(",
+  "ctx": "color.js:1051: if (l.qualifier) by.push(\"qualifier(\" + [\"hue\", \"sat\", \"luma\"].filter((k) => l.qualifier[k]).map((k) => `${k} ${l.qualifier[k].join(\"/\")}`)."
+ },
+ {
+  "en": ", inverted",
+  "ctx": "color.js:1051: if (l.qualifier) by.push(\"qualifier(\" + [\"hue\", \"sat\", \"luma\"].filter((k) => l.qualifier[k]).map((k) => `${k} ${l.qualifier[k].join(\"/\")}`)."
+ },
+ {
+  "en": "whole frame",
+  "ctx": "color.js:1054: return `${l.name ? JSON.stringify(l.name) : \"#\" + (i + 1)}${l.on === false ? \" (off)\" : \"\"}: ${by.join(\" \") || \"whole frame\"} → ${g ? summar"
+ },
+ {
+  "en": "(bypassed)",
+  "ctx": "color.js:1059: return Object.entries(s).map(([k, v]) => k === \"on\" ? \"(bypassed)\""
+ },
+ {
+  "en": "layers[{0}]",
+  "ctx": "color.js:1060: : k === \"layers\" ? `layers[${v.map((l, i) => summarizeLayer(l, i)).join(\" | \")}]`"
+ },
+ {
+  "en": "curves({0})",
+  "ctx": "color.js:1061: : k === \"curves\" ? `curves(${Object.keys(v).join(\",\")})`"
+ },
+ {
+  "en": "Locked — unlock the clip or its track to edit",
+  "ctx": "edit-ops.js:36: const TRIM_LOCKED = \"Locked — unlock the clip or its track to edit\";"
+ },
+ {
+  "en": "No targeted tracks — click a track name to target it",
+  "ctx": "edit-ops.js:448: if (!enabled.length) return \"No targeted tracks — click a track name to target it\";"
+ },
+ {
+  "en": "No gap on {0} — untarget the track or move the playhead",
+  "ctx": "edit-ops.js:452: if (!g) return `No gap on ${tr.id} — untarget the track or move the playhead`;"
+ },
+ {
+  "en": "Nothing to close at playhead",
+  "ctx": "edit-ops.js:457: if (!isFinite(R) || G <= GAP_EPS) return \"Nothing to close at playhead\";"
+ },
+ {
+  "en": "No targeted track for this media — click a track name to target it (and unlock it)",
+  "ctx": "edit-ops.js:660: return \"No targeted track for this media — click a track name to target it (and unlock it)\";"
+ },
+ {
+  "en": "Slip needs a video or audio clip, or a comp clip — stills and titles have no source time",
+  "ctx": "edit-ops.js:831: if (!hasSourceTime(c)) return \"Slip needs a video or audio clip, or a comp clip — stills and titles have no source time\";"
+ },
+ {
+  "en": "Set IN and OUT first (I / O) to {0} that range",
+  "ctx": "edit-ops.js:874: return `Set IN and OUT first (I / O) to ${extract ? \"extract\" : \"lift\"} that range`;"
+ },
+ {
+  "en": "Nothing to lift between IN and OUT",
+  "ctx": "edit-ops.js:879: return \"Nothing to lift between IN and OUT\";"
+ },
+ {
+  "en": "no spare media beyond the cut",
+  "ctx": "edit-ops.js:932: if (d < MIN_TRANS_DUR - 1e-6) return \"no spare media beyond the cut\";"
+ },
+ {
+  "en": "a comp must be an object like {id, name, duration, clips:[…]}",
+  "ctx": "comp.js:41: if (!isObj(c)) return bad(\"a comp must be an object like {id, name, duration, clips:[…]}\");"
+ },
+ {
+  "en": "a comp needs an id",
+  "ctx": "comp.js:42: if (typeof c.id !== \"string\" || !c.id.trim()) return bad(\"a comp needs an id\");"
+ },
+ {
+  "en": "comp {0}: {1} must be a whole number of px (16…8192)",
+  "ctx": "comp.js:47: if (!Number.isInteger(v) || v < 16 || v > 8192) { bad(`comp ${out.id}: ${k} must be a whole number of px (16…8192)`); out[k] = def; }"
+ },
+ {
+  "en": "comp {0}: duration must be a number of seconds > 0",
+  "ctx": "comp.js:50: if (!isNum(c.duration) || c.duration <= 0) return bad(`comp ${out.id}: duration must be a number of seconds > 0`);"
+ },
+ {
+  "en": "comp {0}: background is a colour string (or leave it out for transparent)",
+  "ctx": "comp.js:52: if (c.background != null && typeof c.background !== \"string\") bad(`comp ${out.id}: background is a colour string (or leave it out for transp"
+ },
+ {
+  "en": "comp {0}: tracks is a list of {id, kind:\"video\"|\"audio\"}",
+  "ctx": "comp.js:55: bad(`comp ${out.id}: tracks is a list of {id, kind:\"video\"|\"audio\"}`);"
+ },
+ {
+  "en": "comp {0}: clips must be a list",
+  "ctx": "comp.js:57: if (c.clips != null && !Array.isArray(c.clips)) return bad(`comp ${out.id}: clips must be a list`);"
+ },
+ {
+  "en": "comp {0}: every clip needs id, numeric start and duration",
+  "ctx": "comp.js:61: return bad(`comp ${out.id}: every clip needs id, numeric start and duration`);"
+ },
+ {
+  "en": "precompose: no comp {0}",
+  "ctx": "comp.js:154: if (!host) throw new Error(`precompose: no comp ${from}`);"
+ },
+ {
+  "en": "precompose: none of those clips are there",
+  "ctx": "comp.js:157: if (!moving.length) throw new Error(\"precompose: none of those clips are there\");"
+ },
+ {
+  "en": "precompose: comp {0} already exists",
+  "ctx": "comp.js:163: if (getComp(doc, compId)) throw new Error(`precompose: comp ${compId} already exists`);"
+ },
+ {
+  "en": "Comp",
+  "ctx": "comp.js:165: id: compId, name: name || \"Comp \" + ((doc.comps || []).length + 1),"
+ },
+ {
+  "en": "{0} \"{1}\" {2}x{3} {4}s, {5} clips",
+  "ctx": "comp.js:190: return `${comp.id} \"${comp.name}\" ${comp.width}x${comp.height} ${comp.duration}s, ${(comp.clips || []).length} clips` +"
+ },
+ {
+  "en": "Out",
+  "ctx": "templates.js:54: return { id, name, group: \"Out\", anchor: \"out\", length: p.length, keys, ...(p.props ? { props: { ...p.props } } : {}) };"
+ },
+ {
+  "en": "Fade in",
+  "ctx": "templates.js:58: { id: \"fade-in\", name: \"Fade in\", length: 0.5, keys: { opacity: [k(0, 0), k(0.5, 1)] } },"
+ },
+ {
+  "en": "Pop in",
+  "ctx": "templates.js:59: { id: \"pop-in\", name: \"Pop in\", length: 0.4, keys: { scale: [k(0, 0), k(0.25, 1.12, \"ease-out\"), k(0.4, 1)], opacity: [k(0, 0), k(0.12, 1)] "
+ },
+ {
+  "en": "Slide up",
+  "ctx": "templates.js:60: { id: \"slide-up-in\", name: \"Slide up\", length: 0.6, keys: { y: [k(0, 120), k(0.6, 0, \"ease-out\")], opacity: [k(0, 0), k(0.3, 1)] } },"
+ },
+ {
+  "en": "Slide down",
+  "ctx": "templates.js:61: { id: \"slide-down-in\", name: \"Slide down\", length: 0.6, keys: { y: [k(0, -120), k(0.6, 0, \"ease-out\")], opacity: [k(0, 0), k(0.3, 1)] } },"
+ },
+ {
+  "en": "Slide in from the right",
+  "ctx": "templates.js:62: { id: \"slide-left-in\", name: \"Slide in from the right\", length: 0.6, keys: { x: [k(0, 400), k(0.6, 0, \"ease-out\")], opacity: [k(0, 0), k(0.3"
+ },
+ {
+  "en": "Slide in from the left",
+  "ctx": "templates.js:63: { id: \"slide-right-in\", name: \"Slide in from the left\", length: 0.6, keys: { x: [k(0, -400), k(0.6, 0, \"ease-out\")], opacity: [k(0, 0), k(0."
+ },
+ {
+  "en": "Drop and bounce",
+  "ctx": "templates.js:64: { id: \"drop-in\", name: \"Drop and bounce\", length: 0.8, keys: { y: [k(0, -500), k(0.45, 0, \"ease-in\"), k(0.6, -40, \"ease-out\"), k(0.8, 0, \"ea"
+ },
+ {
+  "en": "Zoom in",
+  "ctx": "templates.js:65: { id: \"zoom-in\", name: \"Zoom in\", length: 0.6, keys: { scale: [k(0, 1.6), k(0.6, 1, \"ease-out\")], opacity: [k(0, 0), k(0.35, 1)], blur: [k(0"
+ },
+ {
+  "en": "Spin in",
+  "ctx": "templates.js:66: { id: \"spin-in\", name: \"Spin in\", length: 0.7, keys: { rotation: [k(0, -180), k(0.7, 0, \"ease-out\")], scale: [k(0, 0), k(0.7, 1, \"ease-out\")"
+ },
+ {
+  "en": "Whip in",
+  "ctx": "templates.js:67: { id: \"whip-in\", name: \"Whip in\", length: 0.45, keys: { x: [k(0, -1400), k(0.45, 0, \"ease-out\")] }, props: { motionBlur: 180 } },"
+ },
+ {
+  "en": "Rise and focus",
+  "ctx": "templates.js:68: { id: \"rise-blur\", name: \"Rise and focus\", length: 0.8, keys: { y: [k(0, 40), k(0.8, 0, \"ease-out\")], blur: [k(0, 16), k(0.8, 0, \"ease-out\")"
+ },
+ {
+  "en": "Draw on (shapes)",
+  "ctx": "templates.js:69: { id: \"draw-on\", name: \"Draw on (shapes)\", length: 1, keys: { trimEnd: [k(0, -100), k(1, 0, \"ease-out\")] } },"
+ },
+ {
+  "en": "In",
+  "ctx": "templates.js:70: ].map((p) => ({ ...p, group: \"In\", anchor: \"in\" }));"
+ },
+ {
+  "en": "Fade out",
+  "ctx": "templates.js:72: mirror(IN[0], \"fade-out\", \"Fade out\"),"
+ },
+ {
+  "en": "Pop out",
+  "ctx": "templates.js:73: mirror(IN[1], \"pop-out\", \"Pop out\"),"
+ },
+ {
+  "en": "Slide out up",
+  "ctx": "templates.js:74: mirror(IN[3], \"slide-up-out\", \"Slide out up\"),"
+ },
+ {
+  "en": "Slide out down",
+  "ctx": "templates.js:75: mirror(IN[2], \"slide-down-out\", \"Slide out down\"),"
+ },
+ {
+  "en": "Slide out to the left",
+  "ctx": "templates.js:76: mirror(IN[5], \"slide-left-out\", \"Slide out to the left\"),"
+ },
+ {
+  "en": "Slide out to the right",
+  "ctx": "templates.js:77: mirror(IN[4], \"slide-right-out\", \"Slide out to the right\"),"
+ },
+ {
+  "en": "Zoom out",
+  "ctx": "templates.js:78: mirror(IN[7], \"zoom-out\", \"Zoom out\"),"
+ },
+ {
+  "en": "Spin out",
+  "ctx": "templates.js:79: mirror(IN[8], \"spin-out\", \"Spin out\"),"
+ },
+ {
+  "en": "Whip out",
+  "ctx": "templates.js:80: { ...mirror(IN[9], \"whip-out\", \"Whip out\"), keys: { x: [k(0, 0), k(0.45, 1400, \"ease-in\")] } },"
+ },
+ {
+  "en": "Sink and blur",
+  "ctx": "templates.js:81: mirror(IN[10], \"sink-blur\", \"Sink and blur\"),"
+ },
+ {
+  "en": "Draw off (shapes)",
+  "ctx": "templates.js:82: mirror(IN[11], \"draw-off\", \"Draw off (shapes)\"),"
+ },
+ {
+  "en": "Pulse",
+  "ctx": "templates.js:85: { id: \"pulse\", name: \"Pulse\", length: 0.4, keys: { scale: [k(0, 1), k(0.15, 1.12, \"ease-out\"), k(0.4, 1)] } },"
+ },
+ {
+  "en": "Shake",
+  "ctx": "templates.js:86: { id: \"shake\", name: \"Shake\", length: 0.35, keys: { x: [k(0, 0), k(0.05, -18), k(0.1, 16), k(0.15, -12), k(0.2, 8), k(0.27, -4), k(0.35, 0)]"
+ },
+ {
+  "en": "Wobble",
+  "ctx": "templates.js:87: { id: \"wobble\", name: \"Wobble\", length: 0.5, keys: { rotation: [k(0, 0), k(0.12, -8, \"ease-out\"), k(0.3, 6), k(0.5, 0)] } },"
+ },
+ {
+  "en": "Bounce",
+  "ctx": "templates.js:88: { id: \"bounce\", name: \"Bounce\", length: 0.65, keys: { y: [k(0, 0), k(0.2, -60, \"ease-out\"), k(0.4, 0, \"ease-in\"), k(0.52, -18, \"ease-out\"), "
+ },
+ {
+  "en": "Flash",
+  "ctx": "templates.js:89: { id: \"flash\", name: \"Flash\", length: 0.4, keys: { brightness: [k(0, 0), k(0.06, 80), k(0.4, 0, \"ease-out\")] } },"
+ },
+ {
+  "en": "Emphasis",
+  "ctx": "templates.js:90: ].map((p) => ({ ...p, group: \"Emphasis\", anchor: \"at\" }));"
+ },
+ {
+  "en": "Float",
+  "ctx": "templates.js:100: { id: \"float\", name: \"Float\", gen: (dur) => ({ y: cycle(dur, 2.4, [0, -14]) }) },"
+ },
+ {
+  "en": "Breathe",
+  "ctx": "templates.js:101: { id: \"breathe\", name: \"Breathe\", gen: (dur) => ({ scale: cycle(dur, 1.2, [1, 1.06]) }) },"
+ },
+ {
+  "en": "Sway",
+  "ctx": "templates.js:102: { id: \"sway\", name: \"Sway\", gen: (dur) => ({ rotation: cycle(dur, 2.4, [0, -6, 0, 6]) }) },"
+ },
+ {
+  "en": "Spin",
+  "ctx": "templates.js:103: { id: \"spin\", name: \"Spin\", gen: (dur) => ({ rotation: [k(0, 0), k(r4(dur), 360 * cycles(dur, 4), \"linear\")] }) },"
+ },
+ {
+  "en": "Wiggle",
+  "ctx": "templates.js:104: { id: \"wiggle\", name: \"Wiggle\", gen: (dur) => {"
+ },
+ {
+  "en": "Loop",
+  "ctx": "templates.js:113: ].map((p) => ({ ...p, group: \"Loop\", anchor: \"whole\" }));"
+ },
+ {
+  "en": "a preset is an object like {name, anchor, length, keys:{channel:[{t, v}]}}",
+  "ctx": "templates.js:119: if (!isObj(p)) return bad(\"a preset is an object like {name, anchor, length, keys:{channel:[{t, v}]}}\");"
+ },
+ {
+  "en": "a preset needs a name",
+  "ctx": "templates.js:122: if (!id) return bad(\"a preset needs a name\");"
+ },
+ {
+  "en": "preset {0}: anchor is {1}",
+  "ctx": "templates.js:124: if (!ANCHORS.includes(anchor)) return bad(`preset ${id}: anchor is ${ANCHORS.join(\" | \")}`);"
+ },
+ {
+  "en": "preset {0}: length is seconds, more than 0",
+  "ctx": "templates.js:126: if (!isNum(length) || length <= 0 || length > 60) return bad(`preset ${id}: length is seconds, more than 0`);"
+ },
+ {
+  "en": "preset {0}: keys is {channel: [{t, v, ease?}, …]}",
+  "ctx": "templates.js:127: if (!isObj(p.keys) || !Object.keys(p.keys).length) return bad(`preset ${id}: keys is {channel: [{t, v, ease?}, …]}`);"
+ },
+ {
+  "en": "preset {0}: {1} can't be animated by a preset ({2})",
+  "ctx": "templates.js:130: if (!CHANNELS.includes(ch)) return bad(`preset ${id}: ${ch} can't be animated by a preset (${CHANNELS.join(\", \")})`);"
+ },
+ {
+  "en": "preset {0}: keys.{1} must be a list of {t, v, ease?}",
+  "ctx": "templates.js:131: if (!Array.isArray(list) || !list.length) return bad(`preset ${id}: keys.${ch} must be a list of {t, v, ease?}`);"
+ },
+ {
+  "en": "preset {0}: keys.{1} times run 0…{2}",
+  "ctx": "templates.js:134: if (!isObj(x) || !isNum(x.t) || !isNum(x.v) || x.t < 0 || x.t > length + EPS) return bad(`preset ${id}: keys.${ch} times run 0…${anchor === "
+ },
+ {
+  "en": "1 (fractions of the clip)",
+  "ctx": "templates.js:134: if (!isObj(x) || !isNum(x.t) || !isNum(x.v) || x.t < 0 || x.t > length + EPS) return bad(`preset ${id}: keys.${ch} times run 0…${anchor === "
+ },
+ {
+  "en": "preset {0}: ease is {1}",
+  "ctx": "templates.js:135: if (x.ease != null && !EASES.includes(x.ease)) return bad(`preset ${id}: ease is ${EASES.join(\" | \")}`);"
+ },
+ {
+  "en": "preset {0}: props may set {1}",
+  "ctx": "templates.js:142: if (!PRESET_PROPS.includes(key) || !isNum(v)) return bad(`preset ${id}: props may set ${PRESET_PROPS.join(\", \")}`);"
+ },
+ {
+  "en": "Saved",
+  "ctx": "templates.js:145: const group = typeof p.group === \"string\" && p.group.trim() ? p.group.trim().slice(0, 30) : \"Saved\";"
+ },
+ {
+  "en": "the clip has no length",
+  "ctx": "templates.js:174: if (!(D > 0)) throw new Error(\"the clip has no length\");"
+ },
+ {
+  "en": "anchor is {0}",
+  "ctx": "templates.js:202: if (!ANCHORS.includes(anchor)) throw new Error(`anchor is ${ANCHORS.join(\" | \")}`);"
+ },
+ {
+  "en": "the window to save is empty",
+  "ctx": "templates.js:203: if (!(to - from > EPS)) throw new Error(\"the window to save is empty\");"
+ },
+ {
+  "en": "the clip has no keyframes a preset can carry there (",
+  "ctx": "templates.js:215: if (!Object.keys(keys).length) throw new Error(\"the clip has no keyframes a preset can carry there (\" + CHANNELS.join(\", \") + \")\");"
+ },
+ {
+  "en": "Logo",
+  "ctx": "templates.js:231: ({ id: \"logo\", kind: \"svg\", mediaId: LOGO_MEDIA.id, track, start, in: 0, duration, name: \"Logo\", props: { fit: \"contain\", scale: 0.22, ...ex"
+ },
+ {
+  "en": "Lower third — Bar",
+  "ctx": "templates.js:237: { id: \"lower-third-bar\", name: \"Lower third — Bar\", group: \"Lower thirds\", width: 1920, height: 1080, duration: 5, hold: 4.5, tracks: TRACKS"
+ },
+ {
+  "en": "Lower thirds",
+  "ctx": "templates.js:237: { id: \"lower-third-bar\", name: \"Lower third — Bar\", group: \"Lower thirds\", width: 1920, height: 1080, duration: 5, hold: 4.5, tracks: TRACKS"
+ },
+ {
+  "en": "Panel",
+  "ctx": "templates.js:240: { type: \"rect\", name: \"Panel\", x: 340, w: 680, h: 140, radius: 6, fill: \"#111827e6\", keys: [{ t: 0, x: 0, w: 0 }, { t: 0.5, x: 340, w: 680, "
+ },
+ {
+  "en": "Accent",
+  "ctx": "templates.js:241: { type: \"rect\", name: \"Accent\", x: 5, w: 10, h: 140, fill: \"#ffd166\", keys: [{ t: 0, h: 0 }, { t: 0.35, h: 140, ease: \"ease-out\" }] }] },"
+ },
+ {
+  "en": "Bar",
+  "ctx": "templates.js:242: { name: \"Bar\", clip: { transitionOut: fade(0.4) } }),"
+ },
+ {
+  "en": "Ava Moreno",
+  "ctx": "templates.js:243: text(\"name\", \"V2\", 0.25, 4.75, { text: \"Ava Moreno\", font: \"Archivo Black\", fontSize: 54, color: \"#ffffff\", align: \"left\", boxW: 620, boxH: "
+ },
+ {
+  "en": "Archivo Black",
+  "ctx": "templates.js:243: text(\"name\", \"V2\", 0.25, 4.75, { text: \"Ava Moreno\", font: \"Archivo Black\", fontSize: 54, color: \"#ffffff\", align: \"left\", boxW: 620, boxH: "
+ },
+ {
+  "en": "Director of Photography",
+  "ctx": "templates.js:245: text(\"title\", \"V3\", 0.45, 4.55, { text: \"Director of Photography\", font: \"Inter\", fontSize: 30, bold: false, color: \"#d1d5db\", align: \"left\""
+ },
+ {
+  "en": "Inter",
+  "ctx": "templates.js:245: text(\"title\", \"V3\", 0.45, 4.55, { text: \"Director of Photography\", font: \"Inter\", fontSize: 30, bold: false, color: \"#d1d5db\", align: \"left\""
+ },
+ {
+  "en": "name:props.text",
+  "ctx": "templates.js:249: { key: \"name\", label: \"Name\", type: \"text\", targets: [\"name:props.text\"] },"
+ },
+ {
+  "en": "title:props.text",
+  "ctx": "templates.js:250: { key: \"title\", label: \"Title\", type: \"text\", targets: [\"title:props.text\"] },"
+ },
+ {
+  "en": "bar:props.shapes.1.fill",
+  "ctx": "templates.js:251: { key: \"accent\", label: \"Accent\", type: \"color\", targets: [\"bar:props.shapes.1.fill\"] },"
+ },
+ {
+  "en": "bar:props.shapes.0.fill",
+  "ctx": "templates.js:252: { key: \"panel\", label: \"Panel\", type: \"color\", targets: [\"bar:props.shapes.0.fill\"] },"
+ },
+ {
+  "en": "Lower third — Underline",
+  "ctx": "templates.js:254: { id: \"lower-third-underline\", name: \"Lower third — Underline\", group: \"Lower thirds\", width: 1920, height: 1080, duration: 5, hold: 4.5, tr"
+ },
+ {
+  "en": "AVA MORENO",
+  "ctx": "templates.js:256: text(\"name\", \"V3\", 0, 5, { text: \"AVA MORENO\", font: \"Montserrat\", fontSize: 60, weight: 800, color: \"#ffffff\", align: \"left\", boxW: 900, bo"
+ },
+ {
+  "en": "Montserrat",
+  "ctx": "templates.js:256: text(\"name\", \"V3\", 0, 5, { text: \"AVA MORENO\", font: \"Montserrat\", fontSize: 60, weight: 800, color: \"#ffffff\", align: \"left\", boxW: 900, bo"
+ },
+ {
+  "en": "Line",
+  "ctx": "templates.js:259: { type: \"line\", name: \"Line\", points: [[0, 0], [560, 0]], stroke: \"#22d3ee\", strokeWidth: 6, lineCap: \"round\", keys: [{ t: 0, trimEnd: 0 }, "
+ },
+ {
+  "en": "Underline",
+  "ctx": "templates.js:260: { name: \"Underline\", clip: { transitionOut: fade(0.35) } }),"
+ },
+ {
+  "en": "DM Sans",
+  "ctx": "templates.js:261: text(\"title\", \"V1\", 0.6, 4.4, { text: \"Director of Photography\", font: \"DM Sans\", fontSize: 32, bold: false, color: \"#e5e7eb\", align: \"left\""
+ },
+ {
+  "en": "rule:props.shapes.0.stroke",
+  "ctx": "templates.js:267: { key: \"accent\", label: \"Accent\", type: \"color\", targets: [\"rule:props.shapes.0.stroke\"] },"
+ },
+ {
+  "en": "Lower third — Boxes",
+  "ctx": "templates.js:269: { id: \"lower-third-boxes\", name: \"Lower third — Boxes\", group: \"Lower thirds\", width: 1920, height: 1080, duration: 5, hold: 4.5, tracks: TR"
+ },
+ {
+  "en": "Box",
+  "ctx": "templates.js:271: shape(\"nameBox\", \"V1\", 0, 5, { x: -530, y: 330, motionBlur: 180, shapes: [{ type: \"rect\", name: \"Box\", w: 620, h: 78, radius: 4, fill: \"#ffd"
+ },
+ {
+  "en": "Name box",
+  "ctx": "templates.js:272: { name: \"Name box\", clip: { keyframes: { x: [{ t: 0, v: -1500 }, { t: 0.45, v: -530, ease: \"ease-out\" }, { t: 4.55, v: -530 }, { t: 5, v: -1"
+ },
+ {
+  "en": "Title box",
+  "ctx": "templates.js:274: { name: \"Title box\", clip: { keyframes: { x: [{ t: 0, v: -1500 }, { t: 0.45, v: -530, ease: \"ease-out\" }, { t: 4.4, v: -530 }, { t: 4.88, v:"
+ },
+ {
+  "en": "Poppins",
+  "ctx": "templates.js:275: text(\"name\", \"V3\", 0, 5, { text: \"Ava Moreno\", font: \"Poppins\", fontSize: 44, weight: 700, color: \"#111111\", align: \"left\", boxW: 580, boxH:"
+ },
+ {
+  "en": "nameBox:props.shapes.0.fill",
+  "ctx": "templates.js:283: { key: \"accent\", label: \"Accent\", type: \"color\", targets: [\"nameBox:props.shapes.0.fill\"] },"
+ },
+ {
+  "en": "titleBox:props.shapes.0.fill",
+  "ctx": "templates.js:284: { key: \"box\", label: \"Title box\", type: \"color\", targets: [\"titleBox:props.shapes.0.fill\"] },"
+ },
+ {
+  "en": "Logo — Ring reveal",
+  "ctx": "templates.js:288: { id: \"logo-ring\", name: \"Logo — Ring reveal\", group: \"Logo animations\", width: 1920, height: 1080, duration: 4, hold: 3.5, tracks: TRACKS3,"
+ },
+ {
+  "en": "Logo animations",
+  "ctx": "templates.js:288: { id: \"logo-ring\", name: \"Logo — Ring reveal\", group: \"Logo animations\", width: 1920, height: 1080, duration: 4, hold: 3.5, tracks: TRACKS3,"
+ },
+ {
+  "en": "Ring",
+  "ctx": "templates.js:291: { type: \"ellipse\", name: \"Ring\", w: 330, h: 330, rotation: -90, fill: \"none\", stroke: \"#ffd166\", strokeWidth: 10, keys: [{ t: 0, trimEnd: 0 "
+ },
+ {
+  "en": "YOUR BRAND",
+  "ctx": "templates.js:294: text(\"brand\", \"V3\", 0.9, 3.1, { text: \"YOUR BRAND\", font: \"Bebas Neue\", fontSize: 72, color: \"#ffffff\", y: 200, letterSpacing: 14, textShado"
+ },
+ {
+  "en": "Bebas Neue",
+  "ctx": "templates.js:294: text(\"brand\", \"V3\", 0.9, 3.1, { text: \"YOUR BRAND\", font: \"Bebas Neue\", fontSize: 72, color: \"#ffffff\", y: 200, letterSpacing: 14, textShado"
+ },
+ {
+  "en": "Brand",
+  "ctx": "templates.js:295: { name: \"Brand\", clip: { transitionOut: fade(0.5) } }),"
+ },
+ {
+  "en": "logo:mediaId",
+  "ctx": "templates.js:298: { key: \"logo\", label: \"Logo\", type: \"media\", targets: [\"logo:mediaId\"] },"
+ },
+ {
+  "en": "brand:props.text",
+  "ctx": "templates.js:299: { key: \"brand\", label: \"Brand\", type: \"text\", targets: [\"brand:props.text\"] },"
+ },
+ {
+  "en": "ring:props.shapes.0.stroke",
+  "ctx": "templates.js:300: { key: \"accent\", label: \"Accent\", type: \"color\", targets: [\"ring:props.shapes.0.stroke\"] },"
+ },
+ {
+  "en": "Logo — Slam",
+  "ctx": "templates.js:302: { id: \"logo-slam\", name: \"Logo — Slam\", group: \"Logo animations\", width: 1920, height: 1080, duration: 3.5, hold: 3, tracks: TRACKS3, media:"
+ },
+ {
+  "en": "Burst",
+  "ctx": "templates.js:304: shape(\"burst\", \"V1\", 0.35, 0.7, { shapes: [{ type: \"group\", name: \"Burst\", scale: 0.5, items:"
+ },
+ {
+  "en": "burst:props.shapes.0.items.{0}.stroke",
+  "ctx": "templates.js:313: { key: \"accent\", label: \"Burst\", type: \"color\", targets: [0, 1, 2, 3, 4, 5, 6, 7].map((i) => `burst:props.shapes.0.items.${i}.stroke`) },"
+ },
+ {
+  "en": "Logo — Lines",
+  "ctx": "templates.js:315: { id: \"logo-lines\", name: \"Logo — Lines\", group: \"Logo animations\", width: 1920, height: 1080, duration: 4, hold: 3.5, tracks: TRACKS3, medi"
+ },
+ {
+  "en": "Top",
+  "ctx": "templates.js:318: { type: \"line\", name: \"Top\", y: -170, points: [[-300, 0], [300, 0]], stroke: \"#ffffff\", strokeWidth: 3, trimStart: 50, trimEnd: 50, keys: [{"
+ },
+ {
+  "en": "Bottom",
+  "ctx": "templates.js:319: { type: \"line\", name: \"Bottom\", y: 150, points: [[-300, 0], [300, 0]], stroke: \"#ffffff\", strokeWidth: 3, trimStart: 50, trimEnd: 50, keys: "
+ },
+ {
+  "en": "Lines",
+  "ctx": "templates.js:320: { name: \"Lines\", clip: { transitionOut: fade(0.5) } }),"
+ },
+ {
+  "en": "Made with care",
+  "ctx": "templates.js:322: text(\"tagline\", \"V3\", 1, 3, { text: \"Made with care\", font: \"Playfair Display\", fontSize: 40, italic: true, bold: false, color: \"#ffffff\", y"
+ },
+ {
+  "en": "Playfair Display",
+  "ctx": "templates.js:322: text(\"tagline\", \"V3\", 1, 3, { text: \"Made with care\", font: \"Playfair Display\", fontSize: 40, italic: true, bold: false, color: \"#ffffff\", y"
+ },
+ {
+  "en": "Tagline",
+  "ctx": "templates.js:323: { name: \"Tagline\", clip: { transitionOut: fade(0.5) } }),"
+ },
+ {
+  "en": "tagline:props.text",
+  "ctx": "templates.js:327: { key: \"tagline\", label: \"Tagline\", type: \"text\", targets: [\"tagline:props.text\"] },"
+ },
+ {
+  "en": "lines:props.shapes.0.stroke",
+  "ctx": "templates.js:328: { key: \"lines\", label: \"Lines\", type: \"color\", targets: [\"lines:props.shapes.0.stroke\", \"lines:props.shapes.1.stroke\"] },"
+ },
+ {
+  "en": "lines:props.shapes.1.stroke",
+  "ctx": "templates.js:328: { key: \"lines\", label: \"Lines\", type: \"color\", targets: [\"lines:props.shapes.0.stroke\", \"lines:props.shapes.1.stroke\"] },"
+ },
+ {
+  "en": "Story — Headline (9:16)",
+  "ctx": "templates.js:332: { id: \"social-story\", name: \"Story — Headline (9:16)\", group: \"Social\", width: 1080, height: 1920, duration: 6, hold: 5.4, background: \"#141"
+ },
+ {
+  "en": "Social",
+  "ctx": "templates.js:332: { id: \"social-story\", name: \"Story — Headline (9:16)\", group: \"Social\", width: 1080, height: 1920, duration: 6, hold: 5.4, background: \"#141"
+ },
+ {
+  "en": "Big",
+  "ctx": "templates.js:335: { type: \"ellipse\", name: \"Big\", x: 330, y: -620, w: 720, h: 720, fill: \"#7b6cff\", keys: [{ t: 0, scale: 0 }, { t: 0.7, scale: 1, ease: \"ease"
+ },
+ {
+  "en": "Small",
+  "ctx": "templates.js:336: { type: \"ellipse\", name: \"Small\", x: -380, y: 700, w: 420, h: 420, fill: \"#ff7ac8\", keys: [{ t: 0.2, scale: 0 }, { t: 0.9, scale: 1, ease: \""
+ },
+ {
+  "en": "Big news is here",
+  "ctx": "templates.js:338: text(\"headline\", \"V2\", 0.4, 5.6, { text: \"Big news is here\", font: \"Anton\", fontSize: 150, color: \"#ffffff\", boxW: 900, boxH: 640, y: -120, "
+ },
+ {
+  "en": "Anton",
+  "ctx": "templates.js:338: text(\"headline\", \"V2\", 0.4, 5.6, { text: \"Big news is here\", font: \"Anton\", fontSize: 150, color: \"#ffffff\", boxW: 900, boxH: 640, y: -120, "
+ },
+ {
+  "en": "Headline",
+  "ctx": "templates.js:339: { name: \"Headline\", clip: { transitionOut: fade(0.6) } }),"
+ },
+ {
+  "en": "Everything you need to know, in one minute",
+  "ctx": "templates.js:340: text(\"subline\", \"V3\", 1.1, 4.9, { text: \"Everything you need to know, in one minute\", font: \"DM Sans\", fontSize: 56, bold: false, color: \"#d"
+ },
+ {
+  "en": "Subline",
+  "ctx": "templates.js:341: { name: \"Subline\", clip: { transitionOut: fade(0.6) } }),"
+ },
+ {
+  "en": "Read more",
+  "ctx": "templates.js:342: text(\"button\", \"V4\", 1.7, 4.3, { text: \"Read more\", font: \"Poppins\", fontSize: 44, weight: 700, color: \"#14112b\", bgColor: \"#ffd166\", bgOpac"
+ },
+ {
+  "en": "Button",
+  "ctx": "templates.js:343: { name: \"Button\", clip: { keyframes: { scale: [{ t: 0, v: 0 }, { t: 0.25, v: 1.12, ease: \"ease-out\" }, { t: 0.4, v: 1 }] }, transitionOut: f"
+ },
+ {
+  "en": "headline:props.text",
+  "ctx": "templates.js:346: { key: \"headline\", label: \"Headline\", type: \"text\", targets: [\"headline:props.text\"] },"
+ },
+ {
+  "en": "subline:props.text",
+  "ctx": "templates.js:347: { key: \"subline\", label: \"Subline\", type: \"text\", targets: [\"subline:props.text\"] },"
+ },
+ {
+  "en": "button:props.text",
+  "ctx": "templates.js:348: { key: \"button\", label: \"Button\", type: \"text\", targets: [\"button:props.text\"] },"
+ },
+ {
+  "en": "blobs:props.shapes.0.fill",
+  "ctx": "templates.js:349: { key: \"accent\", label: \"Accent\", type: \"color\", targets: [\"blobs:props.shapes.0.fill\"] },"
+ },
+ {
+  "en": "Background",
+  "ctx": "templates.js:350: { key: \"background\", label: \"Background\", type: \"color\", targets: [\"comp:background\"] },"
+ },
+ {
+  "en": "comp:background",
+  "ctx": "templates.js:350: { key: \"background\", label: \"Background\", type: \"color\", targets: [\"comp:background\"] },"
+ }
+]

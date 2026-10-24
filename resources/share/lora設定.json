@@ -1,0 +1,103 @@
+{
+ "app": "anima_ui",
+ "exported": 1791547856.8141236,
+ "lora_meta": {
+  "anima-turbo-lora-v0.2.safetensors": {
+   "note": "【加速】官方 Turbo LoRA。搭 aesthetic／base 模型用，10 步、CFG 1。用 turbo-v1.1 模型時不要開。"
+  },
+  "Turbo-ANIMA-v4.safetensors": {
+   "title": "TURBO for ANIMA (less steps)",
+   "modelId": 2619830,
+   "versionId": 3334160,
+   "version": "V4",
+   "triggers": [],
+   "tags": [
+    "assets",
+    "distillation",
+    "anima",
+    "dmd2"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2619830",
+   "preview": "Turbo-ANIMA-v4.jpg",
+   "strength": 0.8,
+   "note": "【加速】社群版 DMD2 加速（從 turbo-v1.1 抽出＋Cosmos 加速混合）。12 步、CFG 1。實測比官方 Turbo LoRA 顏色收斂、細節稍多，只慢約 2 秒。想用 aesthetic 畫風時的首選加速。"
+  },
+  "Turbo-ANIMA-v2.9.safetensors": {
+   "title": "TURBO for ANIMA (less steps)",
+   "modelId": 2619830,
+   "versionId": 3139645,
+   "version": "v2.9",
+   "triggers": [],
+   "tags": [
+    "assets",
+    "distillation",
+    "anima",
+    "dmd2"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2619830",
+   "preview": "Turbo-ANIMA-v2.9.jpg",
+   "strength": 0.8,
+   "note": "【加速】同作者較舊的配方，為了「疊其他 LoRA 時不吃掉效果」而做。12 步、CFG 1。實測跟 V4 幾乎一樣；若某個 LoRA 搭 V4 效果變弱再換這個。"
+  },
+  "qwen21\\p_qwen_image_2.1_8step_v0.1.safetensors": {
+   "title": "Pruna 加速 8 步（Qwen 2.1）",
+   "modelId": 2958738,
+   "versionId": 3362701,
+   "version": "pruna_qwen_2.1_8step_v0.1",
+   "triggers": [],
+   "tags": [
+    "qwen 2.1",
+    "base model",
+    "lora",
+    "turbo"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2958738",
+   "preview": "p_qwen_image_2.1_8step_v0.1.jpg",
+   "strength": 1.0,
+   "note": "【加速】給「非 Turbo」的 Qwen 2.1 模型用（Noct Q V4 Base、Noct Q Anime）：25 步 → 8 步，約快 4～5 倍。Pruna 加速 LoRA 的設定：步數 8（5 步版用 5）、CFG 1、取樣器 er_sde、排程 beta；負面提示詞會失效。實測：轉真人（Base＋Anime2Real）品質和 Turbo 差不多；Noct Q Anime 會變灰、對比變低，適合先快速試構圖，定稿再關掉跑 25 步。Noct Q Turbo 本身已經加速過，不要再疊。"
+  },
+  "qwen21\\p_qwen_image_2.1_5step_v0.1.safetensors": {
+   "title": "Pruna 加速 5 步（Qwen 2.1）",
+   "modelId": 2958738,
+   "versionId": 3362704,
+   "version": "pruna_qwen_2.1_5step_v0.1",
+   "triggers": [],
+   "tags": [
+    "qwen 2.1",
+    "base model",
+    "lora",
+    "turbo"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/2958738",
+   "preview": "p_qwen_image_2.1_5step_v0.1.jpg",
+   "strength": 1.0,
+   "note": "【加速・更快】8 步版的 5 步版本，步數設 5。Pruna 加速 LoRA 的設定：步數 8（5 步版用 5）、CFG 1、取樣器 er_sde、排程 beta；負面提示詞會失效。實測比 8 步更灰、更霧，只建議拿來試構圖。"
+  },
+  "qwen21\\Qwen-Image-2.1-viggle-turbo-4step-lora-r64.safetensors": {
+   "title": "[ Accelerator LoRAs ] Applicable to QW21 | Minimax H3 | HYVideo TURBO/LIGHTNING/DMD/FAST",
+   "modelId": 1063735,
+   "versionId": 3351025,
+   "version": "TURBO(Viggle)QW21 v0.2.1",
+   "triggers": [],
+   "tags": [
+    "hunyuanvideo",
+    "t2v",
+    "tool",
+    "video",
+    "nsfw",
+    "hunyuan",
+    "v2v"
+   ],
+   "nsfw": false,
+   "url": "https://civitai.com/models/1063735",
+   "preview": "Qwen-Image-2.1-viggle-turbo-4step-lora-r64.jpg",
+   "strength": 0.8
+  }
+ },
+ "presets": [],
+ "settings": {}
+}

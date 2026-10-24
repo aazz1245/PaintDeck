@@ -1,0 +1,1402 @@
+[
+ {
+  "en": "Relink to another copy…",
+  "ctx": "app.js:2430: item(isMediaOffline(m.id) ? \"Relink…\" : \"Relink to another copy…\", () => openRelinkDialog([m]), state.connected ? null : \"Needs the FableCut"
+ },
+ {
+  "en": "Needs the FableCut server",
+  "ctx": "app.js:2430: item(isMediaOffline(m.id) ? \"Relink…\" : \"Relink to another copy…\", () => openRelinkDialog([m]), state.connected ? null : \"Needs the FableCut"
+ },
+ {
+  "en": "Needs ffmpeg on the server's PATH",
+  "ctx": "app.js:2434: const why = !state.connected ? \"Needs the FableCut server\" : !state.ffmpeg ? \"Needs ffmpeg on the server's PATH\" : isMediaOffline(m.id) ? \"T"
+ },
+ {
+  "en": "The file is offline",
+  "ctx": "app.js:2434: const why = !state.connected ? \"Needs the FableCut server\" : !state.ffmpeg ? \"Needs ffmpeg on the server's PATH\" : isMediaOffline(m.id) ? \"T"
+ },
+ {
+  "en": "Delete proxy",
+  "ctx": "app.js:2435: if (ps && (ps.state === \"ready\" || ps.state === \"running\" || ps.state === \"queued\")) item(ps.state === \"ready\" ? \"Delete proxy\" : \"Stop maki"
+ },
+ {
+  "en": "Stop making the proxy",
+  "ctx": "app.js:2435: if (ps && (ps.state === \"ready\" || ps.state === \"running\" || ps.state === \"queued\")) item(ps.state === \"ready\" ? \"Delete proxy\" : \"Stop maki"
+ },
+ {
+  "en": "Create proxy (540p)",
+  "ctx": "app.js:2437: item(\"Create proxy (540p)\", () => createProxies([m], 540), why);"
+ },
+ {
+  "en": "Create proxy (720p)",
+  "ctx": "app.js:2438: item(\"Create proxy (720p)\", () => createProxies([m], 720), why);"
+ },
+ {
+  "en": "Remove from favorites",
+  "ctx": "app.js:2442: item(m.favorite ? \"Remove from favorites\" : \"Add to favorites\", () => setMediaFavorite([m.id], !m.favorite));"
+ },
+ {
+  "en": "Add to favorites",
+  "ctx": "app.js:2442: item(m.favorite ? \"Remove from favorites\" : \"Add to favorites\", () => setMediaFavorite([m.id], !m.favorite));"
+ },
+ {
+  "en": "Tags…",
+  "ctx": "app.js:2443: item(\"Tags…\", () => promptBinText(x, y, `Tags for ${m.name}`, (m.tags || []).join(\", \"), (v) => setMediaTags(m, v),"
+ },
+ {
+  "en": "Tags for {0}",
+  "ctx": "app.js:2443: item(\"Tags…\", () => promptBinText(x, y, `Tags for ${m.name}`, (m.tags || []).join(\", \"), (v) => setMediaTags(m, v),"
+ },
+ {
+  "en": "interview, b-roll, day 1",
+  "ctx": "app.js:2444: { allowEmpty: true, max: 400, ok: \"Save\", placeholder: \"interview, b-roll, day 1\", hint: \"Comma-separated. Search #tag to find them.\","
+ },
+ {
+  "en": "Comma-separated. Search #tag to find them.",
+  "ctx": "app.js:2444: { allowEmpty: true, max: 400, ok: \"Save\", placeholder: \"interview, b-roll, day 1\", hint: \"Comma-separated. Search #tag to find them.\","
+ },
+ {
+  "en": "Remove from “{0}”",
+  "ctx": "app.js:2448: item(inIt ? `Remove from “${col.name}”` : `Add to “${col.name}”`, () => addToCollection(col.id, m.id, !inIt));"
+ },
+ {
+  "en": "Add to “{0}”",
+  "ctx": "app.js:2448: item(inIt ? `Remove from “${col.name}”` : `Add to “${col.name}”`, () => addToCollection(col.id, m.id, !inIt));"
+ },
+ {
+  "en": "New collection…",
+  "ctx": "app.js:2450: item(\"New collection…\", () => promptBinText(x, y, \"New collection\", \"\", (name) => {"
+ },
+ {
+  "en": "New collection",
+  "ctx": "app.js:2450: item(\"New collection…\", () => promptBinText(x, y, \"New collection\", \"\", (name) => {"
+ },
+ {
+  "en": "Added {0} to the collection “{1}”",
+  "ctx": "app.js:2452: toast(`Added ${m.name} to the collection “${col.name}”`);"
+ },
+ {
+  "en": "Selects, Interviews…",
+  "ctx": "app.js:2453: }, { placeholder: \"Selects, Interviews…\", ok: \"Create\" }));"
+ },
+ {
+  "en": "Create",
+  "ctx": "app.js:2453: }, { placeholder: \"Selects, Interviews…\", ok: \"Create\" }));"
+ },
+ {
+  "en": "Remove from project",
+  "ctx": "app.js:2455: item(\"Remove from project\", () => removeMediaFromBin(m));"
+ },
+ {
+  "en": "File",
+  "ctx": "app.js:2472: [\"Kind\", m.kind], [\"File\", decodeURIComponent(String(m.src || \"\").split(\"?\")[0]) + (isMediaOffline(m.id) ? \" — MISSING (offline)\" : \"\")],"
+ },
+ {
+  "en": "— MISSING (offline)",
+  "ctx": "app.js:2472: [\"Kind\", m.kind], [\"File\", decodeURIComponent(String(m.src || \"\").split(\"?\")[0]) + (isMediaOffline(m.id) ? \" — MISSING (offline)\" : \"\")],"
+ },
+ {
+  "en": "Video codec",
+  "ctx": "app.js:2475: [\"Video codec\", m.kind === \"video\" ? m.codec : \"\"], [\"Format\", m.kind !== \"video\" && m.codec ? m.codec : \"\"],"
+ },
+ {
+  "en": "Format",
+  "ctx": "app.js:2475: [\"Video codec\", m.kind === \"video\" ? m.codec : \"\"], [\"Format\", m.kind !== \"video\" && m.codec ? m.codec : \"\"],"
+ },
+ {
+  "en": "Used",
+  "ctx": "app.js:2477: [\"Size\", MediaLib.fmtSize(m.size)], [\"Used\", uses.length ? uses.length + \"×\" : \"not used\"],"
+ },
+ {
+  "en": "not used",
+  "ctx": "app.js:2477: [\"Size\", MediaLib.fmtSize(m.size)], [\"Used\", uses.length ? uses.length + \"×\" : \"not used\"],"
+ },
+ {
+  "en": "· playing it",
+  "ctx": "app.js:2481: if (ps.state === \"ready\") return `${ps.width ? ps.width + \"×\" : \"\"}${ps.height} · ${MediaLib.fmtSize(ps.size)}${proxiesOn() ? \" · playing it"
+ },
+ {
+  "en": "· Proxy button off",
+  "ctx": "app.js:2481: if (ps.state === \"ready\") return `${ps.width ? ps.width + \"×\" : \"\"}${ps.height} · ${MediaLib.fmtSize(ps.size)}${proxiesOn() ? \" · playing it"
+ },
+ {
+  "en": "making it — {0}%",
+  "ctx": "app.js:2482: return ps.state === \"running\" ? `making it — ${Math.round((ps.progress || 0) * 100)}%` : ps.state + (ps.error ? \": \" + ps.error : \"\");"
+ },
+ {
+  "en": "Tags",
+  "ctx": "app.js:2484: [\"Folder\", folder ? folder.name : \"\"], [\"Tags\", (m.tags || []).map((t) => \"#\" + t).join(\" \")],"
+ },
+ {
+  "en": "Collections",
+  "ctx": "app.js:2485: [\"Collections\", cols.join(\", \")], [\"Favorite\", m.favorite ? \"★ yes\" : \"\"],"
+ },
+ {
+  "en": "Favorite",
+  "ctx": "app.js:2485: [\"Collections\", cols.join(\", \")], [\"Favorite\", m.favorite ? \"★ yes\" : \"\"],"
+ },
+ {
+  "en": "★ yes",
+  "ctx": "app.js:2485: [\"Collections\", cols.join(\", \")], [\"Favorite\", m.favorite ? \"★ yes\" : \"\"],"
+ },
+ {
+  "en": "Reading the file's details…",
+  "ctx": "app.js:2490: (m.size == null && state.connected ? `<div class=\"bin-pop-hint\">Reading the file's details…</div>` : \"\");"
+ },
+ {
+  "en": "{0} isn't used on the timeline",
+  "ctx": "app.js:2499: if (!list.length) { toast(`${m.name} isn't used on the timeline`); return; }"
+ },
+ {
+  "en": "{0} instance{1} — click one to jump to it",
+  "ctx": "app.js:2506: pop.innerHTML = `<div class=\"bin-pop-title\"></div><div class=\"bin-pop-hint\">${list.length} instance${list.length === 1 ? \"\" : \"s\"} — click o"
+ },
+ {
+  "en": "Main",
+  "ctx": "app.js:2511: b.innerHTML = `<span>${escapeHtml(p.comp ? `▣ ${p.compName}` : \"Main\")} · ${escapeHtml(p.track)}</span><kbd>${fmt(p.start)} → ${fmt(p.start "
+ },
+ {
+  "en": "Its media is no longer in the project",
+  "ctx": "app.js:2538: if (!m) { toast(\"Its media is no longer in the project\"); return; }"
+ },
+ {
+  "en": "{0} offline — right-click it in the bin → Relink…",
+  "ctx": "app.js:2590: if (fresh.length) toast(`${fresh.length === 1 ? `“${getMedia(fresh[0])?.name}” is` : fresh.length + \" files are\"} offline — right-click it i"
+ },
+ {
+  "en": "“{0}” is",
+  "ctx": "app.js:2590: if (fresh.length) toast(`${fresh.length === 1 ? `“${getMedia(fresh[0])?.name}” is` : fresh.length + \" files are\"} offline — right-click it i"
+ },
+ {
+  "en": "files are",
+  "ctx": "app.js:2590: if (fresh.length) toast(`${fresh.length === 1 ? `“${getMedia(fresh[0])?.name}” is` : fresh.length + \" files are\"} offline — right-click it i"
+ },
+ {
+  "en": "Replaced {0}",
+  "ctx": "app.js:2627: let msg = mode === \"replace\" ? `Replaced ${m.name}` : `Relinked ${m.name}`;"
+ },
+ {
+  "en": "Relinked {0}",
+  "ctx": "app.js:2627: let msg = mode === \"replace\" ? `Replaced ${m.name}` : `Relinked ${m.name}`;"
+ },
+ {
+  "en": "— but it is {0} long, the original was {1}: is it the same footage?",
+  "ctx": "app.js:2629: msg += ` — but it is ${fmt(m.duration)} long, the original was ${fmt(oldDur)}: is it the same footage?`;"
+ },
+ {
+  "en": "— {0} clip edge{1} trimmed to fit",
+  "ctx": "app.js:2646: if (trimmed) msg += ` — ${trimmed} clip edge${trimmed === 1 ? \"\" : \"s\"} trimmed to fit`;"
+ },
+ {
+  "en": "audio/*,.mp3,.wav,.m4a,.flac,.ogg",
+  "ctx": "app.js:2685: const files = await pickFilesForRelink({ accept: m.kind === \"audio\" ? \"audio/*,.mp3,.wav,.m4a,.flac,.ogg\" : els.fileInput.accept });"
+ },
+ {
+  "en": "That is {0} file — {1} is {2}",
+  "ctx": "app.js:2689: if (kind !== m.kind && !(m.kind === \"audio\" && kind === \"video\")) { toast(`That is ${kind ? (kind === \"audio\" || kind === \"image\" ? \"an \" : "
+ },
+ {
+  "en": "Copying {0} into the project…",
+  "ctx": "app.js:2690: toast(`Copying ${file.name} into the project…`);"
+ },
+ {
+  "en": "Couldn't copy the file into media/",
+  "ctx": "app.js:2692: if (!up || !up.src) { toast(\"Couldn't copy the file into media/\"); return; }"
+ },
+ {
+  "en": "Nothing is offline",
+  "ctx": "app.js:2701: if (!list.length) { toast(\"Nothing is offline\"); return; }"
+ },
+ {
+  "en": "Pick the folder the files are in now — they are matched by name and copied into the project",
+  "ctx": "app.js:2706: overlay.innerHTML = `<div class=\"dialog relink\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"relinkTitle\" tabindex=\"-1\">"
+ },
+ {
+  "en": "Relink media",
+  "ctx": "app.js:2706: overlay.innerHTML = `<div class=\"dialog relink\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"relinkTitle\" tabindex=\"-1\">"
+ },
+ {
+  "en": "Point {0} at the footage where it is now. Clips keep their In points and edits.",
+  "ctx": "app.js:2706: overlay.innerHTML = `<div class=\"dialog relink\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"relinkTitle\" tabindex=\"-1\">"
+ },
+ {
+  "en": "Choose folder…",
+  "ctx": "app.js:2706: overlay.innerHTML = `<div class=\"dialog relink\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"relinkTitle\" tabindex=\"-1\">"
+ },
+ {
+  "en": "Relink",
+  "ctx": "app.js:2706: overlay.innerHTML = `<div class=\"dialog relink\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"relinkTitle\" tabindex=\"-1\">"
+ },
+ {
+  "en": "this file",
+  "ctx": "app.js:2708: <p class=\"dim\">Point ${list.length === 1 ? \"this file\" : `these ${list.length} files`} at the footage where it is now. Clips keep their In p"
+ },
+ {
+  "en": "these {0} files",
+  "ctx": "app.js:2708: <p class=\"dim\">Point ${list.length === 1 ? \"this file\" : `these ${list.length} files`} at the footage where it is now. Clips keep their In p"
+ },
+ {
+  "en": "New location",
+  "ctx": "app.js:2729: row.innerHTML = `<div class=\"relink-name\"><b></b><span class=\"dim relink-was\"></span></div>"
+ },
+ {
+  "en": "Pick the file (it is copied into the project)",
+  "ctx": "app.js:2729: row.innerHTML = `<div class=\"relink-name\"><b></b><span class=\"dim relink-was\"></span></div>"
+ },
+ {
+  "en": "Browse…",
+  "ctx": "app.js:2729: row.innerHTML = `<div class=\"relink-name\"><b></b><span class=\"dim relink-was\"></span></div>"
+ },
+ {
+  "en": "— leave it —",
+  "ctx": "app.js:2738: opt(\"\", options.length || cur ? \"— leave it —\" : \"— not found: Browse… or Choose folder… —\");"
+ },
+ {
+  "en": "— not found: Browse… or Choose folder… —",
+  "ctx": "app.js:2738: opt(\"\", options.length || cur ? \"— leave it —\" : \"— not found: Browse… or Choose folder… —\");"
+ },
+ {
+  "en": "Copying {0}…",
+  "ctx": "app.js:2750: status.textContent = `Copying ${file.name}…`;"
+ },
+ {
+  "en": "Couldn't copy",
+  "ctx": "app.js:2752: status.textContent = up?.src ? \"\" : \"Couldn't copy \" + file.name;"
+ },
+ {
+  "en": "{0} (chosen)",
+  "ctx": "app.js:2753: if (up?.src) { pick.set(m.id, { src: up.src, label: `${file.name} (chosen)` }); render(); }"
+ },
+ {
+  "en": "Relink {0}",
+  "ctx": "app.js:2763: b.textContent = n ? `Relink ${n}` : \"Relink\";"
+ },
+ {
+  "en": "None of the {0} files in that folder match by name.",
+  "ctx": "app.js:2781: if (!want.length) { status.textContent = `None of the ${files.length} files in that folder match by name.`; return; }"
+ },
+ {
+  "en": "Copying {0}/{1}: {2}…",
+  "ctx": "app.js:2783: const ups = await uploadForRelink(want.map(([, f]) => f), (f) => { status.textContent = `Copying ${++i}/${want.length}: ${f.name}…`; });"
+ },
+ {
+  "en": "{0} (from the folder)",
+  "ctx": "app.js:2784: want.forEach(([m, f], k) => { if (ups[k].src) pick.set(m.id, { src: ups[k].src, label: `${f.name} (from the folder)` }); });"
+ },
+ {
+  "en": "Matched {0} of {1} by name.",
+  "ctx": "app.js:2785: status.textContent = `Matched ${ups.filter((u) => u.src).length} of ${list.length} by name.`;"
+ },
+ {
+  "en": "Looking for the files…",
+  "ctx": "app.js:2798: status.textContent = \"Looking for the files…\";"
+ },
+ {
+  "en": "Found {0} of {1} in the project folders.",
+  "ctx": "app.js:2813: status.textContent = found ? `Found ${found} of ${list.length} in the project folders.` : \"\";"
+ },
+ {
+  "en": "Proxy ready: {0}",
+  "ctx": "app.js:2873: if (s.state === \"ready\" && runtime.proxyAsked?.has(m.id)) { runtime.proxyAsked.delete(m.id); toast(`Proxy ready: ${m.name}`); }"
+ },
+ {
+  "en": "Couldn't make a proxy of {0}: {1}",
+  "ctx": "app.js:2874: if (s.state === \"failed\" && runtime.proxyAsked?.has(m.id)) { runtime.proxyAsked.delete(m.id); toast(`Couldn't make a proxy of ${m.name}: ${s"
+ },
+ {
+  "en": "Proxy ready ({1}{2}p, {3}){4}",
+  "ctx": "app.js:2896: if (s.state === \"ready\") return `<span class=\"bin-proxy ready${proxiesOn() ? \" on\" : \"\"}\" title=\"Proxy ready (${s.width ? s.width + \"×\" : \"\""
+ },
+ {
+  "en": "— playing it while you edit",
+  "ctx": "app.js:2896: if (s.state === \"ready\") return `<span class=\"bin-proxy ready${proxiesOn() ? \" on\" : \"\"}\" title=\"Proxy ready (${s.width ? s.width + \"×\" : \"\""
+ },
+ {
+  "en": "— the Proxy button is off",
+  "ctx": "app.js:2896: if (s.state === \"ready\") return `<span class=\"bin-proxy ready${proxiesOn() ? \" on\" : \"\"}\" title=\"Proxy ready (${s.width ? s.width + \"×\" : \"\""
+ },
+ {
+  "en": "Making a {0}p proxy",
+  "ctx": "app.js:2897: if (s.state === \"running\" || s.state === \"queued\") return `<span class=\"bin-proxy busy\" title=\"Making a ${s.height}p proxy\">P ${s.state === "
+ },
+ {
+  "en": "Proxy failed: {0}",
+  "ctx": "app.js:2898: if (s.state === \"failed\") return `<span class=\"bin-proxy failed\" title=\"Proxy failed: ${escapeHtml(s.error || \"\")}\">P ✕</span>`;"
+ },
+ {
+  "en": "No video to make proxies of",
+  "ctx": "app.js:2911: if (!list.length) { toast(\"No video to make proxies of\"); return; }"
+ },
+ {
+  "en": "Proxies need ffmpeg on the server's PATH",
+  "ctx": "app.js:2912: if (!state.ffmpeg) { toast(\"Proxies need ffmpeg on the server's PATH\"); return; }"
+ },
+ {
+  "en": "Making {0} prox{1} in the background — the bin shows the progress",
+  "ctx": "app.js:2922: toast(queued ? `Making ${queued} prox${queued === 1 ? \"y\" : \"ies\"} in the background — the bin shows the progress` : \"Already has a proxy\");"
+ },
+ {
+  "en": "Already has a proxy",
+  "ctx": "app.js:2922: toast(queued ? `Making ${queued} prox${queued === 1 ? \"y\" : \"ies\"} in the background — the bin shows the progress` : \"Already has a proxy\");"
+ },
+ {
+  "en": "Couldn't start the proxies:",
+  "ctx": "app.js:2923: } catch (e) { toast(\"Couldn't start the proxies: \" + (e.message || e)); }"
+ },
+ {
+  "en": "Proxies on:",
+  "ctx": "app.js:2938: b.title = (proxiesOn() ? \"Proxies on: \" : \"Proxies off: \") +"
+ },
+ {
+  "en": "Proxies off:",
+  "ctx": "app.js:2938: b.title = (proxiesOn() ? \"Proxies on: \" : \"Proxies off: \") +"
+ },
+ {
+  "en": "{0} file{1}",
+  "ctx": "app.js:2939: (n ? `${n} file${n === 1 ? \" has a proxy\" : \"s have proxies\"}` : \"no proxies yet (right-click a video in the bin → Create proxy)\") +"
+ },
+ {
+  "en": "has a proxy",
+  "ctx": "app.js:2939: (n ? `${n} file${n === 1 ? \" has a proxy\" : \"s have proxies\"}` : \"no proxies yet (right-click a video in the bin → Create proxy)\") +"
+ },
+ {
+  "en": "s have proxies",
+  "ctx": "app.js:2939: (n ? `${n} file${n === 1 ? \" has a proxy\" : \"s have proxies\"}` : \"no proxies yet (right-click a video in the bin → Create proxy)\") +"
+ },
+ {
+  "en": "no proxies yet (right-click a video in the bin → Create proxy)",
+  "ctx": "app.js:2939: (n ? `${n} file${n === 1 ? \" has a proxy\" : \"s have proxies\"}` : \"no proxies yet (right-click a video in the bin → Create proxy)\") +"
+ },
+ {
+  "en": "Proxies on — files with a proxy play it while you edit",
+  "ctx": "app.js:2970: toast(proxiesOn() ? \"Proxies on — files with a proxy play it while you edit\" : \"Proxies off — every clip plays its original\");"
+ },
+ {
+  "en": "Proxies off — every clip plays its original",
+  "ctx": "app.js:2970: toast(proxiesOn() ? \"Proxies on — files with a proxy play it while you edit\" : \"Proxies off — every clip plays its original\");"
+ },
+ {
+  "en": "Unsupported file type:",
+  "ctx": "app.js:3017: if (!m) { toast(\"Unsupported file type: \" + f.name); return; }"
+ },
+ {
+  "en": "Couldn't play",
+  "ctx": "app.js:3043: a.play().catch(() => toast(\"Couldn't play \" + f.name));"
+ },
+ {
+  "en": "No assets yet.",
+  "ctx": "app.js:3053: els.libList.innerHTML = `<div class=\"bin-empty\">"
+ },
+ {
+  "en": "Drop files into",
+  "ctx": "app.js:3053: els.libList.innerHTML = `<div class=\"bin-empty\">"
+ },
+ {
+  "en": "library/{1}/",
+  "ctx": "app.js:3053: els.libList.innerHTML = `<div class=\"bin-empty\">"
+ },
+ {
+  "en": "— this list live-updates.",
+  "ctx": "app.js:3053: els.libList.innerHTML = `<div class=\"bin-empty\">"
+ },
+ {
+  "en": "Add at playhead",
+  "ctx": "app.js:3066: item.innerHTML = `"
+ },
+ {
+  "en": "{1} KB",
+  "ctx": "app.js:3066: item.innerHTML = `"
+ },
+ {
+  "en": "Preview",
+  "ctx": "app.js:3072: ${dir === \"sfx\" ? `<button class=\"btn tiny lib-play\" title=\"Preview\">▶</button>` : \"\"}"
+ },
+ {
+  "en": "Select a clip first",
+  "ctx": "app.js:3164: if (!group.length) { toast(\"Select a clip first\"); return; }"
+ },
+ {
+  "en": "Clip disabled — hidden from preview and export",
+  "ctx": "app.js:3171: toast(disable ? \"Clip disabled — hidden from preview and export\" : \"Clip enabled\");"
+ },
+ {
+  "en": "Clip enabled",
+  "ctx": "app.js:3171: toast(disable ? \"Clip disabled — hidden from preview and export\" : \"Clip enabled\");"
+ },
+ {
+  "en": "Clip locked",
+  "ctx": "app.js:3182: toast(lock ? \"Clip locked\" : trackLocked ? \"Clip unlocked — its track is still locked\" : \"Clip unlocked\");"
+ },
+ {
+  "en": "Clip unlocked — its track is still locked",
+  "ctx": "app.js:3182: toast(lock ? \"Clip locked\" : trackLocked ? \"Clip unlocked — its track is still locked\" : \"Clip unlocked\");"
+ },
+ {
+  "en": "Clip unlocked",
+  "ctx": "app.js:3182: toast(lock ? \"Clip locked\" : trackLocked ? \"Clip unlocked — its track is still locked\" : \"Clip unlocked\");"
+ },
+ {
+  "en": "Select a video clip and its audio to link",
+  "ctx": "app.js:3189: if (clips.length < 2) return \"Select a video clip and its audio to link\";"
+ },
+ {
+  "en": "Only video and audio clips can be linked",
+  "ctx": "app.js:3190: if (clips.some((c) => c.kind !== \"video\" && c.kind !== \"audio\")) return \"Only video and audio clips can be linked\";"
+ },
+ {
+  "en": "Select exactly one video clip and its audio",
+  "ctx": "app.js:3191: if (clips.filter((c) => c.kind === \"video\").length !== 1) return \"Select exactly one video clip and its audio\";"
+ },
+ {
+  "en": "Linked clips must come from the same media file",
+  "ctx": "app.js:3193: if (clips.some((c) => !c.mediaId || baseMediaId(c.mediaId) !== v.mediaId)) return \"Linked clips must come from the same media file\";"
+ },
+ {
+  "en": "Line the clips up first — same start, in point and length",
+  "ctx": "app.js:3195: return \"Line the clips up first — same start, in point and length\";"
+ },
+ {
+  "en": "Select clips first",
+  "ctx": "app.js:3200: if (!sel.length) { toast(\"Select clips first\"); return; }"
+ },
+ {
+  "en": "Unlinked — video and audio now move and trim separately",
+  "ctx": "app.js:3207: toast(\"Unlinked — video and audio now move and trim separately\");"
+ },
+ {
+  "en": "Linked",
+  "ctx": "app.js:3215: toast(\"Linked\");"
+ },
+ {
+  "en": "LFE",
+  "ctx": "app.js:3233: const CHANNEL_SHORT = [\"L\", \"R\", \"C\", \"LFE\", \"Ls\", \"Rs\", \"Lb\", \"Rb\"];"
+ },
+ {
+  "en": "Ls",
+  "ctx": "app.js:3233: const CHANNEL_SHORT = [\"L\", \"R\", \"C\", \"LFE\", \"Ls\", \"Rs\", \"Lb\", \"Rb\"];"
+ },
+ {
+  "en": "Rs",
+  "ctx": "app.js:3233: const CHANNEL_SHORT = [\"L\", \"R\", \"C\", \"LFE\", \"Ls\", \"Rs\", \"Lb\", \"Rb\"];"
+ },
+ {
+  "en": "Lb",
+  "ctx": "app.js:3233: const CHANNEL_SHORT = [\"L\", \"R\", \"C\", \"LFE\", \"Ls\", \"Rs\", \"Lb\", \"Rb\"];"
+ },
+ {
+  "en": "Rb",
+  "ctx": "app.js:3233: const CHANNEL_SHORT = [\"L\", \"R\", \"C\", \"LFE\", \"Ls\", \"Rs\", \"Lb\", \"Rb\"];"
+ },
+ {
+  "en": "Left",
+  "ctx": "app.js:3234: const CHANNEL_LONG = [\"Left\", \"Right\", \"Center\", \"LFE\", \"Surround L\", \"Surround R\", \"Back L\", \"Back R\"];"
+ },
+ {
+  "en": "Right",
+  "ctx": "app.js:3234: const CHANNEL_LONG = [\"Left\", \"Right\", \"Center\", \"LFE\", \"Surround L\", \"Surround R\", \"Back L\", \"Back R\"];"
+ },
+ {
+  "en": "Center",
+  "ctx": "app.js:3234: const CHANNEL_LONG = [\"Left\", \"Right\", \"Center\", \"LFE\", \"Surround L\", \"Surround R\", \"Back L\", \"Back R\"];"
+ },
+ {
+  "en": "Surround L",
+  "ctx": "app.js:3234: const CHANNEL_LONG = [\"Left\", \"Right\", \"Center\", \"LFE\", \"Surround L\", \"Surround R\", \"Back L\", \"Back R\"];"
+ },
+ {
+  "en": "Surround R",
+  "ctx": "app.js:3234: const CHANNEL_LONG = [\"Left\", \"Right\", \"Center\", \"LFE\", \"Surround L\", \"Surround R\", \"Back L\", \"Back R\"];"
+ },
+ {
+  "en": "Back L",
+  "ctx": "app.js:3234: const CHANNEL_LONG = [\"Left\", \"Right\", \"Center\", \"LFE\", \"Surround L\", \"Surround R\", \"Back L\", \"Back R\"];"
+ },
+ {
+  "en": "Back R",
+  "ctx": "app.js:3234: const CHANNEL_LONG = [\"Left\", \"Right\", \"Center\", \"LFE\", \"Surround L\", \"Surround R\", \"Back L\", \"Back R\"];"
+ },
+ {
+  "en": "Ch{0}",
+  "ctx": "app.js:3237: return CHANNEL_SHORT[ch] || `Ch${ch + 1}`;"
+ },
+ {
+  "en": "Channel {0}",
+  "ctx": "app.js:3241: return CHANNEL_LONG[ch] || `Channel ${ch + 1}`;"
+ },
+ {
+  "en": "{0} is locked — unlock it to add clips",
+  "ctx": "app.js:3309: if (isTrackLocked(trackId)) { toast(`${trackId} is locked — unlock it to add clips`); return null; }"
+ },
+ {
+  "en": "Added an audio track for {0}-channel audio",
+  "ctx": "app.js:3332: ? `Added an audio track for ${nCh}-channel audio`"
+ },
+ {
+  "en": "Added {0} audio tracks for {1}-channel audio",
+  "ctx": "app.js:3333: : `Added ${added} audio tracks for ${nCh}-channel audio`);"
+ },
+ {
+  "en": "Load Source first (double-click Project or a timeline clip)",
+  "ctx": "app.js:3364: toast(\"Load Source first (double-click Project or a timeline clip)\");"
+ },
+ {
+  "en": "Mark a Source range (I / O) — or load media with a known duration",
+  "ctx": "app.js:3366: toast(\"Mark a Source range (I / O) — or load media with a known duration\");"
+ },
+ {
+  "en": "Cannot retarget Source In/Out on a clip with a speed ramp",
+  "ctx": "app.js:3423: toast(\"Cannot retarget Source In/Out on a clip with a speed ramp\");"
+ },
+ {
+  "en": "{0}: {1} audio channels, only {2} tracks supported — extra channel(s) dropped",
+  "ctx": "app.js:3522: toast(`${m.name}: ${chCount} audio channels, only ${MAX_TRACKS_PER_KIND} tracks supported — extra channel(s) dropped`);"
+ },
+ {
+  "en": "{0}: added {1} audio track{2} and linked {3} channels",
+  "ctx": "app.js:3525: ? `${m.name}: added ${newTracks} audio track${newTracks === 1 ? \"\" : \"s\"} and linked ${wantCh} channels`"
+ },
+ {
+  "en": "Linked {0} audio channel{1} from {2}",
+  "ctx": "app.js:3526: : `Linked ${wantCh} audio channel${wantCh === 1 ? \"\" : \"s\"} from ${m.name}`);"
+ },
+ {
+  "en": "{0} has fewer channels — removed {1} linked audio clip(s)",
+  "ctx": "app.js:3528: toast(`${m.name} has fewer channels — removed ${removed} linked audio clip(s)`);"
+ },
+ {
+  "en": "\"{0}\", sans-serif",
+  "ctx": "app.js:3575: it.style.fontFamily = `\"${v.props.font}\", sans-serif`;"
+ },
+ {
+  "en": "Media replaced — trimmed to fit shorter source",
+  "ctx": "app.js:3638: toast(trimmed ? \"Media replaced — trimmed to fit shorter source\" : \"Media replaced\");"
+ },
+ {
+  "en": "Media replaced",
+  "ctx": "app.js:3638: toast(trimmed ? \"Media replaced — trimmed to fit shorter source\" : \"Media replaced\");"
+ },
+ {
+  "en": "Imported, but can't replace a {0} clip with {1} {2}",
+  "ctx": "app.js:3667: else toast(`Imported, but can't replace a ${c.kind} clip with ${m.kind === \"audio\" ? \"an\" : \"a\"} ${m.kind}`);"
+ },
+ {
+  "en": "📂 Browse file…",
+  "ctx": "app.js:3683: browse.textContent = \"📂 Browse file…\";"
+ },
+ {
+  "en": "No other {0} in bin",
+  "ctx": "app.js:3706: empty.textContent = `No other ${c.kind} in bin`;"
+ },
+ {
+  "en": "V2 is locked — unlock it to add a title",
+  "ctx": "app.js:3724: if (isTrackLocked(\"V2\")) { toast(\"V2 is locked — unlock it to add a title\"); return; }"
+ },
+ {
+  "en": "V3 is locked — unlock it to add an adjustment layer",
+  "ctx": "app.js:3738: if (isTrackLocked(\"V3\")) { toast(\"V3 is locked — unlock it to add an adjustment layer\"); return; }"
+ },
+ {
+  "en": "Adjust",
+  "ctx": "app.js:3742: start: state.time, in: 0, duration: 4, name: \"Adjust\","
+ },
+ {
+  "en": "Closed {0}s gap",
+  "ctx": "app.js:3779: toast(`Closed ${label}s gap`);"
+ },
+ {
+  "en": "Move playhead over the selected clip",
+  "ctx": "app.js:3819: if (t < c.start || t >= clipEnd(c)) { toast(\"Move playhead over the selected clip\"); return; }"
+ },
+ {
+  "en": "No gaps found",
+  "ctx": "app.js:3848: if (t1 - t0 <= GAP_EPS) { toast(\"No gaps found\"); return; }"
+ },
+ {
+  "en": "No gaps in IN/OUT range",
+  "ctx": "app.js:3852: ? \"No gaps in IN/OUT range\" : \"No gaps found\");"
+ },
+ {
+  "en": "Set an IN or OUT marker first (I / O)",
+  "ctx": "app.js:3873: toast(\"Set an IN or OUT marker first (I / O)\");"
+ },
+ {
+  "en": "Nothing to split at IN/OUT",
+  "ctx": "app.js:3877: if (!EDIT.splitAtTimes(cuts)) { toast(\"Nothing to split at IN/OUT\"); return; }"
+ },
+ {
+  "en": "Nothing to trim",
+  "ctx": "app.js:3906: if (!EDIT.trimToRange(inn, out)) { toast(\"Nothing to trim\"); return; }"
+ },
+ {
+  "en": "Extracted",
+  "ctx": "app.js:3928: toast(`${extract ? \"Extracted\" : \"Lifted\"} ${(t1 - t0).toFixed(2)}s`);"
+ },
+ {
+  "en": "Lifted",
+  "ctx": "app.js:3928: toast(`${extract ? \"Extracted\" : \"Lifted\"} ${(t1 - t0).toFixed(2)}s`);"
+ },
+ {
+  "en": "No audio cut next to the selection — clips must touch or overlap on one track",
+  "ctx": "app.js:3935: toast(state.selIds.size ? \"No audio cut next to the selection — clips must touch or overlap on one track\""
+ },
+ {
+  "en": "No audio cut near the playhead on the targeted tracks",
+  "ctx": "app.js:3936: : \"No audio cut near the playhead on the targeted tracks\");"
+ },
+ {
+  "en": "Crossfaded {0} cut{1}",
+  "ctx": "app.js:3944: if (done) toast(`Crossfaded ${done} cut${done === 1 ? \"\" : \"s\"}` + (why.length ? ` · skipped: ${why.join(\", \")}` : \"\"));"
+ },
+ {
+  "en": "· skipped: {0}",
+  "ctx": "app.js:3944: if (done) toast(`Crossfaded ${done} cut${done === 1 ? \"\" : \"s\"}` + (why.length ? ` · skipped: ${why.join(\", \")}` : \"\"));"
+ },
+ {
+  "en": "Couldn't crossfade: {0}",
+  "ctx": "app.js:3945: else toast(`Couldn't crossfade: ${why.join(\", \")}`);"
+ },
+ {
+  "en": "<button type=\"button\" class=\"track-toggle\" aria-pressed=\"{0}\"",
+  "ctx": "app.js:4094: `<button type=\"button\" class=\"track-toggle\" aria-pressed=\"${on}\" ` +"
+ },
+ {
+  "en": "title=\"{0}\" style=\"color:{1}\">",
+  "ctx": "app.js:4095: `title=\"${on ? \"Disable track\" : \"Enable track\"}\" style=\"color:${t.color}\">` +"
+ },
+ {
+  "en": "<button type=\"button\" class=\"track-solo{0}\" aria-pressed=\"{1}\"",
+  "ctx": "app.js:4099: `<button type=\"button\" class=\"track-solo${solo ? \" on\" : \"\"}\" aria-pressed=\"${solo}\" ` +"
+ },
+ {
+  "en": "title=\"{0}\">S",
+  "ctx": "app.js:4100: `title=\"${solo ? \"Unsolo track\" : \"Solo track (mute all others)\"}\">S</button>`;"
+ },
+ {
+  "en": "translateY({0}px)",
+  "ctx": "app.js:4139: if (inner) inner.style.transform = `translateY(${-els.timelineScroll.scrollTop}px)`;"
+ },
+ {
+  "en": "Drag to adjust duration",
+  "ctx": "app.js:4175: `<div class=\"trans-dur-handle\" title=\"Drag to adjust duration\"></div></div>`;"
+ },
+ {
+  "en": "[data-track=\"{0}\"]",
+  "ctx": "app.js:4238: const row = els.tracks.querySelector(`[data-track=\"${c.track}\"]`);"
+ },
+ {
+  "en": "clip c-{0}",
+  "ctx": "app.js:4240: div.className = `clip c-${c.kind}` +"
+ },
+ {
+  "en": "⚠ Offline ·",
+  "ctx": "app.js:4255: const badge = (isMediaOffline(c.mediaId) ? \"⚠ Offline · \" : \"\") + (c.keyframes && Object.keys(c.keyframes).length ? \"◆ \" : \"\") +"
+ },
+ {
+  "en": "FX ·",
+  "ctx": "app.js:4263: : c.kind === \"adjust\" ? \"FX · \" + (c.name || \"\")"
+ },
+ {
+  "en": "missing comp",
+  "ctx": "app.js:4266: : c.kind === \"comp\" ? \"▣ · \" + ((getComp(c.compId) || {}).name || c.name || \"missing comp\")"
+ },
+ {
+  "en": "{0} \"{1}\" — double-click to open and edit{2}",
+  "ctx": "app.js:4274: div.title = comp ? `${comp.template ? \"Template\" : \"Composition\"} \"${comp.name}\" — double-click to open and edit${comp.template ? \" · its fi"
+ },
+ {
+  "en": "Composition",
+  "ctx": "app.js:4274: div.title = comp ? `${comp.template ? \"Template\" : \"Composition\"} \"${comp.name}\" — double-click to open and edit${comp.template ? \" · its fi"
+ },
+ {
+  "en": "· its fields are in the Inspector",
+  "ctx": "app.js:4274: div.title = comp ? `${comp.template ? \"Template\" : \"Composition\"} \"${comp.name}\" — double-click to open and edit${comp.template ? \" · its fi"
+ },
+ {
+  "en": "Its composition is missing",
+  "ctx": "app.js:4274: div.title = comp ? `${comp.template ? \"Template\" : \"Composition\"} \"${comp.name}\" — double-click to open and edit${comp.template ? \" · its fi"
+ },
+ {
+  "en": "Double-click to open",
+  "ctx": "app.js:4275: if (comp && c.duration * state.pps >= label.length * 7 + 190) body += `<div class=\"comp-open-hint\">Double-click to open</div>`;"
+ },
+ {
+  "en": "Overlapping audio",
+  "ctx": "app.js:4326: el.title = \"Overlapping audio\";"
+ },
+ {
+  "en": "Volume — drag to change · Ctrl/Cmd-click: add keyframe",
+  "ctx": "app.js:4407: `<polyline class=\"vol-hit\" points=\"${line}\"><title>Volume — drag to change · Ctrl/Cmd-click: add keyframe</title></polyline></svg>`;"
+ },
+ {
+  "en": "<div class=\"vol-pt\" data-i=\"{0}\" style=\"left:{1}px;top:{2}px\"",
+  "ctx": "app.js:4410: html += `<div class=\"vol-pt\" data-i=\"${i}\" style=\"left:${(k.t * state.pps).toFixed(1)}px;top:${y(k.v)}px\" ` +"
+ },
+ {
+  "en": "{0} @ {1} — drag · Alt-click: remove",
+  "ctx": "app.js:4411: `title=\"${fmtDb(volToDb(k.v))} @ ${fmt(c.start + k.t)} — drag · Alt-click: remove\"></div>`;"
+ },
+ {
+  "en": "title=\"{0} @ {1} — drag · Alt-click: remove\">",
+  "ctx": "app.js:4411: `title=\"${fmtDb(volToDb(k.v))} @ ${fmt(c.start + k.t)} — drag · Alt-click: remove\"></div>`;"
+ },
+ {
+  "en": "Drag to fade in",
+  "ctx": "app.js:4418: return `<div class=\"fade-grip l\" style=\"left:${(Math.min(fin, c.duration) * state.pps).toFixed(1)}px\" title=\"Drag to fade in\"></div>` +"
+ },
+ {
+  "en": "Drag to fade out",
+  "ctx": "app.js:4419: `<div class=\"fade-grip r\" style=\"right:${(Math.min(fout, c.duration) * state.pps).toFixed(1)}px\" title=\"Drag to fade out\"></div>`;"
+ },
+ {
+  "en": "no fade",
+  "ctx": "app.js:4563: showTrimReadout(ev, dur < MIN_TRANS_DUR ? \"no fade\" : `fade ${side} ${dur.toFixed(2)}s`);"
+ },
+ {
+  "en": "fade {0} {1}s",
+  "ctx": "app.js:4563: showTrimReadout(ev, dur < MIN_TRANS_DUR ? \"no fade\" : `fade ${side} ${dur.toFixed(2)}s`);"
+ },
+ {
+  "en": "Clip edges",
+  "ctx": "app.js:4734: clips: \"Clip edges\", playhead: \"Playhead\", markers: \"Markers\","
+ },
+ {
+  "en": "Playhead",
+  "ctx": "app.js:4734: clips: \"Clip edges\", playhead: \"Playhead\", markers: \"Markers\","
+ },
+ {
+  "en": "IN / OUT",
+  "ctx": "app.js:4735: inout: \"IN / OUT\", keyframes: \"Keyframes\", frames: \"Frame grid\","
+ },
+ {
+  "en": "Keyframes",
+  "ctx": "app.js:4735: inout: \"IN / OUT\", keyframes: \"Keyframes\", frames: \"Frame grid\","
+ },
+ {
+  "en": "Frame grid",
+  "ctx": "app.js:4735: inout: \"IN / OUT\", keyframes: \"Keyframes\", frames: \"Frame grid\","
+ },
+ {
+  "en": "Snap to",
+  "ctx": "app.js:4797: menu.innerHTML = `<div class=\"snap-menu-head dim\">Snap to</div>` +"
+ },
+ {
+  "en": "Ripple edit",
+  "ctx": "app.js:4826: ripple: { key: \"B\", label: \"Ripple edit\" },"
+ },
+ {
+  "en": "Rolling edit",
+  "ctx": "app.js:4827: roll: { key: \"R\", label: \"Rolling edit\" },"
+ },
+ {
+  "en": "Slip",
+  "ctx": "app.js:4828: slip: { key: \"Y\", label: \"Slip\" },"
+ },
+ {
+  "en": "Slide",
+  "ctx": "app.js:4829: slide: { key: \"U\", label: \"Slide\" },"
+ },
+ {
+  "en": "[data-k=\"{0}\"]",
+  "ctx": "app.js:5051: const inp = els.inspector.querySelector(`[data-k=\"${durK}\"]`);"
+ },
+ {
+  "en": "{0}{1} — drag to move · double-click to name / colour",
+  "ctx": "app.js:5304: ? `${mk.label ? mk.label + \" · \" : \"\"}${fmt(mk.t)} — drag to move · double-click to name / colour`"
+ },
+ {
+  "en": "No Source marks",
+  "ctx": "app.js:5366: if (!times.length) { toast(src ? \"No Source marks\" : \"No cuts\"); return; }"
+ },
+ {
+  "en": "No cuts",
+  "ctx": "app.js:5366: if (!times.length) { toast(src ? \"No Source marks\" : \"No cuts\"); return; }"
+ },
+ {
+  "en": "Already at Source end",
+  "ctx": "app.js:5371: if (next == null) { toast(src ? \"Already at Source end\" : \"Already at last cut\"); return; }"
+ },
+ {
+  "en": "Already at last cut",
+  "ctx": "app.js:5371: if (next == null) { toast(src ? \"Already at Source end\" : \"Already at last cut\"); return; }"
+ },
+ {
+  "en": "Already at Source start",
+  "ctx": "app.js:5376: if (prev == null) { toast(src ? \"Already at Source start\" : \"Already at first cut\"); return; }"
+ },
+ {
+  "en": "Already at first cut",
+  "ctx": "app.js:5376: if (prev == null) { toast(src ? \"Already at Source start\" : \"Already at first cut\"); return; }"
+ },
+ {
+  "en": "No keyframes",
+  "ctx": "app.js:5393: if (!times.length) { toast(\"No keyframes\"); return; }"
+ },
+ {
+  "en": "No next keyframe",
+  "ctx": "app.js:5397: if (next == null) { toast(\"No next keyframe\"); return; }"
+ },
+ {
+  "en": "No previous keyframe",
+  "ctx": "app.js:5402: if (prev == null) { toast(\"No previous keyframe\"); return; }"
+ },
+ {
+  "en": "No marker after the playhead",
+  "ctx": "app.js:5425: if (!m) { toast(dir > 0 ? \"No marker after the playhead\" : \"No marker before the playhead\"); return; }"
+ },
+ {
+  "en": "No marker before the playhead",
+  "ctx": "app.js:5425: if (!m) { toast(dir > 0 ? \"No marker after the playhead\" : \"No marker before the playhead\"); return; }"
+ },
+ {
+  "en": "That marker is past the end of the timeline",
+  "ctx": "app.js:5430: if (m.t > projDur() + 1e-3) { toast(\"That marker is past the end of the timeline\"); return; }"
+ },
+ {
+  "en": "Marker",
+  "ctx": "app.js:5463: `<div class=\"marker-pop-head\"><span class=\"timecode\">${fmt(mk.t)}</span><span class=\"dim\">Marker</span></div>` +"
+ },
+ {
+  "en": "Name (optional)",
+  "ctx": "app.js:5464: `<input type=\"text\" class=\"marker-name\" maxlength=\"80\" placeholder=\"Name (optional)\" spellcheck=\"false\">` +"
+ },
+ {
+  "en": "Delete marker",
+  "ctx": "app.js:5466: `<button type=\"button\" class=\"ctx-item marker-del\"><span>Delete marker</span></button>`;"
+ },
+ {
+  "en": "No markers yet — press",
+  "ctx": "app.js:5505: menu.innerHTML = `<div class=\"marker-empty dim\">No markers yet — press <kbd>M</kbd> at the playhead.</div>`;"
+ },
+ {
+  "en": "at the playhead.",
+  "ctx": "app.js:5505: menu.innerHTML = `<div class=\"marker-empty dim\">No markers yet — press <kbd>M</kbd> at the playhead.</div>`;"
+ },
+ {
+  "en": "Rename / colour",
+  "ctx": "app.js:5513: `<button type=\"button\" class=\"btn tiny marker-edit\" data-i=\"${i}\" title=\"Rename / colour\">✎</button></div>`,"
+ },
+ {
+  "en": "Clear all markers",
+  "ctx": "app.js:5515: `<button type=\"button\" class=\"ctx-item marker-clear\"><span>Clear all markers</span></button>`;"
+ },
+ {
+  "en": "IN and OUT must be at different times",
+  "ctx": "app.js:5545: toast(Math.abs(t - prevOut) < 1e-6 ? \"IN and OUT must be at different times\" : \"IN must be before OUT\");"
+ },
+ {
+  "en": "IN must be before OUT",
+  "ctx": "app.js:5545: toast(Math.abs(t - prevOut) < 1e-6 ? \"IN and OUT must be at different times\" : \"IN must be before OUT\");"
+ },
+ {
+  "en": "OUT must be after IN",
+  "ctx": "app.js:5558: toast(Math.abs(t - prevIn) < 1e-6 ? \"IN and OUT must be at different times\" : \"OUT must be after IN\");"
+ },
+ {
+  "en": "Select a clip to zoom to",
+  "ctx": "app.js:5668: if (!clips.length) { toast(\"Select a clip to zoom to\"); return; }"
+ },
+ {
+  "en": "Set IN and OUT markers first (I / O)",
+  "ctx": "app.js:5677: toast(\"Set IN and OUT markers first (I / O)\");"
+ },
+ {
+  "en": "No clips on the timeline use this media",
+  "ctx": "app.js:5731: toast(\"No clips on the timeline use this media\");"
+ },
+ {
+  "en": "Disabled",
+  "ctx": "app.js:5778: b(\"disable\", disabled, disabled ? \"Disabled\" : \"Enabled\","
+ },
+ {
+  "en": "Enabled",
+  "ctx": "app.js:5778: b(\"disable\", disabled, disabled ? \"Disabled\" : \"Enabled\","
+ },
+ {
+  "en": "Hidden from preview and export — click to enable (Shift+E)",
+  "ctx": "app.js:5779: disabled ? \"Hidden from preview and export — click to enable (Shift+E)\" : \"Click to disable: hide from preview and export without deleting ("
+ },
+ {
+  "en": "Click to disable: hide from preview and export without deleting (Shift+E)",
+  "ctx": "app.js:5779: disabled ? \"Hidden from preview and export — click to enable (Shift+E)\" : \"Click to disable: hide from preview and export without deleting ("
+ },
+ {
+  "en": "Locked",
+  "ctx": "app.js:5780: b(\"lock\", locked, locked ? \"Locked\" : \"Unlocked\","
+ },
+ {
+  "en": "Unlocked",
+  "ctx": "app.js:5780: b(\"lock\", locked, locked ? \"Locked\" : \"Unlocked\","
+ },
+ {
+  "en": "Click to unlock",
+  "ctx": "app.js:5781: locked ? (c.locked === true ? \"Click to unlock\" : `Locked by track ${c.track} or a linked clip`) : \"Click to lock — nothing can move or chan"
+ },
+ {
+  "en": "Locked by track {0} or a linked clip",
+  "ctx": "app.js:5781: locked ? (c.locked === true ? \"Click to unlock\" : `Locked by track ${c.track} or a linked clip`) : \"Click to lock — nothing can move or chan"
+ },
+ {
+  "en": "Click to lock — nothing can move or change it",
+  "ctx": "app.js:5781: locked ? (c.locked === true ? \"Click to unlock\" : `Locked by track ${c.track} or a linked clip`) : \"Click to lock — nothing can move or chan"
+ },
+ {
+  "en": "Unlinked",
+  "ctx": "app.js:5782: ((linked || canLink) ? b(\"link\", linked, linked ? \"Linked\" : \"Unlinked\","
+ },
+ {
+  "en": "Video and audio move together — click to unlink (Ctrl/Cmd+L)",
+  "ctx": "app.js:5783: linked ? \"Video and audio move together — click to unlink (Ctrl/Cmd+L)\" : \"Click to relink with its audio (select both, Ctrl/Cmd+L)\") : \"\") "
+ },
+ {
+  "en": "Click to relink with its audio (select both, Ctrl/Cmd+L)",
+  "ctx": "app.js:5783: linked ? \"Video and audio move together — click to unlink (Ctrl/Cmd+L)\" : \"Click to relink with its audio (select both, Ctrl/Cmd+L)\") : \"\") "
+ },
+ {
+  "en": "transform, effects &amp; audio.",
+  "ctx": "app.js:5790: els.inspector.innerHTML = `<div class=\"inspector-empty\">Select a clip to edit its<br>transform, effects &amp; audio.</div>`;"
+ },
+ {
+  "en": "Remove keyframe at playhead",
+  "ctx": "app.js:5806: return `<span class=\"kf-ctl\"><button class=\"kf-btn${n ? \" has\" : \"\"}${on ? \" on\" : \"\"}\" data-kf=\"${k}\" title=\"${on ? \"Remove keyframe at pla"
+ },
+ {
+  "en": "Set keyframe at playhead",
+  "ctx": "app.js:5806: return `<span class=\"kf-ctl\"><button class=\"kf-btn${n ? \" has\" : \"\"}${on ? \" on\" : \"\"}\" data-kf=\"${k}\" title=\"${on ? \"Remove keyframe at pla"
+ },
+ {
+  "en": "Clear keyframes",
+  "ctx": "app.js:5806: return `<span class=\"kf-ctl\"><button class=\"kf-btn${n ? \" has\" : \"\"}${on ? \" on\" : \"\"}\" data-kf=\"${k}\" title=\"${on ? \"Remove keyframe at pla"
+ },
+ {
+  "en": "Click: keyframe graph · Ctrl-click: reset channel · Shift-click: reset at playhead / remove keyframe",
+  "ctx": "app.js:5826: ? \"Click: keyframe graph · Ctrl-click: reset channel · Shift-click: reset at playhead / remove keyframe\""
+ },
+ {
+  "en": "Show / hide keyframe graph",
+  "ctx": "app.js:5827: : isGraph ? \"Show / hide keyframe graph\""
+ },
+ {
+  "en": "Ctrl-click: reset channel · Shift-click: reset at playhead / remove keyframe",
+  "ctx": "app.js:5828: : \"Ctrl-click: reset channel · Shift-click: reset at playhead / remove keyframe\";"
+ },
+ {
+  "en": "Ctrl/Cmd-click: reset to default",
+  "ctx": "app.js:5836: `<input type=\"range\" data-k=\"${k}\" min=\"${min}\" max=\"${max}\" step=\"${step}\" value=\"${shown}\" title=\"Ctrl/Cmd-click: reset to default\">"
+ },
+ {
+  "en": "{0} clips selected — drag moves them together, Del deletes all. Fields below edit the primary (white-outlined) clip.",
+  "ctx": "app.js:5840: ? `<div class=\"insp-multi\">${state.selIds.size} clips selected — drag moves them together, Del deletes all. Fields below edit the primary (w"
+ },
+ {
+  "en": "Clip — {0}",
+  "ctx": "app.js:5841: : \"\") + clipStatusBar(c) + `<div class=\"insp-section\"><h3>Clip — ${c.kind}</h3>"
+ },
+ {
+  "en": "Replace this clip's media — keeps position, trim, keyframes and effects",
+  "ctx": "app.js:5843: ${c.mediaId ? row(\"Source\", `<button type=\"button\" class=\"btn tiny style-picker-btn\" data-media-open title=\"Replace this clip's media — keep"
+ },
+ {
+  "en": "Missing media",
+  "ctx": "app.js:5843: ${c.mediaId ? row(\"Source\", `<button type=\"button\" class=\"btn tiny style-picker-btn\" data-media-open title=\"Replace this clip's media — keep"
+ },
+ {
+  "en": "Start (s)",
+  "ctx": "app.js:5844: ${row(\"Start (s)\", `<input type=\"number\" data-k=\"start\" step=\"0.01\" value=\"${c.start.toFixed(2)}\">`)}"
+ },
+ {
+  "en": "Length (s)",
+  "ctx": "app.js:5845: ${row(\"Length (s)\", `<input type=\"number\" data-k=\"duration\" step=\"0.01\" value=\"${c.duration.toFixed(2)}\">`)}"
+ },
+ {
+  "en": "Above ({1})",
+  "ctx": "app.js:5853: const opts = (cur) => [`<option value=\"\" ${!cur ? \"selected\" : \"\"}>Above (${auto || \"none\"})</option>`, ...others.map((id) => `<option value"
+ },
+ {
+  "en": "Track matte",
+  "ctx": "app.js:5854: return row(\"Track matte\", `<select data-k=\"matte\">${[\"none\", ...Mask.MATTES].map((o) => `<option value=\"${o}\" ${(p.matte || \"none\") === o ? "
+ },
+ {
+  "en": "Matte track",
+  "ctx": "app.js:5855: + (p.matte ? row(\"Matte track\", `<select data-k=\"matteTrack\">${opts(p.matteTrack)}</select>`, \"matteTrack\")"
+ },
+ {
+  "en": "No video track above to take the matte from — pick one.",
+  "ctx": "app.js:5856: + (clipMatte(c) ? \"\" : `<div class=\"insp-note\">No video track above to take the matte from — pick one.</div>`) : \"\");"
+ },
+ {
+  "en": "Adjustment layer",
+  "ctx": "app.js:5859: html += `<div class=\"insp-section\"><h3>Adjustment layer</h3>"
+ },
+ {
+  "en": "Null object",
+  "ctx": "app.js:5864: html += `<div class=\"insp-section\"><h3>Null object</h3>"
+ },
+ {
+  "en": "A null never shows in the picture. Parent clips to it (their Parent field), then move, turn or scale the null to move them together.",
+  "ctx": "app.js:5864: html += `<div class=\"insp-section\"><h3>Null object</h3>"
+ },
+ {
+  "en": "Position X",
+  "ctx": "app.js:5866: ${row(\"Position X\", `<input type=\"number\" data-k=\"x\" value=\"${fmtInspNum(p.x)}\">`, \"x\")}"
+ },
+ {
+  "en": "Position Y",
+  "ctx": "app.js:5867: ${row(\"Position Y\", `<input type=\"number\" data-k=\"y\" value=\"${fmtInspNum(p.y)}\">`, \"y\")}"
+ },
+ {
+  "en": "Transform",
+  "ctx": "app.js:5874: html += `<div class=\"insp-section\"><h3>Transform</h3>"
+ },
+ {
+  "en": "Blend",
+  "ctx": "app.js:5882: ${sel(\"Blend\", \"blend\", BLEND_MODES, p.blend)}"
+ },
+ {
+  "en": "Look",
+  "ctx": "app.js:5886: if (c.kind === \"shape\") html += shapeSectionHtml(c, p, row) + `<div class=\"insp-section\"><h3>Look</h3>${slider(\"blur\", 0, 40, 0.5, p.blur, \""
+ },
+ {
+  "en": "Layout",
+  "ctx": "app.js:5889: html += `<div class=\"insp-section\"><h3>Layout</h3>"
+ },
+ {
+  "en": "Crop L/R %",
+  "ctx": "app.js:5891: ${row(\"Crop L/R %\", `<input type=\"number\" data-k=\"cropL\" min=\"0\" max=\"95\" value=\"${p.cropL}\" style=\"max-width:58px\">"
+ },
+ {
+  "en": "cropL,cropR",
+  "ctx": "app.js:5892: <input type=\"number\" data-k=\"cropR\" min=\"0\" max=\"95\" value=\"${p.cropR}\" style=\"max-width:58px\">`, \"\", \"cropL,cropR\")}"
+ },
+ {
+  "en": "Crop T/B %",
+  "ctx": "app.js:5893: ${row(\"Crop T/B %\", `<input type=\"number\" data-k=\"cropT\" min=\"0\" max=\"95\" value=\"${p.cropT}\" style=\"max-width:58px\">"
+ },
+ {
+  "en": "cropT,cropB",
+  "ctx": "app.js:5894: <input type=\"number\" data-k=\"cropB\" min=\"0\" max=\"95\" value=\"${p.cropB}\" style=\"max-width:58px\">`, \"\", \"cropT,cropB\")}"
+ },
+ {
+  "en": "Flip H",
+  "ctx": "app.js:5896: ${check(\"Flip H\", \"flipH\", p.flipH)}"
+ },
+ {
+  "en": "Flip V",
+  "ctx": "app.js:5897: ${check(\"Flip V\", \"flipV\", p.flipV)}"
+ },
+ {
+  "en": "Filter / Color",
+  "ctx": "app.js:5901: html += `<div class=\"insp-section\"><h3>Filter / Color</h3>"
+ },
+ {
+  "en": "Motion FX",
+  "ctx": "app.js:5901: html += `<div class=\"insp-section\"><h3>Filter / Color</h3>"
+ },
+ {
+  "en": "Keying / Cut-out",
+  "ctx": "app.js:5923: html += `<div class=\"insp-section\"><h3>Keying / Cut-out</h3>"
+ },
+ {
+  "en": "Key color",
+  "ctx": "app.js:5924: ${row(\"Key color\", `<input type=\"color\" data-k=\"chromaKey\" value=\"${p.chromaKey || \"#00ff00\"}\">"
+ },
+ {
+  "en": "Disable chroma key",
+  "ctx": "app.js:5924: ${row(\"Key color\", `<input type=\"color\" data-k=\"chromaKey\" value=\"${p.chromaKey || \"#00ff00\"}\">"
+ },
+ {
+  "en": "toggle on",
+  "ctx": "app.js:5925: <button class=\"btn tiny${p.chromaKey ? \"\" : \" toggle on\"}\" data-action=\"keyoff\" title=\"Disable chroma key\">off</button>`, \"\", \"chromaKey\")}"
+ },
+ {
+  "en": "AI bg remove",
+  "ctx": "app.js:5928: ${check(\"AI bg remove\", \"bgRemove\", p.bgRemove)}"
+ },
+ {
+  "en": "Audio / Time",
+  "ctx": "app.js:5934: html += `<div class=\"insp-section\"><h3>Audio / Time</h3>"
+ },
+ {
+  "en": "Channel",
+  "ctx": "app.js:5935: ${chLabel ? row(\"Channel\", `<span style=\"opacity:.75\">${chLabel}</span>`)"
+ },
+ {
+  "en": "Stereo: as recorded · Mono: fold L+R to one channel · Left / Right: use one side only · Swap: exchange L and R",
+  "ctx": "app.js:5936: : row(\"Channels\", `<select data-k=\"channelMode\" title=\"Stereo: as recorded · Mono: fold L+R to one channel · Left / Right: use one side only"
+ },
+ {
+  "en": "Clip gain, applied before volume — Ctrl/Cmd-click: reset",
+  "ctx": "app.js:5938: ${row(\"Gain\", `<input type=\"range\" data-k=\"gain\" min=\"-24\" max=\"24\" step=\"0.1\" value=\"${fmtInspNum(clipGainDb(c), 0.1)}\" title=\"Clip gain, a"
+ },
+ {
+  "en": "{1} dB",
+  "ctx": "app.js:5938: ${row(\"Gain\", `<input type=\"range\" data-k=\"gain\" min=\"-24\" max=\"24\" step=\"0.1\" value=\"${fmtInspNum(clipGainDb(c), 0.1)}\" title=\"Clip gain, a"
+ },
+ {
+  "en": "Normalize",
+  "ctx": "app.js:5940: ${row(\"Normalize\", `<span class=\"insp-ctrls\"><select data-norm-target title=\"Loudness target\">${NORMALIZE_TARGETS.map((t) =>"
+ },
+ {
+  "en": "Loudness target",
+  "ctx": "app.js:5940: ${row(\"Normalize\", `<span class=\"insp-ctrls\"><select data-norm-target title=\"Loudness target\">${NORMALIZE_TARGETS.map((t) =>"
+ },
+ {
+  "en": "Measure the selected clips and set their gain to hit this target (linked stems share one gain)",
+  "ctx": "app.js:5940: ${row(\"Normalize\", `<span class=\"insp-ctrls\"><select data-norm-target title=\"Loudness target\">${NORMALIZE_TARGETS.map((t) =>"
+ },
+ {
+  "en": "Apply",
+  "ctx": "app.js:5940: ${row(\"Normalize\", `<span class=\"insp-ctrls\"><select data-norm-target title=\"Loudness target\">${NORMALIZE_TARGETS.map((t) =>"
+ },
+ {
+  "en": "Noise",
+  "ctx": "app.js:5943: ${row(\"Noise\", `<span class=\"insp-ctrls\"><select data-denoise title=\"${state.connected && state.ffmpeg"
+ },
+ {
+  "en": "Noise reduction (ffmpeg FFT denoiser) — renders a cleaned copy of the file; Off switches back to the original",
+  "ctx": "app.js:5944: ? \"Noise reduction (ffmpeg FFT denoiser) — renders a cleaned copy of the file; Off switches back to the original\""
+ },
+ {
+  "en": "Noise reduction needs the server with ffmpeg on PATH",
+  "ctx": "app.js:5945: : \"Noise reduction needs the server with ffmpeg on PATH\"}\" ${state.connected && state.ffmpeg ? \"\" : \"disabled\"}>${[\"off\", ...DENOISE_LEVELS]"
+ },
+ {
+  "en": "Audio effects",
+  "ctx": "app.js:5953: html += `<div class=\"insp-section\" data-fx-section><h3>Audio effects</h3>${fxEditorHtml(c.fx, playheadOverClip(c) ? state.time - c.start : n"
+ },
+ {
+  "en": "Under",
+  "ctx": "app.js:5959: ${row(\"Under\", `<select data-duck-under title=\"Lower this clip wherever there is sound on these tracks (dialogue / VO)\">"
+ },
+ {
+  "en": "Lower this clip wherever there is sound on these tracks (dialogue / VO)",
+  "ctx": "app.js:5959: ${row(\"Under\", `<select data-duck-under title=\"Lower this clip wherever there is sound on these tracks (dialogue / VO)\">"
+ },
+ {
+  "en": "All other audio tracks",
+  "ctx": "app.js:5959: ${row(\"Under\", `<select data-duck-under title=\"Lower this clip wherever there is sound on these tracks (dialogue / VO)\">"
+ },
+ {
+  "en": "Amount",
+  "ctx": "app.js:5961: ${row(\"Amount\", `<span class=\"insp-ctrls\"><input type=\"number\" data-duck-amount min=\"-40\" max=\"-1\" step=\"1\" value=\"${duckAmount()}\" title=\"H"
+ },
+ {
+  "en": "How far to dip, dB",
+  "ctx": "app.js:5961: ${row(\"Amount\", `<span class=\"insp-ctrls\"><input type=\"number\" data-duck-amount min=\"-40\" max=\"-1\" step=\"1\" value=\"${duckAmount()}\" title=\"H"
+ },
+ {
+  "en": "Write duck keyframes on the selected clips",
+  "ctx": "app.js:5961: ${row(\"Amount\", `<span class=\"insp-ctrls\"><input type=\"number\" data-duck-amount min=\"-40\" max=\"-1\" step=\"1\" value=\"${duckAmount()}\" title=\"H"
+ },
+ {
+  "en": "Remove the ducking",
+  "ctx": "app.js:5963: ${duckN ? `<button type=\"button\" class=\"btn tiny\" data-duck-clear title=\"Remove the ducking\">Clear</button>` : \"\"}</span>`)}"
+ },
+ {
+  "en": "{0} duck keyframe{1} — the dashed line on the clip shows the ducked level.",
+  "ctx": "app.js:5964: ${duckN ? `<div class=\"insp-note\">${duckN} duck keyframe${duckN === 1 ? \"\" : \"s\"} — the dashed line on the clip shows the ducked level.</div"
+ },
+ {
+  "en": "Ctrl-click: reset · Shift-click: reset",
+  "ctx": "app.js:5969: return `<div class=\"insp-row${active ? \" trans-active\" : \"\"}\"><label class=\"insp-reset\" data-reset=\"${key}\" title=\"Ctrl-click: reset · Shift"
+ },
+ {
+  "en": "Fade shape (audio)",
+  "ctx": "app.js:5974: ? row(label, `<select data-k=\"${k}\" title=\"Fade shape (audio)\">${[[\"\", \"Smooth (eased)\"], ...Object.entries(AUDIO_FADE_CURVES)].map(([v, l])"
+ },
+ {
+  "en": "Smooth (eased)",
+  "ctx": "app.js:5974: ? row(label, `<select data-k=\"${k}\" title=\"Fade shape (audio)\">${[[\"\", \"Smooth (eased)\"], ...Object.entries(AUDIO_FADE_CURVES)].map(([v, l])"
+ },
+ {
+  "en": "Transition",
+  "ctx": "app.js:5980: html += `<div class=\"insp-section\"><h3>Transition</h3>"
+ },
+ {
+  "en": "In curve",
+  "ctx": "app.js:5982: ${curveSel(\"In curve\", \"curveIn\", c.transitionIn)}"
+ },
+ {
+  "en": "Out curve",
+  "ctx": "app.js:5984: ${curveSel(\"Out curve\", \"curveOut\", c.transitionOut)}"
+ },
+ {
+  "en": "Text",
+  "ctx": "app.js:5990: html += `<div class=\"insp-section\"><h3>Text</h3>"
+ },
+ {
+  "en": "Font",
+  "ctx": "app.js:5990: html += `<div class=\"insp-section\"><h3>Text</h3>"
+ },
+ {
+  "en": "Text style",
+  "ctx": "app.js:5990: html += `<div class=\"insp-section\"><h3>Text</h3>"
+ },
+ {
+  "en": "Title &amp; caption",
+  "ctx": "app.js:5990: html += `<div class=\"insp-section\"><h3>Text</h3>"
+ },
+ {
+  "en": "Content",
+  "ctx": "app.js:5991: ${row(\"Content\", `<textarea data-k=\"text\">${p.text}</textarea>`, \"\", \"text\")}"
+ },
+ {
+  "en": "Max size",
+  "ctx": "app.js:5992: ${row(hasTextBox(p) && p.boxFit ? \"Max size\" : \"Font size\","
+ },
+ {
+  "en": "Font size",
+  "ctx": "app.js:5992: ${row(hasTextBox(p) && p.boxFit ? \"Max size\" : \"Font size\","
+ },
+ {
+  "en": "{1}px",
+  "ctx": "app.js:5993: `<input type=\"range\" data-k=\"fontSize\" min=\"12\" max=\"300\" step=\"1\" value=\"${fmtInspNum(p.fontSize, 1)}\" title=\"Ctrl/Cmd-click: reset to defa"
+ },
+ {
+  "en": "Box W/H",
+  "ctx": "app.js:5995: ${row(\"Box W/H\", `<span class=\"insp-ctrls\">"
+ },
+ {
+  "en": "Width in px (0 = no box — hug content)",
+  "ctx": "app.js:5995: ${row(\"Box W/H\", `<span class=\"insp-ctrls\">"
+ },
+ {
+  "en": "Height in px (0 = no box — hug content)",
+  "ctx": "app.js:5995: ${row(\"Box W/H\", `<span class=\"insp-ctrls\">"
+ },
+ {
+  "en": "boxW,boxH",
+  "ctx": "app.js:5998: </span>`, \"\", \"boxW,boxH\")}"
+ },
+ {
+  "en": "Scale to fit",
+  "ctx": "app.js:5999: ${hasTextBox(p) ? check(\"Scale to fit\", \"boxFit\", !!p.boxFit) : \"\"}"
+ },
+ {
+  "en": "Gradient bottom color",
+  "ctx": "app.js:6000: ${row(\"Color\", `<span class=\"insp-ctrls\"><input type=\"color\" data-k=\"color\" value=\"${p.color}\">"
+ },
+ {
+  "en": "Disable gradient",
+  "ctx": "app.js:6000: ${row(\"Color\", `<span class=\"insp-ctrls\"><input type=\"color\" data-k=\"color\" value=\"${p.color}\">"
+ },
+ {
+  "en": "color,color2",
+  "ctx": "app.js:6002: <button class=\"btn tiny${p.color2 ? \"\" : \" toggle on\"}\" data-action=\"grad-off\" title=\"Disable gradient\">flat</button></span>`, \"\", \"color,co"
+ },
+ {
+  "en": "Align",
+  "ctx": "app.js:6003: ${sel(\"Align\", \"align\", [\"left\", \"center\", \"right\", \"justify\"], p.align)}"
+ },
+ {
+  "en": "Direction",
+  "ctx": "app.js:6005: ${sel(\"Direction\", \"direction\", [\"auto\", \"ltr\", \"rtl\"], p.direction || \"auto\")}"
+ },
+ {
+  "en": "Family",
+  "ctx": "app.js:6008: ${row(\"Family\", `<select data-k=\"font\">"
+ },
+ {
+  "en": "System",
+  "ctx": "app.js:6009: ${fontGroup(\"System\", SYSTEM_FONTS)}"
+ },
+ {
+  "en": "Library fonts",
+  "ctx": "app.js:6010: ${fontGroup(\"Library fonts\", runtime.customFonts)}"
+ },
+ {
+  "en": "Google fonts",
+  "ctx": "app.js:6011: ${fontGroup(\"Google fonts\", [...new Set([...GOOGLE_FONTS, ...runtime.googleLoaded])])}"
+ },
+ {
+  "en": "Google font",
+  "ctx": "app.js:6014: ${row(\"Google font\", `<input type=\"text\" data-gfont placeholder=\"Type any Google Font name…\">"
+ },
+ {
+  "en": "Type any Google Font name…",
+  "ctx": "app.js:6014: ${row(\"Google font\", `<input type=\"text\" data-gfont placeholder=\"Type any Google Font name…\">"
+ },
+ {
+  "en": "Load",
+  "ctx": "app.js:6014: ${row(\"Google font\", `<input type=\"text\" data-gfont placeholder=\"Type any Google Font name…\">"
+ },
+ {
+  "en": "Weight",
+  "ctx": "app.js:6016: ${sel(\"Weight\", \"weight\", [0, 300, 400, 500, 600, 700, 800, 900], p.weight)}"
+ },
+ {
+  "en": "Bold",
+  "ctx": "app.js:6017: ${check(\"Bold\", \"bold\", p.bold)}"
+ },
+ {
+  "en": "Italic",
+  "ctx": "app.js:6018: ${check(\"Italic\", \"italic\", p.italic)}"
+ },
+ {
+  "en": "Uppercase",
+  "ctx": "app.js:6019: ${check(\"Uppercase\", \"uppercase\", p.uppercase)}"
+ },
+ {
+  "en": "Stroke col.",
+  "ctx": "app.js:6025: ${row(\"Stroke col.\", `<input type=\"color\" data-k=\"strokeColor\" value=\"${p.strokeColor}\">`, \"\", \"strokeColor\")}"
+ },
+ {
+  "en": "Bg color",
+  "ctx": "app.js:6026: ${row(\"Bg color\", `<input type=\"color\" data-k=\"bgColor\" value=\"${p.bgColor}\">`, \"\", \"bgColor\")}"
+ },
+ {
+  "en": "Glow color",
+  "ctx": "app.js:6030: ${row(\"Glow color\", `<input type=\"color\" data-k=\"glowColor\" value=\"${p.glowColor || p.color}\">"
+ },
+ {
+  "en": "Glow uses the text color",
+  "ctx": "app.js:6030: ${row(\"Glow color\", `<input type=\"color\" data-k=\"glowColor\" value=\"${p.glowColor || p.color}\">"
+ },
+ {
+  "en": "Title style",
+  "ctx": "app.js:6034: ${row(\"Title style\", `<button type=\"button\" class=\"btn tiny style-picker-btn\" data-style-open title=\"Pick a style — hover to preview it live"
+ },
+ {
+  "en": "Pick a style — hover to preview it live",
+  "ctx": "app.js:6034: ${row(\"Title style\", `<button type=\"button\" class=\"btn tiny style-picker-btn\" data-style-open title=\"Pick a style — hover to preview it live"
+ },
+ {
+  "en": "Random style",
+  "ctx": "app.js:6034: ${row(\"Title style\", `<button type=\"button\" class=\"btn tiny style-picker-btn\" data-style-open title=\"Pick a style — hover to preview it live"
+ },
+ {
+  "en": "Shuffle",
+  "ctx": "app.js:6034: ${row(\"Title style\", `<button type=\"button\" class=\"btn tiny style-picker-btn\" data-style-open title=\"Pick a style — hover to preview it live"
+ },
+ {
+  "en": "Choose…",
+  "ctx": "app.js:6034: ${row(\"Title style\", `<button type=\"button\" class=\"btn tiny style-picker-btn\" data-style-open title=\"Pick a style — hover to preview it live"
+ },
+ {
+  "en": "Animation",
+  "ctx": "app.js:6036: ${row(\"Animation\", `<select data-k=\"textAnim\">${TEXT_ANIMS.map((a) => `<option ${a === p.textAnim ? \"selected\" : \"\"}>${a}</option>`).join(\"\""
+ },
+ {
+  "en": "[data-k=\"{0}Dur\"]",
+  "ctx": "app.js:6068: const dur = Math.max(MIN_TRANS_DUR, parseFloat(els.inspector.querySelector(`[data-k=\"${k}Dur\"]`)?.value) || 1);"
+ },
+ {
+  "en": "[data-val=\"{0}\"]",
+  "ctx": "app.js:6104: const valEl = els.inspector.querySelector(`[data-val=\"${k}\"]`);"
+ },
+ {
+  "en": "Couldn't load \"{0}\" from Google Fonts",
+  "ctx": "app.js:6124: ensureFont(name).then((ok) => { if (!ok) toast(`Couldn't load \"${name}\" from Google Fonts`); });"
+ },
+ {
+  "en": "Loading Google font \"{0}\"…",
+  "ctx": "app.js:6126: toast(`Loading Google font \"${name}\"…`);"
+ },
+ {
+  "en": "Move the playhead over the clip to add or remove keyframes",
+  "ctx": "app.js:6192: toast(\"Move the playhead over the clip to add or remove keyframes\");"
+ },
+ {
+  "en": "input[type=range][data-k]",
+  "ctx": "app.js:6252: const input = e.target.closest?.(\"input[type=range][data-k]\");"
+ }
+]

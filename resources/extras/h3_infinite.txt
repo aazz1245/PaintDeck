@@ -1,0 +1,8 @@
+h3_infinite.tar.gz：H3 長片接續用的社群 ComfyUI 節點（生圖站自己帶一份，長片第一次開拍時用 ssh 裝到雲端的 ComfyUI\custom_nodes\HerrgottsH3Infinite，不在雲端從 GitHub 抓，版本才固定）
+
+來源：https://github.com/HerrgottMargott/Herrgotts-H3-Infinite-Continuation-Suite
+版本：commit 4b1edd6（2026-08-22，v1.4）
+授權：GPL-3.0（壓縮檔裡有 LICENSE 和完整原始碼）
+只帶執行需要的檔：*.py、web\、LICENSE、README.md、pyproject.toml、node_list.json（不帶 tests、範例影片）
+2026-10-23 小克看過：只用 torch、comfy、safetensors，沒有網路呼叫、沒有執行外部指令；沒有額外的 pip 套件
+重做壓縮檔：解開原始 repo 後只留上面那些檔，頂層資料夾改名 HerrgottsH3Infinite，tar --owner=0 --group=0 -czf h3_infinite.tar.gz HerrgottsH3Infinite

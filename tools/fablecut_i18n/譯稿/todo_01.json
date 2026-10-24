@@ -1,0 +1,1402 @@
+[
+ {
+  "en": "FableCut - Video Editor",
+  "ctx": "index.html:6"
+ },
+ {
+  "en": "Fable",
+  "ctx": "index.html:17"
+ },
+ {
+  "en": "Cut",
+  "ctx": "index.html:17"
+ },
+ {
+  "en": "Untitled Project",
+  "ctx": "index.html:18"
+ },
+ {
+  "en": "Workspace",
+  "ctx": "index.html:20"
+ },
+ {
+  "en": "Edit workspace: media bin, inspector, mixer",
+  "ctx": "index.html:21"
+ },
+ {
+  "en": "Edit",
+  "ctx": "index.html:21"
+ },
+ {
+  "en": "Color workspace: scopes, wheels and the grade of the selected clip",
+  "ctx": "index.html:22"
+ },
+ {
+  "en": "Color",
+  "ctx": "index.html:22"
+ },
+ {
+  "en": "Restore default layout",
+  "ctx": "index.html:25"
+ },
+ {
+  "en": "⊡ Layout",
+  "ctx": "index.html:25"
+ },
+ {
+  "en": "Timeline track height",
+  "ctx": "index.html:26"
+ },
+ {
+  "en": "Compact tracks (no thumbnails)",
+  "ctx": "index.html:27"
+ },
+ {
+  "en": "Medium tracks",
+  "ctx": "index.html:28"
+ },
+ {
+  "en": "Large tracks",
+  "ctx": "index.html:29"
+ },
+ {
+  "en": "Settings",
+  "ctx": "index.html:32"
+ },
+ {
+  "en": "Keyboard shortcuts",
+  "ctx": "index.html:37"
+ },
+ {
+  "en": "⬇ Export",
+  "ctx": "index.html:38"
+ },
+ {
+  "en": "Add a title card at the playhead",
+  "ctx": "index.html:49"
+ },
+ {
+  "en": "+ Title",
+  "ctx": "index.html:49"
+ },
+ {
+  "en": "Add an adjustment layer (grades everything below it)",
+  "ctx": "index.html:50"
+ },
+ {
+  "en": "+ Adjust",
+  "ctx": "index.html:50"
+ },
+ {
+  "en": "Import media files",
+  "ctx": "index.html:51"
+ },
+ {
+  "en": "+ Import",
+  "ctx": "index.html:51"
+ },
+ {
+  "en": "Download media from an HTTPS URL into the project",
+  "ctx": "index.html:52"
+ },
+ {
+  "en": "+ URL",
+  "ctx": "index.html:52"
+ },
+ {
+  "en": "Media used by this project — right-click for New folder",
+  "ctx": "index.html:56"
+ },
+ {
+  "en": "Project",
+  "ctx": "index.html:56"
+ },
+ {
+  "en": "Overlay art from library/elements",
+  "ctx": "index.html:57"
+ },
+ {
+  "en": "Elements",
+  "ctx": "index.html:57"
+ },
+ {
+  "en": "Sound effects from library/sfx",
+  "ctx": "index.html:58"
+ },
+ {
+  "en": "SFX",
+  "ctx": "index.html:58"
+ },
+ {
+  "en": "Vector animations from library/svg",
+  "ctx": "index.html:59"
+ },
+ {
+  "en": "SVG",
+  "ctx": "index.html:59"
+ },
+ {
+  "en": "Shape layers and null objects",
+  "ctx": "index.html:60"
+ },
+ {
+  "en": "Shapes",
+  "ctx": "index.html:60"
+ },
+ {
+  "en": "Lower thirds, logo animations and social layouts — with fields you edit in the Inspector",
+  "ctx": "index.html:61"
+ },
+ {
+  "en": "Templates",
+  "ctx": "index.html:61"
+ },
+ {
+  "en": "Search name, #tag, codec, 4k…",
+  "ctx": "index.html:64"
+ },
+ {
+  "en": "Search the Project bin",
+  "ctx": "index.html:64"
+ },
+ {
+  "en": "Show only…",
+  "ctx": "index.html:65"
+ },
+ {
+  "en": "Show",
+  "ctx": "index.html:65"
+ },
+ {
+  "en": "Sort by",
+  "ctx": "index.html:66"
+ },
+ {
+  "en": "Name",
+  "ctx": "index.html:67"
+ },
+ {
+  "en": "Kind",
+  "ctx": "index.html:67"
+ },
+ {
+  "en": "Duration",
+  "ctx": "index.html:67"
+ },
+ {
+  "en": "Resolution",
+  "ctx": "index.html:68"
+ },
+ {
+  "en": "Frame rate",
+  "ctx": "index.html:68"
+ },
+ {
+  "en": "Codec",
+  "ctx": "index.html:68"
+ },
+ {
+  "en": "Audio channels",
+  "ctx": "index.html:69"
+ },
+ {
+  "en": "File size",
+  "ctx": "index.html:69"
+ },
+ {
+  "en": "Times used",
+  "ctx": "index.html:69"
+ },
+ {
+  "en": "Ascending — click for descending",
+  "ctx": "index.html:71"
+ },
+ {
+  "en": "List view: metadata columns",
+  "ctx": "index.html:72"
+ },
+ {
+  "en": "Drop video, audio or images here",
+  "ctx": "index.html:78"
+ },
+ {
+  "en": "or click",
+  "ctx": "index.html:78"
+ },
+ {
+  "en": "Double-click to open in Source, or drag onto the timeline.",
+  "ctx": "index.html:79"
+ },
+ {
+  "en": "Scopes",
+  "ctx": "index.html:87"
+ },
+ {
+  "en": "Source = loaded clip · Program = timeline",
+  "ctx": "index.html:95"
+ },
+ {
+  "en": "Source",
+  "ctx": "index.html:96"
+ },
+ {
+  "en": "Program",
+  "ctx": "index.html:97"
+ },
+ {
+  "en": "Reset monitor view to fit stage",
+  "ctx": "index.html:100"
+ },
+ {
+  "en": "Fit",
+  "ctx": "index.html:100"
+ },
+ {
+  "en": "Canvas aspect preset",
+  "ctx": "index.html:103"
+ },
+ {
+  "en": "Project frame rate",
+  "ctx": "index.html:104"
+ },
+ {
+  "en": "Delivery export frame — crop inside the canvas for reframing",
+  "ctx": "index.html:105"
+ },
+ {
+  "en": "Toggle export frame overlay (drag handle to reframe)",
+  "ctx": "index.html:106"
+ },
+ {
+  "en": "⬒ Frame",
+  "ctx": "index.html:106"
+ },
+ {
+  "en": "Lights off — crop to the export frame",
+  "ctx": "index.html:107"
+ },
+ {
+  "en": "Toggle safe-area guides",
+  "ctx": "index.html:108"
+ },
+ {
+  "en": "▦ Safe",
+  "ctx": "index.html:108"
+ },
+ {
+  "en": "Play proxies while editing (export always uses the originals)",
+  "ctx": "index.html:109"
+ },
+ {
+  "en": "Proxy",
+  "ctx": "index.html:109"
+ },
+ {
+  "en": "Export frame — drag or arrow keys to reposition (Shift for 10px steps)",
+  "ctx": "index.html:125"
+ },
+ {
+  "en": "Export frame",
+  "ctx": "index.html:126"
+ },
+ {
+  "en": "Drag to reposition export frame",
+  "ctx": "index.html:127"
+ },
+ {
+  "en": "Click to switch RMS / LUFS / Peak",
+  "ctx": "index.html:135"
+ },
+ {
+  "en": "Scrub source · drag to seek",
+  "ctx": "index.html:137"
+ },
+ {
+  "en": "Playhead / sequence duration",
+  "ctx": "index.html:146"
+ },
+ {
+  "en": "Playhead — click (or type a digit) to enter a time",
+  "ctx": "index.html:147"
+ },
+ {
+  "en": "Mark In (I) — Source marks when Source is active; timeline work area in Program",
+  "ctx": "index.html:152"
+ },
+ {
+  "en": "Go to start (Home)",
+  "ctx": "index.html:153"
+ },
+ {
+  "en": "Back 1 frame (←)",
+  "ctx": "index.html:154"
+ },
+ {
+  "en": "Play / Pause (Space)",
+  "ctx": "index.html:155"
+ },
+ {
+  "en": "Forward 1 frame (→)",
+  "ctx": "index.html:156"
+ },
+ {
+  "en": "Go to end (End)",
+  "ctx": "index.html:157"
+ },
+ {
+  "en": "Mark Out (O) — Source marks when Source is active; timeline work area in Program",
+  "ctx": "index.html:158"
+ },
+ {
+  "en": "Preview speed — click to cycle 1×/1.5×/2×/4×. L forward · J reverse (tap again = faster) · K stop. Preview only, not export.",
+  "ctx": "index.html:159"
+ },
+ {
+  "en": "Insert Source In→Out at the timeline playhead (,)",
+  "ctx": "index.html:162"
+ },
+ {
+  "en": "Insert",
+  "ctx": "index.html:162"
+ },
+ {
+  "en": "Replace (overwrite) Source In→Out at the timeline playhead (.)",
+  "ctx": "index.html:168"
+ },
+ {
+  "en": "Replace",
+  "ctx": "index.html:168"
+ },
+ {
+  "en": "IN point",
+  "ctx": "index.html:175"
+ },
+ {
+  "en": "IN",
+  "ctx": "index.html:176"
+ },
+ {
+  "en": "Marked duration",
+  "ctx": "index.html:179"
+ },
+ {
+  "en": "DUR",
+  "ctx": "index.html:180"
+ },
+ {
+  "en": "OUT point",
+  "ctx": "index.html:183"
+ },
+ {
+  "en": "OUT",
+  "ctx": "index.html:184"
+ },
+ {
+  "en": "Selected clip: transform, effects & audio",
+  "ctx": "index.html:195"
+ },
+ {
+  "en": "Inspector",
+  "ctx": "index.html:195"
+ },
+ {
+  "en": "Track and master faders, pan, mute / solo, meters",
+  "ctx": "index.html:196"
+ },
+ {
+  "en": "Mixer",
+  "ctx": "index.html:196"
+ },
+ {
+  "en": "Grade the selected clip: wheels, exposure, white balance, tone",
+  "ctx": "index.html:197"
+ },
+ {
+  "en": "Select a clip to edit its",
+  "ctx": "index.html:200"
+ },
+ {
+  "en": "transform, effects & audio.",
+  "ctx": "index.html:200"
+ },
+ {
+  "en": "Drag to resize · double-click to reset",
+  "ctx": "index.html:207"
+ },
+ {
+  "en": "Open composition",
+  "ctx": "index.html:212"
+ },
+ {
+  "en": "Trim clips to IN/OUT (⇧T)",
+  "ctx": "index.html:213"
+ },
+ {
+  "en": "Trim",
+  "ctx": "index.html:213"
+ },
+ {
+  "en": "Limit playback to IN/OUT (Home/End jump to markers; playhead outside = override)",
+  "ctx": "index.html:214"
+ },
+ {
+  "en": "Limit",
+  "ctx": "index.html:214"
+ },
+ {
+  "en": "Edit tool",
+  "ctx": "index.html:215"
+ },
+ {
+  "en": "Selection tool (V) — move and trim clips",
+  "ctx": "index.html:215"
+ },
+ {
+  "en": "Ripple edit (B) — drag a clip edge; everything after it moves with it",
+  "ctx": "index.html:215"
+ },
+ {
+  "en": "Rolling edit (R) — drag a cut; the clips on both sides trim, nothing else moves",
+  "ctx": "index.html:215"
+ },
+ {
+  "en": "Slip (Y) — drag a clip to change which part of the source it shows",
+  "ctx": "index.html:215"
+ },
+ {
+  "en": "Slide (U) — drag a clip along the track; its neighbours trim to make room",
+  "ctx": "index.html:215"
+ },
+ {
+  "en": "Split at playhead on targeted tracks (S)",
+  "ctx": "index.html:216"
+ },
+ {
+  "en": "✂ Split",
+  "ctx": "index.html:216"
+ },
+ {
+  "en": "Close gap at playhead (⇧G)",
+  "ctx": "index.html:217"
+ },
+ {
+  "en": "Close gap",
+  "ctx": "index.html:217"
+ },
+ {
+  "en": "Find gap (G)",
+  "ctx": "index.html:218"
+ },
+ {
+  "en": "Find gap",
+  "ctx": "index.html:218"
+ },
+ {
+  "en": "Delete selected (Del)",
+  "ctx": "index.html:219"
+ },
+ {
+  "en": "Delete",
+  "ctx": "index.html:219"
+ },
+ {
+  "en": "Ripple delete selection (⇧Del) — closes gap on targeted tracks",
+  "ctx": "index.html:220"
+ },
+ {
+  "en": "Ripple delete",
+  "ctx": "index.html:220"
+ },
+ {
+  "en": "Lift (;) — remove IN→OUT on targeted tracks, leave the gap",
+  "ctx": "index.html:221"
+ },
+ {
+  "en": "Lift",
+  "ctx": "index.html:221"
+ },
+ {
+  "en": "Extract (') — remove IN→OUT on targeted tracks and close the gap",
+  "ctx": "index.html:222"
+ },
+ {
+  "en": "Extract",
+  "ctx": "index.html:222"
+ },
+ {
+  "en": "Toggle snapping (N)",
+  "ctx": "index.html:223"
+ },
+ {
+  "en": "Snap",
+  "ctx": "index.html:223"
+ },
+ {
+  "en": "Snap targets — clip edges, playhead, markers, IN/OUT, keyframes, frame grid",
+  "ctx": "index.html:223"
+ },
+ {
+  "en": "Snap targets",
+  "ctx": "index.html:223"
+ },
+ {
+  "en": "Markers — list, jump, rename, recolour (M add · ⇧M next · Alt+⇧M previous)",
+  "ctx": "index.html:224"
+ },
+ {
+  "en": "Markers",
+  "ctx": "index.html:224"
+ },
+ {
+  "en": "Audio Hold — while paused, loop one frame of audio at the playhead. Play/Stop turns it off.",
+  "ctx": "index.html:225"
+ },
+ {
+  "en": "Audio hold",
+  "ctx": "index.html:225"
+ },
+ {
+  "en": "Zoom",
+  "ctx": "index.html:227"
+ },
+ {
+  "en": "Zoom timeline to fit (⇧Z)",
+  "ctx": "index.html:229"
+ },
+ {
+  "en": "Add video track",
+  "ctx": "index.html:234"
+ },
+ {
+  "en": "Add audio track",
+  "ctx": "index.html:235"
+ },
+ {
+  "en": "Import from URL",
+  "ctx": "index.html:256"
+ },
+ {
+  "en": "Downloads an HTTPS video, audio or image into the project media folder. The file is stored locally — the URL is not used as the playback source. Remote SVGs are not imported (they can run script if opened as a document).",
+  "ctx": "index.html:257"
+ },
+ {
+  "en": "Media URL",
+  "ctx": "index.html:259"
+ },
+ {
+  "en": "Downloading…",
+  "ctx": "index.html:262"
+ },
+ {
+  "en": "Cancel",
+  "ctx": "index.html:265"
+ },
+ {
+  "en": "Import",
+  "ctx": "index.html:266"
+ },
+ {
+  "en": "Export",
+  "ctx": "index.html:274"
+ },
+ {
+  "en": "Range",
+  "ctx": "index.html:277"
+ },
+ {
+  "en": "Entire timeline",
+  "ctx": "index.html:279"
+ },
+ {
+  "en": "IN–OUT",
+  "ctx": "index.html:280"
+ },
+ {
+  "en": "Fast (ffmpeg)",
+  "ctx": "index.html:286"
+ },
+ {
+  "en": "Frame-accurate ffmpeg encode. Keeps rendering if you switch tabs.",
+  "ctx": "index.html:286"
+ },
+ {
+  "en": "WebCodecs (HW encode)",
+  "ctx": "index.html:290"
+ },
+ {
+  "en": "Frame-accurate. Browser encodes H.264; server muxes. Needs a modern Chromium and ffmpeg.",
+  "ctx": "index.html:290"
+ },
+ {
+  "en": "Preset",
+  "ctx": "index.html:294"
+ },
+ {
+  "en": "Save these settings as a preset for every project",
+  "ctx": "index.html:296"
+ },
+ {
+  "en": "Save preset…",
+  "ctx": "index.html:296"
+ },
+ {
+  "en": "Delete this saved preset",
+  "ctx": "index.html:297"
+ },
+ {
+  "en": "Preset name, e.g. Client 4K",
+  "ctx": "index.html:302"
+ },
+ {
+  "en": "Preset name",
+  "ctx": "index.html:302"
+ },
+ {
+  "en": "Save",
+  "ctx": "index.html:303"
+ },
+ {
+  "en": "Video",
+  "ctx": "index.html:310"
+ },
+ {
+  "en": "Width × height",
+  "ctx": "index.html:313"
+ },
+ {
+  "en": "Width",
+  "ctx": "index.html:314"
+ },
+ {
+  "en": "Height",
+  "ctx": "index.html:314"
+ },
+ {
+  "en": "Reframe",
+  "ctx": "index.html:315"
+ },
+ {
+  "en": "Fill (crop to fit)",
+  "ctx": "index.html:316"
+ },
+ {
+  "en": "Fit (black bars)",
+  "ctx": "index.html:317"
+ },
+ {
+  "en": "Stretch",
+  "ctx": "index.html:318"
+ },
+ {
+  "en": "Encoder",
+  "ctx": "index.html:322"
+ },
+ {
+  "en": "Profile",
+  "ctx": "index.html:323"
+ },
+ {
+  "en": "Rate control",
+  "ctx": "index.html:324"
+ },
+ {
+  "en": "CRF (constant quality)",
+  "ctx": "index.html:325"
+ },
+ {
+  "en": "VBR (variable bitrate)",
+  "ctx": "index.html:326"
+ },
+ {
+  "en": "CBR (constant bitrate)",
+  "ctx": "index.html:327"
+ },
+ {
+  "en": "CRF",
+  "ctx": "index.html:329"
+ },
+ {
+  "en": "Lower = better quality, bigger file",
+  "ctx": "index.html:329"
+ },
+ {
+  "en": "Bitrate (Mb/s)",
+  "ctx": "index.html:330"
+ },
+ {
+  "en": "Max rate (Mb/s)",
+  "ctx": "index.html:331"
+ },
+ {
+  "en": "Keyframe every (s)",
+  "ctx": "index.html:332"
+ },
+ {
+  "en": "0 = the encoder's default",
+  "ctx": "index.html:332"
+ },
+ {
+  "en": "Encoder speed",
+  "ctx": "index.html:333"
+ },
+ {
+  "en": "Fast",
+  "ctx": "index.html:334"
+ },
+ {
+  "en": "Balanced",
+  "ctx": "index.html:335"
+ },
+ {
+  "en": "Best quality (slow)",
+  "ctx": "index.html:336"
+ },
+ {
+  "en": "Pixel format",
+  "ctx": "index.html:338"
+ },
+ {
+  "en": "Container",
+  "ctx": "index.html:340"
+ },
+ {
+  "en": "Audio",
+  "ctx": "index.html:344"
+ },
+ {
+  "en": "Bitrate (kb/s)",
+  "ctx": "index.html:347"
+ },
+ {
+  "en": "Sample rate",
+  "ctx": "index.html:348"
+ },
+ {
+  "en": "48 kHz",
+  "ctx": "index.html:349"
+ },
+ {
+  "en": "44.1 kHz",
+  "ctx": "index.html:350"
+ },
+ {
+  "en": "Channels",
+  "ctx": "index.html:352"
+ },
+ {
+  "en": "Stereo",
+  "ctx": "index.html:353"
+ },
+ {
+  "en": "Mono",
+  "ctx": "index.html:354"
+ },
+ {
+  "en": "Loudness",
+  "ctx": "index.html:356"
+ },
+ {
+  "en": "Turn the whole mix up or down to an integrated loudness, with a true-peak limiter",
+  "ctx": "index.html:356"
+ },
+ {
+  "en": "True peak (dBTP)",
+  "ctx": "index.html:357"
+ },
+ {
+  "en": "File name and metadata",
+  "ctx": "index.html:361"
+ },
+ {
+  "en": "File name",
+  "ctx": "index.html:362"
+ },
+ {
+  "en": "Title",
+  "ctx": "index.html:367"
+ },
+ {
+  "en": "Artist / author",
+  "ctx": "index.html:368"
+ },
+ {
+  "en": "Copyright",
+  "ctx": "index.html:369"
+ },
+ {
+  "en": "Date",
+  "ctx": "index.html:370"
+ },
+ {
+  "en": "Description",
+  "ctx": "index.html:371"
+ },
+ {
+  "en": "Keywords",
+  "ctx": "index.html:372"
+ },
+ {
+  "en": "comma, separated",
+  "ctx": "index.html:372"
+ },
+ {
+  "en": "Batch outputs",
+  "ctx": "index.html:380"
+ },
+ {
+  "en": "Add the settings above to this project's outputs",
+  "ctx": "index.html:382"
+ },
+ {
+  "en": "+ Add these settings",
+  "ctx": "index.html:382"
+ },
+ {
+  "en": "Master, YouTube 1080p, Reel 1080×1920, Square 1080 and a 720p preview",
+  "ctx": "index.html:383"
+ },
+ {
+  "en": "+ Typical set",
+  "ctx": "index.html:383"
+ },
+ {
+  "en": "One render, several files: every checked output is encoded from the same frames. Saved with the project.",
+  "ctx": "index.html:386"
+ },
+ {
+  "en": "Bitrate",
+  "ctx": "index.html:390"
+ },
+ {
+  "en": "Auto (from resolution)",
+  "ctx": "index.html:392"
+ },
+ {
+  "en": "2 Mbps",
+  "ctx": "index.html:393"
+ },
+ {
+  "en": "4 Mbps",
+  "ctx": "index.html:394"
+ },
+ {
+  "en": "6 Mbps",
+  "ctx": "index.html:395"
+ },
+ {
+  "en": "8 Mbps",
+  "ctx": "index.html:396"
+ },
+ {
+  "en": "12 Mbps",
+  "ctx": "index.html:397"
+ },
+ {
+  "en": "16 Mbps",
+  "ctx": "index.html:398"
+ },
+ {
+  "en": "20 Mbps",
+  "ctx": "index.html:399"
+ },
+ {
+  "en": "30 Mbps",
+  "ctx": "index.html:400"
+ },
+ {
+  "en": "50 Mbps",
+  "ctx": "index.html:401"
+ },
+ {
+  "en": "VBR (variable)",
+  "ctx": "index.html:406"
+ },
+ {
+  "en": "CBR (constant)",
+  "ctx": "index.html:407"
+ },
+ {
+  "en": "WebCodecs has no CRF — quality is driven by bitrate. VBR spends bits on hard frames; CBR holds a steady rate.",
+  "ctx": "index.html:410"
+ },
+ {
+  "en": "Show the export queue",
+  "ctx": "index.html:416"
+ },
+ {
+  "en": "Queue",
+  "ctx": "index.html:416"
+ },
+ {
+  "en": "Queue every checked batch output and start",
+  "ctx": "index.html:418"
+ },
+ {
+  "en": "Export checked",
+  "ctx": "index.html:418"
+ },
+ {
+  "en": "Add these settings to the export queue",
+  "ctx": "index.html:419"
+ },
+ {
+  "en": "Add to queue",
+  "ctx": "index.html:419"
+ },
+ {
+  "en": "Export queue",
+  "ctx": "index.html:428"
+ },
+ {
+  "en": "Clear finished",
+  "ctx": "index.html:432"
+ },
+ {
+  "en": "Close",
+  "ctx": "index.html:433"
+ },
+ {
+  "en": "Start",
+  "ctx": "index.html:434"
+ },
+ {
+  "en": "Exporting…",
+  "ctx": "index.html:442"
+ },
+ {
+  "en": "Rendering your sequence in real time. Keep this tab focused.",
+  "ctx": "index.html:443"
+ },
+ {
+  "en": "Preferences are stored in this browser only.",
+  "ctx": "index.html:453"
+ },
+ {
+  "en": "Selection",
+  "ctx": "index.html:455"
+ },
+ {
+  "en": "Link timeline and Project bin selection",
+  "ctx": "index.html:459"
+ },
+ {
+  "en": "Selecting a timeline clip highlights its media in Project, and the reverse. Off by default.",
+  "ctx": "index.html:460"
+ },
+ {
+  "en": "Filter — e.g. marker, trim, mask",
+  "ctx": "index.html:473"
+ },
+ {
+  "en": "Filter shortcuts",
+  "ctx": "index.html:473"
+ },
+ {
+  "en": "Playback",
+  "ctx": "index.html:477"
+ },
+ {
+  "en": "Play / pause (Source or Program — whichever is active)",
+  "ctx": "index.html:479"
+ },
+ {
+  "en": "Shuttle —",
+  "ctx": "index.html:480"
+ },
+ {
+  "en": "plays forward,",
+  "ctx": "index.html:480"
+ },
+ {
+  "en": "in reverse (silent); tap again for 1.5× · 2× · 4×, the other key turns around;",
+  "ctx": "index.html:480"
+ },
+ {
+  "en": "Hold",
+  "ctx": "index.html:481"
+ },
+ {
+  "en": "and tap to step one frame; hold both to crawl at ¼ speed",
+  "ctx": "index.html:481"
+ },
+ {
+  "en": "Step 1 frame (",
+  "ctx": "index.html:482"
+ },
+ {
+  "en": "= 1 second)",
+  "ctx": "index.html:482"
+ },
+ {
+  "en": "Jump to previous / next cut (selected clip In then Out; no selection → targeted tracks). Source monitor: In / Out marks",
+  "ctx": "index.html:483"
+ },
+ {
+  "en": "Jump to start / end",
+  "ctx": "index.html:484"
+ },
+ {
+  "en": "Type a time:",
+  "ctx": "index.html:485"
+ },
+ {
+  "en": ", packed",
+  "ctx": "index.html:485"
+ },
+ {
+  "en": "to offset,",
+  "ctx": "index.html:485"
+ },
+ {
+  "en": "seconds. Click IN / OUT readouts to type those too",
+  "ctx": "index.html:485"
+ },
+ {
+  "en": "Limit (toolbar)",
+  "ctx": "index.html:486"
+ },
+ {
+  "en": "Play stops at OUT; Home / End use IN / OUT",
+  "ctx": "index.html:486"
+ },
+ {
+  "en": "Source monitor",
+  "ctx": "index.html:490"
+ },
+ {
+  "en": "Dbl-click bin / clip",
+  "ctx": "index.html:492"
+ },
+ {
+  "en": "Load into the Source monitor",
+  "ctx": "index.html:492"
+ },
+ {
+  "en": "Insert Source In→Out at the timeline playhead (ripples later clips)",
+  "ctx": "index.html:493"
+ },
+ {
+  "en": "Replace — overwrite at the playhead, or apply new Source In / Out to a timeline-loaded clip (ripples if the duration changes)",
+  "ctx": "index.html:494"
+ },
+ {
+  "en": "Editing",
+  "ctx": "index.html:498"
+ },
+ {
+  "en": "Tools: Selection · Ripple edit (drag an edge, the rest follows) · Rolling edit (drag a cut) · Slip (change the source under a clip) · Slide (move a clip, neighbours trim)",
+  "ctx": "index.html:500"
+ },
+ {
+  "en": "Split clip(s) at the playhead (selection, else targeted tracks)",
+  "ctx": "index.html:501"
+ },
+ {
+  "en": "Trim selected in / out to the playhead",
+  "ctx": "index.html:502"
+ },
+ {
+  "en": "Delete selected clip(s), or clear the focused transition",
+  "ctx": "index.html:503"
+ },
+ {
+  "en": "Ripple delete — remove the selection and close the gap on targeted tracks",
+  "ctx": "index.html:504"
+ },
+ {
+  "en": "Find the next shared gap (wraps; respects IN / OUT)",
+  "ctx": "index.html:505"
+ },
+ {
+  "en": "Close the gap at the playhead (targeted tracks)",
+  "ctx": "index.html:506"
+ },
+ {
+  "en": "Add a transition at the playhead (in / out by half)",
+  "ctx": "index.html:507"
+ },
+ {
+  "en": "Disable / enable selected clip(s) — hidden from preview and export",
+  "ctx": "index.html:508"
+ },
+ {
+  "en": "Unlink / link video and its audio",
+  "ctx": "index.html:509"
+ },
+ {
+  "en": "Undo / redo (also",
+  "ctx": "index.html:510"
+ },
+ {
+  "en": "Drag empty area",
+  "ctx": "index.html:516"
+ },
+ {
+  "en": "Marquee-select clips",
+  "ctx": "index.html:516"
+ },
+ {
+  "en": "+click clip",
+  "ctx": "index.html:517"
+ },
+ {
+  "en": "Add to / remove from the selection",
+  "ctx": "index.html:517"
+ },
+ {
+  "en": "Select all / deselect",
+  "ctx": "index.html:518"
+ },
+ {
+  "en": "Right-click clip",
+  "ctx": "index.html:519"
+ },
+ {
+  "en": "Disable / lock / link or unlink / precompose",
+  "ctx": "index.html:519"
+ },
+ {
+  "en": "IN / OUT and markers",
+  "ctx": "index.html:523"
+ },
+ {
+  "en": "Set Source In / Out (Source mode) or the timeline work area (Program; also bounds Export)",
+  "ctx": "index.html:525"
+ },
+ {
+  "en": "Clear Source or timeline IN / OUT",
+  "ctx": "index.html:526"
+ },
+ {
+  "en": "Split clips at the IN / OUT marks",
+  "ctx": "index.html:527"
+ },
+ {
+  "en": "Trim clips to IN / OUT (remove heads and tails)",
+  "ctx": "index.html:528"
+ },
+ {
+  "en": "Lift / Extract IN→OUT on targeted tracks (Extract closes the gap)",
+  "ctx": "index.html:529"
+ },
+ {
+  "en": "Add / remove a marker at the playhead",
+  "ctx": "index.html:530"
+ },
+ {
+  "en": "Go to the next / previous marker",
+  "ctx": "index.html:531"
+ },
+ {
+  "en": "Marker on ruler",
+  "ctx": "index.html:532"
+ },
+ {
+  "en": "Drag to move · click to jump · double-click or right-click to name / colour / delete ·",
+  "ctx": "index.html:532"
+ },
+ {
+  "en": "lists them all",
+  "ctx": "index.html:532"
+ },
+ {
+  "en": "Timeline view and tracks",
+  "ctx": "index.html:536"
+ },
+ {
+  "en": "Zoom the timeline",
+  "ctx": "index.html:538"
+ },
+ {
+  "en": "+wheel",
+  "ctx": "index.html:539"
+ },
+ {
+  "en": "Zoom at the cursor",
+  "ctx": "index.html:539"
+ },
+ {
+  "en": "Zoom to the selected clip(s)",
+  "ctx": "index.html:540"
+ },
+ {
+  "en": "Zoom to the IN–OUT work area",
+  "ctx": "index.html:541"
+ },
+ {
+  "en": "Zoom to fit",
+  "ctx": "index.html:542"
+ },
+ {
+  "en": "Snapping on / off —",
+  "ctx": "index.html:543"
+ },
+ {
+  "en": "picks targets (clip edges, playhead, markers, IN / OUT, keyframes, frame grid)",
+  "ctx": "index.html:543"
+ },
+ {
+  "en": "Click track name",
+  "ctx": "index.html:544"
+ },
+ {
+  "en": "Target / untarget the track — edits touch lit (targeted) tracks only",
+  "ctx": "index.html:544"
+ },
+ {
+  "en": "Track",
+  "ctx": "index.html:545"
+ },
+ {
+  "en": "Solo the track (mutes all others; click again to restore)",
+  "ctx": "index.html:545"
+ },
+ {
+  "en": "Track padlock",
+  "ctx": "index.html:546"
+ },
+ {
+  "en": "Lock the track — nothing on it can be edited or moved",
+  "ctx": "index.html:546"
+ },
+ {
+  "en": "Right-click track",
+  "ctx": "index.html:547"
+ },
+ {
+  "en": "Remove an empty track (keeps ≥1 video + ≥1 audio)",
+  "ctx": "index.html:547"
+ },
+ {
+  "en": "Keyframes, presets and Inspector",
+  "ctx": "index.html:551"
+ },
+ {
+  "en": "Go to the previous / next keyframe (the Inspector follows)",
+  "ctx": "index.html:553"
+ },
+ {
+  "en": "+click inspector label or slider",
+  "ctx": "index.html:554"
+ },
+ {
+  "en": "Reset a property and clear all its keyframes",
+  "ctx": "index.html:554"
+ },
+ {
+  "en": "+click label",
+  "ctx": "index.html:555"
+ },
+ {
+  "en": "Reset the value at the playhead, or remove that keyframe",
+  "ctx": "index.html:555"
+ },
+ {
+  "en": "Motion → Presets",
+  "ctx": "index.html:556"
+ },
+ {
+  "en": "In · Out · At playhead · Loop menus key a ready-made animation onto the selected clips ·",
+  "ctx": "index.html:556"
+ },
+ {
+  "en": "Save as preset",
+  "ctx": "index.html:556"
+ },
+ {
+  "en": "keeps this clip's keyframes for every project",
+  "ctx": "index.html:556"
+ },
+ {
+  "en": "Volume line",
+  "ctx": "index.html:562"
+ },
+ {
+  "en": "Drag to change the level ·",
+  "ctx": "index.html:562"
+ },
+ {
+  "en": "+click adds a keyframe ·",
+  "ctx": "index.html:562"
+ },
+ {
+  "en": "+click or double-click removes one · corner grips drag fades",
+  "ctx": "index.html:562"
+ },
+ {
+  "en": "Crossfade the audio cut next to the selected clip (or at the playhead)",
+  "ctx": "index.html:563"
+ },
+ {
+  "en": "Bin, compositions and templates",
+  "ctx": "index.html:567"
+ },
+ {
+  "en": "+click bin",
+  "ctx": "index.html:569"
+ },
+ {
+  "en": "New folder · New composition",
+  "ctx": "index.html:570"
+ },
+ {
+  "en": "Bin search",
+  "ctx": "index.html:571"
+ },
+ {
+  "en": "Name, kind, codec,",
+  "ctx": "index.html:571"
+ },
+ {
+  "en": "or a tag;",
+  "ctx": "index.html:571"
+ },
+ {
+  "en": "matches tags only ·",
+  "ctx": "index.html:571"
+ },
+ {
+  "en": "Right-click a bin file",
+  "ctx": "index.html:572"
+ },
+ {
+  "en": "Find timeline instances · Media info · favorites · Tags · collections",
+  "ctx": "index.html:572"
+ },
+ {
+  "en": "☆ / uses badge on a bin file",
+  "ctx": "index.html:573"
+ },
+ {
+  "en": "Star it · list where it is used (click one to jump there)",
+  "ctx": "index.html:573"
+ },
+ {
+  "en": "☰ in the bin",
+  "ctx": "index.html:574"
+ },
+ {
+  "en": "List view with metadata columns · click a heading to sort",
+  "ctx": "index.html:574"
+ },
+ {
+  "en": "Right-click a clip",
+  "ctx": "index.html:575"
+ },
+ {
+  "en": "Reveal in project",
+  "ctx": "index.html:575"
+ },
+ {
+  "en": "— show its file in the bin",
+  "ctx": "index.html:575"
+ },
+ {
+  "en": "Relink…",
+  "ctx": "index.html:576"
+ },
+ {
+  "en": "— point it at the footage where it is now ·",
+  "ctx": "index.html:576"
+ }
+]

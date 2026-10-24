@@ -1,0 +1,1402 @@
+[
+ {
+  "en": "Pos X",
+  "ctx": "app.js:6338: x: \"Pos X\", y: \"Pos Y\", scale: \"Scale\", rotation: \"Rotation\", opacity: \"Opacity\","
+ },
+ {
+  "en": "Pos Y",
+  "ctx": "app.js:6338: x: \"Pos X\", y: \"Pos Y\", scale: \"Scale\", rotation: \"Rotation\", opacity: \"Opacity\","
+ },
+ {
+  "en": "Scale",
+  "ctx": "app.js:6338: x: \"Pos X\", y: \"Pos Y\", scale: \"Scale\", rotation: \"Rotation\", opacity: \"Opacity\","
+ },
+ {
+  "en": "Rotation",
+  "ctx": "app.js:6338: x: \"Pos X\", y: \"Pos Y\", scale: \"Scale\", rotation: \"Rotation\", opacity: \"Opacity\","
+ },
+ {
+  "en": "Opacity",
+  "ctx": "app.js:6338: x: \"Pos X\", y: \"Pos Y\", scale: \"Scale\", rotation: \"Rotation\", opacity: \"Opacity\","
+ },
+ {
+  "en": "Volume",
+  "ctx": "app.js:6339: volume: \"Volume\", pan: \"Pan\", duck: \"Duck\", speed: \"Speed\", brightness: \"Bright\", contrast: \"Contrast\","
+ },
+ {
+  "en": "Pan",
+  "ctx": "app.js:6339: volume: \"Volume\", pan: \"Pan\", duck: \"Duck\", speed: \"Speed\", brightness: \"Bright\", contrast: \"Contrast\","
+ },
+ {
+  "en": "Duck",
+  "ctx": "app.js:6339: volume: \"Volume\", pan: \"Pan\", duck: \"Duck\", speed: \"Speed\", brightness: \"Bright\", contrast: \"Contrast\","
+ },
+ {
+  "en": "Speed",
+  "ctx": "app.js:6339: volume: \"Volume\", pan: \"Pan\", duck: \"Duck\", speed: \"Speed\", brightness: \"Bright\", contrast: \"Contrast\","
+ },
+ {
+  "en": "Bright",
+  "ctx": "app.js:6339: volume: \"Volume\", pan: \"Pan\", duck: \"Duck\", speed: \"Speed\", brightness: \"Bright\", contrast: \"Contrast\","
+ },
+ {
+  "en": "Sat",
+  "ctx": "app.js:6340: saturation: \"Sat\", hue: \"Hue\", blur: \"Blur\", grayscale: \"Gray\", sepia: \"Sepia\","
+ },
+ {
+  "en": "Hue",
+  "ctx": "app.js:6340: saturation: \"Sat\", hue: \"Hue\", blur: \"Blur\", grayscale: \"Gray\", sepia: \"Sepia\","
+ },
+ {
+  "en": "Blur",
+  "ctx": "app.js:6340: saturation: \"Sat\", hue: \"Hue\", blur: \"Blur\", grayscale: \"Gray\", sepia: \"Sepia\","
+ },
+ {
+  "en": "Gray",
+  "ctx": "app.js:6340: saturation: \"Sat\", hue: \"Hue\", blur: \"Blur\", grayscale: \"Gray\", sepia: \"Sepia\","
+ },
+ {
+  "en": "Sepia",
+  "ctx": "app.js:6340: saturation: \"Sat\", hue: \"Hue\", blur: \"Blur\", grayscale: \"Gray\", sepia: \"Sepia\","
+ },
+ {
+  "en": "Invert",
+  "ctx": "app.js:6341: invert: \"Invert\", temperature: \"Temp\", tint: \"Tint\", vignette: \"Vignette\","
+ },
+ {
+  "en": "Vignette",
+  "ctx": "app.js:6341: invert: \"Invert\", temperature: \"Temp\", tint: \"Tint\", vignette: \"Vignette\","
+ },
+ {
+  "en": "Radius",
+  "ctx": "app.js:6342: cornerRadius: \"Radius\", shake: \"Shake\", rgbSplit: \"RGB\", grain: \"Grain\","
+ },
+ {
+  "en": "RGB",
+  "ctx": "app.js:6342: cornerRadius: \"Radius\", shake: \"Shake\", rgbSplit: \"RGB\", grain: \"Grain\","
+ },
+ {
+  "en": "Grain",
+  "ctx": "app.js:6342: cornerRadius: \"Radius\", shake: \"Shake\", rgbSplit: \"RGB\", grain: \"Grain\","
+ },
+ {
+  "en": "Glow",
+  "ctx": "app.js:6343: fontSize: \"Size\", letterSpacing: \"Track\", glow: \"Glow\","
+ },
+ {
+  "en": "Anchor X",
+  "ctx": "app.js:6344: anchorX: \"Anchor X\", anchorY: \"Anchor Y\", trimStart: \"Trim start\", trimEnd: \"Trim end\", trimOffset: \"Trim offset\", pathOffset: \"Path offset\""
+ },
+ {
+  "en": "Anchor Y",
+  "ctx": "app.js:6344: anchorX: \"Anchor X\", anchorY: \"Anchor Y\", trimStart: \"Trim start\", trimEnd: \"Trim end\", trimOffset: \"Trim offset\", pathOffset: \"Path offset\""
+ },
+ {
+  "en": "Trim start",
+  "ctx": "app.js:6344: anchorX: \"Anchor X\", anchorY: \"Anchor Y\", trimStart: \"Trim start\", trimEnd: \"Trim end\", trimOffset: \"Trim offset\", pathOffset: \"Path offset\""
+ },
+ {
+  "en": "Trim end",
+  "ctx": "app.js:6344: anchorX: \"Anchor X\", anchorY: \"Anchor Y\", trimStart: \"Trim start\", trimEnd: \"Trim end\", trimOffset: \"Trim offset\", pathOffset: \"Path offset\""
+ },
+ {
+  "en": "Trim offset",
+  "ctx": "app.js:6344: anchorX: \"Anchor X\", anchorY: \"Anchor Y\", trimStart: \"Trim start\", trimEnd: \"Trim end\", trimOffset: \"Trim offset\", pathOffset: \"Path offset\""
+ },
+ {
+  "en": "Path offset",
+  "ctx": "app.js:6344: anchorX: \"Anchor X\", anchorY: \"Anchor Y\", trimStart: \"Trim start\", trimEnd: \"Trim end\", trimOffset: \"Trim offset\", pathOffset: \"Path offset\""
+ },
+ {
+  "en": "Close graph",
+  "ctx": "app.js:6365: return `<div class=\"kf-graph\" data-kfgraph-card=\"${k}\">"
+ },
+ {
+  "en": "Apply Source In→Out to the timeline clip (.) — ripples later clips if duration changes",
+  "ctx": "app.js:6584: ? \"Apply Source In→Out to the timeline clip (.) — ripples later clips if duration changes\""
+ },
+ {
+  "en": "translate3d({0}px,0,0)",
+  "ctx": "app.js:6697: els.sourceScrubHead.style.transform = `translate3d(${hx}px,0,0)`;"
+ },
+ {
+  "en": "Double-click a clip in Project or the timeline to load Source",
+  "ctx": "app.js:6820: toast(\"Double-click a clip in Project or the timeline to load Source\");"
+ },
+ {
+  "en": "Titles, shapes, nulls and adjustment layers have no source media",
+  "ctx": "app.js:6906: toast(\"Titles, shapes, nulls and adjustment layers have no source media\");"
+ },
+ {
+  "en": "Enter to go · Esc to cancel (see ? for formats)",
+  "ctx": "app.js:7006: input.title = \"Enter to go · Esc to cancel (see ? for formats)\";"
+ },
+ {
+  "en": "Couldn't read that time — try 01:15:00, 1500, +30 or 12.5s",
+  "ctx": "app.js:7023: if (t == null) toast(\"Couldn't read that time — try 01:15:00, 1500, +30 or 12.5s\");"
+ },
+ {
+  "en": "600 {0}px \"Segoe UI\", sans-serif",
+  "ctx": "app.js:7151: ctx2d.font = `600 ${Math.round(H * 0.045)}px \"Segoe UI\", sans-serif`;"
+ },
+ {
+  "en": "Double-click a clip to load Source",
+  "ctx": "app.js:7154: ctx2d.fillText(\"Double-click a clip to load Source\", W / 2, H / 2);"
+ },
+ {
+  "en": "700 {0}px \"Segoe UI\", sans-serif",
+  "ctx": "app.js:7175: ctx2d.font = `700 ${Math.round(H * 0.08)}px \"Segoe UI\", sans-serif`;"
+ },
+ {
+  "en": "fx-worklet.js?v=2",
+  "ctx": "app.js:7342: p = ctx.audioWorklet.addModule(\"fx-worklet.js?v=2\")"
+ },
+ {
+  "en": "−14 LUFS (streaming)",
+  "ctx": "app.js:7735: { id: \"lufs-14\", label: \"−14 LUFS (streaming)\", mode: \"lufs\", value: -14 },"
+ },
+ {
+  "en": "−16 LUFS (podcast)",
+  "ctx": "app.js:7736: { id: \"lufs-16\", label: \"−16 LUFS (podcast)\", mode: \"lufs\", value: -16 },"
+ },
+ {
+  "en": "−23 LUFS (broadcast)",
+  "ctx": "app.js:7737: { id: \"lufs-23\", label: \"−23 LUFS (broadcast)\", mode: \"lufs\", value: -23 },"
+ },
+ {
+  "en": "−1 dBFS peak",
+  "ctx": "app.js:7738: { id: \"peak-1\", label: \"−1 dBFS peak\", mode: \"peak\", value: -1 },"
+ },
+ {
+  "en": "Loudness module missing — reload the editor",
+  "ctx": "app.js:7783: if (typeof FableCutLoudness === \"undefined\") { toast(\"Loudness module missing — reload the editor\"); return; }"
+ },
+ {
+  "en": "Select an audio or video clip to normalize",
+  "ctx": "app.js:7785: if (!groups.length) { toast(\"Select an audio or video clip to normalize\"); return; }"
+ },
+ {
+  "en": "Measuring {0} clip{1}…",
+  "ctx": "app.js:7786: toast(`Measuring ${groups.length} clip${groups.length > 1 ? \"s\" : \"\"}…`);"
+ },
+ {
+  "en": "gain {0}",
+  "ctx": "app.js:7804: ? `gain ${fmtDb(results[0].g[0].props.gain)}` : `${done} clip${done === 1 ? \"\" : \"s\"}`;"
+ },
+ {
+  "en": "{0} clip{1}",
+  "ctx": "app.js:7804: ? `gain ${fmtDb(results[0].g[0].props.gain)}` : `${done} clip${done === 1 ? \"\" : \"s\"}`;"
+ },
+ {
+  "en": "Normalized to {0}: {1}{2}",
+  "ctx": "app.js:7805: toast(`Normalized to ${target.label}: ${what}${silent ? ` · ${silent} silent, skipped` : \"\"}`);"
+ },
+ {
+  "en": "· {0} silent, skipped",
+  "ctx": "app.js:7805: toast(`Normalized to ${target.label}: ${what}${silent ? ` · ${silent} silent, skipped` : \"\"}`);"
+ },
+ {
+  "en": "Noise reduction works on audio — this picture has no linked audio stems",
+  "ctx": "app.js:7830: if (!picked.length) { toast(\"Noise reduction works on audio — this picture has no linked audio stems\"); renderInspector(); return; }"
+ },
+ {
+  "en": "Reducing noise ({0})…",
+  "ctx": "app.js:7836: toast(`Reducing noise (${level})…`);"
+ },
+ {
+  "en": "Noise reduction failed: {0}",
+  "ctx": "app.js:7851: toast(`Noise reduction failed: ${err.message || err}`);"
+ },
+ {
+  "en": "Noise reduction off — playing the original",
+  "ctx": "app.js:7871: toast(level === \"off\" ? \"Noise reduction off — playing the original\" : `Noise reduction: ${level}`);"
+ },
+ {
+  "en": "Noise reduction: {0}",
+  "ctx": "app.js:7871: toast(level === \"off\" ? \"Noise reduction off — playing the original\" : `Noise reduction: ${level}`);"
+ },
+ {
+  "en": "Ducking module missing — reload the editor",
+  "ctx": "app.js:7916: if (typeof FableCutDucking === \"undefined\") { toast(\"Ducking module missing — reload the editor\"); return; }"
+ },
+ {
+  "en": "Select the music clip(s) to duck",
+  "ctx": "app.js:7918: if (!music.length) { toast(\"Select the music clip(s) to duck\"); return; }"
+ },
+ {
+  "en": "No audio on {0} under these clips to duck for",
+  "ctx": "app.js:7926: toast(`No audio on ${under || \"the other audio tracks\"} under these clips to duck for`);"
+ },
+ {
+  "en": "the other audio tracks",
+  "ctx": "app.js:7926: toast(`No audio on ${under || \"the other audio tracks\"} under these clips to duck for`);"
+ },
+ {
+  "en": "Listening for voice…",
+  "ctx": "app.js:7929: toast(\"Listening for voice…\");"
+ },
+ {
+  "en": "Ducked {0} dB under {1} — {2} dip{3}",
+  "ctx": "app.js:7945: toast(regions.length ? `Ducked ${amount} dB under ${lanes.join(\", \")} — ${dips} dip${dips === 1 ? \"\" : \"s\"}`"
+ },
+ {
+  "en": "No voice found on {0} — nothing ducked",
+  "ctx": "app.js:7946: : `No voice found on ${lanes.join(\", \")} — nothing ducked`);"
+ },
+ {
+  "en": "−∞ dB",
+  "ctx": "app.js:7959: if (!Number.isFinite(db) || db <= FADER_DB_MIN) return \"−∞ dB\";"
+ },
+ {
+  "en": "Up to {0} buses",
+  "ctx": "app.js:8044: if (buses.length >= BUS_MAX) { toast(`Up to ${BUS_MAX} buses`); return; }"
+ },
+ {
+  "en": "{4} fader — double-click: 0 dB",
+  "ctx": "app.js:8088: s.innerHTML = `"
+ },
+ {
+  "en": "Type a level in dB (e.g. -6, +2, -inf)",
+  "ctx": "app.js:8088: s.innerHTML = `"
+ },
+ {
+  "en": "{5} effects",
+  "ctx": "app.js:8088: s.innerHTML = `"
+ },
+ {
+  "en": "FX",
+  "ctx": "app.js:8088: s.innerHTML = `"
+ },
+ {
+  "en": "Master bus — everything you hear and export",
+  "ctx": "app.js:8089: <div class=\"mix-name\" title=\"${isMaster ? \"Master bus — everything you hear and export\" : isBus ? `Submix bus ${id} — double-click to rename"
+ },
+ {
+  "en": "Submix bus {0} — double-click to rename",
+  "ctx": "app.js:8089: <div class=\"mix-name\" title=\"${isMaster ? \"Master bus — everything you hear and export\" : isBus ? `Submix bus ${id} — double-click to rename"
+ },
+ {
+  "en": "Where this track goes: the master, or a submix bus",
+  "ctx": "app.js:8090: ${!isMaster && !isBus ? `<select class=\"mix-out\" title=\"Where this track goes: the master, or a submix bus\"><option value=\"\">→ Master</optio"
+ },
+ {
+  "en": "→ Master",
+  "ctx": "app.js:8090: ${!isMaster && !isBus ? `<select class=\"mix-out\" title=\"Where this track goes: the master, or a submix bus\"><option value=\"\">→ Master</optio"
+ },
+ {
+  "en": "Momentary loudness of the mix (post-fader)",
+  "ctx": "app.js:8092: ${isMaster ? `<div class=\"mix-pan-row mix-lufs\" title=\"Momentary loudness of the mix (post-fader)\">— LUFS</div>`"
+ },
+ {
+  "en": "— LUFS",
+  "ctx": "app.js:8092: ${isMaster ? `<div class=\"mix-pan-row mix-lufs\" title=\"Momentary loudness of the mix (post-fader)\">— LUFS</div>`"
+ },
+ {
+  "en": "Track pan — double-click: center",
+  "ctx": "app.js:8093: : `<div class=\"mix-pan-row\"><input type=\"range\" class=\"mix-pan\" min=\"-1\" max=\"1\" step=\"0.01\" title=\"Track pan — double-click: center\"><span "
+ },
+ {
+  "en": "Bus {0}",
+  "ctx": "app.js:8099: <button type=\"button\" class=\"mix-fx\" title=\"${isMaster ? \"Master\" : isBus ? `Bus ${id}` : `Track ${id}`} effects\">FX</button>"
+ },
+ {
+  "en": "Mute the bus",
+  "ctx": "app.js:8100: ${isMaster ? \"\" : isBus ? `<div class=\"mix-btns\"><button type=\"button\" class=\"mix-m\" title=\"Mute the bus\">M</button><button type=\"button\" cl"
+ },
+ {
+  "en": "Remove the bus — its tracks go back to the master",
+  "ctx": "app.js:8100: ${isMaster ? \"\" : isBus ? `<div class=\"mix-btns\"><button type=\"button\" class=\"mix-m\" title=\"Mute the bus\">M</button><button type=\"button\" cl"
+ },
+ {
+  "en": "Mute (track output on/off)",
+  "ctx": "app.js:8101: : `<div class=\"mix-btns\"><button type=\"button\" class=\"mix-m\" title=\"Mute (track output on/off)\">M</button><button type=\"button\" class=\"mix-s"
+ },
+ {
+  "en": "Solo",
+  "ctx": "app.js:8101: : `<div class=\"mix-btns\"><button type=\"button\" class=\"mix-m\" title=\"Mute (track output on/off)\">M</button><button type=\"button\" class=\"mix-s"
+ },
+ {
+  "en": "Add a submix bus — route tracks into it to process and level them together",
+  "ctx": "app.js:8151: add.title = \"Add a submix bus — route tracks into it to process and level them together\";"
+ },
+ {
+  "en": "+ Bus",
+  "ctx": "app.js:8152: add.textContent = \"+ Bus\";"
+ },
+ {
+  "en": "FX {0}",
+  "ctx": "app.js:8186: fxBtn.textContent = nFx ? `FX ${nFx}` : \"FX\";"
+ },
+ {
+  "en": "{0} Hz",
+  "ctx": "app.js:8213: if (d.unit === \"Hz\") return v >= 1000 ? `${(v / 1000).toFixed(v >= 10000 ? 1 : 2)} kHz` : `${Math.round(v)} Hz`;"
+ },
+ {
+  "en": "{0} ms",
+  "ctx": "app.js:8215: if (d.unit === \"ms\") return `${Math.round(v)} ms`;"
+ },
+ {
+  "en": "Replace the chain with a preset — tweak it afterwards",
+  "ctx": "app.js:8232: let html = `<div class=\"fx-tools-row\">"
+ },
+ {
+  "en": "Add an effect to the end of the chain",
+  "ctx": "app.js:8232: let html = `<div class=\"fx-tools-row\">"
+ },
+ {
+  "en": "Preset…",
+  "ctx": "app.js:8232: let html = `<div class=\"fx-tools-row\">"
+ },
+ {
+  "en": "+ Add effect…",
+  "ctx": "app.js:8232: let html = `<div class=\"fx-tools-row\">"
+ },
+ {
+  "en": "Remove every effect",
+  "ctx": "app.js:8237: ${list?.length ? `<button type=\"button\" class=\"btn tiny\" data-fx-clear title=\"Remove every effect\">Clear</button>` : \"\"}"
+ },
+ {
+  "en": "No effects. Pick a preset or add one.",
+  "ctx": "app.js:8239: if (!list?.length) return html + `<div class=\"insp-note\">No effects. Pick a preset or add one.</div>`;"
+ },
+ {
+  "en": "On / bypass",
+  "ctx": "app.js:8243: html += `<div class=\"fx-card${e.on === false ? \" off\" : \"\"}\" data-fx-i=\"${i}\">"
+ },
+ {
+  "en": "Earlier in the chain",
+  "ctx": "app.js:8243: html += `<div class=\"fx-card${e.on === false ? \" off\" : \"\"}\" data-fx-i=\"${i}\">"
+ },
+ {
+  "en": "Later in the chain",
+  "ctx": "app.js:8243: html += `<div class=\"fx-card${e.on === false ? \" off\" : \"\"}\" data-fx-i=\"${i}\">"
+ },
+ {
+  "en": "Remove",
+  "ctx": "app.js:8243: html += `<div class=\"fx-card${e.on === false ? \" off\" : \"\"}\" data-fx-i=\"${i}\">"
+ },
+ {
+  "en": "Double-click: default",
+  "ctx": "app.js:8246: ${Object.entries(def.params).map(([k, d]) => `<div class=\"fx-param\"><span>${d.label}</span>"
+ },
+ {
+  "en": "Move the playhead over the clip to automate this",
+  "ctx": "app.js:8257: const title = at == null ? \"Move the playhead over the clip to automate this\""
+ },
+ {
+  "en": "Remove the key at the playhead",
+  "ctx": "app.js:8258: : on ? \"Remove the key at the playhead\" : \"Set a key at the playhead\";"
+ },
+ {
+  "en": "Set a key at the playhead",
+  "ctx": "app.js:8258: : on ? \"Remove the key at the playhead\" : \"Set a key at the playhead\";"
+ },
+ {
+  "en": "[data-fx-kf=\"{0}\"]",
+  "ctx": "app.js:8351: const b = card.querySelector(`[data-fx-kf=\"${k}\"]`);"
+ },
+ {
+  "en": "← Mixer",
+  "ctx": "app.js:8366: root.innerHTML = `<div class=\"mixer-fx\">"
+ },
+ {
+  "en": "{0} effects",
+  "ctx": "app.js:8366: root.innerHTML = `<div class=\"mixer-fx\">"
+ },
+ {
+  "en": "{0} LUFS",
+  "ctx": "app.js:8422: const txt = playing && m.lufs > -70 ? `${m.lufs.toFixed(1)} LUFS` : \"— LUFS\";"
+ },
+ {
+  "en": "RMS",
+  "ctx": "app.js:8440: const METER_MODE_LABEL = { rms: \"RMS\", lufs: \"LUFS\", peak: \"PEAK\" };"
+ },
+ {
+  "en": "LUFS",
+  "ctx": "app.js:8440: const METER_MODE_LABEL = { rms: \"RMS\", lufs: \"LUFS\", peak: \"PEAK\" };"
+ },
+ {
+  "en": "PEAK",
+  "ctx": "app.js:8440: const METER_MODE_LABEL = { rms: \"RMS\", lufs: \"LUFS\", peak: \"PEAK\" };"
+ },
+ {
+  "en": "Mode: {0} — click to switch",
+  "ctx": "app.js:8587: if (root) root.title = `Mode: ${METER_MODE_LABEL[meterState.mode]} — click to switch`;"
+ },
+ {
+  "en": "Hide track meters",
+  "ctx": "app.js:8603: btn.title = meterState.tracksExpanded ? \"Hide track meters\" : \"Show track meters\";"
+ },
+ {
+  "en": "Show track meters",
+  "ctx": "app.js:8603: btn.title = meterState.tracksExpanded ? \"Hide track meters\" : \"Show track meters\";"
+ },
+ {
+  "en": "meter-worklet.js?v=9",
+  "ctx": "app.js:8635: await audio.ctx.audioWorklet.addModule(\"meter-worklet.js?v=9\");"
+ },
+ {
+  "en": "Cycle RMS → LUFS → Peak",
+  "ctx": "app.js:8792: modeBtn.title = \"Cycle RMS → LUFS → Peak\";"
+ },
+ {
+  "en": "scale(",
+  "ctx": "app.js:8844: meter.style.transform = next >= 0.999 ? \"\" : \"scale(\" + next + \")\";"
+ },
+ {
+  "en": "Constant power",
+  "ctx": "app.js:9262: const AUDIO_FADE_CURVES = { power: \"Constant power\", linear: \"Constant gain\", exp: \"Exponential\" };"
+ },
+ {
+  "en": "Constant gain",
+  "ctx": "app.js:9262: const AUDIO_FADE_CURVES = { power: \"Constant power\", linear: \"Constant gain\", exp: \"Exponential\" };"
+ },
+ {
+  "en": "Exponential",
+  "ctx": "app.js:9262: const AUDIO_FADE_CURVES = { power: \"Constant power\", linear: \"Constant gain\", exp: \"Exponential\" };"
+ },
+ {
+  "en": "*{animation-play-state:paused!important;",
+  "ctx": "app.js:9372: const style = `<style>*{animation-play-state:paused!important;` +"
+ },
+ {
+  "en": "svg raster failed",
+  "ctx": "app.js:9401: img.onerror = () => { URL.revokeObjectURL(url); reject(new Error(\"svg raster failed\")); };"
+ },
+ {
+  "en": "script load failed:",
+  "ctx": "app.js:9451: s.src = src; s.onload = res; s.onerror = () => rej(new Error(\"script load failed: \" + src));"
+ },
+ {
+  "en": "{0}/selfie_segmentation.js",
+  "ctx": "app.js:9459: bgSeg.loading = loadScript(`${base}/selfie_segmentation.js`).then(() => {"
+ },
+ {
+  "en": "Background removal unavailable — couldn't load MediaPipe (offline?). Using chroma key still works.",
+  "ctx": "app.js:9472: toast(\"Background removal unavailable — couldn't load MediaPipe (offline?). Using chroma key still works.\");"
+ },
+ {
+  "en": "brightness({0}%)",
+  "ctx": "app.js:9992: if (p.brightness !== 100) parts.push(`brightness(${p.brightness}%)`);"
+ },
+ {
+  "en": "contrast({0}%)",
+  "ctx": "app.js:9993: if (p.contrast !== 100) parts.push(`contrast(${p.contrast}%)`);"
+ },
+ {
+  "en": "saturate({0}%)",
+  "ctx": "app.js:9994: if (p.saturation !== 100) parts.push(`saturate(${p.saturation}%)`);"
+ },
+ {
+  "en": "hue-rotate({0}deg)",
+  "ctx": "app.js:9995: if (p.hue) parts.push(`hue-rotate(${p.hue}deg)`);"
+ },
+ {
+  "en": "grayscale({0}%)",
+  "ctx": "app.js:9997: if (p.grayscale) parts.push(`grayscale(${p.grayscale}%)`);"
+ },
+ {
+  "en": "sepia({0}%)",
+  "ctx": "app.js:9998: if (p.sepia) parts.push(`sepia(${p.sepia}%)`);"
+ },
+ {
+  "en": "invert({0}%)",
+  "ctx": "app.js:9999: if (p.invert) parts.push(`invert(${p.invert}%)`);"
+ },
+ {
+  "en": "That composition is missing",
+  "ctx": "app.js:10195: if (!comp) { toast(\"That composition is missing\"); return; }"
+ },
+ {
+  "en": "Back to the main timeline",
+  "ctx": "app.js:10232: el.innerHTML = `<button type=\"button\" class=\"btn tiny\" data-crumb=\"${x.path.length}\" title=\"Back to the main timeline\">◀ Main</button>` +"
+ },
+ {
+  "en": "◀ Main",
+  "ctx": "app.js:10232: el.innerHTML = `<button type=\"button\" class=\"btn tiny\" data-crumb=\"${x.path.length}\" title=\"Back to the main timeline\">◀ Main</button>` +"
+ },
+ {
+  "en": "You are editing this composition — Esc or ◀ Main goes back",
+  "ctx": "app.js:10235: : `<b title=\"You are editing this composition — Esc or ◀ Main goes back\">${escapeHtml(n)}</b>`)).join(\"\");"
+ },
+ {
+  "en": "Select the clips to put in a composition",
+  "ctx": "app.js:10244: if (!sel.length) { toast(\"Select the clips to put in a composition\"); return; }"
+ },
+ {
+  "en": "{0} clip{1} now live in \"{2}\" — double-click it to open",
+  "ctx": "app.js:10256: toast(`${sel.length} clip${sel.length > 1 ? \"s\" : \"\"} now live in \"${comp.name}\" — double-click it to open`);"
+ },
+ {
+  "en": "{0} is locked",
+  "ctx": "app.js:10269: if (isTrackLocked(track)) { toast(`${track} is locked`); return; }"
+ },
+ {
+  "en": "A composition can't contain itself",
+  "ctx": "app.js:10271: if (here && CompLib.wouldCycle(state.compCtx ? state.compCtx.root : project, here, comp.id)) { toast(\"A composition can't contain itself\"); "
+ },
+ {
+  "en": "Add at the playhead",
+  "ctx": "app.js:10285: item.innerHTML = `<div class=\"bin-thumb comp-thumb\">▣</div>"
+ },
+ {
+  "en": "Composition · {0}×{1} · {2}s{3}",
+  "ctx": "app.js:10285: item.innerHTML = `<div class=\"bin-thumb comp-thumb\">▣</div>"
+ },
+ {
+  "en": "· used {0}×",
+  "ctx": "app.js:10286: <div class=\"bin-meta\"><div class=\"bin-name\"></div><div class=\"bin-sub\">Composition · ${comp.width}×${comp.height} · ${comp.duration}s${used "
+ },
+ {
+  "en": "Drag onto the timeline · double-click to open and edit",
+  "ctx": "app.js:10289: item.title = \"Drag onto the timeline · double-click to open and edit\";"
+ },
+ {
+  "en": "Open",
+  "ctx": "app.js:10306: item(\"Open\", () => enterComp(comp.id));"
+ },
+ {
+  "en": "Duplicate",
+  "ctx": "app.js:10307: item(\"Duplicate\", () => {"
+ },
+ {
+  "en": "{0} copy",
+  "ctx": "app.js:10309: const copy = JSON.parse(JSON.stringify(comp)); copy.id = newCompId(); copy.name = `${comp.name} copy`.slice(0, 80);"
+ },
+ {
+  "en": "Used {0}× — remove its clips first",
+  "ctx": "app.js:10319: }, used ? `Used ${used}× — remove its clips first` : state.compCtx && state.compCtx.path.includes(comp.id) ? \"It is open\" : null);"
+ },
+ {
+  "en": "It is open",
+  "ctx": "app.js:10319: }, used ? `Used ${used}× — remove its clips first` : state.compCtx && state.compCtx.path.includes(comp.id) ? \"It is open\" : null);"
+ },
+ {
+  "en": "Its composition ({0}) is missing.",
+  "ctx": "app.js:10327: if (!comp) return `<div class=\"insp-section\"><h3>Composition</h3><p class=\"cl-note\">Its composition (${escapeHtml(c.compId || \"?\")}) is miss"
+ },
+ {
+  "en": "The clip shows the comp from its In point ({4} s). Every clip using this comp changes when you edit it.",
+  "ctx": "app.js:10328: return `<div class=\"insp-section\" data-comp-section><h3>Composition</h3>"
+ },
+ {
+  "en": "The composition's name (every clip using it shows it)",
+  "ctx": "app.js:10329: ${row(\"Comp\", `<span class=\"insp-ctrls\"><input type=\"text\" data-comp-name value=\"${escapeHtml(comp.name)}\" maxlength=\"80\" title=\"The composi"
+ },
+ {
+  "en": "Open it on the timeline (or double-click the clip)",
+  "ctx": "app.js:10329: ${row(\"Comp\", `<span class=\"insp-ctrls\"><input type=\"text\" data-comp-name value=\"${escapeHtml(comp.name)}\" maxlength=\"80\" title=\"The composi"
+ },
+ {
+  "en": "Transparent: what is under the comp clip shows through",
+  "ctx": "app.js:10332: ${row(\"Background\", `<span class=\"insp-ctrls\"><input type=\"color\" data-comp-bg value=\"${comp.background || \"#000000\"}\"><button type=\"button\""
+ },
+ {
+  "en": "None",
+  "ctx": "app.js:10332: ${row(\"Background\", `<span class=\"insp-ctrls\"><input type=\"color\" data-comp-bg value=\"${comp.background || \"#000000\"}\"><button type=\"button\""
+ },
+ {
+  "en": "Drag onto the timeline or click ＋ — then edit its fields in the Inspector",
+  "ctx": "app.js:10380: item.title = \"Drag onto the timeline or click ＋ — then edit its fields in the Inspector\";"
+ },
+ {
+  "en": "no fields",
+  "ctx": "app.js:10385: item.querySelector(\".bin-sub\").textContent = `${t.width}×${t.height} · ${t.duration}s · ${t.fields.map((f) => f.label).join(\", \") || \"no fie"
+ },
+ {
+  "en": "Right-click a composition in the Project tab → Save as template to keep your own here.",
+  "ctx": "app.js:10394: p.textContent = \"Right-click a composition in the Project tab → Save as template to keep your own here.\";"
+ },
+ {
+  "en": "V1–V3 are locked — unlock a video track to add a template",
+  "ctx": "app.js:10401: if (!track || isTrackLocked(track)) { toast(track ? `${track} is locked` : \"V1–V3 are locked — unlock a video track to add a template\"); ret"
+ },
+ {
+  "en": "{0} placed — edit its fields in the Inspector",
+  "ctx": "app.js:10420: toast(`${comp.name} placed — edit its fields in the Inspector`);"
+ },
+ {
+  "en": "Import your picture (or drop it in the bin), then pick it here",
+  "ctx": "app.js:10443: return row(label, `<select data-tf=\"${escapeHtml(f.key)}\" title=\"Import your picture (or drop it in the bin), then pick it here\">${pics.map("
+ },
+ {
+  "en": "These fields belong to this copy (its comp \"{3}\"). Open it to change anything else.",
+  "ctx": "app.js:10446: return `<div class=\"insp-section\" data-tpl-section><h3>Template</h3>"
+ },
+ {
+  "en": "Longer holds longer — the exit keeps its timing at the end",
+  "ctx": "app.js:10448: ${row(\"Length (s)\", `<input type=\"number\" data-tf-dur min=\"0.5\" step=\"0.1\" value=\"${comp.duration}\" title=\"Longer holds longer — the exit ke"
+ },
+ {
+  "en": "Canvas",
+  "ctx": "app.js:10449: ${sameShape || state.compCtx ? \"\" : row(\"Canvas\", `<button type=\"button\" class=\"btn tiny\" data-tf-canvas title=\"Make the project canvas ${co"
+ },
+ {
+  "en": "Make the project canvas {0}×{1}, the size this template was made for",
+  "ctx": "app.js:10449: ${sameShape || state.compCtx ? \"\" : row(\"Canvas\", `<button type=\"button\" class=\"btn tiny\" data-tf-canvas title=\"Make the project canvas ${co"
+ },
+ {
+  "en": "Use {2}×{3}",
+  "ctx": "app.js:10449: ${sameShape || state.compCtx ? \"\" : row(\"Canvas\", `<button type=\"button\" class=\"btn tiny\" data-tf-canvas title=\"Make the project canvas ${co"
+ },
+ {
+  "en": "Canvas is now {0}×{1}",
+  "ctx": "app.js:10483: root.querySelector(\"[data-tf-canvas]\")?.addEventListener(\"click\", () => { setCanvasSize(comp.width, comp.height); renderInspector(); toast(`"
+ },
+ {
+  "en": "Saved \"{0}\" to {1}",
+  "ctx": "app.js:10493: toast(`Saved \"${j.name}\" to ${j.file}`);"
+ },
+ {
+  "en": "Couldn't save the template:",
+  "ctx": "app.js:10494: } catch (err) { toast(\"Couldn't save the template: \" + err.message); return; }"
+ },
+ {
+  "en": "Presets",
+  "ctx": "app.js:10506: return row(\"Presets\", `<span class=\"insp-ctrls\">${opts(\"in\", \"In…\")}${opts(\"out\", \"Out…\")}</span>`)"
+ },
+ {
+  "en": "In…",
+  "ctx": "app.js:10506: return row(\"Presets\", `<span class=\"insp-ctrls\">${opts(\"in\", \"In…\")}${opts(\"out\", \"Out…\")}</span>`)"
+ },
+ {
+  "en": "Out…",
+  "ctx": "app.js:10506: return row(\"Presets\", `<span class=\"insp-ctrls\">${opts(\"in\", \"In…\")}${opts(\"out\", \"Out…\")}</span>`)"
+ },
+ {
+  "en": "At playhead…",
+  "ctx": "app.js:10507: + row(\"\", `<span class=\"insp-ctrls\">${opts(\"at\", \"At playhead…\")}${opts(\"whole\", \"Loop…\")}</span>`)"
+ },
+ {
+  "en": "Loop…",
+  "ctx": "app.js:10507: + row(\"\", `<span class=\"insp-ctrls\">${opts(\"at\", \"At playhead…\")}${opts(\"whole\", \"Loop…\")}</span>`)"
+ },
+ {
+  "en": "In: from the clip's start · Out: up to its end · Loop: the whole clip",
+  "ctx": "app.js:10508: + row(\"Save as preset\", `<span class=\"insp-ctrls\"><input type=\"text\" data-preset-name maxlength=\"60\" placeholder=\"Name\" style=\"max-width:110"
+ },
+ {
+  "en": "Save this clip's keyframes to library/presets — every project can use it",
+  "ctx": "app.js:10508: + row(\"Save as preset\", `<span class=\"insp-ctrls\"><input type=\"text\" data-preset-name maxlength=\"60\" placeholder=\"Name\" style=\"max-width:110"
+ },
+ {
+  "en": "{0} on {1} clip{2}",
+  "ctx": "app.js:10524: toast(`${p.name} on ${targets.length} clip${targets.length > 1 ? \"s\" : \"\"}`);"
+ },
+ {
+  "en": "Name the preset first",
+  "ctx": "app.js:10529: if (!name) { toast(\"Name the preset first\"); return; }"
+ },
+ {
+  "en": "This clip has no keyframes to save",
+  "ctx": "app.js:10531: if (!times.length) { toast(\"This clip has no keyframes to save\"); return; }"
+ },
+ {
+  "en": "Couldn't save the preset:",
+  "ctx": "app.js:10540: } catch (err) { toast(\"Couldn't save the preset: \" + err.message); return; }"
+ },
+ {
+  "en": "url(\"data:image/svg+xml,{0}\") 10 10, crosshair",
+  "ctx": "app.js:10715: return `url(\"data:image/svg+xml,${encodeURIComponent(svg)}\") 10 10, crosshair`;"
+ },
+ {
+  "en": "700 {0}px \"Segoe UI\", system-ui, sans-serif",
+  "ctx": "app.js:10937: ctx2d.font = `700 ${fs}px \"Segoe UI\", system-ui, sans-serif`;"
+ },
+ {
+  "en": "Media offline",
+  "ctx": "app.js:10938: ctx2d.fillText(\"Media offline\", 0, -fs * 0.35, dw * 0.9);"
+ },
+ {
+  "en": "400 {0}px \"Segoe UI\", system-ui, sans-serif",
+  "ctx": "app.js:10939: ctx2d.font = `400 ${fs * 0.42}px \"Segoe UI\", system-ui, sans-serif`;"
+ },
+ {
+  "en": "url(#fcLumaAlpha)",
+  "ctx": "app.js:11178: y.filter = \"url(#fcLumaAlpha)\"; y.drawImage(a, 0, 0);"
+ },
+ {
+  "en": "Feather",
+  "ctx": "app.js:11274: opacity: [\"Opacity\", 0, 1, 0.01], feather: [\"Feather\", 0, 300, 1], expand: [\"Expand\", -200, 200, 1],"
+ },
+ {
+  "en": "Add",
+  "ctx": "app.js:11278: const MASK_MODE_LABEL = { add: \"Add\", subtract: \"Subtract\", intersect: \"Intersect\", difference: \"Difference\" };"
+ },
+ {
+  "en": "Subtract",
+  "ctx": "app.js:11278: const MASK_MODE_LABEL = { add: \"Add\", subtract: \"Subtract\", intersect: \"Intersect\", difference: \"Difference\" };"
+ },
+ {
+  "en": "Intersect",
+  "ctx": "app.js:11278: const MASK_MODE_LABEL = { add: \"Add\", subtract: \"Subtract\", intersect: \"Intersect\", difference: \"Difference\" };"
+ },
+ {
+  "en": "Difference",
+  "ctx": "app.js:11278: const MASK_MODE_LABEL = { add: \"Add\", subtract: \"Subtract\", intersect: \"Intersect\", difference: \"Difference\" };"
+ },
+ {
+  "en": "the video did not seek to {0} s",
+  "ctx": "app.js:11347: const tm = setTimeout(() => { el.removeEventListener(\"seeked\", done); rej(new Error(`the video did not seek to ${t.toFixed(2)} s`)); }, 4000"
+ },
+ {
+  "en": "tracking needs a video clip",
+  "ctx": "app.js:11359: if (c.kind !== \"video\" || !m) throw new Error(\"tracking needs a video clip\");"
+ },
+ {
+  "en": "the video did not load",
+  "ctx": "app.js:11364: const tm = setTimeout(() => rej(new Error(\"the video did not load\")), 15000);"
+ },
+ {
+  "en": "the video could not be read",
+  "ctx": "app.js:11366: el.addEventListener(\"error\", () => { clearTimeout(tm); rej(new Error(\"the video could not be read\")); }, { once: true });"
+ },
+ {
+  "en": "that region has no detail to follow — pick a spot with texture or edges",
+  "ctx": "app.js:11381: if (tr.flat) throw new Error(\"that region has no detail to follow — pick a spot with texture or edges\");"
+ },
+ {
+  "en": "Already tracking — wait, or press Esc to stop",
+  "ctx": "app.js:11510: if (trackUi.run) { toast(\"Already tracking — wait, or press Esc to stop\"); return null; }"
+ },
+ {
+  "en": "{0}: {1}% — Esc stops",
+  "ctx": "app.js:11518: for (const el of els.inspector.querySelectorAll(\"[data-track-progress]\")) el.textContent = `${label}: ${Math.round(f * 100)}% — Esc stops`;"
+ },
+ {
+  "en": "Lost the region on the next frame — try a spot with more detail, or a bigger region",
+  "ctx": "app.js:11520: if (r.samples.length < 2) { toast(r.lostAt != null ? \"Lost the region on the next frame — try a spot with more detail, or a bigger region\" :"
+ },
+ {
+  "en": "Nothing to track there",
+  "ctx": "app.js:11520: if (r.samples.length < 2) { toast(r.lostAt != null ? \"Lost the region on the next frame — try a spot with more detail, or a bigger region\" :"
+ },
+ {
+  "en": "The clip changed while tracking — nothing was applied; track it again",
+  "ctx": "app.js:11522: toast(\"The clip changed while tracking — nothing was applied; track it again\");"
+ },
+ {
+  "en": "Stopped — kept {0} s",
+  "ctx": "app.js:11529: toast(r.cancelled ? `Stopped — kept ${span.toFixed(2)} s` : r.lostAt != null ? `Lost the region at ${fmt(c.start + r.lostAt)} — kept ${span."
+ },
+ {
+  "en": "Lost the region at {0} — kept {1} s up to there",
+  "ctx": "app.js:11529: toast(r.cancelled ? `Stopped — kept ${span.toFixed(2)} s` : r.lostAt != null ? `Lost the region at ${fmt(c.start + r.lostAt)} — kept ${span."
+ },
+ {
+  "en": "Tracked {0} s ({1} frames)",
+  "ctx": "app.js:11529: toast(r.cancelled ? `Stopped — kept ${span.toFixed(2)} s` : r.lostAt != null ? `Lost the region at ${fmt(c.start + r.lostAt)} — kept ${span."
+ },
+ {
+  "en": "Tracking failed:",
+  "ctx": "app.js:11532: toast(\"Tracking failed: \" + (err && err.message || err));"
+ },
+ {
+  "en": "Move the playhead over the clip first",
+  "ctx": "app.js:11542: if (!raw || !activeAt(c, state.time)) { toast(\"Move the playhead over the clip first\"); return; }"
+ },
+ {
+  "en": "The mask is outside the picture here",
+  "ctx": "app.js:11544: if (!box) { toast(\"The mask is outside the picture here\"); return; }"
+ },
+ {
+  "en": "Mask {0}",
+  "ctx": "app.js:11545: const name = raw.name || `Mask ${i + 1}`, opts = { scale: trackUi.scale, rotation: trackUi.rotation };"
+ },
+ {
+  "en": "Tracking {0}",
+  "ctx": "app.js:11546: trackWithUi(c, `Tracking ${name}`, { box, from: t, to: dir > 0 ? c.duration : 0, dir, mask: i, ...opts }, (r) => {"
+ },
+ {
+  "en": "Click a spot on the monitor to follow it from the playhead to the clip's end",
+  "ctx": "app.js:11568: let html = `<div class=\"insp-section\" data-track-section><h3>Tracking</h3>"
+ },
+ {
+  "en": "Also follow the region's size (tracking, and attaching)",
+  "ctx": "app.js:11568: let html = `<div class=\"insp-section\" data-track-section><h3>Tracking</h3>"
+ },
+ {
+  "en": "Also follow the region's rotation (tracking, and attaching)",
+  "ctx": "app.js:11568: let html = `<div class=\"insp-section\" data-track-section><h3>Tracking</h3>"
+ },
+ {
+  "en": "The area matched around a picked point, % of the picture's width",
+  "ctx": "app.js:11568: let html = `<div class=\"insp-section\" data-track-section><h3>Tracking</h3>"
+ },
+ {
+  "en": "+ Track point",
+  "ctx": "app.js:11568: let html = `<div class=\"insp-section\" data-track-section><h3>Tracking</h3>"
+ },
+ {
+  "en": "Rotate",
+  "ctx": "app.js:11568: let html = `<div class=\"insp-section\" data-track-section><h3>Tracking</h3>"
+ },
+ {
+  "en": "Region %",
+  "ctx": "app.js:11568: let html = `<div class=\"insp-section\" data-track-section><h3>Tracking</h3>"
+ },
+ {
+  "en": "Click the spot to follow on the monitor — something with detail: a corner, a logo, an eye. Esc cancels.",
+  "ctx": "app.js:11575: ${trackUi.tool === \"point\" ? `<p class=\"cl-note\">Click the spot to follow on the monitor — something with detail: a corner, a logo, an eye. "
+ },
+ {
+  "en": "Follow a spot in the video, then pin a title, sticker or another clip to it. A mask tracks from the Masks section.",
+  "ctx": "app.js:11576: ${list.length ? `<div class=\"cl-row\">${chips}</div>` : trackUi.tool || run ? \"\" : `<p class=\"cl-note\">Follow a spot in the video, then pin a"
+ },
+ {
+  "en": "Track from the playhead back to the clip's start",
+  "ctx": "app.js:11579: html += `<div class=\"cl-row\"><button type=\"button\" class=\"btn tiny\" data-tact=\"back\" ${run ? \"disabled\" : \"\"} title=\"Track from the playhead"
+ },
+ {
+  "en": "Track from the playhead to the clip's end",
+  "ctx": "app.js:11579: html += `<div class=\"cl-row\"><button type=\"button\" class=\"btn tiny\" data-tact=\"back\" ${run ? \"disabled\" : \"\"} title=\"Track from the playhead"
+ },
+ {
+  "en": "Delete this track (what follows it keeps its keys)",
+  "ctx": "app.js:11579: html += `<div class=\"cl-row\"><button type=\"button\" class=\"btn tiny\" data-tact=\"back\" ${run ? \"disabled\" : \"\"} title=\"Track from the playhead"
+ },
+ {
+  "en": "A clip to pin to this track",
+  "ctx": "app.js:11579: html += `<div class=\"cl-row\"><button type=\"button\" class=\"btn tiny\" data-tact=\"back\" ${run ? \"disabled\" : \"\"} title=\"Track from the playhead"
+ },
+ {
+  "en": "Key the clip's position (and scale / rotation when those are on) so it rides on the track, keeping where it is at the playhead",
+  "ctx": "app.js:11579: html += `<div class=\"cl-row\"><button type=\"button\" class=\"btn tiny\" data-tact=\"back\" ${run ? \"disabled\" : \"\"} title=\"Track from the playhead"
+ },
+ {
+  "en": "◀ Track back",
+  "ctx": "app.js:11579: html += `<div class=\"cl-row\"><button type=\"button\" class=\"btn tiny\" data-tact=\"back\" ${run ? \"disabled\" : \"\"} title=\"Track from the playhead"
+ },
+ {
+  "en": "Track on ▶",
+  "ctx": "app.js:11579: html += `<div class=\"cl-row\"><button type=\"button\" class=\"btn tiny\" data-tact=\"back\" ${run ? \"disabled\" : \"\"} title=\"Track from the playhead"
+ },
+ {
+  "en": "Attach",
+  "ctx": "app.js:11579: html += `<div class=\"cl-row\"><button type=\"button\" class=\"btn tiny\" data-tact=\"back\" ${run ? \"disabled\" : \"\"} title=\"Track from the playhead"
+ },
+ {
+  "en": "Pick a clip…",
+  "ctx": "app.js:11579: html += `<div class=\"cl-row\"><button type=\"button\" class=\"btn tiny\" data-tact=\"back\" ${run ? \"disabled\" : \"\"} title=\"Track from the playhead"
+ },
+ {
+  "en": "Attach to the track",
+  "ctx": "app.js:11579: html += `<div class=\"cl-row\"><button type=\"button\" class=\"btn tiny\" data-tact=\"back\" ${run ? \"disabled\" : \"\"} title=\"Track from the playhead"
+ },
+ {
+  "en": "{4} samples, {5}–{6} s of the clip. Attaching writes keyframes — edit them like any others.",
+  "ctx": "app.js:11579: html += `<div class=\"cl-row\"><button type=\"button\" class=\"btn tiny\" data-tact=\"back\" ${run ? \"disabled\" : \"\"} title=\"Track from the playhead"
+ },
+ {
+  "en": "Move the playhead over the clip, then click the spot to follow",
+  "ctx": "app.js:11605: if (trackUi.tool && !activeAt(c, state.time)) toast(\"Move the playhead over the clip, then click the spot to follow\");"
+ },
+ {
+  "en": "Pick a clip to attach first",
+  "ctx": "app.js:11617: if (!other) { toast(\"Pick a clip to attach first\"); return; }"
+ },
+ {
+  "en": "{0} follows {1} ({2} keys)",
+  "ctx": "app.js:11622: toast(n ? `${other.name || other.kind} follows ${tr.name} (${n} keys)` : \"That clip and the track don't overlap in time\");"
+ },
+ {
+  "en": "That clip and the track don't overlap in time",
+  "ctx": "app.js:11622: toast(n ? `${other.name || other.kind} follows ${tr.name} (${n} keys)` : \"That clip and the track don't overlap in time\");"
+ },
+ {
+  "en": "Click inside the clip's picture",
+  "ctx": "app.js:11652: if (u < 0 || u > 1 || v < 0 || v > 1) { toast(\"Click inside the clip's picture\"); return; }"
+ },
+ {
+  "en": "{3} — click to edit on the monitor",
+  "ctx": "app.js:11668: const chips = list.map((mk, j) => `<button type=\"button\" class=\"btn tiny cl-chip${j === i ? \" toggle on\" : \"\"}${mk.on === false ? \" off\" : \""
+ },
+ {
+  "en": "· inverted",
+  "ctx": "app.js:11669: title=\"${escapeHtml(mk.shape + (mk.mode !== \"add\" ? \" · \" + mk.mode : \"\") + (mk.invert ? \" · inverted\" : \"\"))} — click to edit on the monito"
+ },
+ {
+  "en": "+ Rect",
+  "ctx": "app.js:11671: <div class=\"cl-row\">${tool(\"rect\", \"+ Rect\", \"Add a rectangle mask\")}${tool(\"ellipse\", \"+ Ellipse\", \"Add an ellipse mask\")}${tool(\"pen\", \"Pe"
+ },
+ {
+  "en": "Add a rectangle mask",
+  "ctx": "app.js:11671: <div class=\"cl-row\">${tool(\"rect\", \"+ Rect\", \"Add a rectangle mask\")}${tool(\"ellipse\", \"+ Ellipse\", \"Add an ellipse mask\")}${tool(\"pen\", \"Pe"
+ },
+ {
+  "en": "+ Ellipse",
+  "ctx": "app.js:11671: <div class=\"cl-row\">${tool(\"rect\", \"+ Rect\", \"Add a rectangle mask\")}${tool(\"ellipse\", \"+ Ellipse\", \"Add an ellipse mask\")}${tool(\"pen\", \"Pe"
+ },
+ {
+  "en": "Add an ellipse mask",
+  "ctx": "app.js:11671: <div class=\"cl-row\">${tool(\"rect\", \"+ Rect\", \"Add a rectangle mask\")}${tool(\"ellipse\", \"+ Ellipse\", \"Add an ellipse mask\")}${tool(\"pen\", \"Pe"
+ },
+ {
+  "en": "Click points on the monitor (drag to pull curve handles); click the first point or press Enter to close",
+  "ctx": "app.js:11671: <div class=\"cl-row\">${tool(\"rect\", \"+ Rect\", \"Add a rectangle mask\")}${tool(\"ellipse\", \"+ Ellipse\", \"Add an ellipse mask\")}${tool(\"pen\", \"Pe"
+ },
+ {
+  "en": "Drag a free-hand outline on the monitor — it becomes an editable bezier",
+  "ctx": "app.js:11671: <div class=\"cl-row\">${tool(\"rect\", \"+ Rect\", \"Add a rectangle mask\")}${tool(\"ellipse\", \"+ Ellipse\", \"Add an ellipse mask\")}${tool(\"pen\", \"Pe"
+ },
+ {
+  "en": "Show the matte in the monitor (white = visible)",
+  "ctx": "app.js:11672: ${list.length ? `<button type=\"button\" class=\"btn tiny${runtime.maskView ? \" toggle on\" : \"\"}\" data-mact=\"view\" title=\"Show the matte in the"
+ },
+ {
+  "en": "Matte",
+  "ctx": "app.js:11672: ${list.length ? `<button type=\"button\" class=\"btn tiny${runtime.maskView ? \" toggle on\" : \"\"}\" data-mact=\"view\" title=\"Show the matte in the"
+ },
+ {
+  "en": "Pen: click to add points, drag to curve. Click the first point or press Enter to close. Ctrl+Z / Backspace removes the last point, Ctrl+Shift+Z puts it back, Esc cancels.",
+  "ctx": "app.js:11673: ${ui.tool === \"pen\" ? `<p class=\"cl-note\">Pen: click to add points, drag to curve. Click the first point or press Enter to close. Ctrl+Z / B"
+ },
+ {
+  "en": "Draw: drag around what to keep. Esc cancels.",
+  "ctx": "app.js:11674: ${ui.tool === \"draw\" ? `<p class=\"cl-note\">Draw: drag around what to keep. Esc cancels.</p>` : \"\"}"
+ },
+ {
+  "en": "No masks: the whole clip shows. Masks keep (add), cut (subtract) or intersect parts of the picture and move with the clip.",
+  "ctx": "app.js:11675: ${list.length ? `<div class=\"cl-row\">${chips}</div>` : ui.tool ? \"\" : `<p class=\"cl-note\">No masks: the whole clip shows. Masks keep (add), "
+ },
+ {
+  "en": "Mask {1}",
+  "ctx": "app.js:11684: html += `<div class=\"cl-row\"><input type=\"text\" class=\"cl-name\" data-mname value=\"${escapeHtml(raw.name || \"\")}\" placeholder=\"Mask ${i + 1}\""
+ },
+ {
+  "en": "Mask name",
+  "ctx": "app.js:11684: html += `<div class=\"cl-row\"><input type=\"text\" class=\"cl-name\" data-mname value=\"${escapeHtml(raw.name || \"\")}\" placeholder=\"Mask ${i + 1}\""
+ },
+ {
+  "en": "Mask on / off",
+  "ctx": "app.js:11684: html += `<div class=\"cl-row\"><input type=\"text\" class=\"cl-name\" data-mname value=\"${escapeHtml(raw.name || \"\")}\" placeholder=\"Mask ${i + 1}\""
+ },
+ {
+  "en": "Move down the stack (combined earlier)",
+  "ctx": "app.js:11684: html += `<div class=\"cl-row\"><input type=\"text\" class=\"cl-name\" data-mname value=\"${escapeHtml(raw.name || \"\")}\" placeholder=\"Mask ${i + 1}\""
+ },
+ {
+  "en": "Move up the stack (combined later)",
+  "ctx": "app.js:11684: html += `<div class=\"cl-row\"><input type=\"text\" class=\"cl-name\" data-mname value=\"${escapeHtml(raw.name || \"\")}\" placeholder=\"Mask ${i + 1}\""
+ },
+ {
+  "en": "Delete this mask",
+  "ctx": "app.js:11684: html += `<div class=\"cl-row\"><input type=\"text\" class=\"cl-name\" data-mname value=\"${escapeHtml(raw.name || \"\")}\" placeholder=\"Mask ${i + 1}\""
+ },
+ {
+  "en": "How this mask combines with the masks before it",
+  "ctx": "app.js:11684: html += `<div class=\"cl-row\"><input type=\"text\" class=\"cl-name\" data-mname value=\"${escapeHtml(raw.name || \"\")}\" placeholder=\"Mask ${i + 1}\""
+ },
+ {
+  "en": "Use everything outside the shape",
+  "ctx": "app.js:11684: html += `<div class=\"cl-row\"><input type=\"text\" class=\"cl-name\" data-mname value=\"${escapeHtml(raw.name || \"\")}\" placeholder=\"Mask ${i + 1}\""
+ },
+ {
+  "en": "Copy",
+  "ctx": "app.js:11684: html += `<div class=\"cl-row\"><input type=\"text\" class=\"cl-name\" data-mname value=\"${escapeHtml(raw.name || \"\")}\" placeholder=\"Mask ${i + 1}\""
+ },
+ {
+  "en": "◆ Key",
+  "ctx": "app.js:11684: html += `<div class=\"cl-row\"><input type=\"text\" class=\"cl-name\" data-mname value=\"${escapeHtml(raw.name || \"\")}\" placeholder=\"Mask ${i + 1}\""
+ },
+ {
+  "en": "On the monitor: drag inside to move, the knob rotates (Shift: 15° steps){22}. Esc deselects. Every change undoes with Ctrl+Z (redo: Ctrl+Shift+Z or Ctrl+Y).",
+  "ctx": "app.js:11684: html += `<div class=\"cl-row\"><input type=\"text\" class=\"cl-name\" data-mname value=\"${escapeHtml(raw.name || \"\")}\" placeholder=\"Mask ${i + 1}\""
+ },
+ {
+  "en": "Off",
+  "ctx": "app.js:11685: <button type=\"button\" class=\"btn tiny${raw.on === false ? \"\" : \" toggle on\"}\" data-mact=\"on\" title=\"Mask on / off\">${raw.on === false ? \"Off"
+ },
+ {
+  "en": "On",
+  "ctx": "app.js:11685: <button type=\"button\" class=\"btn tiny${raw.on === false ? \"\" : \" toggle on\"}\" data-mact=\"on\" title=\"Mask on / off\">${raw.on === false ? \"Off"
+ },
+ {
+  "en": "Key the mask at the playhead — with keys, every change keys",
+  "ctx": "app.js:11692: <button type=\"button\" class=\"btn tiny${onKey ? \" toggle on\" : \"\"}\" data-mact=\"key\" title=\"${onKey ? \"Remove the key at the playhead\" : \"Key "
+ },
+ {
+  "en": "{0} key{1}",
+  "ctx": "app.js:11693: <span class=\"cl-note\">${keyed ? `${keyed} key${keyed > 1 ? \"s\" : \"\"}` : \"\"}</span>"
+ },
+ {
+  "en": "Remove every key (keeps the mask as it is at the playhead)",
+  "ctx": "app.js:11694: ${keyed ? `<button type=\"button\" class=\"btn tiny\" data-mact=\"clearkeys\" title=\"Remove every key (keeps the mask as it is at the playhead)\">C"
+ },
+ {
+  "en": "Clear keys",
+  "ctx": "app.js:11694: ${keyed ? `<button type=\"button\" class=\"btn tiny\" data-mact=\"clearkeys\" title=\"Remove every key (keeps the mask as it is at the playhead)\">C"
+ },
+ {
+  "en": "Follow what the mask covers from the playhead back to the clip's start — keys its position",
+  "ctx": "app.js:11695: ${c.kind === \"video\" ? `<div class=\"cl-row\"><span class=\"cl-note\">Track</span>"
+ },
+ {
+  "en": "Follow what the mask covers from the playhead to the clip's end — keys its position",
+  "ctx": "app.js:11695: ${c.kind === \"video\" ? `<div class=\"cl-row\"><span class=\"cl-note\">Track</span>"
+ },
+ {
+  "en": "Also key its scale",
+  "ctx": "app.js:11695: ${c.kind === \"video\" ? `<div class=\"cl-row\"><span class=\"cl-note\">Track</span>"
+ },
+ {
+  "en": "Also key its rotation",
+  "ctx": "app.js:11695: ${c.kind === \"video\" ? `<div class=\"cl-row\"><span class=\"cl-note\">Track</span>"
+ },
+ {
+  "en": "◀ Back",
+  "ctx": "app.js:11695: ${c.kind === \"video\" ? `<div class=\"cl-row\"><span class=\"cl-note\">Track</span>"
+ },
+ {
+  "en": "On ▶",
+  "ctx": "app.js:11695: ${c.kind === \"video\" ? `<div class=\"cl-row\"><span class=\"cl-note\">Track</span>"
+ },
+ {
+  "en": "; drag a point to move it, its handles to curve it (Alt: break the pair), Alt-drag a point to pull new handles, Ctrl-click the outline to add a point, double-click a point to remove it",
+  "ctx": "app.js:11703: ? \"; drag a point to move it, its handles to curve it (Alt: break the pair), Alt-drag a point to pull new handles, Ctrl-click the outline to"
+ },
+ {
+  "en": ", the edge handles resize",
+  "ctx": "app.js:11704: : \", the edge handles resize\"}. Esc deselects. Every change undoes with Ctrl+Z (redo: Ctrl+Shift+Z or Ctrl+Y).</p>`;"
+ },
+ {
+  "en": "Move the playhead over the clip to see the mask on the monitor",
+  "ctx": "app.js:11722: if (!activeAt(c, state.time)) toast(\"Move the playhead over the clip to see the mask on the monitor\");"
+ },
+ {
+  "en": "Move the playhead over the clip, then draw on the monitor",
+  "ctx": "app.js:11726: if (maskUi.tool) { maskUi.sel = -1; if (state.playing) pause(); if (!activeAt(c, state.time)) toast(\"Move the playhead over the clip, then d"
+ },
+ {
+  "en": "[data-mknum=\"{0}\"]",
+  "ctx": "app.js:11779: const n = root.querySelector(`[data-mknum=\"${p}\"]`); if (n) n.value = fmtG(+r.value, MASK_ROWS_UI[p][3]);"
+ },
+ {
+  "en": "[data-mk=\"{0}\"]",
+  "ctx": "app.js:11800: const r = root.querySelector(`[data-mk=\"${p}\"]`), n = root.querySelector(`[data-mknum=\"${p}\"]`);"
+ },
+ {
+  "en": "A clip has at most {0} masks",
+  "ctx": "app.js:11908: if (list.length >= Mask.MAX_MASKS) { toast(`A clip has at most ${Mask.MAX_MASKS} masks`); return; }"
+ },
+ {
+  "en": "A pen mask needs at least 3 points",
+  "ctx": "app.js:11918: if (!B || !P || P.length < 3) { toast(\"A pen mask needs at least 3 points\"); return; }"
+ },
+ {
+  "en": "A mask has at most {0} points",
+  "ctx": "app.js:11963: if (P.length >= Mask.MAX_POINTS) { toast(`A mask has at most ${Mask.MAX_POINTS} points`); return; }"
+ },
+ {
+  "en": "Drag around what the mask should keep",
+  "ctx": "app.js:12059: else toast(\"Drag around what the mask should keep\");"
+ },
+ {
+  "en": "A mask needs at least 3 points",
+  "ctx": "app.js:12076: if (h.m.points.length <= 3) { toast(\"A mask needs at least 3 points\"); return; }"
+ },
+ {
+  "en": "Rectangle",
+  "ctx": "app.js:12122: rect: { label: \"Rectangle\", item: { type: \"rect\", w: 420, h: 240, radius: 24, fill: \"#ffd166\" } },"
+ },
+ {
+  "en": "Ellipse",
+  "ctx": "app.js:12123: ellipse: { label: \"Ellipse\", item: { type: \"ellipse\", w: 260, h: 260, fill: \"#7b6cff\" } },"
+ },
+ {
+  "en": "Polygon",
+  "ctx": "app.js:12124: polygon: { label: \"Polygon\", item: { type: \"polygon\", sides: 6, w: 260, h: 260, fill: \"#22d3ee\" } },"
+ },
+ {
+  "en": "Star",
+  "ctx": "app.js:12125: star: { label: \"Star\", item: { type: \"star\", sides: 5, inner: 0.45, w: 280, h: 280, fill: \"#ff7ac8\" } },"
+ },
+ {
+  "en": "Inner",
+  "ctx": "app.js:12132: inner: [\"Inner\", 0.05, 1, 0.01], strokeWidth: [\"Stroke px\", 0, 100, 0.5],"
+ },
+ {
+  "en": "Stroke px",
+  "ctx": "app.js:12132: inner: [\"Inner\", 0.05, 1, 0.01], strokeWidth: [\"Stroke px\", 0, 100, 0.5],"
+ },
+ {
+  "en": "V1–V3 are locked — unlock a video track to add a shape",
+  "ctx": "app.js:12144: if (!track) { toast(\"V1–V3 are locked — unlock a video track to add a shape\"); return; }"
+ },
+ {
+  "en": "Shape",
+  "ctx": "app.js:12147: const c = newVisualClip(\"shape\", pre ? pre.label : \"Shape\", track);"
+ },
+ {
+  "en": "Pen: click points on the monitor (drag to curve); click the first point to close, Enter for an open path",
+  "ctx": "app.js:12155: if (!pre) toast(\"Pen: click points on the monitor (drag to curve); click the first point to close, Enter for an open path\");"
+ },
+ {
+  "en": "V1–V3 are locked — unlock a video track to add a null",
+  "ctx": "app.js:12159: if (!track) { toast(\"V1–V3 are locked — unlock a video track to add a null\"); return; }"
+ },
+ {
+  "en": "Null",
+  "ctx": "app.js:12161: const c = newVisualClip(\"null\", \"Null\", track);"
+ },
+ {
+  "en": "Shape layer",
+  "ctx": "app.js:12178: ...Object.entries(SHAPE_PRESETS).map(([k, pre]) => ({ k, name: pre.label, sub: \"Shape layer\", run: () => addShapeLayer(k) })),"
+ },
+ {
+  "en": "Pen path",
+  "ctx": "app.js:12179: { k: \"pen\", name: \"Pen path\", sub: \"Click points on the monitor\", run: () => addShapeLayer(\"pen\") },"
+ },
+ {
+  "en": "Click points on the monitor",
+  "ctx": "app.js:12179: { k: \"pen\", name: \"Pen path\", sub: \"Click points on the monitor\", run: () => addShapeLayer(\"pen\") },"
+ },
+ {
+  "en": "Invisible parent for other clips",
+  "ctx": "app.js:12180: { k: \"null\", name: \"Null object\", sub: \"Invisible parent for other clips\", run: addNull },"
+ },
+ {
+  "en": "Add a null object at the playhead — parent clips to it to move them together",
+  "ctx": "app.js:12186: item.title = r.k === \"null\" ? \"Add a null object at the playhead — parent clips to it to move them together\" : `Add a ${r.name.toLowerCase()"
+ },
+ {
+  "en": "Add a {0} layer at the playhead",
+  "ctx": "app.js:12186: item.title = r.k === \"null\" ? \"Add a null object at the playhead — parent clips to it to move them together\" : `Add a ${r.name.toLowerCase()"
+ },
+ {
+  "en": "V1–V3 are locked — unlock a video track for the null",
+  "ctx": "app.js:12201: if (!track) { toast(\"V1–V3 are locked — unlock a video track for the null\"); return; }"
+ },
+ {
+  "en": "{0} clip{1} now follow the null — move, turn or scale it",
+  "ctx": "app.js:12211: toast(`${sel.length} clip${sel.length > 1 ? \"s\" : \"\"} now follow the null — move, turn or scale it`);"
+ },
+ {
+  "en": "That would parent the clip to itself",
+  "ctx": "app.js:12215: if (parentId && Motion.wouldCycle(c.id, parentId, getClip)) { toast(\"That would parent the clip to itself\"); return false; }"
+ },
+ {
+  "en": "(null)",
+  "ctx": "app.js:12233: const opts = [`<option value=\"\">None</option>`, ...cands.map((x) => `<option value=\"${x.id}\" ${x.id === c.parent ? \"selected\" : \"\"}>${escape"
+ },
+ {
+  "en": "Missing clip",
+  "ctx": "app.js:12234: if (c.parent && !cur) opts.push(`<option value=\"${escapeHtml(c.parent)}\" selected>Missing clip</option>`);"
+ },
+ {
+  "en": "Move, turn and scale with another clip (its opacity and effects are not inherited)",
+  "ctx": "app.js:12235: return `<div class=\"insp-row\"><label title=\"Move, turn and scale with another clip (its opacity and effects are not inherited)\">Parent</labe"
+ },
+ {
+  "en": "Parent",
+  "ctx": "app.js:12235: return `<div class=\"insp-row\"><label title=\"Move, turn and scale with another clip (its opacity and effects are not inherited)\">Parent</labe"
+ },
+ {
+  "en": "Drag on the monitor to move the anchor point — the picture stays put (Shift: snap to its centre)",
+  "ctx": "app.js:12238: return `<div class=\"insp-row\"><label>Anchor</label><span class=\"insp-ctrls\">"
+ },
+ {
+  "en": "Put the anchor point back on the picture's centre, keeping the picture where it is",
+  "ctx": "app.js:12238: return `<div class=\"insp-row\"><label>Anchor</label><span class=\"insp-ctrls\">"
+ },
+ {
+  "en": "Anchor",
+  "ctx": "app.js:12238: return `<div class=\"insp-row\"><label>Anchor</label><span class=\"insp-ctrls\">"
+ },
+ {
+  "en": "✥ Move",
+  "ctx": "app.js:12238: return `<div class=\"insp-row\"><label>Anchor</label><span class=\"insp-ctrls\">"
+ },
+ {
+  "en": "Centre",
+  "ctx": "app.js:12238: return `<div class=\"insp-row\"><label>Anchor</label><span class=\"insp-ctrls\">"
+ },
+ {
+  "en": "Move the playhead over the clip",
+  "ctx": "app.js:12255: if (!playheadOverClip(c)) { toast(\"Move the playhead over the clip\"); return; }"
+ },
+ {
+  "en": "Add a {0} to this layer",
+  "ctx": "app.js:12334: <div class=\"cl-row\">${Object.entries(SHAPE_PRESETS).map(([k, pre]) => btn(`data-sadd=\"${k}\"`, \"+ \" + pre.label, `Add a ${pre.label.toLowerCa"
+ },
+ {
+  "en": "Click points on the monitor (drag to curve); click the first point to close, Enter for an open path",
+  "ctx": "app.js:12335: ${btn('data-stool=\"pen\"', \"Pen\", \"Click points on the monitor (drag to curve); click the first point to close, Enter for an open path\", ui.t"
+ },
+ {
+  "en": "Pen: click to add points, drag to curve. Click the first point to close, Enter keeps the path open. Backspace / Ctrl+Z removes the last point, Esc cancels.",
+  "ctx": "app.js:12336: ${ui.tool === \"pen\" ? `<p class=\"cl-note\">Pen: click to add points, drag to curve. Click the first point to close, Enter keeps the path open"
+ },
+ {
+  "en": "No shapes yet — add one above.",
+  "ctx": "app.js:12337: ${list.length ? `<div class=\"cl-row shape-items\">${chips}</div>` : ui.tool ? \"\" : `<p class=\"cl-note\">No shapes yet — add one above.</p>`}"
+ },
+ {
+  "en": "Key this value at the playhead / remove the key there",
+  "ctx": "app.js:12342: const kbtn = (k) => `<button type=\"button\" class=\"kf-btn${isAnimated(raw, k) ? \" has\" : \"\"}${j >= 0 && raw.keys[j][k] != null ? \" on\" : \"\"}\""
+ },
+ {
+  "en": "No {0}",
+  "ctx": "app.js:12351: ${btn(`data-snone=\"${k}\"`, \"None\", `No ${lab.toLowerCase()}`, now[k] === \"none\")}${kbtn(k)}</span></div>`;"
+ },
+ {
+  "en": "Item name",
+  "ctx": "app.js:12354: html += `<div class=\"cl-row\"><input type=\"text\" class=\"cl-name\" data-sname value=\"${escapeHtml(raw.name || \"\")}\" placeholder=\"${escapeHtml(s"
+ },
+ {
+  "en": "On the monitor: drag the item to move it, the knob turns it (Shift: 15° steps), the corners resize it{25}. Esc deselects.",
+  "ctx": "app.js:12354: html += `<div class=\"cl-row\"><input type=\"text\" class=\"cl-name\" data-sname value=\"${escapeHtml(raw.name || \"\")}\" placeholder=\"${escapeHtml(s"
+ },
+ {
+  "en": "Item on / off",
+  "ctx": "app.js:12355: ${btn('data-sact=\"on\"', raw.on === false ? \"Off\" : \"On\", \"Item on / off\", raw.on !== false)}"
+ },
+ {
+  "en": "Move down the stack (drawn earlier)",
+  "ctx": "app.js:12356: ${btn('data-sact=\"up\"', \"↑\", \"Move down the stack (drawn earlier)\", false, i === 0)}"
+ },
+ {
+  "en": "Move up the stack (drawn later)",
+  "ctx": "app.js:12357: ${btn('data-sact=\"down\"', \"↓\", \"Move up the stack (drawn later)\", false, i >= siblings.length - 1)}"
+ },
+ {
+  "en": "Group",
+  "ctx": "app.js:12359: ${btn('data-sact=\"group\"', \"Group\", \"Put this item in a new group (move, turn, scale and trim them together)\", false, full || path.length >="
+ },
+ {
+  "en": "Put this item in a new group (move, turn, scale and trim them together)",
+  "ctx": "app.js:12359: ${btn('data-sact=\"group\"', \"Group\", \"Put this item in a new group (move, turn, scale and trim them together)\", false, full || path.length >="
+ },
+ {
+  "en": "Ungroup",
+  "ctx": "app.js:12360: ${raw.type === \"group\" ? btn('data-sact=\"ungroup\"', \"Ungroup\", \"Take the items out of this group\") : \"\"}"
+ },
+ {
+  "en": "Take the items out of this group",
+  "ctx": "app.js:12360: ${raw.type === \"group\" ? btn('data-sact=\"ungroup\"', \"Ungroup\", \"Take the items out of this group\") : \"\"}"
+ },
+ {
+  "en": "Move this item out of its group",
+  "ctx": "app.js:12361: ${inGroup ? btn('data-sact=\"out\"', \"Out\", \"Move this item out of its group\") : \"\"}"
+ },
+ {
+  "en": "Delete this item",
+  "ctx": "app.js:12362: ${btn('data-sact=\"del\"', \"Delete\", \"Delete this item\")}"
+ },
+ {
+  "en": "Remove every key (keeps the item as it is at the playhead)",
+  "ctx": "app.js:12363: ${raw.keys ? btn('data-sact=\"clearkeys\"', \"Clear keys\", \"Remove every key (keeps the item as it is at the playhead)\") : \"\"}</div>"
+ },
+ {
+  "en": "Points",
+  "ctx": "app.js:12366: ${own.includes(\"sides\") ? `<div class=\"insp-row\"><label>Points</label><input type=\"number\" data-ssides min=\"3\" max=\"64\" step=\"1\" value=\"${ra"
+ },
+ {
+  "en": "Closed",
+  "ctx": "app.js:12368: ${raw.type === \"path\" ? `<div class=\"insp-row\"><label>Closed</label><input type=\"checkbox\" data-sclosed ${raw.closed !== false ? \"checked\" :"
+ },
+ {
+  "en": "Fill",
+  "ctx": "app.js:12369: ${raw.type !== \"group\" ? color(\"fill\", \"Fill\") + color(\"stroke\", \"Stroke\") + srow(\"strokeWidth\") +"
+ },
+ {
+  "en": "Stroke",
+  "ctx": "app.js:12369: ${raw.type !== \"group\" ? color(\"fill\", \"Fill\") + color(\"stroke\", \"Stroke\") + srow(\"strokeWidth\") +"
+ },
+ {
+  "en": "Ends / joins",
+  "ctx": "app.js:12370: `<div class=\"insp-row\"><label>Ends / joins</label><span class=\"insp-ctrls\"><select data-scap>${Motion.CAPS.map((v) => `<option ${raw.lineCap"
+ },
+ {
+  "en": "; drag a point to move it, its handles to curve it (Alt: break the pair), Alt-drag a point to pull new handles",
+  "ctx": "app.js:12374: ? \"; drag a point to move it, its handles to curve it (Alt: break the pair), Alt-drag a point to pull new handles\" + (raw.type === \"path\" ? "
+ },
+ {
+  "en": ", Ctrl-click the outline to add a point, double-click a point to remove it",
+  "ctx": "app.js:12374: ? \"; drag a point to move it, its handles to curve it (Alt: break the pair), Alt-drag a point to pull new handles\" + (raw.type === \"path\" ? "
+ },
+ {
+  "en": "Move the playhead over the clip to key it",
+  "ctx": "app.js:12453: if (!playheadOverClip(c)) { toast(\"Move the playhead over the clip to key it\"); return; }"
+ },
+ {
+  "en": "[data-sknum=\"{0}\"]",
+  "ctx": "app.js:12482: const n = root.querySelector(`[data-sknum=\"${k}\"]`); if (n) n.value = fmtG(+r.value, SHAPE_ROWS_UI[k][3]);"
+ },
+ {
+  "en": "[data-sk=\"{0}\"]",
+  "ctx": "app.js:12503: const r = root.querySelector(`[data-sk=\"${k}\"]`), n = root.querySelector(`[data-sknum=\"${k}\"]`);"
+ },
+ {
+  "en": "A closed path needs at least 3 points",
+  "ctx": "app.js:12599: if (!P || P.length < (closed ? 3 : 2)) { toast(closed ? \"A closed path needs at least 3 points\" : \"A path needs at least 2 points\"); return;"
+ },
+ {
+  "en": "A path needs at least 2 points",
+  "ctx": "app.js:12599: if (!P || P.length < (closed ? 3 : 2)) { toast(closed ? \"A closed path needs at least 3 points\" : \"A path needs at least 2 points\"); return;"
+ },
+ {
+  "en": "A path has at most {0} points",
+  "ctx": "app.js:12644: if (P.length >= Motion.MAX_POINTS) { toast(`A path has at most ${Motion.MAX_POINTS} points`); return; }"
+ },
+ {
+  "en": "The path needs the points it has",
+  "ctx": "app.js:12754: if (h.it.points.length <= (h.it.closed === false ? 2 : 3)) { toast(\"The path needs the points it has\"); return; }"
+ },
+ {
+  "en": "Arc",
+  "ctx": "app.js:12805: arc: { label: \"Arc\", item: Motion.TEXT_PATH_PRESETS.arc },"
+ },
+ {
+  "en": "Circle",
+  "ctx": "app.js:12806: circle: { label: \"Circle\", item: Motion.TEXT_PATH_PRESETS.circle },"
+ },
+ {
+  "en": "Wave",
+  "ctx": "app.js:12807: wave: { label: \"Wave\", item: Motion.TEXT_PATH_PRESETS.wave },"
+ },
+ {
+  "en": "0px",
+  "ctx": "app.js:12852: try { ctx2d.letterSpacing = \"0px\"; } catch { }   // spacing is laid out by hand along the path"
+ },
+ {
+  "en": "Text path",
+  "ctx": "app.js:12965: return `<div class=\"insp-section\" data-textpath-section><h3>Text path</h3>"
+ },
+ {
+  "en": "Set the title on a {0}",
+  "ctx": "app.js:12966: <div class=\"cl-row\">${Object.entries(TEXT_PATH_PRESETS).map(([k, pre]) => btn(`data-tpath=\"${k}\"`, pre.label, `Set the title on a ${pre.labe"
+ },
+ {
+  "en": "Draw the path on the monitor: click points (drag to curve), Enter to finish, click the first point to close it",
+  "ctx": "app.js:12967: ${btn('data-tpath=\"pen\"', \"Pen\", \"Draw the path on the monitor: click points (drag to curve), Enter to finish, click the first point to clos"
+ },
+ {
+  "en": "Each line runs along the path, the next one a line below it. Every text animation plays along the path.",
+  "ctx": "app.js:12968: ${has ? `<div class=\"cl-row\">${btn('data-tpath=\"edit\"', \"Edit path\", \"Show the path's points and handles on the monitor\", editing)}${btn('da"
+ },
+ {
+  "en": "Edit path",
+  "ctx": "app.js:12968: ${has ? `<div class=\"cl-row\">${btn('data-tpath=\"edit\"', \"Edit path\", \"Show the path's points and handles on the monitor\", editing)}${btn('da"
+ },
+ {
+  "en": "Show the path's points and handles on the monitor",
+  "ctx": "app.js:12968: ${has ? `<div class=\"cl-row\">${btn('data-tpath=\"edit\"', \"Edit path\", \"Show the path's points and handles on the monitor\", editing)}${btn('da"
+ },
+ {
+  "en": "Back to a normal title",
+  "ctx": "app.js:12968: ${has ? `<div class=\"cl-row\">${btn('data-tpath=\"edit\"', \"Edit path\", \"Show the path's points and handles on the monitor\", editing)}${btn('da"
+ },
+ {
+  "en": "Slide the text along the path, % of its length — key it to make the text travel",
+  "ctx": "app.js:12969: ${row(\"Offset\", `<input type=\"range\" data-k=\"pathOffset\" min=\"-100\" max=\"200\" step=\"0.5\" value=\"${fmtInspNum(p.pathOffset, 0.5)}\" title=\"Sli"
+ },
+ {
+  "en": "Set the title along a line, an arc, a circle, a wave or a path you draw.",
+  "ctx": "app.js:12973: : `<p class=\"cl-note\">Set the title along a line, an arc, a circle, a wave or a path you draw.</p>`}"
+ },
+ {
+  "en": "Move the playhead over the title, then draw on the monitor",
+  "ctx": "app.js:12991: if (!on && !activeAt(c, state.time)) toast(\"Move the playhead over the title, then draw on the monitor\");"
+ }
+]

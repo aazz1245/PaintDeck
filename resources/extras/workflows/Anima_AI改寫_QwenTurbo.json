@@ -1,0 +1,1215 @@
+{
+ "id": "86641ac4-3bef-405b-a68c-18a99c0e2f57",
+ "revision": 0,
+ "last_node_id": 16,
+ "last_link_id": 17,
+ "nodes": [
+  {
+   "id": 1,
+   "type": "AnimaPromptEnhance",
+   "pos": [
+    40,
+    60
+   ],
+   "size": [
+    420,
+    420
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image1",
+     "name": "image1",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": null
+    },
+    {
+     "localized_name": "image2",
+     "name": "image2",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": null
+    },
+    {
+     "localized_name": "image3",
+     "name": "image3",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": null
+    },
+    {
+     "localized_name": "image4",
+     "name": "image4",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": null
+    },
+    {
+     "localized_name": "idea",
+     "name": "idea",
+     "type": "STRING",
+     "widget": {
+      "name": "idea"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "task",
+     "name": "task",
+     "type": "COMBO",
+     "widget": {
+      "name": "task"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "temperature",
+     "name": "temperature",
+     "type": "FLOAT",
+     "widget": {
+      "name": "temperature"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "seed",
+     "name": "seed",
+     "type": "INT",
+     "widget": {
+      "name": "seed"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "think",
+     "name": "think",
+     "type": "BOOLEAN",
+     "widget": {
+      "name": "think"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "gpu_layers",
+     "name": "gpu_layers",
+     "type": "INT",
+     "widget": {
+      "name": "gpu_layers"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "unload_after",
+     "name": "unload_after",
+     "type": "BOOLEAN",
+     "widget": {
+      "name": "unload_after"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "noct_anime",
+     "name": "noct_anime",
+     "type": "BOOLEAN",
+     "widget": {
+      "name": "noct_anime"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "previous_prompt",
+     "name": "previous_prompt",
+     "shape": 7,
+     "type": "STRING",
+     "widget": {
+      "name": "previous_prompt"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "instruction",
+     "name": "instruction",
+     "shape": 7,
+     "type": "STRING",
+     "widget": {
+      "name": "instruction"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "prompt",
+     "name": "prompt",
+     "type": "STRING",
+     "links": [
+      1
+     ]
+    },
+    {
+     "localized_name": "wh_ratio",
+     "name": "wh_ratio",
+     "type": "STRING",
+     "links": [
+      2
+     ]
+    },
+    {
+     "localized_name": "thinking",
+     "name": "thinking",
+     "type": "STRING",
+     "links": null
+    }
+   ],
+   "title": "① AI 改寫提示詞",
+   "properties": {
+    "Node name for S&R": "AnimaPromptEnhance"
+   },
+   "widgets_values": [
+    "黃昏的屋頂上，一位穿白色洋裝的成年女性回頭微笑，長髮被風吹起",
+    "t2i",
+    1,
+    7,
+    "fixed",
+    false,
+    99,
+    true,
+    false,
+    "",
+    ""
+   ],
+   "widgets_values_named": {
+    "idea": "黃昏的屋頂上，一位穿白色洋裝的成年女性回頭微笑，長髮被風吹起",
+    "task": "t2i",
+    "temperature": 1,
+    "seed": 7,
+    "fixed": "fixed",
+    "think": false,
+    "gpu_layers": 99,
+    "unload_after": true,
+    "noct_anime": false,
+    "previous_prompt": "",
+    "instruction": ""
+   }
+  },
+  {
+   "id": 2,
+   "type": "AnimaPromptEdit",
+   "pos": [
+    500,
+    60
+   ],
+   "size": [
+    460,
+    360
+   ],
+   "flags": {},
+   "order": 8,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "text",
+     "name": "text",
+     "type": "STRING",
+     "link": 1
+    },
+    {
+     "localized_name": "edited",
+     "name": "edited",
+     "type": "STRING",
+     "widget": {
+      "name": "edited"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "use_edited",
+     "name": "use_edited",
+     "type": "BOOLEAN",
+     "widget": {
+      "name": "use_edited"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "prompt",
+     "name": "prompt",
+     "type": "STRING",
+     "links": [
+      3
+     ]
+    }
+   ],
+   "title": "② 看結果／手動修改",
+   "properties": {
+    "Node name for S&R": "AnimaPromptEdit"
+   },
+   "widgets_values": [
+    "",
+    false
+   ],
+   "widgets_values_named": {
+    "edited": "",
+    "use_edited": false
+   }
+  },
+  {
+   "id": 3,
+   "type": "AnimaRatioToSize",
+   "pos": [
+    500,
+    460
+   ],
+   "size": [
+    270,
+    126
+   ],
+   "flags": {},
+   "order": 9,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "wh_ratio",
+     "name": "wh_ratio",
+     "type": "STRING",
+     "link": 2
+    },
+    {
+     "localized_name": "megapixels",
+     "name": "megapixels",
+     "type": "FLOAT",
+     "widget": {
+      "name": "megapixels"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "fallback_width",
+     "name": "fallback_width",
+     "type": "INT",
+     "widget": {
+      "name": "fallback_width"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "fallback_height",
+     "name": "fallback_height",
+     "type": "INT",
+     "widget": {
+      "name": "fallback_height"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "width",
+     "name": "width",
+     "type": "INT",
+     "links": [
+      5
+     ]
+    },
+    {
+     "localized_name": "height",
+     "name": "height",
+     "type": "INT",
+     "links": [
+      6
+     ]
+    }
+   ],
+   "title": "③ 建議比例 → 尺寸",
+   "properties": {
+    "Node name for S&R": "AnimaRatioToSize"
+   },
+   "widgets_values": [
+    1,
+    832,
+    1248
+   ],
+   "widgets_values_named": {
+    "megapixels": 1,
+    "fallback_width": 832,
+    "fallback_height": 1248
+   }
+  },
+  {
+   "id": 4,
+   "type": "UNETLoader",
+   "pos": [
+    40,
+    620
+   ],
+   "size": [
+    270,
+    82
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "unet_name",
+     "name": "unet_name",
+     "type": "COMBO",
+     "widget": {
+      "name": "unet_name"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "weight_dtype",
+     "name": "weight_dtype",
+     "type": "COMBO",
+     "widget": {
+      "name": "weight_dtype"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "模型",
+     "name": "MODEL",
+     "type": "MODEL",
+     "links": [
+      7
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "UNETLoader"
+   },
+   "widgets_values": [
+    "NoctQ_v3_Turbo_int8.safetensors",
+    "default"
+   ],
+   "widgets_values_named": {
+    "unet_name": "NoctQ_v3_Turbo_int8.safetensors",
+    "weight_dtype": "default"
+   }
+  },
+  {
+   "id": 5,
+   "type": "CLIPLoader",
+   "pos": [
+    40,
+    740
+   ],
+   "size": [
+    270,
+    106
+   ],
+   "flags": {},
+   "order": 2,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "clip_name",
+     "name": "clip_name",
+     "type": "COMBO",
+     "widget": {
+      "name": "clip_name"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "type",
+     "name": "type",
+     "type": "COMBO",
+     "widget": {
+      "name": "type"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "device",
+     "name": "device",
+     "shape": 7,
+     "type": "COMBO",
+     "widget": {
+      "name": "device"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "CLIP",
+     "name": "CLIP",
+     "type": "CLIP",
+     "links": [
+      4
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CLIPLoader"
+   },
+   "widgets_values": [
+    "qwen3vl_8b_w4a8.safetensors",
+    "qwen_image",
+    "default"
+   ],
+   "widgets_values_named": {
+    "clip_name": "qwen3vl_8b_w4a8.safetensors",
+    "type": "qwen_image",
+    "device": "default"
+   }
+  },
+  {
+   "id": 6,
+   "type": "VAELoader",
+   "pos": [
+    40,
+    880
+   ],
+   "size": [
+    270,
+    58
+   ],
+   "flags": {},
+   "order": 3,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "vae_name",
+     "name": "vae_name",
+     "type": "COMBO",
+     "widget": {
+      "name": "vae_name"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "VAE",
+     "name": "VAE",
+     "type": "VAE",
+     "links": [
+      16
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAELoader"
+   },
+   "widgets_values": [
+    "qwen_image_2.1_vae_bf16.safetensors"
+   ],
+   "widgets_values_named": {
+    "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+   }
+  },
+  {
+   "id": 7,
+   "type": "TextEncodeQwenImage21",
+   "pos": [
+    1000,
+    60
+   ],
+   "size": [
+    400,
+    206
+   ],
+   "flags": {},
+   "order": 10,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "clip",
+     "name": "clip",
+     "type": "CLIP",
+     "link": 4
+    },
+    {
+     "localized_name": "image_1",
+     "name": "images.image_1",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": null
+    },
+    {
+     "localized_name": "vae",
+     "name": "vae",
+     "shape": 7,
+     "type": "VAE",
+     "link": null
+    },
+    {
+     "localized_name": "prompt",
+     "name": "prompt",
+     "type": "STRING",
+     "widget": {
+      "name": "prompt"
+     },
+     "link": 3
+    },
+    {
+     "localized_name": "negative_prompt",
+     "name": "negative_prompt",
+     "type": "STRING",
+     "widget": {
+      "name": "negative_prompt"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "resolution",
+     "name": "resolution",
+     "type": "INT",
+     "widget": {
+      "name": "resolution"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "positive",
+     "name": "positive",
+     "type": "CONDITIONING",
+     "links": [
+      8
+     ]
+    },
+    {
+     "localized_name": "negative",
+     "name": "negative",
+     "type": "CONDITIONING",
+     "links": [
+      9
+     ]
+    },
+    {
+     "localized_name": "latent",
+     "name": "latent",
+     "type": "LATENT",
+     "links": null
+    }
+   ],
+   "title": "④ Qwen 2.1 文字編碼",
+   "properties": {
+    "Node name for S&R": "TextEncodeQwenImage21"
+   },
+   "widgets_values": [
+    "",
+    "artifacts, gpt-image, washed-out colors, low quality, low resolution, AI slop, deviantart, sloppy lines, rough sketch, blurry, indistinct, missing fingers, badly drawn hands, wrong number of fingers",
+    1024
+   ],
+   "widgets_values_named": {
+    "prompt": "",
+    "negative_prompt": "artifacts, gpt-image, washed-out colors, low quality, low resolution, AI slop, deviantart, sloppy lines, rough sketch, blurry, indistinct, missing fingers, badly drawn hands, wrong number of fingers",
+    "resolution": 1024
+   }
+  },
+  {
+   "id": 8,
+   "type": "EmptyLatentImage",
+   "pos": [
+    1000,
+    420
+   ],
+   "size": [
+    270,
+    106
+   ],
+   "flags": {},
+   "order": 11,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "寬度",
+     "name": "width",
+     "type": "INT",
+     "widget": {
+      "name": "width"
+     },
+     "link": 5
+    },
+    {
+     "localized_name": "高度",
+     "name": "height",
+     "type": "INT",
+     "widget": {
+      "name": "height"
+     },
+     "link": 6
+    },
+    {
+     "localized_name": "批次大小",
+     "name": "batch_size",
+     "type": "INT",
+     "widget": {
+      "name": "batch_size"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "latent (潛空間)",
+     "name": "LATENT",
+     "type": "LATENT",
+     "links": [
+      14
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "EmptyLatentImage"
+   },
+   "widgets_values": [
+    1024,
+    1024,
+    1
+   ],
+   "widgets_values_named": {
+    "width": 1024,
+    "height": 1024,
+    "batch_size": 1
+   }
+  },
+  {
+   "id": 9,
+   "type": "RandomNoise",
+   "pos": [
+    1000,
+    580
+   ],
+   "size": [
+    270,
+    82
+   ],
+   "flags": {},
+   "order": 4,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "noise_seed",
+     "name": "noise_seed",
+     "type": "INT",
+     "widget": {
+      "name": "noise_seed"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "雜訊",
+     "name": "NOISE",
+     "type": "NOISE",
+     "links": [
+      10
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "RandomNoise"
+   },
+   "widgets_values": [
+    12345,
+    "randomize"
+   ],
+   "widgets_values_named": {
+    "noise_seed": 12345,
+    "control_after_generate": "randomize"
+   }
+  },
+  {
+   "id": 10,
+   "type": "CFGGuider",
+   "pos": [
+    1440,
+    60
+   ],
+   "size": [
+    270,
+    98
+   ],
+   "flags": {},
+   "order": 12,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "model",
+     "name": "model",
+     "type": "MODEL",
+     "link": 7
+    },
+    {
+     "localized_name": "正向",
+     "name": "positive",
+     "type": "CONDITIONING",
+     "link": 8
+    },
+    {
+     "localized_name": "負向",
+     "name": "negative",
+     "type": "CONDITIONING",
+     "link": 9
+    },
+    {
+     "localized_name": "cfg",
+     "name": "cfg",
+     "type": "FLOAT",
+     "widget": {
+      "name": "cfg"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "引導器",
+     "name": "GUIDER",
+     "type": "GUIDER",
+     "links": [
+      11
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CFGGuider"
+   },
+   "widgets_values": [
+    1
+   ],
+   "widgets_values_named": {
+    "cfg": 1
+   }
+  },
+  {
+   "id": 11,
+   "type": "KSamplerSelect",
+   "pos": [
+    1440,
+    200
+   ],
+   "size": [
+    270,
+    58
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "取樣器名稱",
+     "name": "sampler_name",
+     "type": "COMBO",
+     "widget": {
+      "name": "sampler_name"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "取樣器",
+     "name": "SAMPLER",
+     "type": "SAMPLER",
+     "links": [
+      12
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "KSamplerSelect"
+   },
+   "widgets_values": [
+    "euler"
+   ],
+   "widgets_values_named": {
+    "sampler_name": "euler"
+   }
+  },
+  {
+   "id": 12,
+   "type": "ManualSigmas",
+   "pos": [
+    1440,
+    300
+   ],
+   "size": [
+    270,
+    58
+   ],
+   "flags": {},
+   "order": 6,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "sigmas",
+     "name": "sigmas",
+     "type": "STRING",
+     "widget": {
+      "name": "sigmas"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "Sigma 值",
+     "name": "SIGMAS",
+     "type": "SIGMAS",
+     "links": [
+      13
+     ]
+    }
+   ],
+   "title": "Turbo 6 步排程（約 100 萬像素）",
+   "properties": {
+    "Node name for S&R": "ManualSigmas"
+   },
+   "widgets_values": [
+    "1.000000, 0.967691, 0.933233, 0.856945, 0.666308, 0.399612, 0.000000"
+   ],
+   "widgets_values_named": {
+    "sigmas": "1.000000, 0.967691, 0.933233, 0.856945, 0.666308, 0.399612, 0.000000"
+   }
+  },
+  {
+   "id": 13,
+   "type": "SamplerCustomAdvanced",
+   "pos": [
+    1440,
+    460
+   ],
+   "size": [
+    212.3638671875,
+    106
+   ],
+   "flags": {},
+   "order": 13,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "雜訊",
+     "name": "noise",
+     "type": "NOISE",
+     "link": 10
+    },
+    {
+     "localized_name": "引導器",
+     "name": "guider",
+     "type": "GUIDER",
+     "link": 11
+    },
+    {
+     "localized_name": "取樣器",
+     "name": "sampler",
+     "type": "SAMPLER",
+     "link": 12
+    },
+    {
+     "localized_name": "Sigma 值",
+     "name": "sigmas",
+     "type": "SIGMAS",
+     "link": 13
+    },
+    {
+     "localized_name": "latent 影像",
+     "name": "latent_image",
+     "type": "LATENT",
+     "link": 14
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "輸出",
+     "name": "output",
+     "type": "LATENT",
+     "links": [
+      15
+     ]
+    },
+    {
+     "localized_name": "去雜訊輸出",
+     "name": "denoised_output",
+     "type": "LATENT",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SamplerCustomAdvanced"
+   }
+  },
+  {
+   "id": 14,
+   "type": "VAEDecode",
+   "pos": [
+    1780,
+    60
+   ],
+   "size": [
+    140,
+    46
+   ],
+   "flags": {},
+   "order": 14,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "samples",
+     "name": "samples",
+     "type": "LATENT",
+     "link": 15
+    },
+    {
+     "localized_name": "vae",
+     "name": "vae",
+     "type": "VAE",
+     "link": 16
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "影像",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      17
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAEDecode"
+   }
+  },
+  {
+   "id": 15,
+   "type": "SaveImage",
+   "pos": [
+    1780,
+    180
+   ],
+   "size": [
+    420,
+    520
+   ],
+   "flags": {},
+   "order": 15,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "影像",
+     "name": "images",
+     "type": "IMAGE",
+     "link": 17
+    },
+    {
+     "localized_name": "檔名前綴",
+     "name": "filename_prefix",
+     "type": "STRING",
+     "widget": {
+      "name": "filename_prefix"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "images",
+     "name": "images",
+     "type": "IMAGE",
+     "links": null
+    }
+   ],
+   "properties": {},
+   "widgets_values": [
+    "AnimaPE/demo"
+   ],
+   "widgets_values_named": {
+    "filename_prefix": "AnimaPE/demo"
+   }
+  },
+  {
+   "id": 16,
+   "type": "Note",
+   "pos": [
+    500,
+    700
+   ],
+   "size": [
+    800,
+    230
+   ],
+   "flags": {},
+   "order": 7,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [],
+   "title": "說明",
+   "properties": {},
+   "widgets_values": [
+    "繪匣 PaintDeck：AI 改寫提示詞範例（Qwen-Image 2.1 PE Heretic，無審查版）\n① 在 idea 寫一句想法（中英文都可以），按「執行」。第一次會載入改寫模型（約 4 秒），改寫約 6～15 秒。\n② 改寫結果會出現在 edited 欄位；想手動修改就改完再把 use_edited 打開，之後就用你改過的版本。\n③ 建議比例會自動換成約 100 萬像素、對齊 32 的尺寸。\n微調：把上一版貼到 ① 的 previous_prompt、在 instruction 寫想怎麼改，只會改提到的部分。\nunload_after 請保持開啟：8GB 顯卡放不下改寫模型和生圖模型，改寫完要先關掉才能生圖。\n改寫模型授權：Qwen Research License，不可商用。"
+   ],
+   "widgets_values_named": {
+    "text": "繪匣 PaintDeck：AI 改寫提示詞範例（Qwen-Image 2.1 PE Heretic，無審查版）\n① 在 idea 寫一句想法（中英文都可以），按「執行」。第一次會載入改寫模型（約 4 秒），改寫約 6～15 秒。\n② 改寫結果會出現在 edited 欄位；想手動修改就改完再把 use_edited 打開，之後就用你改過的版本。\n③ 建議比例會自動換成約 100 萬像素、對齊 32 的尺寸。\n微調：把上一版貼到 ① 的 previous_prompt、在 instruction 寫想怎麼改，只會改提到的部分。\nunload_after 請保持開啟：8GB 顯卡放不下改寫模型和生圖模型，改寫完要先關掉才能生圖。\n改寫模型授權：Qwen Research License，不可商用。"
+   },
+   "color": "#432",
+   "bgcolor": "#653"
+  }
+ ],
+ "links": [
+  [
+   1,
+   1,
+   0,
+   2,
+   0,
+   "STRING"
+  ],
+  [
+   2,
+   1,
+   1,
+   3,
+   0,
+   "STRING"
+  ],
+  [
+   3,
+   2,
+   0,
+   7,
+   3,
+   "STRING"
+  ],
+  [
+   4,
+   5,
+   0,
+   7,
+   0,
+   "CLIP"
+  ],
+  [
+   5,
+   3,
+   0,
+   8,
+   0,
+   "INT"
+  ],
+  [
+   6,
+   3,
+   1,
+   8,
+   1,
+   "INT"
+  ],
+  [
+   7,
+   4,
+   0,
+   10,
+   0,
+   "MODEL"
+  ],
+  [
+   8,
+   7,
+   0,
+   10,
+   1,
+   "CONDITIONING"
+  ],
+  [
+   9,
+   7,
+   1,
+   10,
+   2,
+   "CONDITIONING"
+  ],
+  [
+   10,
+   9,
+   0,
+   13,
+   0,
+   "NOISE"
+  ],
+  [
+   11,
+   10,
+   0,
+   13,
+   1,
+   "GUIDER"
+  ],
+  [
+   12,
+   11,
+   0,
+   13,
+   2,
+   "SAMPLER"
+  ],
+  [
+   13,
+   12,
+   0,
+   13,
+   3,
+   "SIGMAS"
+  ],
+  [
+   14,
+   8,
+   0,
+   13,
+   4,
+   "LATENT"
+  ],
+  [
+   15,
+   13,
+   0,
+   14,
+   0,
+   "LATENT"
+  ],
+  [
+   16,
+   6,
+   0,
+   14,
+   1,
+   "VAE"
+  ],
+  [
+   17,
+   14,
+   0,
+   15,
+   0,
+   "IMAGE"
+  ]
+ ],
+ "groups": [],
+ "config": {},
+ "extra": {
+  "ds": {
+   "scale": 0.9,
+   "offset": [
+    416,
+    110
+   ]
+  }
+ },
+ "version": 0.4
+}

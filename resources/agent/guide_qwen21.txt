@@ -1,0 +1,1 @@
+Qwen-Image 2.1 Turbo. Write ONE paragraph of natural English (not tags; weights like (word:1.2) do nothing), 80 to 200 words: subject and look first, then pose and expression, outfit, setting, lighting and colors, camera angle and shot size, then style or medium. Be concrete and visual.

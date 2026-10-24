@@ -1,0 +1,113 @@
+/* 動態層（2.0.6）：讓這台機器「有手感」——開機自檢、插卡匣、按鍵回彈、快門顯影。
+   原則沿用 app.css：動作都是機械式的（滑入、卡入、回彈、指示燈），不做 CRT 特效（掃描線、反光、暗角、發光字），不做藍紫漸層。
+   一律只用 animation-fill-mode: backwards，動畫跑完不留 transform（免得變成 fixed 元素的定位基準）。
+   系統開了「減少動態效果」就全部關掉（app.css 最後的 prefers-reduced-motion；換主題的動畫在 system.js 另外判斷）。 */
+:root { --ease-snap: cubic-bezier(.3, 1.45, .5, 1); --ease-out: cubic-bezier(.2, .8, .2, 1); }
+
+/* ---------- 1. 開機：機殼各區依序上電，功能鍵指示燈自檢一輪 ---------- */
+.unit-head, .rail, .pages, .status { animation: power-in .5s var(--ease-out) backwards; }
+.rail { animation-delay: .06s; } .pages { animation-delay: .12s; } .status { animation-delay: .2s; }
+@keyframes power-in { from { opacity: 0; transform: translateY(6px); } }
+.status > * { animation: vfd-on .45s steps(3, end) .35s backwards; }
+@keyframes vfd-on { from { opacity: 0; } 50% { opacity: .5; } }
+.rail .pkey .led { animation: lamp-test .5s ease-out backwards; transition: background .15s, box-shadow .15s; }
+.rail .pkey:nth-child(1) .led { animation-delay: .35s; } .rail .pkey:nth-child(2) .led { animation-delay: .41s; }
+.rail .pkey:nth-child(3) .led { animation-delay: .47s; } .rail .pkey:nth-child(4) .led { animation-delay: .53s; }
+.rail .pkey:nth-child(5) .led { animation-delay: .59s; } .rail .pkey:nth-child(7) .led { animation-delay: .65s; }
+.rail .pkey:nth-child(8) .led { animation-delay: .71s; }
+@keyframes lamp-test { 0%, 45% { background: var(--ph-amber); box-shadow: 0 0 6px var(--ph-amber); } }
+
+/* ---------- 2. 換頁：像卡匣推進槽裡，生成頁三塊面板依序到位 ---------- */
+.page.on { animation: slot-in .28s var(--ease-out) backwards; }
+@keyframes slot-in { from { opacity: 0; transform: translateY(10px); } }
+#page-gen.on { animation: none; }
+#page-gen.on > .panel { animation: slot-in .3s var(--ease-out) backwards; }
+#page-gen.on > .panel:nth-child(2) { animation-delay: .05s; }
+#page-gen.on > .panel:nth-child(3) { animation-delay: .1s; }
+
+/* ---------- 3. 按鍵：滑過微微浮起，按下立刻壓到底 ---------- */
+.pkey, .akey, .btn, .minikey, .chip, .piano button, .bigkey {
+  transition: transform .14s var(--ease-snap), box-shadow .1s, filter .14s, background-color .15s; }
+.pkey:active, .akey:active, .btn:active, .minikey:active, .chip:active, .piano button:active, .bigkey:active { transition-duration: .04s; }
+@media (hover: hover) {
+  /* :not(:active)：按住時不能被浮起蓋掉（hover 的特異性比下面的 :active 高） */
+  .pkey:not(.on):not(.busy):not(:disabled):not(:active):hover, .akey:not(.on):not(:disabled):not(:active):hover, .btn:not(.on):not(:disabled):not(:active):hover,
+  .minikey:not(:active):hover, .chip:not(.on):not(:disabled):not(:active):hover, .piano button:not(.on):not(:active):hover { transform: translateY(-1px); filter: brightness(1.05); }
+  .pkey:not(.on):not(.busy):not(:disabled):active, .akey:not(:disabled):active, .btn:not(:disabled):active,
+  .minikey:active, .chip:not(:disabled):active, .piano button:active { filter: none; }
+  .pkey:not(.on):not(.busy):not(:disabled):active { transform: translateY(4px); }
+  .akey:not(:disabled):active { transform: translateY(3px); }
+  .btn:not(:disabled):active, .minikey:active, .chip:not(:disabled):active { transform: translateY(2px); }
+  .piano button:active { transform: translateY(4px); }
+  .bigkey:not(:disabled):hover { filter: brightness(1.06) saturate(1.05); }
+  .bigkey:not(:disabled):active { filter: none; }
+  .knob .dial::before { transition: opacity .15s; }
+  .knob:not(.off):hover .dial::before { opacity: 1; }
+}
+.piano button::before { transition: background .15s, box-shadow .15s; }
+input[type=checkbox]::after { transition: background .12s, box-shadow .12s; }
+
+/* ---------- 4. 生成中：頂端色條跑馬、觀景窗錄影燈閃、進度條走帶 ---------- */
+.unit:has(.bigkey.busy) .unit-head .stripes i { animation: stripe-chase 1.2s ease-in-out infinite; }
+.unit:has(.bigkey.busy) .unit-head .stripes i:nth-child(2) { animation-delay: .15s; }
+.unit:has(.bigkey.busy) .unit-head .stripes i:nth-child(3) { animation-delay: .3s; }
+.unit:has(.bigkey.busy) .unit-head .stripes i:nth-child(4) { animation-delay: .45s; }
+@keyframes stripe-chase { 0%, 60%, 100% { filter: none; } 25% { filter: brightness(1.45) saturate(1.1); } }
+.unit:has(.bigkey.busy) .viewer .pled { background: var(--ph-red); box-shadow: 0 0 5px var(--ph-red); animation: blink 1s steps(1) infinite; }
+.prog > div { background: repeating-linear-gradient(-45deg, var(--ph-amber) 0 6px, #e8992e 6px 12px); background-size: 17px 100%; animation: tape-run .6s linear infinite; }
+@keyframes tape-run { to { background-position: 17px 0; } }
+.slides .pending { background-image: repeating-linear-gradient(-45deg, transparent 0 8px, rgba(110,101,83,.12) 8px 16px); background-size: 22.6px 100%;
+  animation: tape-run-wide 1.2s linear infinite; }
+@keyframes tape-run-wide { to { background-position: 22.6px 0; } }
+
+/* ---------- 5. 觀景窗：快門一眨，新圖從過曝慢慢顯影 ---------- */
+.win::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: var(--bezel); transform: scaleY(0); }
+.win.swap::after { animation: shutter .3s ease-in-out; }
+@keyframes shutter { 40% { transform: scaleY(1); } 100% { transform: scaleY(0); } }
+.win.swap img.on { animation: develop 1.2s linear .08s backwards; }
+@keyframes develop {
+  0% { opacity: 0; filter: brightness(2) saturate(0) blur(8px); transform: scale(1.02); animation-timing-function: ease-out; }
+  22% { opacity: 1; filter: brightness(1.6) saturate(.15) blur(5px); animation-timing-function: cubic-bezier(.35, 0, .25, 1); }
+  100% { opacity: 1; filter: brightness(1) saturate(1) blur(0); transform: none; } }
+
+/* ---------- 6. 幻燈片匣：新的一張從上面掉進來 ---------- */
+.slides img.new { animation: slide-drop .45s var(--ease-snap) backwards; }
+@keyframes slide-drop { from { opacity: 0; transform: translateY(-16px) rotate(-2deg); } }
+
+/* ---------- 7. 圖庫：相片一張張排上桌 ---------- */
+.gallery .g { animation: tile-in .4s var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 22ms); }
+@keyframes tile-in { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+.card { animation: tile-in .35s var(--ease-out) backwards; }
+
+/* ---------- 8. 浮層：對話框像卡匣卡進來，抽屜從右邊滑出 ---------- */
+.modal { backdrop-filter: blur(2px); }
+.modal:not([hidden]) { animation: fade-in .18s ease-out; }
+.modal:not([hidden]) > .dialog, .modal:not([hidden]) > .lb-body { animation: cart-in .32s var(--ease-snap) backwards; }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes cart-in { from { opacity: 0; transform: translateY(18px) scale(.98); } }
+.drawer:not([hidden]) { animation: drawer-in .3s var(--ease-snap) backwards; }
+@keyframes drawer-in { from { opacity: 0; transform: translateX(26px); } }
+.popover:not([hidden]), .selbar:not([hidden]) { animation: pop-in .26s var(--ease-snap) backwards; }
+@keyframes pop-in { from { opacity: 0; transform: translate(-50%, 10px); } }
+.ac.on { animation: fade-in .12s ease-out; }
+details.fold[open] > :not(summary), details.pe[open] > :not(summary) { animation: fold-in .22s var(--ease-out) backwards; }
+@keyframes fold-in { from { opacity: 0; transform: translateY(-4px); } }
+
+/* ---------- 9. 通知：從右邊彈進來，時間到滑出去 ---------- */
+.toast { animation: toast-in .32s var(--ease-snap); }
+.toast.out { animation: toast-out .22s ease-in forwards; }
+@keyframes toast-in { from { opacity: 0; transform: translateX(30px); } }
+@keyframes toast-out { to { opacity: 0; transform: translateX(30px); } }
+
+/* ---------- 10. 狀態燈：ComfyUI 斷線時紅燈慢閃 ---------- */
+.status .dot:not(.on) { animation: blink 1.4s steps(1) infinite; }
+
+/* ---------- 11. 換模型：卡帶標籤往上退出再插回去，捲盤轉一下（2026-10-20，gen.js 在 #modelWell 加 .swap） ---------- */
+.cart-well.swap select { animation: cart-swap .36s var(--ease-snap); }
+@keyframes cart-swap { 35% { transform: translateY(-8px); opacity: .5; } }
+.cart-well.swap .cart-reels i { animation: spin .36s linear; }
+
+/* ---------- 換主題：從開關的位置把新配色推開 ---------- */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) { animation: theme-wipe .55s var(--ease-out); }
+@keyframes theme-wipe { from { clip-path: circle(0 at var(--vt-x, 90%) var(--vt-y, 24px)); } to { clip-path: circle(150vmax at var(--vt-x, 90%) var(--vt-y, 24px)); } }

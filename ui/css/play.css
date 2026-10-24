@@ -1,0 +1,41 @@
+/* 生圖玩法（js\play.js、擴圖模式）：玩法選單、差分、塗鴉畫布、X/Y 對照表 */
+.play-body { display: flex; flex-direction: column; gap: 10px; }
+.play-dlg .sub { display: block; }
+.play-group { display: flex; flex-direction: column; gap: 4px; }
+.play-src { width: 112px; height: 112px; object-fit: contain; flex: none; border-radius: 6px; background: var(--viewer); box-shadow: inset 0 1px 3px rgba(0,0,0,.5); }
+
+/* 觀景窗／燈箱的「玩法…」：浮在按鈕旁邊的小選單（比燈箱 .modal 高一層） */
+.play-menu { position: fixed; z-index: 70; min-width: 190px; display: flex; flex-direction: column; padding: 6px; gap: 2px; border-radius: 8px;
+  background: var(--case); box-shadow: 0 1px 0 var(--case-hi) inset, 0 14px 30px -8px rgba(0,0,0,.6), 0 0 0 1px var(--case-lo); }
+.play-menu button { text-align: left; border: 0; background: none; color: var(--label); font: 13px/1.4 var(--f-ui); padding: 7px 10px; border-radius: 5px; cursor: pointer; }
+.play-menu button:hover, .play-menu button:focus-visible { background: var(--acc); color: #fff; outline: none; }
+
+/* 塗鴉畫布 */
+.sk-stage { position: relative; align-self: center; max-width: 100%; line-height: 0; }
+.sk-stage canvas { max-width: 100%; max-height: 64vh; background: #fff; border-radius: 4px; touch-action: none; cursor: crosshair;
+  box-shadow: 0 0 0 1px var(--case-lo), 0 6px 18px -8px rgba(0,0,0,.5); }
+.sk-stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; opacity: .28; pointer-events: none; border-radius: 4px; }
+#skColor { width: 36px; height: 28px; padding: 0 2px; border: 0; background: none; cursor: pointer; }
+
+/* X/Y 對照表 */
+.xy-axis { display: grid; grid-template-columns: 44px 120px auto 1fr; gap: 6px; align-items: center; }
+.xy-axis select[hidden] { display: none; }
+.xy-axis input[type=text] { min-width: 0; }
+.xy-out { display: flex; flex-direction: column; gap: 6px; }
+.xy-out img { max-width: 100%; max-height: 60vh; object-fit: contain; align-self: center; border-radius: 4px; background: var(--viewer); }
+@media (max-width: 640px) { .xy-axis { grid-template-columns: 44px 1fr; } .xy-axis input[type=text] { grid-column: 1 / -1; } }
+
+/* 擴圖模式：四邊像素＋示意圖 */
+.op-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.op-grid label { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--label); }
+.op-grid input { width: 100%; min-width: 0; }
+.op-preview { position: relative; align-self: center; width: 100%; max-width: 260px; border-radius: 4px;
+  background: repeating-linear-gradient(45deg, var(--case-3) 0 6px, var(--case-2) 6px 12px); box-shadow: inset 0 0 0 1px var(--case-lo); }
+.op-preview .op-orig { position: absolute; background: var(--viewer) center / cover no-repeat; box-shadow: 0 0 0 2px var(--acc); }
+.op-preview .op-info { position: absolute; left: 4px; bottom: 4px; font-size: 11px; color: var(--label); background: var(--case); padding: 0 5px; border-radius: 3px; }
+
+/* 透明背景的圖（一鍵去背）在大圖裡看得出透明 */
+#lbImg.alpha, #viewImg.alpha { background: repeating-conic-gradient(#d6d6d6 0 25%, #fff 0 50%) 0 0 / 24px 24px; }
+/* 「批次：每行一句」在提示詞框下面 */
+.batch-row { font-size: 12px; margin-top: 2px; }
+.play-tools { margin-top: 4px; }

@@ -1,0 +1,30 @@
+# 編譯產物
+src-tauri/target/
+src-tauri/gen/
+__pycache__/
+*.log
+
+# 安裝包、待刪除、測試報告（影片和圖很大）
+發行/
+待刪除/
+報告/
+
+# 大型二進位檔（模型、DLL）。只擋根目錄的 vendor\（onnxruntime.dll、7zr.exe，用 tools\fetch_vendor.ps1 下載）；
+# ui\vendor\ 是網頁要用的 three.js、opencc-js，要進版控
+/vendor/
+*.safetensors
+*.gguf
+*.onnx
+*.exe
+*.dll
+*.mp4
+# 官方論文原檔（32MB，參考用；文字版 paper.txt 有進版控）
+design/MOSS官方資料/原始檔/*.pdf
+
+# 本機設定和使用者資料（可能有金鑰）
+.claude/settings.local.json
+data/
+settings.json
+
+# 腦力激盪的網頁草圖（superpowers 視覺助手）
+.superpowers/

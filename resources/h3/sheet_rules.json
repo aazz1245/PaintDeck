@@ -1,0 +1,37 @@
+{
+  "_說明": "拍攝單送出前健檢用的字表（src-tauri\\src\\shotsheet.rs 編進程式）。英文整字比對、不分大小寫；中文直接找字。cheat 是鏡位按鈕：[按鈕字, 插入的中文, 插入的英文]。",
+  "mood": ["sultry", "playful", "dreamy", "glowing", "chaotic", "urgent", "sensual", "romantic", "passionate", "mysterious", "ethereal", "seductive",
+           "性感", "夢幻", "唯美", "激情", "浪漫", "曖昧", "神秘", "誘惑"],
+  "prevent": ["not", "never", "no", "don't", "do not", "avoid", "without", "不要", "別", "不能", "不准", "禁止", "避免"],
+  "prevent_re": ["\\bonly\\b.*\\bever\\b"],
+  "prevent_skip": ["特別", "分別", "區別", "類別", "個別", "性別", "告別", "級別", "差別", "辨別", "識別", "別人", "別的", "別處", "道別", "離別"],
+  "danger": ["tongue", "lick", "glans", "saliva"],
+  "body": ["頭", "臉", "眼", "嘴", "唇", "下巴", "脖子", "頸", "肩", "手", "臂", "肘", "指", "掌", "腕", "胸", "腰", "腹", "肚", "背", "臀", "屁股", "腿", "膝", "腳", "足", "踝", "髮", "身體", "上半身", "下半身",
+           "head", "face", "eye", "eyes", "mouth", "lips", "chin", "neck", "shoulder", "shoulders", "arm", "arms", "elbow", "elbows", "hand", "hands",
+           "finger", "fingers", "palm", "palms", "wrist", "wrists", "chest", "breast", "breasts", "waist", "belly", "stomach", "back", "hip", "hips",
+           "butt", "leg", "legs", "thigh", "thighs", "knee", "knees", "foot", "feet", "ankle", "ankles", "hair", "body", "torso"],
+  "position": ["左", "右", "上方", "下方", "前", "後", "中間", "旁", "對面", "面前", "身後", "上面", "下面", "裡", "外", "桌", "床", "地上", "牆", "窗", "門", "椅",
+               "left", "right", "above", "below", "in front of", "behind", "between", "beside", "next to", "on top of", "under", "center", "middle",
+               "toward", "towards", "table", "bed", "floor", "wall", "window", "door", "chair"],
+  "direction": ["回頭", "轉身", "轉頭", "往前伸", "伸手", "低頭", "抬頭", "彎腰", "後仰", "前傾", "靠近", "走向", "看向",
+                "look back", "turn around", "turns around", "turn head", "lean forward", "leans forward", "lean back", "look down", "look up",
+                "bend over", "bends over", "reach out", "reaches out", "walk toward", "walks toward"],
+  "cheat": {
+    "view": [
+      ["POV", "第一人稱 POV 視角", "POV first-person view"],
+      ["第三人稱", "第三人稱旁觀視角", "third-person view"],
+      ["側面", "側面視角", "side view"],
+      ["俯", "由上往下的俯視角", "high-angle view from above"],
+      ["仰", "由下往上的仰視角", "low-angle view from below"]
+    ],
+    "move": [
+      ["固定", "鏡頭固定不動", "the camera stays still"],
+      ["推近", "鏡頭慢慢推近", "the camera slowly pushes in"],
+      ["拉遠", "鏡頭慢慢拉遠", "the camera slowly pulls back"],
+      ["平移", "鏡頭水平平移", "the camera pans horizontally"],
+      ["繞拍", "鏡頭繞著主角轉", "the camera orbits around the subject"],
+      ["跟拍", "鏡頭跟著主角移動", "the camera follows the subject"],
+      ["手持", "手持鏡頭輕微晃動", "handheld camera with slight shake"]
+    ]
+  }
+}

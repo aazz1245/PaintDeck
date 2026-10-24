@@ -1,0 +1,1 @@
+{"vc":[{"name":"AMD Radeon 780M Graphics","pnp":"PCI\\VEN_1002&DEV_15BF&SUBSYS_0B8D1028&REV_C4\\4&2D5C7E1F&0&0041","vendor":"Advanced Micro Devices, Inc.","driver":"32.0.21025.1024","ram":2147483648}],"reg":[{"id":"pci\\ven_1002&dev_15bf&rev_c4","desc":"AMD Radeon 780M Graphics","qw":2147483648,"mem":null,"radeon":"25.10.2"}]}

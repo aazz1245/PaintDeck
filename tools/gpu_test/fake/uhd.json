@@ -1,0 +1,1 @@
+{"vc":[{"name":"Intel(R) UHD Graphics 770","pnp":"PCI\\VEN_8086&DEV_A780&SUBSYS_88821043&REV_04\\3&11583659&0&10","vendor":"Intel Corporation","driver":"31.0.101.5186","ram":1073741824}],"reg":[{"id":"pci\\ven_8086&dev_a780","desc":"Intel(R) UHD Graphics 770","qw":null,"mem":1073741824,"radeon":""}]}

@@ -1,0 +1,57 @@
+[package]
+name = "anima-app"
+version = "26.10.24"
+description = "繪匣 PaintDeck：本機 AI 生圖（ComfyUI 前端）"
+edition = "2021"
+default-run = "anima-app"
+
+[lib]
+name = "anima_app"
+path = "src/lib.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+serde = { version = "1", features = ["derive"] }
+# float_roundtrip：解析小數要精確（預設的快速解析會差最後一位，存回資料庫就漂掉了）
+# preserve_order：物件保留原本的鍵順序，跟 Python dict 一樣（「第一個找到的節點」、寫回資料庫的 JSON 才會一致）
+serde_json = { version = "1", features = ["float_roundtrip", "preserve_order"] }
+regex = "1"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+tokio = { version = "1.53.2", features = ["full"] }
+axum = { version = "0.8.9", features = ["ws", "multipart"] }
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "stream", "native-tls", "http2", "charset", "query", "blocking", "socks"] }
+tokio-tungstenite = "0.30.0"
+futures-util = "0.3.34"
+bytes = "1.12.1"
+png = "0.18.1"
+rand = "0.10.3"
+tokio-util = { version = "0.7.20", features = ["io"] }
+tower-http = { version = "0.7.1", features = ["fs"] }
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+# 圖庫匯出用 Stored；第一次啟動精靈解 llama.cpp 的 zip 要 deflate
+zip = { version = "9.0.0", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+windows-sys = { version = "0.61.2", features = ["Win32_UI_Shell", "Win32_Foundation", "Win32_Storage_FileSystem", "Win32_System_IO", "Win32_System_Threading", "Win32_UI_WindowsAndMessaging", "Win32_Security_Cryptography", "Win32_System_JobObjects", "Win32_System_Registry"] }
+csv = "1.4.0"
+webp = "0.3.1"
+sha2 = "0.10.9"
+base64 = "0.22.1"
+# 反推（ONNX）：不在編譯時下載 onnxruntime，執行時載入 onnxruntime.dll（見 tagger.rs）
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic", "api-28"] }
+# 安裝精靈、設定頁的「選資料夾」：Windows 原生的選資料夾視窗（Tauri 官方 dialog 外掛底層也是它）。
+# raw-window-handle 本來就在（tauri 用的），這裡直接用來把視窗掛在生圖站上面
+rfd = { version = "0.17.2", default-features = false }
+raw-window-handle = "0.6.2"
+
+# 開發版的套件也要最佳化：沒最佳化的 LZMA 解壓（ComfyUI 的 7z）、反推的影像處理會慢幾十倍
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

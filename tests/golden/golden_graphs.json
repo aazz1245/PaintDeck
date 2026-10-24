@@ -1,0 +1,7498 @@
+[
+ {
+  "name": "t2i wildcard offset 0",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "masterpiece, best quality, safe, 1girl, {red|blue|{green|yellow}} hair, {smile|grin}",
+   "negative": "worst quality, {blurry|jpeg artifacts}",
+   "seed": 123456789,
+   "width": 1024,
+   "height": 1536
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "masterpiece, best quality, safe, 1girl, yellow hair, grin",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "worst quality, jpeg artifacts",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 1024,
+     "height": 1536,
+     "batch_size": 1
+    }
+   },
+   "6": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "4",
+      0
+     ],
+     "latent_image": [
+      "5",
+      0
+     ],
+     "seed": 123456789,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "6",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "8",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "masterpiece, best quality, safe, 1girl, yellow hair, grin",
+   "negative": "worst quality, jpeg artifacts",
+   "seed": 123456789,
+   "width": 1024,
+   "height": 1536,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i wildcard offset 1",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "masterpiece, best quality, safe, 1girl, {red|blue|{green|yellow}} hair, {smile|grin}",
+   "negative": "worst quality, {blurry|jpeg artifacts}",
+   "seed": 123456789,
+   "width": 1024,
+   "height": 1536
+  },
+  "offset": 1,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "masterpiece, best quality, safe, 1girl, red hair, smile",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "worst quality, jpeg artifacts",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 1024,
+     "height": 1536,
+     "batch_size": 1
+    }
+   },
+   "6": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "4",
+      0
+     ],
+     "latent_image": [
+      "5",
+      0
+     ],
+     "seed": 123456790,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "6",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "8",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "masterpiece, best quality, safe, 1girl, red hair, smile",
+   "negative": "worst quality, jpeg artifacts",
+   "seed": 123456790,
+   "width": 1024,
+   "height": 1536,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i wildcard offset 2",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "masterpiece, best quality, safe, 1girl, {red|blue|{green|yellow}} hair, {smile|grin}",
+   "negative": "worst quality, {blurry|jpeg artifacts}",
+   "seed": 123456789,
+   "width": 1024,
+   "height": 1536
+  },
+  "offset": 2,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "masterpiece, best quality, safe, 1girl, blue hair, smile",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "worst quality, jpeg artifacts",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 1024,
+     "height": 1536,
+     "batch_size": 1
+    }
+   },
+   "6": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "4",
+      0
+     ],
+     "latent_image": [
+      "5",
+      0
+     ],
+     "seed": 123456791,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "6",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "8",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "masterpiece, best quality, safe, 1girl, blue hair, smile",
+   "negative": "worst quality, jpeg artifacts",
+   "seed": 123456791,
+   "width": 1024,
+   "height": 1536,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i wildcard offset 3",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "masterpiece, best quality, safe, 1girl, {red|blue|{green|yellow}} hair, {smile|grin}",
+   "negative": "worst quality, {blurry|jpeg artifacts}",
+   "seed": 123456789,
+   "width": 1024,
+   "height": 1536
+  },
+  "offset": 3,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "masterpiece, best quality, safe, 1girl, red hair, grin",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "worst quality, jpeg artifacts",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 1024,
+     "height": 1536,
+     "batch_size": 1
+    }
+   },
+   "6": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "4",
+      0
+     ],
+     "latent_image": [
+      "5",
+      0
+     ],
+     "seed": 123456792,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "6",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "8",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "masterpiece, best quality, safe, 1girl, red hair, grin",
+   "negative": "worst quality, jpeg artifacts",
+   "seed": 123456792,
+   "width": 1024,
+   "height": 1536,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i big seed",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "masterpiece, best quality, safe, 1girl, {red|blue|{green|yellow}} hair, {smile|grin}",
+   "negative": "worst quality, {blurry|jpeg artifacts}",
+   "seed": 140737488367673,
+   "width": 1000,
+   "height": 1500
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "masterpiece, best quality, safe, 1girl, blue hair, grin",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "worst quality, blurry",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 992,
+     "height": 1504,
+     "batch_size": 1
+    }
+   },
+   "6": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "4",
+      0
+     ],
+     "latent_image": [
+      "5",
+      0
+     ],
+     "seed": 140737488367673,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "6",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "8",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "masterpiece, best quality, safe, 1girl, blue hair, grin",
+   "negative": "worst quality, blurry",
+   "seed": 140737488367673,
+   "width": 992,
+   "height": 1504,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i round half even",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "a",
+   "negative": "",
+   "seed": 1,
+   "width": 1032,
+   "height": 1048
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 1024,
+     "height": 1056,
+     "batch_size": 1
+    }
+   },
+   "6": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "4",
+      0
+     ],
+     "latent_image": [
+      "5",
+      0
+     ],
+     "seed": 1,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "6",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "8",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "",
+   "seed": 1,
+   "width": 1024,
+   "height": 1056,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i turbo lora true",
+  "params": {
+   "model": "anima-aesthetic-v1.1.safetensors",
+   "family": "anima",
+   "steps": 30,
+   "cfg": 4,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 5,
+   "width": 832,
+   "height": 1216,
+   "turbo_lora": true
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-aesthetic-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "lora_name": "anima-turbo-lora-v0.2.safetensors",
+     "strength_model": 1.0
+    }
+   },
+   "3": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "3",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "3",
+      0
+     ]
+    }
+   },
+   "6": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 832,
+     "height": 1216,
+     "batch_size": 1
+    }
+   },
+   "7": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "2",
+      0
+     ],
+     "positive": [
+      "4",
+      0
+     ],
+     "negative": [
+      "5",
+      0
+     ],
+     "latent_image": [
+      "6",
+      0
+     ],
+     "seed": 5,
+     "steps": 30,
+     "cfg": 4.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "8": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "9": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "7",
+      0
+     ],
+     "vae": [
+      "8",
+      0
+     ]
+    }
+   },
+   "10": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "9",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 5,
+   "width": 832,
+   "height": 1216,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i turbo lora str",
+  "params": {
+   "model": "anima-aesthetic-v1.1.safetensors",
+   "family": "anima",
+   "steps": 30,
+   "cfg": 4,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 5,
+   "width": 832,
+   "height": 1216,
+   "turbo_lora": "Turbo-ANIMA-v4.safetensors"
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-aesthetic-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "lora_name": "Turbo-ANIMA-v4.safetensors",
+     "strength_model": 1.0
+    }
+   },
+   "3": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "3",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "3",
+      0
+     ]
+    }
+   },
+   "6": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 832,
+     "height": 1216,
+     "batch_size": 1
+    }
+   },
+   "7": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "2",
+      0
+     ],
+     "positive": [
+      "4",
+      0
+     ],
+     "negative": [
+      "5",
+      0
+     ],
+     "latent_image": [
+      "6",
+      0
+     ],
+     "seed": 5,
+     "steps": 30,
+     "cfg": 4.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "8": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "9": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "7",
+      0
+     ],
+     "vae": [
+      "8",
+      0
+     ]
+    }
+   },
+   "10": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "9",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 5,
+   "width": 832,
+   "height": 1216,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i turbo model ignores turbo lora",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 5,
+   "width": 832,
+   "height": 1216,
+   "turbo_lora": true
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 832,
+     "height": 1216,
+     "batch_size": 1
+    }
+   },
+   "6": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "4",
+      0
+     ],
+     "latent_image": [
+      "5",
+      0
+     ],
+     "seed": 5,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "6",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "8",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 5,
+   "width": 832,
+   "height": 1216,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i loras",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 896,
+   "height": 1152,
+   "loras": [
+    {
+     "name": "a.safetensors",
+     "strength": 0.8
+    },
+    {
+     "name": "b.safetensors",
+     "strength": 0,
+     "enabled": true
+    },
+    {
+     "name": "c.safetensors",
+     "strength": 1.2,
+     "enabled": false
+    },
+    {
+     "name": "sub\\d.safetensors",
+     "strength": -1
+    }
+   ]
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "lora_name": "a.safetensors",
+     "strength_model": 0.8
+    }
+   },
+   "3": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "model": [
+      "2",
+      0
+     ],
+     "lora_name": "sub\\d.safetensors",
+     "strength_model": -1.0
+    }
+   },
+   "4": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "4",
+      0
+     ]
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "4",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 896,
+     "height": 1152,
+     "batch_size": 1
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "3",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "latent_image": [
+      "7",
+      0
+     ],
+     "seed": 9,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "9": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "10": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "8",
+      0
+     ],
+     "vae": [
+      "9",
+      0
+     ]
+    }
+   },
+   "11": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "10",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 896,
+   "height": 1152,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i hires",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 896,
+   "height": 1152,
+   "hires": {
+    "enabled": true,
+    "scale": 1.5,
+    "denoise": 0.4,
+    "upscaler": "4x-AnimeSharp.safetensors"
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 896,
+     "height": 1152,
+     "batch_size": 1
+    }
+   },
+   "6": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "4",
+      0
+     ],
+     "latent_image": [
+      "5",
+      0
+     ],
+     "seed": 9,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "6",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "UpscaleModelLoader",
+    "inputs": {
+     "model_name": "4x-AnimeSharp.safetensors"
+    }
+   },
+   "10": {
+    "class_type": "ImageUpscaleWithModel",
+    "inputs": {
+     "upscale_model": [
+      "9",
+      0
+     ],
+     "image": [
+      "8",
+      0
+     ]
+    }
+   },
+   "11": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "10",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 1344,
+     "height": 1728,
+     "crop": "disabled"
+    }
+   },
+   "12": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "11",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "13": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "4",
+      0
+     ],
+     "latent_image": [
+      "12",
+      0
+     ],
+     "seed": 10,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 0.4
+    }
+   },
+   "14": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "13",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "15": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "14",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 1344,
+   "height": 1728,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i hires tiled",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 1024,
+   "height": 1536,
+   "hires": {
+    "enabled": true,
+    "scale": 2,
+    "denoise": 0.35,
+    "steps": 12,
+    "upscaler": "RealESRGAN_x4plus_anime_6B.pth"
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 1024,
+     "height": 1536,
+     "batch_size": 1
+    }
+   },
+   "6": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "4",
+      0
+     ],
+     "latent_image": [
+      "5",
+      0
+     ],
+     "seed": 9,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "6",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "UpscaleModelLoader",
+    "inputs": {
+     "model_name": "RealESRGAN_x4plus_anime_6B.pth"
+    }
+   },
+   "10": {
+    "class_type": "ImageUpscaleWithModel",
+    "inputs": {
+     "upscale_model": [
+      "9",
+      0
+     ],
+     "image": [
+      "8",
+      0
+     ]
+    }
+   },
+   "11": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "10",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 2048,
+     "height": 3072,
+     "crop": "disabled"
+    }
+   },
+   "12": {
+    "class_type": "VAEEncodeTiled",
+    "inputs": {
+     "pixels": [
+      "11",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ],
+     "tile_size": 512,
+     "overlap": 64,
+     "temporal_size": 64,
+     "temporal_overlap": 8
+    }
+   },
+   "13": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "4",
+      0
+     ],
+     "latent_image": [
+      "12",
+      0
+     ],
+     "seed": 10,
+     "steps": 12,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 0.35
+    }
+   },
+   "14": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "samples": [
+      "13",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ],
+     "tile_size": 512,
+     "overlap": 64,
+     "temporal_size": 64,
+     "temporal_overlap": 8
+    }
+   },
+   "15": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "14",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 2048,
+   "height": 3072,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i hires off",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 896,
+   "height": 1152,
+   "hires": {
+    "enabled": false,
+    "scale": 2
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 896,
+     "height": 1152,
+     "batch_size": 1
+    }
+   },
+   "6": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "4",
+      0
+     ],
+     "latent_image": [
+      "5",
+      0
+     ],
+     "seed": 9,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "6",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "8",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 896,
+   "height": 1152,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i control canny invert",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 896,
+   "height": 1152,
+   "control": {
+    "enabled": true,
+    "type": "any",
+    "preprocess": "canny",
+    "invert": true,
+    "strength": 1,
+    "start": 0,
+    "end": 0.8,
+    "image": "init.png"
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "init.png"
+    }
+   },
+   "2": {
+    "class_type": "Canny",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "low_threshold": 0.17,
+     "high_threshold": 0.45
+    }
+   },
+   "3": {
+    "class_type": "ImageInvert",
+    "inputs": {
+     "image": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "3",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 896,
+     "height": 1152,
+     "crop": "center"
+    }
+   },
+   "5": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "6": {
+    "class_type": "ModelPatchLoader",
+    "inputs": {
+     "name": "anima-lllite-any-test-like-v2.safetensors"
+    }
+   },
+   "7": {
+    "class_type": "AnimaLLLiteApply",
+    "inputs": {
+     "model": [
+      "5",
+      0
+     ],
+     "model_patch": [
+      "6",
+      0
+     ],
+     "image": [
+      "4",
+      0
+     ],
+     "strength": 1.0,
+     "start_percent": 0.0,
+     "end_percent": 0.8
+    }
+   },
+   "8": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "9": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "8",
+      0
+     ]
+    }
+   },
+   "10": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "8",
+      0
+     ]
+    }
+   },
+   "11": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 896,
+     "height": 1152,
+     "batch_size": 1
+    }
+   },
+   "12": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "7",
+      0
+     ],
+     "positive": [
+      "9",
+      0
+     ],
+     "negative": [
+      "10",
+      0
+     ],
+     "latent_image": [
+      "11",
+      0
+     ],
+     "seed": 9,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "13": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "14": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "12",
+      0
+     ],
+     "vae": [
+      "13",
+      0
+     ]
+    }
+   },
+   "15": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "14",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 896,
+   "height": 1152,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i control depth",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 896,
+   "height": 1152,
+   "control": {
+    "enabled": true,
+    "type": "depth",
+    "preprocess": "depth",
+    "invert": false,
+    "strength": 0.75,
+    "image": "init.png"
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "init.png"
+    }
+   },
+   "2": {
+    "class_type": "LoadDA3Model",
+    "inputs": {
+     "model_name": "depth_anything_3_mono_large.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "3": {
+    "class_type": "DA3Inference",
+    "inputs": {
+     "da3_model": [
+      "2",
+      0
+     ],
+     "image": [
+      "1",
+      0
+     ],
+     "resolution": 504,
+     "resize_method": "upper_bound_resize",
+     "mode": "mono"
+    }
+   },
+   "4": {
+    "class_type": "DA3Render",
+    "inputs": {
+     "da3_geometry": [
+      "3",
+      0
+     ],
+     "output": "depth",
+     "output.normalization": "v2_style",
+     "output.apply_sky_clip": false
+    }
+   },
+   "5": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "4",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 896,
+     "height": 1152,
+     "crop": "center"
+    }
+   },
+   "6": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "7": {
+    "class_type": "ModelPatchLoader",
+    "inputs": {
+     "name": "anima-lllite-depth-1.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "AnimaLLLiteApply",
+    "inputs": {
+     "model": [
+      "6",
+      0
+     ],
+     "model_patch": [
+      "7",
+      0
+     ],
+     "image": [
+      "5",
+      0
+     ],
+     "strength": 0.75,
+     "start_percent": 0.0,
+     "end_percent": 1.0
+    }
+   },
+   "9": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "10": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "9",
+      0
+     ]
+    }
+   },
+   "11": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "9",
+      0
+     ]
+    }
+   },
+   "12": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 896,
+     "height": 1152,
+     "batch_size": 1
+    }
+   },
+   "13": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "8",
+      0
+     ],
+     "positive": [
+      "10",
+      0
+     ],
+     "negative": [
+      "11",
+      0
+     ],
+     "latent_image": [
+      "12",
+      0
+     ],
+     "seed": 9,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "14": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "15": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "13",
+      0
+     ],
+     "vae": [
+      "14",
+      0
+     ]
+    }
+   },
+   "16": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "15",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 896,
+   "height": 1152,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i control lineart raw + hires + lora",
+  "params": {
+   "model": "anima-aesthetic-v1.1.safetensors",
+   "family": "anima",
+   "steps": 30,
+   "cfg": 4,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 896,
+   "height": 1152,
+   "loras": [
+    {
+     "name": "a.safetensors",
+     "strength": 0.8
+    }
+   ],
+   "turbo_lora": "anima-turbo-lora-v0.2.safetensors",
+   "control": {
+    "enabled": true,
+    "type": "lineart",
+    "preprocess": "none",
+    "image": "odd.png"
+   },
+   "hires": {
+    "enabled": true,
+    "scale": 1.25,
+    "denoise": 0.5
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "odd.png"
+    }
+   },
+   "2": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 896,
+     "height": 1152,
+     "crop": "center"
+    }
+   },
+   "3": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-aesthetic-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "4": {
+    "class_type": "ModelPatchLoader",
+    "inputs": {
+     "name": "anima-lllite-lineart-1.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "AnimaLLLiteApply",
+    "inputs": {
+     "model": [
+      "3",
+      0
+     ],
+     "model_patch": [
+      "4",
+      0
+     ],
+     "image": [
+      "2",
+      0
+     ],
+     "strength": 1.0,
+     "start_percent": 0.0,
+     "end_percent": 1.0
+    }
+   },
+   "6": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "model": [
+      "5",
+      0
+     ],
+     "lora_name": "anima-turbo-lora-v0.2.safetensors",
+     "strength_model": 1.0
+    }
+   },
+   "7": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "model": [
+      "6",
+      0
+     ],
+     "lora_name": "a.safetensors",
+     "strength_model": 0.8
+    }
+   },
+   "8": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "9": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "8",
+      0
+     ]
+    }
+   },
+   "10": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "8",
+      0
+     ]
+    }
+   },
+   "11": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 896,
+     "height": 1152,
+     "batch_size": 1
+    }
+   },
+   "12": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "7",
+      0
+     ],
+     "positive": [
+      "9",
+      0
+     ],
+     "negative": [
+      "10",
+      0
+     ],
+     "latent_image": [
+      "11",
+      0
+     ],
+     "seed": 9,
+     "steps": 30,
+     "cfg": 4.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "13": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "14": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "12",
+      0
+     ],
+     "vae": [
+      "13",
+      0
+     ]
+    }
+   },
+   "15": {
+    "class_type": "UpscaleModelLoader",
+    "inputs": {
+     "model_name": "4x-AnimeSharp.safetensors"
+    }
+   },
+   "16": {
+    "class_type": "ImageUpscaleWithModel",
+    "inputs": {
+     "upscale_model": [
+      "15",
+      0
+     ],
+     "image": [
+      "14",
+      0
+     ]
+    }
+   },
+   "17": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "16",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 1120,
+     "height": 1440,
+     "crop": "disabled"
+    }
+   },
+   "18": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "17",
+      0
+     ],
+     "vae": [
+      "13",
+      0
+     ]
+    }
+   },
+   "19": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "7",
+      0
+     ],
+     "positive": [
+      "9",
+      0
+     ],
+     "negative": [
+      "10",
+      0
+     ],
+     "latent_image": [
+      "18",
+      0
+     ],
+     "seed": 10,
+     "steps": 30,
+     "cfg": 4.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 0.5
+    }
+   },
+   "20": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "19",
+      0
+     ],
+     "vae": [
+      "13",
+      0
+     ]
+    }
+   },
+   "21": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "20",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 1120,
+   "height": 1440,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "t2i control disabled",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 896,
+   "height": 1152,
+   "control": {
+    "enabled": false,
+    "image": "init.png"
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 896,
+     "height": 1152,
+     "batch_size": 1
+    }
+   },
+   "6": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "4",
+      0
+     ],
+     "latent_image": [
+      "5",
+      0
+     ],
+     "seed": 9,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "6",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "8",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 9,
+   "width": 896,
+   "height": 1152,
+   "mode": "txt2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "qwen t2i turbo",
+  "params": {
+   "model": "NoctQ_v3_Turbo_int8.safetensors",
+   "family": "qwen21",
+   "steps": 6,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "A woman.",
+   "negative": "",
+   "seed": 77,
+   "width": 832,
+   "height": 1248
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "NoctQ_v3_Turbo_int8.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_8b_w4a8.safetensors",
+     "type": "qwen_image",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "prompt": "A woman.",
+     "negative_prompt": "",
+     "resolution": 0
+    }
+   },
+   "4": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 832,
+     "height": 1248,
+     "batch_size": 1
+    }
+   },
+   "5": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "3",
+      1
+     ],
+     "cfg": 1.0
+    }
+   },
+   "6": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 77
+    }
+   },
+   "7": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "8": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.000000, 0.967691, 0.933233, 0.856945, 0.666308, 0.399612, 0.000000"
+    }
+   },
+   "9": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "noise": [
+      "6",
+      0
+     ],
+     "guider": [
+      "5",
+      0
+     ],
+     "sampler": [
+      "7",
+      0
+     ],
+     "sigmas": [
+      "8",
+      0
+     ],
+     "latent_image": [
+      "4",
+      0
+     ]
+    }
+   },
+   "10": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+   },
+   "11": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "9",
+      0
+     ],
+     "vae": [
+      "10",
+      0
+     ]
+    }
+   },
+   "12": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "11",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "A woman.",
+   "negative": "",
+   "seed": 77,
+   "width": 832,
+   "height": 1248,
+   "mode": "txt2img",
+   "family": "qwen21"
+  }
+ },
+ {
+  "name": "qwen t2i base",
+  "params": {
+   "model": "NoctQ_v4_Base_int8.safetensors",
+   "family": "qwen21",
+   "steps": 25,
+   "cfg": 3,
+   "sampler": "er_sde",
+   "scheduler": "beta",
+   "mode": "txt2img",
+   "prompt": "A woman.",
+   "negative": "ugly",
+   "seed": 77,
+   "width": 1000,
+   "height": 1000
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "NoctQ_v4_Base_int8.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_8b_w4a8.safetensors",
+     "type": "qwen_image",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "prompt": "A woman.",
+     "negative_prompt": "ugly",
+     "resolution": 0
+    }
+   },
+   "4": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 992,
+     "height": 992,
+     "batch_size": 1
+    }
+   },
+   "5": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "3",
+      1
+     ],
+     "latent_image": [
+      "4",
+      0
+     ],
+     "seed": 77,
+     "steps": 25,
+     "cfg": 3.0,
+     "sampler_name": "er_sde",
+     "scheduler": "beta",
+     "denoise": 1.0
+    }
+   },
+   "6": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+   },
+   "7": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "5",
+      0
+     ],
+     "vae": [
+      "6",
+      0
+     ]
+    }
+   },
+   "8": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "7",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "A woman.",
+   "negative": "ugly",
+   "seed": 77,
+   "width": 992,
+   "height": 992,
+   "mode": "txt2img",
+   "family": "qwen21"
+  }
+ },
+ {
+  "name": "qwen t2i turbo hires",
+  "params": {
+   "model": "NoctQ_v3_Turbo_int8.safetensors",
+   "family": "qwen21",
+   "steps": 6,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "A woman.",
+   "negative": "",
+   "seed": 77,
+   "width": 832,
+   "height": 1248,
+   "hires": {
+    "enabled": true,
+    "scale": 1.5,
+    "denoise": 0.4
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "NoctQ_v3_Turbo_int8.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_8b_w4a8.safetensors",
+     "type": "qwen_image",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "prompt": "A woman.",
+     "negative_prompt": "",
+     "resolution": 0
+    }
+   },
+   "4": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 832,
+     "height": 1248,
+     "batch_size": 1
+    }
+   },
+   "5": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "3",
+      1
+     ],
+     "cfg": 1.0
+    }
+   },
+   "6": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 77
+    }
+   },
+   "7": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "8": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.000000, 0.967691, 0.933233, 0.856945, 0.666308, 0.399612, 0.000000"
+    }
+   },
+   "9": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "noise": [
+      "6",
+      0
+     ],
+     "guider": [
+      "5",
+      0
+     ],
+     "sampler": [
+      "7",
+      0
+     ],
+     "sigmas": [
+      "8",
+      0
+     ],
+     "latent_image": [
+      "4",
+      0
+     ]
+    }
+   },
+   "10": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+   },
+   "11": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "9",
+      0
+     ],
+     "vae": [
+      "10",
+      0
+     ]
+    }
+   },
+   "12": {
+    "class_type": "UpscaleModelLoader",
+    "inputs": {
+     "model_name": "4x-AnimeSharp.safetensors"
+    }
+   },
+   "13": {
+    "class_type": "ImageUpscaleWithModel",
+    "inputs": {
+     "upscale_model": [
+      "12",
+      0
+     ],
+     "image": [
+      "11",
+      0
+     ]
+    }
+   },
+   "14": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "13",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 1248,
+     "height": 1856,
+     "crop": "disabled"
+    }
+   },
+   "15": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "14",
+      0
+     ],
+     "vae": [
+      "10",
+      0
+     ]
+    }
+   },
+   "16": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "3",
+      1
+     ],
+     "cfg": 1.0
+    }
+   },
+   "17": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 78
+    }
+   },
+   "18": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "19": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "0.631273, 0.461211, 0.000000"
+    }
+   },
+   "20": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "noise": [
+      "17",
+      0
+     ],
+     "guider": [
+      "16",
+      0
+     ],
+     "sampler": [
+      "18",
+      0
+     ],
+     "sigmas": [
+      "19",
+      0
+     ],
+     "latent_image": [
+      "15",
+      0
+     ]
+    }
+   },
+   "21": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "20",
+      0
+     ],
+     "vae": [
+      "10",
+      0
+     ]
+    }
+   },
+   "22": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "21",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "A woman.",
+   "negative": "",
+   "seed": 77,
+   "width": 1248,
+   "height": 1856,
+   "mode": "txt2img",
+   "family": "qwen21"
+  }
+ },
+ {
+  "name": "qwen t2i control ignored",
+  "params": {
+   "model": "NoctQ_v3_Turbo_int8.safetensors",
+   "family": "qwen21",
+   "steps": 6,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "txt2img",
+   "prompt": "a",
+   "negative": "",
+   "seed": 1,
+   "width": 832,
+   "height": 1248,
+   "turbo_lora": true,
+   "control": {
+    "enabled": true,
+    "type": "any",
+    "preprocess": "canny",
+    "image": "init.png"
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "NoctQ_v3_Turbo_int8.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_8b_w4a8.safetensors",
+     "type": "qwen_image",
+     "device": "default"
+    }
+   },
+   "3": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+     "clip": [
+      "2",
+      0
+     ],
+     "prompt": "a",
+     "negative_prompt": "",
+     "resolution": 0
+    }
+   },
+   "4": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 832,
+     "height": 1248,
+     "batch_size": 1
+    }
+   },
+   "5": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "model": [
+      "1",
+      0
+     ],
+     "positive": [
+      "3",
+      0
+     ],
+     "negative": [
+      "3",
+      1
+     ],
+     "cfg": 1.0
+    }
+   },
+   "6": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 1
+    }
+   },
+   "7": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "8": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.000000, 0.967691, 0.933233, 0.856945, 0.666308, 0.399612, 0.000000"
+    }
+   },
+   "9": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "noise": [
+      "6",
+      0
+     ],
+     "guider": [
+      "5",
+      0
+     ],
+     "sampler": [
+      "7",
+      0
+     ],
+     "sigmas": [
+      "8",
+      0
+     ],
+     "latent_image": [
+      "4",
+      0
+     ]
+    }
+   },
+   "10": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+   },
+   "11": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "9",
+      0
+     ],
+     "vae": [
+      "10",
+      0
+     ]
+    }
+   },
+   "12": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "11",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/txt2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "",
+   "seed": 1,
+   "width": 832,
+   "height": 1248,
+   "mode": "txt2img",
+   "family": "qwen21"
+  }
+ },
+ {
+  "name": "i2i anima auto",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "img2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 3,
+   "init_image": "init.png",
+   "size_mode": "auto",
+   "pixels": 1572864,
+   "denoise": 0.6
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "init.png"
+    }
+   },
+   "2": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 1088,
+     "height": 1456,
+     "crop": "center"
+    }
+   },
+   "3": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "4": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "4",
+      0
+     ]
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "4",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "2",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "3",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "latent_image": [
+      "8",
+      0
+     ],
+     "seed": 3,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 0.6
+    }
+   },
+   "10": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "9",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "11": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "10",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/img2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 3,
+   "width": 1088,
+   "height": 1456,
+   "mode": "img2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "i2i anima auto odd default pixels",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "img2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 3,
+   "init_image": "odd.png",
+   "denoise": 0.45
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "odd.png"
+    }
+   },
+   "2": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 1104,
+     "height": 1424,
+     "crop": "center"
+    }
+   },
+   "3": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "4": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "4",
+      0
+     ]
+    }
+   },
+   "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "4",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "2",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "3",
+      0
+     ],
+     "positive": [
+      "5",
+      0
+     ],
+     "negative": [
+      "6",
+      0
+     ],
+     "latent_image": [
+      "8",
+      0
+     ],
+     "seed": 3,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 0.45
+    }
+   },
+   "10": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "9",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "11": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "10",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/img2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 3,
+   "width": 1104,
+   "height": 1424,
+   "mode": "img2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "i2i anima fixed + hires + control",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "img2img",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 3,
+   "init_image": "init.png",
+   "size_mode": "fixed",
+   "width": 896,
+   "height": 1152,
+   "denoise": 0.5,
+   "hires": {
+    "enabled": true,
+    "scale": 1.5,
+    "denoise": 0.4
+   },
+   "control": {
+    "enabled": true,
+    "type": "any",
+    "preprocess": "canny",
+    "invert": true,
+    "image": "init.png"
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "init.png"
+    }
+   },
+   "2": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 896,
+     "height": 1152,
+     "crop": "center"
+    }
+   },
+   "3": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "init.png"
+    }
+   },
+   "4": {
+    "class_type": "Canny",
+    "inputs": {
+     "image": [
+      "3",
+      0
+     ],
+     "low_threshold": 0.17,
+     "high_threshold": 0.45
+    }
+   },
+   "5": {
+    "class_type": "ImageInvert",
+    "inputs": {
+     "image": [
+      "4",
+      0
+     ]
+    }
+   },
+   "6": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "5",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 896,
+     "height": 1152,
+     "crop": "center"
+    }
+   },
+   "7": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "8": {
+    "class_type": "ModelPatchLoader",
+    "inputs": {
+     "name": "anima-lllite-any-test-like-v2.safetensors"
+    }
+   },
+   "9": {
+    "class_type": "AnimaLLLiteApply",
+    "inputs": {
+     "model": [
+      "7",
+      0
+     ],
+     "model_patch": [
+      "8",
+      0
+     ],
+     "image": [
+      "6",
+      0
+     ],
+     "strength": 1.0,
+     "start_percent": 0.0,
+     "end_percent": 1.0
+    }
+   },
+   "10": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "11": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "10",
+      0
+     ]
+    }
+   },
+   "12": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "10",
+      0
+     ]
+    }
+   },
+   "13": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "14": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "2",
+      0
+     ],
+     "vae": [
+      "13",
+      0
+     ]
+    }
+   },
+   "15": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "9",
+      0
+     ],
+     "positive": [
+      "11",
+      0
+     ],
+     "negative": [
+      "12",
+      0
+     ],
+     "latent_image": [
+      "14",
+      0
+     ],
+     "seed": 3,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 0.5
+    }
+   },
+   "16": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "15",
+      0
+     ],
+     "vae": [
+      "13",
+      0
+     ]
+    }
+   },
+   "17": {
+    "class_type": "UpscaleModelLoader",
+    "inputs": {
+     "model_name": "4x-AnimeSharp.safetensors"
+    }
+   },
+   "18": {
+    "class_type": "ImageUpscaleWithModel",
+    "inputs": {
+     "upscale_model": [
+      "17",
+      0
+     ],
+     "image": [
+      "16",
+      0
+     ]
+    }
+   },
+   "19": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "18",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 1344,
+     "height": 1728,
+     "crop": "disabled"
+    }
+   },
+   "20": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "19",
+      0
+     ],
+     "vae": [
+      "13",
+      0
+     ]
+    }
+   },
+   "21": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "9",
+      0
+     ],
+     "positive": [
+      "11",
+      0
+     ],
+     "negative": [
+      "12",
+      0
+     ],
+     "latent_image": [
+      "20",
+      0
+     ],
+     "seed": 4,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 0.4
+    }
+   },
+   "22": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "21",
+      0
+     ],
+     "vae": [
+      "13",
+      0
+     ]
+    }
+   },
+   "23": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "22",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/img2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 3,
+   "width": 1344,
+   "height": 1728,
+   "mode": "img2img",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "i2i qwen 1.0",
+  "params": {
+   "model": "NoctQ_v3_Turbo_int8.safetensors",
+   "family": "qwen21",
+   "steps": 6,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "img2img",
+   "prompt": "Transform the image to a realistic photograph.",
+   "negative": "",
+   "seed": 3,
+   "init_image": "init.png",
+   "size_mode": "auto",
+   "pixels": 1048576,
+   "denoise": 1
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "init.png"
+    }
+   },
+   "2": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 896,
+     "height": 1184,
+     "crop": "center"
+    }
+   },
+   "3": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "NoctQ_v3_Turbo_int8.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "4": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_8b_w4a8.safetensors",
+     "type": "qwen_image",
+     "device": "default"
+    }
+   },
+   "6": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+     "clip": [
+      "5",
+      0
+     ],
+     "prompt": "Transform the image to a realistic photograph.",
+     "negative_prompt": "",
+     "resolution": 0,
+     "images.image_1": [
+      "2",
+      0
+     ],
+     "vae": [
+      "4",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "model": [
+      "3",
+      0
+     ],
+     "positive": [
+      "6",
+      0
+     ],
+     "negative": [
+      "6",
+      1
+     ],
+     "cfg": 1.0
+    }
+   },
+   "8": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 3
+    }
+   },
+   "9": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "10": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.000000, 0.967830, 0.933509, 0.857488, 0.667293, 0.400677, 0.000000"
+    }
+   },
+   "11": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "noise": [
+      "8",
+      0
+     ],
+     "guider": [
+      "7",
+      0
+     ],
+     "sampler": [
+      "9",
+      0
+     ],
+     "sigmas": [
+      "10",
+      0
+     ],
+     "latent_image": [
+      "6",
+      2
+     ]
+    }
+   },
+   "12": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "11",
+      0
+     ],
+     "vae": [
+      "4",
+      0
+     ]
+    }
+   },
+   "13": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "12",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/img2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "Transform the image to a realistic photograph.",
+   "negative": "",
+   "seed": 3,
+   "width": 896,
+   "height": 1184,
+   "mode": "img2img",
+   "family": "qwen21"
+  }
+ },
+ {
+  "name": "i2i qwen 0.7 turbo",
+  "params": {
+   "model": "NoctQ_v3_Turbo_int8.safetensors",
+   "family": "qwen21",
+   "steps": 6,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "img2img",
+   "prompt": "x",
+   "negative": "",
+   "seed": 3,
+   "init_image": "odd.png",
+   "size_mode": "auto",
+   "pixels": 1048576,
+   "denoise": 0.7
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "odd.png"
+    }
+   },
+   "2": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 896,
+     "height": 1152,
+     "crop": "center"
+    }
+   },
+   "3": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "NoctQ_v3_Turbo_int8.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "4": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_8b_w4a8.safetensors",
+     "type": "qwen_image",
+     "device": "default"
+    }
+   },
+   "6": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+     "clip": [
+      "5",
+      0
+     ],
+     "prompt": "x",
+     "negative_prompt": "",
+     "resolution": 0,
+     "images.image_1": [
+      "2",
+      0
+     ],
+     "vae": [
+      "4",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "2",
+      0
+     ],
+     "vae": [
+      "4",
+      0
+     ]
+    }
+   },
+   "8": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "model": [
+      "3",
+      0
+     ],
+     "positive": [
+      "6",
+      0
+     ],
+     "negative": [
+      "6",
+      1
+     ],
+     "cfg": 1.0
+    }
+   },
+   "9": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 3
+    }
+   },
+   "10": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "11": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "0.823119, 0.666039, 0.399322, 0.000000"
+    }
+   },
+   "12": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "noise": [
+      "9",
+      0
+     ],
+     "guider": [
+      "8",
+      0
+     ],
+     "sampler": [
+      "10",
+      0
+     ],
+     "sigmas": [
+      "11",
+      0
+     ],
+     "latent_image": [
+      "7",
+      0
+     ]
+    }
+   },
+   "13": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "12",
+      0
+     ],
+     "vae": [
+      "4",
+      0
+     ]
+    }
+   },
+   "14": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "13",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/img2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "x",
+   "negative": "",
+   "seed": 3,
+   "width": 896,
+   "height": 1152,
+   "mode": "img2img",
+   "family": "qwen21"
+  }
+ },
+ {
+  "name": "i2i qwen base 0.85 fixed",
+  "params": {
+   "model": "NoctQ_v4_Base_int8.safetensors",
+   "family": "qwen21",
+   "steps": 25,
+   "cfg": 3,
+   "sampler": "er_sde",
+   "scheduler": "beta",
+   "mode": "img2img",
+   "prompt": "x",
+   "negative": "y",
+   "seed": 3,
+   "init_image": "wide.png",
+   "size_mode": "fixed",
+   "width": 1216,
+   "height": 832,
+   "denoise": 0.85
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "wide.png"
+    }
+   },
+   "2": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 1216,
+     "height": 832,
+     "crop": "center"
+    }
+   },
+   "3": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "NoctQ_v4_Base_int8.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "4": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_8b_w4a8.safetensors",
+     "type": "qwen_image",
+     "device": "default"
+    }
+   },
+   "6": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+     "clip": [
+      "5",
+      0
+     ],
+     "prompt": "x",
+     "negative_prompt": "y",
+     "resolution": 0,
+     "images.image_1": [
+      "2",
+      0
+     ],
+     "vae": [
+      "4",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "2",
+      0
+     ],
+     "vae": [
+      "4",
+      0
+     ]
+    }
+   },
+   "8": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "3",
+      0
+     ],
+     "positive": [
+      "6",
+      0
+     ],
+     "negative": [
+      "6",
+      1
+     ],
+     "latent_image": [
+      "7",
+      0
+     ],
+     "seed": 3,
+     "steps": 25,
+     "cfg": 3.0,
+     "sampler_name": "er_sde",
+     "scheduler": "beta",
+     "denoise": 0.85
+    }
+   },
+   "9": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "8",
+      0
+     ],
+     "vae": [
+      "4",
+      0
+     ]
+    }
+   },
+   "10": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "9",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/img2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "x",
+   "negative": "y",
+   "seed": 3,
+   "width": 1216,
+   "height": 832,
+   "mode": "img2img",
+   "family": "qwen21"
+  }
+ },
+ {
+  "name": "i2i qwen no denoise key",
+  "params": {
+   "model": "NoctQ_v3_Turbo_int8.safetensors",
+   "family": "qwen21",
+   "steps": 6,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "img2img",
+   "prompt": "x",
+   "negative": "",
+   "seed": 3,
+   "init_image": "small.png",
+   "pixels": 0
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "small.png"
+    }
+   },
+   "2": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 928,
+     "height": 1152,
+     "crop": "center"
+    }
+   },
+   "3": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "NoctQ_v3_Turbo_int8.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "4": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+   },
+   "5": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_8b_w4a8.safetensors",
+     "type": "qwen_image",
+     "device": "default"
+    }
+   },
+   "6": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+     "clip": [
+      "5",
+      0
+     ],
+     "prompt": "x",
+     "negative_prompt": "",
+     "resolution": 0,
+     "images.image_1": [
+      "2",
+      0
+     ],
+     "vae": [
+      "4",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "model": [
+      "3",
+      0
+     ],
+     "positive": [
+      "6",
+      0
+     ],
+     "negative": [
+      "6",
+      1
+     ],
+     "cfg": 1.0
+    }
+   },
+   "8": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 3
+    }
+   },
+   "9": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "10": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.000000, 0.967880, 0.933609, 0.857685, 0.667651, 0.401065, 0.000000"
+    }
+   },
+   "11": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "noise": [
+      "8",
+      0
+     ],
+     "guider": [
+      "7",
+      0
+     ],
+     "sampler": [
+      "9",
+      0
+     ],
+     "sigmas": [
+      "10",
+      0
+     ],
+     "latent_image": [
+      "6",
+      2
+     ]
+    }
+   },
+   "12": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "11",
+      0
+     ],
+     "vae": [
+      "4",
+      0
+     ]
+    }
+   },
+   "13": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "12",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/img2img"
+    }
+   }
+  },
+  "info": {
+   "prompt": "x",
+   "negative": "",
+   "seed": 3,
+   "width": 928,
+   "height": 1152,
+   "mode": "img2img",
+   "family": "qwen21"
+  }
+ },
+ {
+  "name": "inpaint anima lllite full",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "inpaint",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 4,
+   "init_image": "init.png",
+   "mask": "mask.png",
+   "denoise": 1,
+   "inpaint": {
+    "method": "lllite",
+    "area": "full",
+    "grow": 8,
+    "blur": 12,
+    "padding": 64
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "init.png"
+    }
+   },
+   "2": {
+    "class_type": "LoadImageMask",
+    "inputs": {
+     "image": "mask.png",
+     "channel": "red"
+    }
+   },
+   "3": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 880,
+     "height": 1184,
+     "crop": "disabled"
+    }
+   },
+   "4": {
+    "class_type": "MaskToImage",
+    "inputs": {
+     "mask": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "4",
+      0
+     ],
+     "upscale_method": "bilinear",
+     "width": 880,
+     "height": 1184,
+     "crop": "disabled"
+    }
+   },
+   "6": {
+    "class_type": "ImageToMask",
+    "inputs": {
+     "image": [
+      "5",
+      0
+     ],
+     "channel": "red"
+    }
+   },
+   "7": {
+    "class_type": "GrowMask",
+    "inputs": {
+     "mask": [
+      "6",
+      0
+     ],
+     "expand": 6,
+     "tapered_corners": true
+    }
+   },
+   "8": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "9": {
+    "class_type": "ModelPatchLoader",
+    "inputs": {
+     "name": "anima-lllite-inpainting-v2.safetensors"
+    }
+   },
+   "10": {
+    "class_type": "AnimaLLLiteApply",
+    "inputs": {
+     "model": [
+      "8",
+      0
+     ],
+     "model_patch": [
+      "9",
+      0
+     ],
+     "image": [
+      "3",
+      0
+     ],
+     "strength": 1.0,
+     "start_percent": 0.0,
+     "end_percent": 1.0,
+     "mask": [
+      "7",
+      0
+     ]
+    }
+   },
+   "11": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "12": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "11",
+      0
+     ]
+    }
+   },
+   "13": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "11",
+      0
+     ]
+    }
+   },
+   "14": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "15": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "3",
+      0
+     ],
+     "vae": [
+      "14",
+      0
+     ]
+    }
+   },
+   "16": {
+    "class_type": "SetLatentNoiseMask",
+    "inputs": {
+     "samples": [
+      "15",
+      0
+     ],
+     "mask": [
+      "7",
+      0
+     ]
+    }
+   },
+   "17": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "10",
+      0
+     ],
+     "positive": [
+      "12",
+      0
+     ],
+     "negative": [
+      "13",
+      0
+     ],
+     "latent_image": [
+      "16",
+      0
+     ],
+     "seed": 4,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "18": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "17",
+      0
+     ],
+     "vae": [
+      "14",
+      0
+     ]
+    }
+   },
+   "19": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "18",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 1086,
+     "height": 1448,
+     "crop": "disabled"
+    }
+   },
+   "20": {
+    "class_type": "GrowMask",
+    "inputs": {
+     "mask": [
+      "2",
+      0
+     ],
+     "expand": 8,
+     "tapered_corners": true
+    }
+   },
+   "21": {
+    "class_type": "MaskToImage",
+    "inputs": {
+     "mask": [
+      "20",
+      0
+     ]
+    }
+   },
+   "22": {
+    "class_type": "ImageBlur",
+    "inputs": {
+     "image": [
+      "21",
+      0
+     ],
+     "blur_radius": 12,
+     "sigma": 6.0
+    }
+   },
+   "23": {
+    "class_type": "ImageToMask",
+    "inputs": {
+     "image": [
+      "22",
+      0
+     ],
+     "channel": "red"
+    }
+   },
+   "24": {
+    "class_type": "ImageCompositeMasked",
+    "inputs": {
+     "destination": [
+      "1",
+      0
+     ],
+     "source": [
+      "19",
+      0
+     ],
+     "x": 0,
+     "y": 0,
+     "resize_source": false,
+     "mask": [
+      "23",
+      0
+     ]
+    }
+   },
+   "25": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "24",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/inpaint"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 4,
+   "width": 1086,
+   "height": 1448,
+   "mode": "inpaint",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "inpaint anima masked latent",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "inpaint",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 4,
+   "init_image": "init.png",
+   "mask": "mask.png",
+   "denoise": 0.75,
+   "inpaint": {
+    "method": "latent",
+    "area": "masked",
+    "grow": 8,
+    "blur": 12,
+    "padding": 96
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "init.png"
+    }
+   },
+   "2": {
+    "class_type": "LoadImageMask",
+    "inputs": {
+     "image": "mask.png",
+     "channel": "red"
+    }
+   },
+   "3": {
+    "class_type": "ImageCrop",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "width": 513,
+     "height": 570,
+     "x": 204,
+     "y": 304
+    }
+   },
+   "4": {
+    "class_type": "MaskToImage",
+    "inputs": {
+     "mask": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "ImageCrop",
+    "inputs": {
+     "image": [
+      "4",
+      0
+     ],
+     "width": 513,
+     "height": 570,
+     "x": 204,
+     "y": 304
+    }
+   },
+   "6": {
+    "class_type": "ImageToMask",
+    "inputs": {
+     "channel": "red",
+     "image": [
+      "5",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "3",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 976,
+     "height": 1072,
+     "crop": "disabled"
+    }
+   },
+   "8": {
+    "class_type": "MaskToImage",
+    "inputs": {
+     "mask": [
+      "6",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "8",
+      0
+     ],
+     "upscale_method": "bilinear",
+     "width": 976,
+     "height": 1072,
+     "crop": "disabled"
+    }
+   },
+   "10": {
+    "class_type": "ImageToMask",
+    "inputs": {
+     "image": [
+      "9",
+      0
+     ],
+     "channel": "red"
+    }
+   },
+   "11": {
+    "class_type": "GrowMask",
+    "inputs": {
+     "mask": [
+      "10",
+      0
+     ],
+     "expand": 15,
+     "tapered_corners": true
+    }
+   },
+   "12": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "13": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "14": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "13",
+      0
+     ]
+    }
+   },
+   "15": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "13",
+      0
+     ]
+    }
+   },
+   "16": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "17": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "7",
+      0
+     ],
+     "vae": [
+      "16",
+      0
+     ]
+    }
+   },
+   "18": {
+    "class_type": "SetLatentNoiseMask",
+    "inputs": {
+     "samples": [
+      "17",
+      0
+     ],
+     "mask": [
+      "11",
+      0
+     ]
+    }
+   },
+   "19": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "12",
+      0
+     ],
+     "positive": [
+      "14",
+      0
+     ],
+     "negative": [
+      "15",
+      0
+     ],
+     "latent_image": [
+      "18",
+      0
+     ],
+     "seed": 4,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 0.75
+    }
+   },
+   "20": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "19",
+      0
+     ],
+     "vae": [
+      "16",
+      0
+     ]
+    }
+   },
+   "21": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "20",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 513,
+     "height": 570,
+     "crop": "disabled"
+    }
+   },
+   "22": {
+    "class_type": "GrowMask",
+    "inputs": {
+     "mask": [
+      "6",
+      0
+     ],
+     "expand": 8,
+     "tapered_corners": true
+    }
+   },
+   "23": {
+    "class_type": "MaskToImage",
+    "inputs": {
+     "mask": [
+      "22",
+      0
+     ]
+    }
+   },
+   "24": {
+    "class_type": "ImageBlur",
+    "inputs": {
+     "image": [
+      "23",
+      0
+     ],
+     "blur_radius": 12,
+     "sigma": 6.0
+    }
+   },
+   "25": {
+    "class_type": "ImageToMask",
+    "inputs": {
+     "image": [
+      "24",
+      0
+     ],
+     "channel": "red"
+    }
+   },
+   "26": {
+    "class_type": "ImageCompositeMasked",
+    "inputs": {
+     "destination": [
+      "1",
+      0
+     ],
+     "source": [
+      "21",
+      0
+     ],
+     "x": 204,
+     "y": 304,
+     "resize_source": false,
+     "mask": [
+      "25",
+      0
+     ]
+    }
+   },
+   "27": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "26",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/inpaint"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 4,
+   "width": 1086,
+   "height": 1448,
+   "mode": "inpaint",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "inpaint anima masked rgb mask",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "inpaint",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 4,
+   "init_image": "odd.png",
+   "mask": "mask_rgb.png",
+   "denoise": 1,
+   "inpaint": {
+    "method": "lllite",
+    "area": "masked",
+    "grow": 8,
+    "blur": 12,
+    "padding": 64
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "odd.png"
+    }
+   },
+   "2": {
+    "class_type": "LoadImageMask",
+    "inputs": {
+     "image": "mask_rgb.png",
+     "channel": "red"
+    }
+   },
+   "3": {
+    "class_type": "ImageCrop",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "width": 765,
+     "height": 1001,
+     "x": 0,
+     "y": 0
+    }
+   },
+   "4": {
+    "class_type": "MaskToImage",
+    "inputs": {
+     "mask": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "ImageCrop",
+    "inputs": {
+     "image": [
+      "4",
+      0
+     ],
+     "width": 765,
+     "height": 1001,
+     "x": 0,
+     "y": 0
+    }
+   },
+   "6": {
+    "class_type": "ImageToMask",
+    "inputs": {
+     "channel": "red",
+     "image": [
+      "5",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "3",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 896,
+     "height": 1168,
+     "crop": "disabled"
+    }
+   },
+   "8": {
+    "class_type": "MaskToImage",
+    "inputs": {
+     "mask": [
+      "6",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "8",
+      0
+     ],
+     "upscale_method": "bilinear",
+     "width": 896,
+     "height": 1168,
+     "crop": "disabled"
+    }
+   },
+   "10": {
+    "class_type": "ImageToMask",
+    "inputs": {
+     "image": [
+      "9",
+      0
+     ],
+     "channel": "red"
+    }
+   },
+   "11": {
+    "class_type": "GrowMask",
+    "inputs": {
+     "mask": [
+      "10",
+      0
+     ],
+     "expand": 9,
+     "tapered_corners": true
+    }
+   },
+   "12": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "13": {
+    "class_type": "ModelPatchLoader",
+    "inputs": {
+     "name": "anima-lllite-inpainting-v2.safetensors"
+    }
+   },
+   "14": {
+    "class_type": "AnimaLLLiteApply",
+    "inputs": {
+     "model": [
+      "12",
+      0
+     ],
+     "model_patch": [
+      "13",
+      0
+     ],
+     "image": [
+      "7",
+      0
+     ],
+     "strength": 1.0,
+     "start_percent": 0.0,
+     "end_percent": 1.0,
+     "mask": [
+      "11",
+      0
+     ]
+    }
+   },
+   "15": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "16": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "15",
+      0
+     ]
+    }
+   },
+   "17": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "15",
+      0
+     ]
+    }
+   },
+   "18": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "19": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "7",
+      0
+     ],
+     "vae": [
+      "18",
+      0
+     ]
+    }
+   },
+   "20": {
+    "class_type": "SetLatentNoiseMask",
+    "inputs": {
+     "samples": [
+      "19",
+      0
+     ],
+     "mask": [
+      "11",
+      0
+     ]
+    }
+   },
+   "21": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "14",
+      0
+     ],
+     "positive": [
+      "16",
+      0
+     ],
+     "negative": [
+      "17",
+      0
+     ],
+     "latent_image": [
+      "20",
+      0
+     ],
+     "seed": 4,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "22": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "21",
+      0
+     ],
+     "vae": [
+      "18",
+      0
+     ]
+    }
+   },
+   "23": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "22",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 765,
+     "height": 1001,
+     "crop": "disabled"
+    }
+   },
+   "24": {
+    "class_type": "GrowMask",
+    "inputs": {
+     "mask": [
+      "6",
+      0
+     ],
+     "expand": 8,
+     "tapered_corners": true
+    }
+   },
+   "25": {
+    "class_type": "MaskToImage",
+    "inputs": {
+     "mask": [
+      "24",
+      0
+     ]
+    }
+   },
+   "26": {
+    "class_type": "ImageBlur",
+    "inputs": {
+     "image": [
+      "25",
+      0
+     ],
+     "blur_radius": 12,
+     "sigma": 6.0
+    }
+   },
+   "27": {
+    "class_type": "ImageToMask",
+    "inputs": {
+     "image": [
+      "26",
+      0
+     ],
+     "channel": "red"
+    }
+   },
+   "28": {
+    "class_type": "ImageCompositeMasked",
+    "inputs": {
+     "destination": [
+      "1",
+      0
+     ],
+     "source": [
+      "23",
+      0
+     ],
+     "x": 0,
+     "y": 0,
+     "resize_source": false,
+     "mask": [
+      "27",
+      0
+     ]
+    }
+   },
+   "29": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "28",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/inpaint"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 4,
+   "width": 777,
+   "height": 1001,
+   "mode": "inpaint",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "inpaint grow 0 blur 0",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "inpaint",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 4,
+   "init_image": "init.png",
+   "mask": "mask.png",
+   "inpaint": {
+    "method": "lllite",
+    "area": "full",
+    "grow": 0,
+    "blur": 0,
+    "padding": 64
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "init.png"
+    }
+   },
+   "2": {
+    "class_type": "LoadImageMask",
+    "inputs": {
+     "image": "mask.png",
+     "channel": "red"
+    }
+   },
+   "3": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 880,
+     "height": 1184,
+     "crop": "disabled"
+    }
+   },
+   "4": {
+    "class_type": "MaskToImage",
+    "inputs": {
+     "mask": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "4",
+      0
+     ],
+     "upscale_method": "bilinear",
+     "width": 880,
+     "height": 1184,
+     "crop": "disabled"
+    }
+   },
+   "6": {
+    "class_type": "ImageToMask",
+    "inputs": {
+     "image": [
+      "5",
+      0
+     ],
+     "channel": "red"
+    }
+   },
+   "7": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "8": {
+    "class_type": "ModelPatchLoader",
+    "inputs": {
+     "name": "anima-lllite-inpainting-v2.safetensors"
+    }
+   },
+   "9": {
+    "class_type": "AnimaLLLiteApply",
+    "inputs": {
+     "model": [
+      "7",
+      0
+     ],
+     "model_patch": [
+      "8",
+      0
+     ],
+     "image": [
+      "3",
+      0
+     ],
+     "strength": 1.0,
+     "start_percent": 0.0,
+     "end_percent": 1.0,
+     "mask": [
+      "6",
+      0
+     ]
+    }
+   },
+   "10": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "11": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "10",
+      0
+     ]
+    }
+   },
+   "12": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "10",
+      0
+     ]
+    }
+   },
+   "13": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "14": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "3",
+      0
+     ],
+     "vae": [
+      "13",
+      0
+     ]
+    }
+   },
+   "15": {
+    "class_type": "SetLatentNoiseMask",
+    "inputs": {
+     "samples": [
+      "14",
+      0
+     ],
+     "mask": [
+      "6",
+      0
+     ]
+    }
+   },
+   "16": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "9",
+      0
+     ],
+     "positive": [
+      "11",
+      0
+     ],
+     "negative": [
+      "12",
+      0
+     ],
+     "latent_image": [
+      "15",
+      0
+     ],
+     "seed": 4,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 1.0
+    }
+   },
+   "17": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "16",
+      0
+     ],
+     "vae": [
+      "13",
+      0
+     ]
+    }
+   },
+   "18": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "17",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 1086,
+     "height": 1448,
+     "crop": "disabled"
+    }
+   },
+   "19": {
+    "class_type": "ImageCompositeMasked",
+    "inputs": {
+     "destination": [
+      "1",
+      0
+     ],
+     "source": [
+      "18",
+      0
+     ],
+     "x": 0,
+     "y": 0,
+     "resize_source": false,
+     "mask": [
+      "2",
+      0
+     ]
+    }
+   },
+   "20": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "19",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/inpaint"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 4,
+   "width": 1086,
+   "height": 1448,
+   "mode": "inpaint",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "inpaint qwen masked",
+  "params": {
+   "model": "NoctQ_v3_Turbo_int8.safetensors",
+   "family": "qwen21",
+   "steps": 6,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "inpaint",
+   "prompt": "a",
+   "negative": "",
+   "seed": 4,
+   "init_image": "init.png",
+   "mask": "mask.png",
+   "denoise": 0.9,
+   "inpaint": {
+    "method": "lllite",
+    "area": "masked",
+    "grow": 8,
+    "blur": 12,
+    "padding": 64
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "init.png"
+    }
+   },
+   "2": {
+    "class_type": "LoadImageMask",
+    "inputs": {
+     "image": "mask.png",
+     "channel": "red"
+    }
+   },
+   "3": {
+    "class_type": "ImageCrop",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "width": 449,
+     "height": 506,
+     "x": 236,
+     "y": 336
+    }
+   },
+   "4": {
+    "class_type": "MaskToImage",
+    "inputs": {
+     "mask": [
+      "2",
+      0
+     ]
+    }
+   },
+   "5": {
+    "class_type": "ImageCrop",
+    "inputs": {
+     "image": [
+      "4",
+      0
+     ],
+     "width": 449,
+     "height": 506,
+     "x": 236,
+     "y": 336
+    }
+   },
+   "6": {
+    "class_type": "ImageToMask",
+    "inputs": {
+     "channel": "red",
+     "image": [
+      "5",
+      0
+     ]
+    }
+   },
+   "7": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "3",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 960,
+     "height": 1088,
+     "crop": "disabled"
+    }
+   },
+   "8": {
+    "class_type": "MaskToImage",
+    "inputs": {
+     "mask": [
+      "6",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "8",
+      0
+     ],
+     "upscale_method": "bilinear",
+     "width": 960,
+     "height": 1088,
+     "crop": "disabled"
+    }
+   },
+   "10": {
+    "class_type": "ImageToMask",
+    "inputs": {
+     "image": [
+      "9",
+      0
+     ],
+     "channel": "red"
+    }
+   },
+   "11": {
+    "class_type": "GrowMask",
+    "inputs": {
+     "mask": [
+      "10",
+      0
+     ],
+     "expand": 17,
+     "tapered_corners": true
+    }
+   },
+   "12": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "NoctQ_v3_Turbo_int8.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "13": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+   },
+   "14": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_8b_w4a8.safetensors",
+     "type": "qwen_image",
+     "device": "default"
+    }
+   },
+   "15": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+     "clip": [
+      "14",
+      0
+     ],
+     "prompt": "a",
+     "negative_prompt": "",
+     "resolution": 0,
+     "images.image_1": [
+      "7",
+      0
+     ],
+     "vae": [
+      "13",
+      0
+     ]
+    }
+   },
+   "16": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "7",
+      0
+     ],
+     "vae": [
+      "13",
+      0
+     ]
+    }
+   },
+   "17": {
+    "class_type": "SetLatentNoiseMask",
+    "inputs": {
+     "samples": [
+      "16",
+      0
+     ],
+     "mask": [
+      "11",
+      0
+     ]
+    }
+   },
+   "18": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "model": [
+      "12",
+      0
+     ],
+     "positive": [
+      "15",
+      0
+     ],
+     "negative": [
+      "15",
+      1
+     ],
+     "cfg": 1.0
+    }
+   },
+   "19": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 4
+    }
+   },
+   "20": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "21": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "0.947348, 0.933308, 0.857093, 0.666577, 0.399903, 0.000000"
+    }
+   },
+   "22": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "noise": [
+      "19",
+      0
+     ],
+     "guider": [
+      "18",
+      0
+     ],
+     "sampler": [
+      "20",
+      0
+     ],
+     "sigmas": [
+      "21",
+      0
+     ],
+     "latent_image": [
+      "17",
+      0
+     ]
+    }
+   },
+   "23": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "22",
+      0
+     ],
+     "vae": [
+      "13",
+      0
+     ]
+    }
+   },
+   "24": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "23",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 449,
+     "height": 506,
+     "crop": "disabled"
+    }
+   },
+   "25": {
+    "class_type": "GrowMask",
+    "inputs": {
+     "mask": [
+      "6",
+      0
+     ],
+     "expand": 8,
+     "tapered_corners": true
+    }
+   },
+   "26": {
+    "class_type": "MaskToImage",
+    "inputs": {
+     "mask": [
+      "25",
+      0
+     ]
+    }
+   },
+   "27": {
+    "class_type": "ImageBlur",
+    "inputs": {
+     "image": [
+      "26",
+      0
+     ],
+     "blur_radius": 12,
+     "sigma": 6.0
+    }
+   },
+   "28": {
+    "class_type": "ImageToMask",
+    "inputs": {
+     "image": [
+      "27",
+      0
+     ],
+     "channel": "red"
+    }
+   },
+   "29": {
+    "class_type": "ImageCompositeMasked",
+    "inputs": {
+     "destination": [
+      "1",
+      0
+     ],
+     "source": [
+      "24",
+      0
+     ],
+     "x": 236,
+     "y": 336,
+     "resize_source": false,
+     "mask": [
+      "28",
+      0
+     ]
+    }
+   },
+   "30": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "29",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/inpaint"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "",
+   "seed": 4,
+   "width": 1086,
+   "height": 1448,
+   "mode": "inpaint",
+   "family": "qwen21"
+  }
+ },
+ {
+  "name": "inpaint empty mask",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "inpaint",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 4,
+   "init_image": "init.png",
+   "mask": "mask_empty.png",
+   "inpaint": {
+    "method": "lllite",
+    "area": "masked",
+    "grow": 8,
+    "blur": 12,
+    "padding": 64
+   }
+  },
+  "offset": 0,
+  "error": "遮罩是空的，請先在圖上塗出要重繪的區域"
+ },
+ {
+  "name": "multiref auto",
+  "params": {
+   "model": "NoctQ_v3_Turbo_int8.safetensors",
+   "family": "qwen21",
+   "steps": 6,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "multiref",
+   "prompt": "<image1> wears <image2> in <image3>",
+   "negative": "",
+   "seed": 8,
+   "refs": [
+    {
+     "image": "init.png",
+     "role": "base"
+    },
+    {
+     "image": "odd.png",
+     "role": "outfit"
+    },
+    {
+     "image": "wide.png",
+     "role": "scene"
+    },
+    {
+     "image": "",
+     "role": "x"
+    }
+   ],
+   "size_mode": "auto",
+   "pixels": 1048576,
+   "ref_pixels": 524288
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "init.png"
+    }
+   },
+   "2": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 896,
+     "height": 1184,
+     "crop": "center"
+    }
+   },
+   "3": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "odd.png"
+    }
+   },
+   "4": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "3",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 640,
+     "height": 832,
+     "crop": "center"
+    }
+   },
+   "5": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "wide.png"
+    }
+   },
+   "6": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "5",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 960,
+     "height": 544,
+     "crop": "center"
+    }
+   },
+   "7": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "NoctQ_v3_Turbo_int8.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "8": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+   },
+   "9": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_8b_w4a8.safetensors",
+     "type": "qwen_image",
+     "device": "default"
+    }
+   },
+   "10": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+     "clip": [
+      "9",
+      0
+     ],
+     "prompt": "<image1> wears <image2> in <image3>",
+     "negative_prompt": "",
+     "resolution": 0,
+     "images.image_1": [
+      "2",
+      0
+     ],
+     "images.image_2": [
+      "4",
+      0
+     ],
+     "images.image_3": [
+      "6",
+      0
+     ],
+     "vae": [
+      "8",
+      0
+     ]
+    }
+   },
+   "11": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "model": [
+      "7",
+      0
+     ],
+     "positive": [
+      "10",
+      0
+     ],
+     "negative": [
+      "10",
+      1
+     ],
+     "cfg": 1.0
+    }
+   },
+   "12": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 8
+    }
+   },
+   "13": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "14": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "1.000000, 0.967830, 0.933509, 0.857488, 0.667293, 0.400677, 0.000000"
+    }
+   },
+   "15": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "noise": [
+      "12",
+      0
+     ],
+     "guider": [
+      "11",
+      0
+     ],
+     "sampler": [
+      "13",
+      0
+     ],
+     "sigmas": [
+      "14",
+      0
+     ],
+     "latent_image": [
+      "10",
+      2
+     ]
+    }
+   },
+   "16": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "15",
+      0
+     ],
+     "vae": [
+      "8",
+      0
+     ]
+    }
+   },
+   "17": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "16",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/multiref"
+    }
+   }
+  },
+  "info": {
+   "prompt": "<image1> wears <image2> in <image3>",
+   "negative": "",
+   "seed": 8,
+   "width": 896,
+   "height": 1184,
+   "mode": "multiref",
+   "family": "qwen21"
+  }
+ },
+ {
+  "name": "multiref fixed + lora",
+  "params": {
+   "model": "NoctQ_v4_Base_int8.safetensors",
+   "family": "qwen21",
+   "steps": 25,
+   "cfg": 3,
+   "sampler": "er_sde",
+   "scheduler": "beta",
+   "mode": "multiref",
+   "prompt": "group photo",
+   "negative": "",
+   "seed": 8,
+   "refs": [
+    {
+     "image": "init.png",
+     "role": "base"
+    },
+    {
+     "image": "odd.png",
+     "role": "outfit"
+    }
+   ],
+   "size_mode": "fixed",
+   "width": 1216,
+   "height": 832,
+   "loras": [
+    {
+     "name": "a.safetensors",
+     "strength": 0.8
+    }
+   ]
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "init.png"
+    }
+   },
+   "2": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "1",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 640,
+     "height": 832,
+     "crop": "center"
+    }
+   },
+   "3": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "odd.png"
+    }
+   },
+   "4": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "3",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 640,
+     "height": 832,
+     "crop": "center"
+    }
+   },
+   "5": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "NoctQ_v4_Base_int8.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "6": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+     "model": [
+      "5",
+      0
+     ],
+     "lora_name": "a.safetensors",
+     "strength_model": 0.8
+    }
+   },
+   "7": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+   },
+   "8": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_8b_w4a8.safetensors",
+     "type": "qwen_image",
+     "device": "default"
+    }
+   },
+   "9": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+     "clip": [
+      "8",
+      0
+     ],
+     "prompt": "group photo",
+     "negative_prompt": "",
+     "resolution": 0,
+     "images.image_1": [
+      "2",
+      0
+     ],
+     "images.image_2": [
+      "4",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "10": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+     "width": 1216,
+     "height": 832,
+     "batch_size": 1
+    }
+   },
+   "11": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "6",
+      0
+     ],
+     "positive": [
+      "9",
+      0
+     ],
+     "negative": [
+      "9",
+      1
+     ],
+     "latent_image": [
+      "10",
+      0
+     ],
+     "seed": 8,
+     "steps": 25,
+     "cfg": 3.0,
+     "sampler_name": "er_sde",
+     "scheduler": "beta",
+     "denoise": 1.0
+    }
+   },
+   "12": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "11",
+      0
+     ],
+     "vae": [
+      "7",
+      0
+     ]
+    }
+   },
+   "13": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "12",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/multiref"
+    }
+   }
+  },
+  "info": {
+   "prompt": "group photo",
+   "negative": "",
+   "seed": 8,
+   "width": 1216,
+   "height": 832,
+   "mode": "multiref",
+   "family": "qwen21"
+  }
+ },
+ {
+  "name": "multiref anima error",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "multiref",
+   "prompt": "x",
+   "negative": "",
+   "seed": 8,
+   "refs": [
+    {
+     "image": "init.png",
+     "role": "base"
+    },
+    {
+     "image": "odd.png",
+     "role": "outfit"
+    },
+    {
+     "image": "wide.png",
+     "role": "scene"
+    },
+    {
+     "image": "",
+     "role": "x"
+    }
+   ]
+  },
+  "offset": 0,
+  "error": "多圖參考只支援 Qwen 2.1 模型（Noct Q），請先在「模型」換成 Qwen 2.1"
+ },
+ {
+  "name": "multiref empty error",
+  "params": {
+   "model": "NoctQ_v3_Turbo_int8.safetensors",
+   "family": "qwen21",
+   "steps": 6,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "multiref",
+   "prompt": "x",
+   "negative": "",
+   "seed": 8,
+   "refs": [
+    {
+     "image": ""
+    }
+   ]
+  },
+  "offset": 0,
+  "error": "請先加入至少一張參考圖"
+ },
+ {
+  "name": "upscale anima",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "upscale",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 2,
+   "init_image": "init.png",
+   "upscale": {
+    "upscaler": "4x-AnimeSharp.safetensors",
+    "scale": 2,
+    "refine": false
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UpscaleModelLoader",
+    "inputs": {
+     "model_name": "4x-AnimeSharp.safetensors"
+    }
+   },
+   "2": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "init.png"
+    }
+   },
+   "3": {
+    "class_type": "ImageUpscaleWithModel",
+    "inputs": {
+     "upscale_model": [
+      "1",
+      0
+     ],
+     "image": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "3",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 2176,
+     "height": 2896,
+     "crop": "disabled"
+    }
+   },
+   "5": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "4",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/upscale"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 2,
+   "width": 2176,
+   "height": 2896,
+   "mode": "upscale",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "upscale anima 1.5 refine",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "upscale",
+   "prompt": "a",
+   "negative": "b",
+   "seed": 2,
+   "init_image": "odd.png",
+   "upscale": {
+    "upscaler": "4x-AnimeSharp.safetensors",
+    "scale": 1.5,
+    "refine": true,
+    "denoise": 0.3
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UpscaleModelLoader",
+    "inputs": {
+     "model_name": "4x-AnimeSharp.safetensors"
+    }
+   },
+   "2": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "odd.png"
+    }
+   },
+   "3": {
+    "class_type": "ImageUpscaleWithModel",
+    "inputs": {
+     "upscale_model": [
+      "1",
+      0
+     ],
+     "image": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "3",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 1168,
+     "height": 1504,
+     "crop": "disabled"
+    }
+   },
+   "5": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "anima-turbo-v1.1.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "6": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen_3_06b_base.safetensors",
+     "type": "stable_diffusion",
+     "device": "default"
+    }
+   },
+   "7": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "a",
+     "clip": [
+      "6",
+      0
+     ]
+    }
+   },
+   "8": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+     "text": "b",
+     "clip": [
+      "6",
+      0
+     ]
+    }
+   },
+   "9": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_vae.safetensors"
+    }
+   },
+   "10": {
+    "class_type": "VAEEncode",
+    "inputs": {
+     "pixels": [
+      "4",
+      0
+     ],
+     "vae": [
+      "9",
+      0
+     ]
+    }
+   },
+   "11": {
+    "class_type": "KSampler",
+    "inputs": {
+     "model": [
+      "5",
+      0
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "negative": [
+      "8",
+      0
+     ],
+     "latent_image": [
+      "10",
+      0
+     ],
+     "seed": 2,
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler_name": "euler",
+     "scheduler": "simple",
+     "denoise": 0.3
+    }
+   },
+   "12": {
+    "class_type": "VAEDecode",
+    "inputs": {
+     "samples": [
+      "11",
+      0
+     ],
+     "vae": [
+      "9",
+      0
+     ]
+    }
+   },
+   "13": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "12",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/upscale"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "b",
+   "seed": 2,
+   "width": 1168,
+   "height": 1504,
+   "mode": "upscale",
+   "family": "anima"
+  }
+ },
+ {
+  "name": "upscale qwen refine",
+  "params": {
+   "model": "NoctQ_v3_Turbo_int8.safetensors",
+   "family": "qwen21",
+   "steps": 6,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "upscale",
+   "prompt": "a",
+   "negative": "",
+   "seed": 2,
+   "init_image": "small.png",
+   "upscale": {
+    "upscaler": "RealESRGAN_x4plus_anime_6B.pth",
+    "scale": 3,
+    "refine": true,
+    "denoise": 0.25
+   }
+  },
+  "offset": 0,
+  "nodes": {
+   "1": {
+    "class_type": "UpscaleModelLoader",
+    "inputs": {
+     "model_name": "RealESRGAN_x4plus_anime_6B.pth"
+    }
+   },
+   "2": {
+    "class_type": "LoadImage",
+    "inputs": {
+     "image": "small.png"
+    }
+   },
+   "3": {
+    "class_type": "ImageUpscaleWithModel",
+    "inputs": {
+     "upscale_model": [
+      "1",
+      0
+     ],
+     "image": [
+      "2",
+      0
+     ]
+    }
+   },
+   "4": {
+    "class_type": "ImageScale",
+    "inputs": {
+     "image": [
+      "3",
+      0
+     ],
+     "upscale_method": "lanczos",
+     "width": 1536,
+     "height": 1920,
+     "crop": "disabled"
+    }
+   },
+   "5": {
+    "class_type": "UNETLoader",
+    "inputs": {
+     "unet_name": "NoctQ_v3_Turbo_int8.safetensors",
+     "weight_dtype": "default"
+    }
+   },
+   "6": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+     "clip_name": "qwen3vl_8b_w4a8.safetensors",
+     "type": "qwen_image",
+     "device": "default"
+    }
+   },
+   "7": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+     "clip": [
+      "6",
+      0
+     ],
+     "prompt": "a",
+     "negative_prompt": "",
+     "resolution": 0
+    }
+   },
+   "8": {
+    "class_type": "VAELoader",
+    "inputs": {
+     "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+   },
+   "9": {
+    "class_type": "VAEEncodeTiled",
+    "inputs": {
+     "pixels": [
+      "4",
+      0
+     ],
+     "vae": [
+      "8",
+      0
+     ],
+     "tile_size": 512,
+     "overlap": 64,
+     "temporal_size": 64,
+     "temporal_overlap": 8
+    }
+   },
+   "10": {
+    "class_type": "CFGGuider",
+    "inputs": {
+     "model": [
+      "5",
+      0
+     ],
+     "positive": [
+      "7",
+      0
+     ],
+     "negative": [
+      "7",
+      1
+     ],
+     "cfg": 1.0
+    }
+   },
+   "11": {
+    "class_type": "RandomNoise",
+    "inputs": {
+     "noise_seed": 2
+    }
+   },
+   "12": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+     "sampler_name": "euler"
+    }
+   },
+   "13": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+     "sigmas": "0.492283, 0.000000"
+    }
+   },
+   "14": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+     "noise": [
+      "11",
+      0
+     ],
+     "guider": [
+      "10",
+      0
+     ],
+     "sampler": [
+      "12",
+      0
+     ],
+     "sigmas": [
+      "13",
+      0
+     ],
+     "latent_image": [
+      "9",
+      0
+     ]
+    }
+   },
+   "15": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+     "samples": [
+      "14",
+      0
+     ],
+     "vae": [
+      "8",
+      0
+     ],
+     "tile_size": 512,
+     "overlap": 64,
+     "temporal_size": 64,
+     "temporal_overlap": 8
+    }
+   },
+   "16": {
+    "class_type": "SaveImage",
+    "inputs": {
+     "images": [
+      "15",
+      0
+     ],
+     "filename_prefix": "AnimaWeb/upscale"
+    }
+   }
+  },
+  "info": {
+   "prompt": "a",
+   "negative": "",
+   "seed": 2,
+   "width": 1536,
+   "height": 1920,
+   "mode": "upscale",
+   "family": "qwen21"
+  }
+ },
+ {
+  "name": "unknown mode",
+  "params": {
+   "model": "anima-turbo-v1.1.safetensors",
+   "family": "anima",
+   "steps": 8,
+   "cfg": 1,
+   "sampler": "euler",
+   "scheduler": "simple",
+   "mode": "warp",
+   "prompt": "a",
+   "negative": "",
+   "seed": 1
+  },
+  "offset": 0,
+  "error": "未知的模式：warp"
+ }
+]

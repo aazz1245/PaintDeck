@@ -1,0 +1,782 @@
+{
+ "last_node_id": 999,
+ "last_link_id": 18,
+ "nodes": [
+  {
+   "id": 1,
+   "type": "UNETLoader",
+   "pos": [
+    40,
+    40
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "links": [
+      1
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "UNETLoader"
+   },
+   "widgets_values": [
+    "anima-turbo-v1.1.safetensors",
+    "default"
+   ]
+  },
+  {
+   "id": 2,
+   "type": "LoraLoaderModelOnly",
+   "pos": [
+    40,
+    190
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 1
+    }
+   ],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "links": [
+      4
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "LoraLoaderModelOnly"
+   },
+   "widgets_values": [
+    "anima-highres-aesthetic-boost.safetensors",
+    0.6
+   ]
+  },
+  {
+   "id": 3,
+   "type": "ModelPatchLoader",
+   "pos": [
+    40,
+    350
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 2,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "MODEL_PATCH",
+     "type": "MODEL_PATCH",
+     "links": [
+      5
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "ModelPatchLoader"
+   },
+   "widgets_values": [
+    "anima-lllite-inpainting-v2.safetensors"
+   ]
+  },
+  {
+   "id": 4,
+   "type": "CLIPLoader",
+   "pos": [
+    40,
+    510
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 3,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "CLIP",
+     "type": "CLIP",
+     "links": [
+      2,
+      3
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CLIPLoader"
+   },
+   "widgets_values": [
+    "qwen_3_06b_base.safetensors",
+    "stable_diffusion",
+    "default"
+   ]
+  },
+  {
+   "id": 5,
+   "type": "VAELoader",
+   "pos": [
+    40,
+    670
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 4,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "VAE",
+     "type": "VAE",
+     "links": [
+      9,
+      17
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAELoader"
+   },
+   "widgets_values": [
+    "qwen_image_vae.safetensors"
+   ]
+  },
+  {
+   "id": 6,
+   "type": "LoadImage",
+   "pos": [
+    40,
+    830
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      6,
+      8
+     ],
+     "slot_index": 0
+    },
+    {
+     "name": "MASK",
+     "type": "MASK",
+     "links": [],
+     "slot_index": 1
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "inpaint_src.png",
+    "image"
+   ]
+  },
+  {
+   "id": 7,
+   "type": "LoadImageMask",
+   "pos": [
+    40,
+    990
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 6,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "MASK",
+     "type": "MASK",
+     "links": [
+      7,
+      11
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "LoadImageMask"
+   },
+   "widgets_values": [
+    "inpaint_mask.png",
+    "red"
+   ]
+  },
+  {
+   "id": 8,
+   "type": "CLIPTextEncode",
+   "pos": [
+    430,
+    40
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 7,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "clip",
+     "type": "CLIP",
+     "link": 2
+    }
+   ],
+   "outputs": [
+    {
+     "name": "CONDITIONING",
+     "type": "CONDITIONING",
+     "links": [
+      13
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CLIPTextEncode"
+   },
+   "widgets_values": [
+    "masterpiece, best quality, 1girl, solo, uncensored, completely nude, detailed pussy, detailed anus, spread legs, lying on back, soft skin, smooth shading, natural skin tone, matching lighting, soft shadows, detailed anatomy, consistent artstyle"
+   ]
+  },
+  {
+   "id": 9,
+   "type": "CLIPTextEncode",
+   "pos": [
+    430,
+    250
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 8,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "clip",
+     "type": "CLIP",
+     "link": 3
+    }
+   ],
+   "outputs": [
+    {
+     "name": "CONDITIONING",
+     "type": "CONDITIONING",
+     "links": [
+      14
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CLIPTextEncode"
+   },
+   "widgets_values": [
+    "censored, mosaic censoring, bar censor, pixelated, blurry, worst quality, low quality, score_1, score_2, score_3, jpeg artifacts, bad anatomy, bad hands, extra fingers, extra limbs, deformed, watermark, text, signature, seam, hard edges, discoloration, different artstyle, photorealistic, 3d"
+   ]
+  },
+  {
+   "id": 10,
+   "type": "AnimaLLLiteApply",
+   "pos": [
+    430,
+    450
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 9,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 4
+    },
+    {
+     "name": "model_patch",
+     "type": "MODEL_PATCH",
+     "link": 5
+    },
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "link": 6
+    },
+    {
+     "name": "mask",
+     "type": "MASK",
+     "link": 7
+    }
+   ],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "links": [
+      12
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "AnimaLLLiteApply"
+   },
+   "widgets_values": [
+    1.0,
+    0.0,
+    1.0
+   ]
+  },
+  {
+   "id": 11,
+   "type": "VAEEncode",
+   "pos": [
+    430,
+    720
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 10,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "pixels",
+     "type": "IMAGE",
+     "link": 8
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 9
+    }
+   ],
+   "outputs": [
+    {
+     "name": "LATENT",
+     "type": "LATENT",
+     "links": [
+      10
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAEEncode"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 12,
+   "type": "SetLatentNoiseMask",
+   "pos": [
+    430,
+    860
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 11,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "samples",
+     "type": "LATENT",
+     "link": 10
+    },
+    {
+     "name": "mask",
+     "type": "MASK",
+     "link": 11
+    }
+   ],
+   "outputs": [
+    {
+     "name": "LATENT",
+     "type": "LATENT",
+     "links": [
+      15
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SetLatentNoiseMask"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 13,
+   "type": "KSampler",
+   "pos": [
+    830,
+    40
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 12,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 12
+    },
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "link": 13
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "link": 14
+    },
+    {
+     "name": "latent_image",
+     "type": "LATENT",
+     "link": 15
+    }
+   ],
+   "outputs": [
+    {
+     "name": "LATENT",
+     "type": "LATENT",
+     "links": [
+      16
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "KSampler"
+   },
+   "widgets_values": [
+    0,
+    "fixed",
+    8,
+    1.0,
+    "euler",
+    "simple",
+    1.0
+   ]
+  },
+  {
+   "id": 14,
+   "type": "VAEDecode",
+   "pos": [
+    830,
+    400
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 13,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "samples",
+     "type": "LATENT",
+     "link": 16
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 17
+    }
+   ],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      18
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAEDecode"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 15,
+   "type": "SaveImage",
+   "pos": [
+    830,
+    560
+   ],
+   "size": [
+    330,
+    110
+   ],
+   "flags": {},
+   "order": 14,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 18
+    }
+   ],
+   "outputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "links": [],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "anima_inpaint"
+   ]
+  },
+  {
+   "id": 999,
+   "type": "Note",
+   "pos": [
+    1300,
+    40
+   ],
+   "size": [
+    460,
+    620
+   ],
+   "flags": {},
+   "order": 15,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [],
+   "properties": {},
+   "color": "#432",
+   "bgcolor": "#653",
+   "widgets_values": [
+    "inpaint 除碼（Anima + anima-lllite-inpainting-v2）\n\n1. 遮罩是灰階 PNG，白色＝要重畫。邊緣羽化 4~8px，硬邊會留接縫。\n2. 被碼那區如果看得出格線，先模糊掉再跑（模型會順著格子畫方塊）。\n   工具包：tools/comfyui/inpaint.py prep --image ... --mask ... --blur 8\n3. AnimaLLLiteApply 的 image 餵**原圖**就好，不用自己抹——\n   這個 patch 的 inpaint_masked_input=true，它會自己把遮罩區歸零再當條件。\n4. SetLatentNoiseMask 只保證潛空間裡沒被遮到的部分不動，整張圖還是走了一次\n   VAE 編碼→解碼，顏色會整體位移。**產出不要整張拿去用**，\n   只把遮罩區貼回原圖：tools/comfyui/inpaint.py run ... --paste-into 原圖.png\n5. 局部做比整張做好：--crop x0,y0,x1,y1 --scale 2（裁切→放大→重繪→縮回貼上）。\n   8 GB VRAM 跑 1024² 很順，1920×1080 會很痛苦。\n6. 差分圖要一致：同一組 seed ＋ 同一組提示詞，或先畫一張再貼到角度相近的差分。\n\n模型路徑（實測這台）：D:\\AI\\ComfyUI_models ← E:\\AI\\ComfyUI_windows_portable\\ComfyUI\\models\n"
+   ]
+  }
+ ],
+ "links": [
+  [
+   1,
+   1,
+   0,
+   2,
+   0,
+   "MODEL"
+  ],
+  [
+   2,
+   4,
+   0,
+   8,
+   0,
+   "CLIP"
+  ],
+  [
+   3,
+   4,
+   0,
+   9,
+   0,
+   "CLIP"
+  ],
+  [
+   4,
+   2,
+   0,
+   10,
+   0,
+   "MODEL"
+  ],
+  [
+   5,
+   3,
+   0,
+   10,
+   1,
+   "MODEL_PATCH"
+  ],
+  [
+   6,
+   6,
+   0,
+   10,
+   2,
+   "IMAGE"
+  ],
+  [
+   7,
+   7,
+   0,
+   10,
+   3,
+   "MASK"
+  ],
+  [
+   8,
+   6,
+   0,
+   11,
+   0,
+   "IMAGE"
+  ],
+  [
+   9,
+   5,
+   0,
+   11,
+   1,
+   "VAE"
+  ],
+  [
+   10,
+   11,
+   0,
+   12,
+   0,
+   "LATENT"
+  ],
+  [
+   11,
+   7,
+   0,
+   12,
+   1,
+   "MASK"
+  ],
+  [
+   12,
+   10,
+   0,
+   13,
+   0,
+   "MODEL"
+  ],
+  [
+   13,
+   8,
+   0,
+   13,
+   1,
+   "CONDITIONING"
+  ],
+  [
+   14,
+   9,
+   0,
+   13,
+   2,
+   "CONDITIONING"
+  ],
+  [
+   15,
+   12,
+   0,
+   13,
+   3,
+   "LATENT"
+  ],
+  [
+   16,
+   13,
+   0,
+   14,
+   0,
+   "LATENT"
+  ],
+  [
+   17,
+   5,
+   0,
+   14,
+   1,
+   "VAE"
+  ],
+  [
+   18,
+   14,
+   0,
+   15,
+   0,
+   "IMAGE"
+  ]
+ ],
+ "groups": [],
+ "config": {},
+ "extra": {
+  "ds": {
+   "scale": 0.9,
+   "offset": [
+    0,
+    0
+   ]
+  }
+ },
+ "version": 0.4
+}

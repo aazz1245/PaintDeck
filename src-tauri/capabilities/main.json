@@ -1,0 +1,18 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "主視窗：網頁由內建伺服器（127.0.0.1）提供，只開放視窗按鈕和拖曳標題列需要的權限",
+  "windows": ["main"],
+  "remote": {
+    "urls": ["http://127.0.0.1:*"]
+  },
+  "permissions": [
+    "core:default",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-internal-toggle-maximize",
+    "core:window:allow-start-dragging",
+    "allow-hide-window",
+    "allow-quit-app"
+  ]
+}

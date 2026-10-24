@@ -1,0 +1,2237 @@
+[
+ {
+  "id": "i2v_portrait_alive",
+  "name_zh": "人像動起來（呼吸、眨眼、微風）",
+  "group_zh": "圖生影片",
+  "mode": "i2v",
+  "desc_zh": "準備一張人物圖，讓她自然地動起來：眨眼、呼吸、頭髮與衣角被風吹動，鏡頭緩緩推近，沒有台詞。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫面風格",
+    "hint_zh": "要和圖 1 一致，例：Live-action cinematic 或 2D-animated",
+    "default_en": "Live-action, cinematic"
+   },
+   {
+    "key": "subject",
+    "label_zh": "人物簡述",
+    "hint_zh": "要和圖 1 對得上",
+    "default_en": "a young woman with long orange hair and orange eyes, wearing a white-and-orange short dress with sunflower patterns"
+   },
+   {
+    "key": "motion",
+    "label_zh": "想要的細微動作",
+    "hint_zh": "例：慢慢眨一次眼、嘴角微微上揚",
+    "default_en": "the subject blinks slowly once, the lips curve into a faint smile and the gaze drifts from the side toward the camera"
+   },
+   {
+    "key": "camera",
+    "label_zh": "鏡頭動作",
+    "hint_zh": "照官方運鏡詞彙寫",
+    "default_en": "pushes in with small amplitude at slow speed toward the face"
+   },
+   {
+    "key": "ambience",
+    "label_zh": "環境聲",
+    "hint_zh": "例：微風、遠處鳥叫",
+    "default_en": "a light breeze and distant birdsong"
+   }
+  ],
+  "media": {
+   "images": 1,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "圖 1＝要動起來的人物圖"
+  },
+  "seconds": 5,
+  "template_en": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] {style}, the subject shown in <Picture 1>, {subject}, stays in the pose, framing, clothing, lighting and background of <Picture 1>, preserving the face, hair color, outfit and every key detail. The chest rises and falls with a soft breath, strands of hair and the hem of the clothing sway in a light breeze, and {motion}. The camera {camera}, and the background keeps its depth with slow natural motion in the light.\n\noverall_soundscape: A quiet ambience of {ambience}, with a faint fabric rustle and a soft breath as the subject moves.\n\nnon_diegetic_music: N/A",
+  "tips_zh": [
+   "動作越小越自然；一次只要求 2～3 個小動作。",
+   "畫風請和你的圖一致（寫實就寫 Live-action，動漫就寫 2D-animated）。",
+   "沒有台詞，要說話請改用「角色對鏡頭說話」範本。"
+  ],
+  "icon": "i2i",
+  "slots": [
+   {
+    "slot": "first",
+    "kind": "image",
+    "role": "要動起來的人物圖"
+   }
+  ]
+ },
+ {
+  "id": "i2v_character_speaks",
+  "name_zh": "角色對鏡頭說話（圖生影片）",
+  "group_zh": "圖生影片",
+  "mode": "i2v",
+  "desc_zh": "準備一張角色正面圖，讓她對鏡頭說兩句中文台詞，嘴型跟著動，加上自然的表情與小手勢。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫面風格",
+    "hint_zh": "要和圖 1 一致",
+    "default_en": "Live-action, cinematic"
+   },
+   {
+    "key": "subject",
+    "label_zh": "人物簡述",
+    "hint_zh": "要和圖 1 對得上",
+    "default_en": "a young woman with long orange hair and orange eyes, wearing a white-and-orange short dress with sunflower patterns"
+   },
+   {
+    "key": "voice",
+    "label_zh": "聲音特徵",
+    "hint_zh": "音高、音色、語速",
+    "default_en": "a warm, slightly breathy mid-pitched voice at a calm, friendly pace"
+   },
+   {
+    "key": "line_1",
+    "label_zh": "第一句台詞",
+    "hint_zh": "15 字內",
+    "default_en": "嗨，終於見到你了。"
+   },
+   {
+    "key": "line_2",
+    "label_zh": "第二句台詞",
+    "hint_zh": "15 字內",
+    "default_en": "今天有好多事想跟你說。"
+   },
+   {
+    "key": "gesture",
+    "label_zh": "小手勢或表情",
+    "hint_zh": "例：右手輕輕揮一下、微微歪頭",
+    "default_en": "one hand rising in a small wave and the head tilting slightly"
+   }
+  ],
+  "media": {
+   "images": 1,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "圖 1＝角色正面或四分之三側面圖（臉清楚、嘴沒被擋住）"
+  },
+  "seconds": 10,
+  "template_en": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] {style}, the subject shown in <Picture 1>, {subject}, faces the camera in the framing, lighting and setting of <Picture 1>, keeping the face, hair, outfit and background unchanged. The camera pushes in with small amplitude at slow speed as the subject takes a small breath and, with {voice} (S1), says: <d>[Chinese] {line_1}</d> The lips and jaw follow every syllable and the eyes stay on the lens, with {gesture}. After a short pause, with a gentle blink, the subject says in the same voice (S1): <d>[Chinese] {line_2}</d> The expression softens into a warm smile, and the shoulders ease down as the last word ends.\n\noverall_soundscape: A quiet room tone with a faint breath before each sentence and a soft fabric rustle when the subject moves.\n\nnon_diegetic_music: N/A",
+  "tips_zh": [
+   "兩句台詞加起來約 30 字以內，10 秒才講得完。",
+   "圖 1 的嘴不要被頭髮或手遮住，嘴型會更準。",
+   "想要某個口音或情緒，寫進「聲音特徵」那格。"
+  ],
+  "icon": "i2i",
+  "slots": [
+   {
+    "slot": "first",
+    "kind": "image",
+    "role": "角色正面或四分之三側面圖（臉清楚、嘴沒被擋住）"
+   }
+  ]
+ },
+ {
+  "id": "i2v_landscape_ambient",
+  "name_zh": "風景圖活起來（雲、水、風）",
+  "group_zh": "圖生影片",
+  "mode": "i2v",
+  "desc_zh": "準備一張風景或場景圖，讓雲慢慢飄、水流動、樹葉搖，鏡頭緩緩前進，配上環境聲。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫面風格",
+    "hint_zh": "要和圖 1 一致",
+    "default_en": "Live-action, cinematic"
+   },
+   {
+    "key": "scene",
+    "label_zh": "場景簡述",
+    "hint_zh": "要和圖 1 對得上",
+    "default_en": "a quiet mountain lake at dawn with pine trees along the shore and thin mist over the water"
+   },
+   {
+    "key": "motion",
+    "label_zh": "想動的東西",
+    "hint_zh": "例：霧氣流動、湖面漣漪、樹梢搖晃",
+    "default_en": "mist drifts slowly across the water, small ripples spread from the shore and the pine tips sway"
+   },
+   {
+    "key": "camera",
+    "label_zh": "鏡頭動作",
+    "hint_zh": "用官方運鏡詞彙寫",
+    "default_en": "pushes in with small amplitude at slow speed over the lake"
+   },
+   {
+    "key": "sounds",
+    "label_zh": "環境聲",
+    "hint_zh": "例：水波輕拍、遠處鳥鳴、風聲",
+    "default_en": "water lapping softly at the shore, distant birdsong and a low breeze through the pines"
+   }
+  ],
+  "media": {
+   "images": 1,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "圖 1＝風景或場景圖"
+  },
+  "seconds": 10,
+  "template_en": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] {style}, the scene shown in <Picture 1>, {scene}, begins exactly in the composition, lighting and colors of <Picture 1>. Over the next ten seconds, {motion}, while the light changes only slightly and no people or objects enter the frame. The camera {camera}, and the foreground, midground and far background shift gently at different speeds, giving the scene a soft sense of depth.\n\noverall_soundscape: Ambient sound of {sounds}, with the quiet tone of open air underneath.\n\nnon_diegetic_music: A very sparse ambient pad at a slow tempo with a few widely spaced soft piano notes, gradually decreasing in volume until the end.",
+  "tips_zh": [
+   "不要在「想動的東西」裡寫太多，2～3 種自然動態最乾淨。",
+   "若圖裡有人，請改用「人像動起來」範本。",
+   "這個範本不加人物台詞，只有環境聲。"
+  ],
+  "icon": "i2i",
+  "slots": [
+   {
+    "slot": "first",
+    "kind": "image",
+    "role": "風景或場景圖"
+   }
+  ]
+ },
+ {
+  "id": "fl2v_scene_transition",
+  "name_zh": "首尾幀：場景轉變（日夜、季節、變形）",
+  "group_zh": "首尾幀",
+  "mode": "fl2v",
+  "desc_zh": "準備首幀與尾幀兩張圖，做 5 秒一鏡到底的轉變：光線、天氣或景物逐步從第一張變成第二張。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫面風格",
+    "hint_zh": "要和兩張圖一致",
+    "default_en": "Live-action, cinematic"
+   },
+   {
+    "key": "first_state",
+    "label_zh": "首幀畫面",
+    "hint_zh": "用一句話描述圖 1",
+    "default_en": "a small stone cottage on a green hillside in bright afternoon sun, window dark"
+   },
+   {
+    "key": "last_state",
+    "label_zh": "尾幀畫面",
+    "hint_zh": "用一句話描述圖 2",
+    "default_en": "the same cottage and hillside under a deep violet night sky, every window glowing warm gold"
+   },
+   {
+    "key": "camera",
+    "label_zh": "鏡頭動作",
+    "hint_zh": "照官方運鏡詞彙寫",
+    "default_en": "pushes in with small amplitude at slow speed"
+   },
+   {
+    "key": "change_path",
+    "label_zh": "中間逐步發生的變化",
+    "hint_zh": "一步一步寫出來",
+    "default_en": "the sun slides behind the hills, the sky shifts from gold through orange to deep violet, the shadows lengthen and fade, and the window lights of the cottage switch on one by one"
+   },
+   {
+    "key": "sounds",
+    "label_zh": "環境聲",
+    "hint_zh": "兩張圖之間的聲音變化",
+    "default_en": "birdsong fading into crickets, with a light evening breeze"
+   }
+  ],
+  "media": {
+   "images": 2,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "圖 1＝首幀、圖 2＝尾幀（構圖盡量接近，才能平順過渡）"
+  },
+  "seconds": 5,
+  "template_en": "How the reference pictures align with the target video — Picture 1 (from Shot 1) aligns with the 0.00-second mark of the target video; Picture 2 (from Shot 1) aligns with the {secs}-second mark of the target video.\n\nintegrated_multimodal_description: [Shot 1] {style}, the shot begins in the position and framing established by Picture 1, {first_state}. The camera {camera} while {change_path}. The differences between the two frames narrow step by step through continuous, observable changes, with no cut, until the shot settles into the composition, lighting and positions established by Picture 2 at the end of the shot, {last_state}.\n\noverall_soundscape: Ambient sound of {sounds}, changing gradually with the scene.\n\nnon_diegetic_music: N/A",
+  "tips_zh": [
+   "兩張圖的構圖越接近（機位、主體位置），過渡越自然。",
+   "「中間逐步發生的變化」要用一步一步的動作寫，不要只寫「變成」。",
+   "首尾幀盡量用單一鏡頭，除非你很明確要切鏡。"
+  ],
+  "icon": "slides",
+  "slots": [
+   {
+    "slot": "first",
+    "kind": "image",
+    "role": "首幀"
+   },
+   {
+    "slot": "last",
+    "kind": "image",
+    "role": "尾幀（構圖盡量接近，才能平順過渡）"
+   }
+  ]
+ },
+ {
+  "id": "fl2v_emotional_moment",
+  "name_zh": "首尾幀：情緒轉折（平靜到含淚微笑）",
+  "group_zh": "首尾幀",
+  "mode": "fl2v",
+  "desc_zh": "準備一張平靜的臉和一張含淚微笑的臉，做 5 秒特寫：角色讀完信，眼眶泛淚、嘴角慢慢上揚，輕聲說一句話。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫面風格",
+    "hint_zh": "要和兩張圖一致",
+    "default_en": "Live-action, cinematic"
+   },
+   {
+    "key": "subject",
+    "label_zh": "人物簡述",
+    "hint_zh": "要和兩張圖對得上",
+    "default_en": "a young woman with long dark hair and a cream knit sweater"
+   },
+   {
+    "key": "first_state",
+    "label_zh": "首幀的表情與姿勢",
+    "hint_zh": "圖 1",
+    "default_en": "a composed, quiet face looking down at a folded letter held in both hands"
+   },
+   {
+    "key": "last_state",
+    "label_zh": "尾幀的表情與姿勢",
+    "hint_zh": "圖 2",
+    "default_en": "a tearful smile with eyes lifted and glistening, the letter held against the chest"
+   },
+   {
+    "key": "trigger",
+    "label_zh": "引發情緒的事",
+    "hint_zh": "一個具體動作",
+    "default_en": "reaches the last line of the letter"
+   },
+   {
+    "key": "voice",
+    "label_zh": "聲音特徵",
+    "hint_zh": "音高、語速",
+    "default_en": "a soft, slightly trembling, low voice"
+   },
+   {
+    "key": "line",
+    "label_zh": "結尾輕聲說的一句",
+    "hint_zh": "8 字內",
+    "default_en": "謝謝你一直在。"
+   }
+  ],
+  "media": {
+   "images": 2,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "圖 1＝首幀（平靜）、圖 2＝尾幀（含淚微笑）"
+  },
+  "seconds": 5,
+  "template_en": "How the reference pictures align with the target video — Picture 1 (from Shot 1) aligns with the 0.00-second mark of the target video; Picture 2 (from Shot 1) aligns with the {secs}-second mark of the target video.\n\nintegrated_multimodal_description: [Shot 1] {style}, a close-up begins in the framing, lighting and expression established by Picture 1: {subject}, {first_state}. The camera pushes in with small amplitude at slow speed as the subject {trigger}. The brows soften, the breath catches and the eyes fill slowly, a tear gathering along the lower lid before it rolls down one cheek, while the corners of the mouth begin to lift. The subject, with {voice} (S1), murmurs: <d>[Chinese] {line}</d> The change from the opening expression to the last one is continuous and gradual, with no cut, and the shot settles into the framing, expression and lighting established by Picture 2 at the end of the shot, {last_state}.\n\noverall_soundscape: A quiet room tone with the faint crackle of folding paper, a small catch of breath and a soft sniff.\n\nnon_diegetic_music: A slow solo piano with widely spaced notes and a sustained low cello, gradually swelling and fading out on the final frame.",
+  "tips_zh": [
+   "兩張圖的臉要是同一個人、同一角度，情緒才會連貫。",
+   "結尾的台詞很短，8 字內，才說得完。",
+   "情緒用「眼神、呼吸、淚水、嘴角」寫，不要只寫『很感動』。"
+  ],
+  "icon": "slides",
+  "slots": [
+   {
+    "slot": "first",
+    "kind": "image",
+    "role": "首幀（平靜）"
+   },
+   {
+    "slot": "last",
+    "kind": "image",
+    "role": "尾幀（含淚微笑）"
+   }
+  ]
+ },
+ {
+  "id": "multiframe_three_beat",
+  "name_zh": "三關鍵幀小故事（3 張圖釘時間點）",
+  "group_zh": "多圖參考",
+  "mode": "keys",
+  "desc_zh": "準備 3 張關鍵畫面（開場、轉折、結尾），做 10 秒三段小故事：第一張當開場畫面，第二、三張在指定秒數切鏡命中。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "整體畫風",
+    "hint_zh": "例：寫實電影感、柔和自然光",
+    "default_en": "a cinematic live-action medium with soft natural light, muted colors and a shallow depth of field"
+   },
+   {
+    "key": "subject",
+    "label_zh": "主角",
+    "hint_zh": "要在三張圖都一樣",
+    "default_en": "a young woman with short black hair, a yellow raincoat and a clear umbrella"
+   },
+   {
+    "key": "pic1_state",
+    "label_zh": "圖 1（開場）的畫面",
+    "hint_zh": "名詞片語，描述圖 1 看到什麼",
+    "default_en": "the main character standing at a rain-soaked bus stop at dusk, glancing at a wristwatch"
+   },
+   {
+    "key": "pic2_state",
+    "label_zh": "圖 2（轉折）的畫面",
+    "hint_zh": "名詞片語，描述圖 2 看到什麼",
+    "default_en": "the main character running along a flooded street with the umbrella tipped back, splashing, while the red tail-lights of a bus pull away ahead"
+   },
+   {
+    "key": "pic3_state",
+    "label_zh": "圖 3（結尾）的畫面",
+    "hint_zh": "名詞片語，描述圖 3 看到什麼",
+    "default_en": "the main character sitting on a bus beside a fogged window, smiling at a small heart drawn on the glass"
+   },
+   {
+    "key": "move_1",
+    "label_zh": "第一段的動作與鏡頭",
+    "hint_zh": "動作加鏡頭，用第三人稱動詞開頭",
+    "default_en": "checks the wristwatch, looks down the road and starts to jog, as the camera pushes in with small amplitude at slow speed"
+   },
+   {
+    "key": "move_2",
+    "label_zh": "第二段的動作與鏡頭",
+    "hint_zh": "動作加鏡頭",
+    "default_en": "sprints after the bus, kicking up spray, as the camera tracks left with small amplitude at fast speed"
+   },
+   {
+    "key": "move_3",
+    "label_zh": "第三段的動作與鏡頭",
+    "hint_zh": "動作加鏡頭",
+    "default_en": "wipes a small clearing in the fogged glass and finishes the heart, as the camera pulls out with small amplitude at slow speed"
+   },
+   {
+    "key": "sounds",
+    "label_zh": "整體環境聲",
+    "hint_zh": "三段共用，用英文列出",
+    "default_en": "steady rain, wet footsteps, passing traffic and the rumble of a bus engine"
+   }
+  ],
+  "media": {
+   "images": 3,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "圖 1＝第一鏡頭首幀（0 秒）、圖 2＝第二鏡頭關鍵幀（釘在 3.5 秒）、圖 3＝第三鏡頭關鍵幀（釘在 7 秒）"
+  },
+  "seconds": 10,
+  "template_en": "subject_definitions:\n<Subject 1> is the main character in <Picture 1>, {subject}.\n<Picture 1> is the first frame of [Shot 1], showing {pic1_state}.\n<Picture 2> is the keyframe of [Shot 2], showing {pic2_state}.\n<Picture 3> is the keyframe of [Shot 3], showing {pic3_state}.\n\nsummary:\n[keyframe completion + reference generation] The target video is a three-beat short story that begins from <Picture 1>, cuts at 00:03.500 to match the keyframe of <Picture 2>, and cuts at 00:07.000 to match the keyframe of <Picture 3>, keeping <Subject 1> consistent across all three beats.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - the face, hairstyle and clothing of the main character are retained in every shot.\n<Picture 1> ([Shot 1] first frame): fully_preserved - the video starts exactly from the framing, pose and surroundings of <Picture 1>.\n<Picture 2> ([Shot 2] keyframe): fully_preserved - the composition, pose and surroundings of <Picture 2> are accurately established at the start of [Shot 2].\n<Picture 3> ([Shot 3] keyframe): fully_preserved - the composition, pose and surroundings of <Picture 3> are accurately established in [Shot 3].\n\ndetailed_description:\nThe target video is a short three-beat story in {style}, with a consistent color palette and a calm, observational rhythm.\n[Shot 1] The shot begins from <Picture 1>, showing {pic1_state}. <Subject 1> {move_1}. The surroundings keep the layout, colors and light of <Picture 1>, and the movement is unhurried so that the opening state stays readable. Light, color and depth of field follow <Picture 1> closely, with the main character kept fully visible in the frame.\n[Shot 2] At 00:03.500, the shot cuts to the next beat, whose keyframe corresponds to <Picture 2>, showing {pic2_state}. <Subject 1> {move_2}. The surroundings and the light match <Picture 2>, and the character keeps the same face, hairstyle and clothing as in Shot 1. Natural motion blur follows the faster movement, and the background keeps the depth and light of the keyframe.\n[Shot 3] At 00:07.000, the shot cuts to the final beat, whose keyframe corresponds to <Picture 3>, showing {pic3_state}. <Subject 1> {move_3}. The surroundings and the light match <Picture 3>, and the shot settles on a quiet, stable image for the last moment. The camera finishes its movement slowly, and the final composition rests on the character with the same face, hairstyle and clothing as in the earlier shots.\n\noverall_soundscape:\nAmbient sound of {sounds}, changing with each location and synchronized with the movement of the character.\n\nnon_diegetic_music:\nA piano melody at a moderate tempo with soft strings underneath, becoming warmer and fuller in the last shot and fading out at the end.",
+  "tips_zh": [
+   "圖 2、圖 3 要在工作流程裡分別釘到 3.5 秒和 7 秒，並且也接到參考圖，提示詞才讀得到。",
+   "三張圖的主角要是同一個人、同樣的服裝，畫面差異放在場景與動作。",
+   "每一段只寫一個動作，不要塞太多事。"
+  ],
+  "keys_secs": [
+   0,
+   3.5,
+   7
+  ],
+  "icon": "multi",
+  "slots": [
+   {
+    "slot": "key",
+    "kind": "image",
+    "role": "第一鏡頭首幀（0 秒）",
+    "secs": 0
+   },
+   {
+    "slot": "key",
+    "kind": "image",
+    "role": "第二鏡頭關鍵幀（釘在 3.5 秒）",
+    "secs": 3.5
+   },
+   {
+    "slot": "key",
+    "kind": "image",
+    "role": "第三鏡頭關鍵幀（釘在 7 秒）",
+    "secs": 7
+   }
+  ]
+ },
+ {
+  "id": "dance_motion_transfer",
+  "name_zh": "舞蹈動作轉移（參考舞蹈影片）",
+  "group_zh": "多圖參考",
+  "mode": "ref2v",
+  "desc_zh": "準備一張舞者圖、一段舞蹈參考影片和一首音樂，讓舞者照參考影片的舞步跳舞，一鏡到底，全身入鏡。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫面類型",
+    "hint_zh": "要和圖 1 一致",
+    "default_en": "live-action"
+   },
+   {
+    "key": "dancer",
+    "label_zh": "舞者外觀",
+    "hint_zh": "要和圖 1 對得上",
+    "default_en": "a young woman with long orange hair and orange eyes, wearing a white-and-orange short dress with sunflower patterns and white sneakers"
+   },
+   {
+    "key": "stage",
+    "label_zh": "舞台場景與燈光",
+    "hint_zh": "用文字描述",
+    "default_en": "a bare black studio stage with a single warm overhead light and a faint haze"
+   }
+  ],
+  "media": {
+   "images": 1,
+   "videos": 1,
+   "audios": 0,
+   "notes_zh": "圖 1＝舞者圖（全身最好）；影片 1＝舞蹈參考影片（人物全身入鏡、動作清楚）；音訊 1＝舞蹈用的音樂（可用影片原聲或另一首歌）"
+  },
+  "seconds": 10,
+  "template_en": "subject_definitions:\n<Subject 1> is the dancer whose appearance comes from <Picture 1>, {dancer}.\n<Subject 2> is the complete choreography performed in <Video 1>, including its movement sequence, timing, rhythm, body mechanics and spatial path. <Subject 2> transfers only to <Subject 1> and does not carry the appearance, clothing or setting of the source dancer.\n<Audio 1> is the supplied music track and is synchronized with the choreography of <Subject 2>.\n\nsummary:\n[reference generation + audio reuse] The target video is a single continuous full-body dance shot in which <Subject 1> performs the choreography of <Subject 2> on a stage, set to the music of <Audio 1>, which is reused as the complete final audio.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): fully_preserved - the face, hair, outfit and body proportions from <Picture 1> are retained for the whole shot.\n<Subject 2> (appears in [Shot 1]): attribute_transfer - the movement sequence, rhythm and body mechanics of the dancer in <Video 1> are transferred to <Subject 1>, while the source dancer's identity, clothing and background are not carried over.\n<Audio 1>: fully_copy - <Audio 1> is reused 1:1 as the target video's complete final audio track, and the choreography stays locked to its beat.\n\ndetailed_description:\nThe target video is a {style} dance film in the visual medium of <Picture 1>, with stage lighting, a shallow depth of field and the whole body kept in frame, shot as one continuous take.\n[Shot 1] A wide shot frames <Subject 1>, {dancer}, at the center of {stage}, the lighting modeling the figure from above and slightly behind, with long soft shadows moving across the floor. In the first seconds <Subject 1> begins in the opening position of the choreography and moves into it on the first beat. <Subject 1> then performs the choreography of <Subject 2> from the first beat to the last, with the timing, sequence and spatial path of <Video 1> followed throughout. The body keeps real weight: the feet press and slide on the floor, the hair and the hem of the outfit carry the momentum of each turn and settle a moment after it, and the breathing deepens with the effort while the face stays relaxed and focused. The camera arcs slowly around the dancer with small amplitude at slow speed, always keeping the head, hands and feet inside the frame so that no limb is cropped at the key moments of the movement. The lighting follows the figure and shows the arc of every sweeping arm. In the final seconds the choreography of <Video 1> resolves, <Subject 1> settles into the closing pose, and the chest rises and falls with a few slow breaths while the light holds on the figure. The appearance of <Subject 1> stays identical to <Picture 1> throughout, and no appearance, clothing or background of the source dancer in <Video 1> is carried over.\n\noverall_soundscape:\nThe copied audio of <Audio 1> is the complete audible layer of the video; no extra ambience or effects are layered over it.\n\nnon_diegetic_music:\n<Audio 1> is directly reused as the complete audience-only score, keeping its original tempo, instrumentation and dynamics, and the choreography is synchronized to its beat.",
+  "tips_zh": [
+   "參考舞蹈影片請選全身入鏡、背景乾淨、動作清楚的片段，長度 2～15 秒。",
+   "舞者圖最好是全身照，臉和服裝才會穩。",
+   "動作過快時肢體容易變形，先挑節奏明確的舞步試。"
+  ],
+  "video_audio_default": [
+   true
+  ],
+  "icon": "multi",
+  "slots": [
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "舞者圖（全身最好）"
+   },
+   {
+    "slot": "ref_video",
+    "kind": "video",
+    "role": "舞蹈參考影片（人物全身入鏡、動作清楚）",
+    "soundtrack": true
+   }
+  ]
+ },
+ {
+  "id": "camera_move_transfer",
+  "name_zh": "運鏡轉移（照著參考影片的鏡頭走）",
+  "group_zh": "多圖參考",
+  "mode": "ref2v",
+  "desc_zh": "準備一張主角或場景圖，和一段你想模仿運鏡的參考影片，讓新畫面照那段影片的鏡頭路徑、速度和切鏡節奏拍攝。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫面類型",
+    "hint_zh": "要和圖 1 一致",
+    "default_en": "live-action cinematic"
+   },
+   {
+    "key": "subject",
+    "label_zh": "主角與場景",
+    "hint_zh": "要和圖 1 對得上",
+    "default_en": "a young woman with short black hair in a yellow raincoat, standing on a quiet seaside road with a low concrete wall and a grey sea behind"
+   },
+   {
+    "key": "action",
+    "label_zh": "主角在做的事",
+    "hint_zh": "簡單的一個動作",
+    "default_en": "slowly turning the head toward the sea and holding up a hand to catch the drizzle"
+   },
+   {
+    "key": "light",
+    "label_zh": "光線與氣氛",
+    "hint_zh": "要和圖 1 一致",
+    "default_en": "overcast soft light with a fine drizzle in the air"
+   },
+   {
+    "key": "sounds",
+    "label_zh": "環境聲",
+    "hint_zh": "用英文寫幾種聲音",
+    "default_en": "a soft drizzle, a low seaside wind, distant waves on shingle and the faint rustle of the raincoat fabric"
+   }
+  ],
+  "media": {
+   "images": 1,
+   "videos": 1,
+   "audios": 0,
+   "notes_zh": "圖 1＝主角或場景圖；影片 1＝運鏡參考影片（只借鏡頭，不借內容）"
+  },
+  "seconds": 10,
+  "template_en": "subject_definitions:\n<Subject 1> is the main subject of <Picture 1>, {subject}, including the appearance, outfit and surroundings shown there.\n<Video 1> provides the target video's camera movement, cuts and pacing structure only.\n\nsummary:\n[reference generation] The target video shows <Subject 1> in the setting of <Picture 1> performing a simple action, filmed with the camera movement, cuts and pacing structure of <Video 1>.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): fully_preserved - the identity, outfit and surroundings from <Picture 1> are retained for the whole shot.\n<Video 1> (camera movement, cuts and pacing structure): fully_preserved - the path, speed, amplitude, cut points and rhythm of the camera in <Video 1> are followed throughout, while its people, scenery, objects and colors are not carried over.\n\ndetailed_description:\nThe target video is a {style} shot lit by {light}, with natural color and a shallow depth of field, in the visual medium of <Picture 1>, in which the camera behavior follows <Video 1> from the first frame to the last.\n[Shot 1] The scene is built around <Subject 1>, {subject}. In the opening composition <Subject 1> sits in the frame as in <Picture 1>, with the surroundings arranged in clear layers behind, and the light falls evenly across the face and the clothing. <Subject 1> is {action}, with the fabric of the clothing and the hair responding to the air in the scene and the small details of the surroundings staying consistent with <Picture 1>. The camera movement, speed, amplitude, framing changes and any cut timing are supplied by <Video 1>, which is followed exactly while the content in front of the lens is that of <Subject 1> and its surroundings. As the camera moves, the foreground, the subject and the distant background shift against each other with natural parallax, and the subject remains clearly readable at every point of the move. The lighting stays stable, and no new people or objects appear, nor does any content, color or subject of <Video 1> enter the frame. Subtle environmental motion, such as drifting air, fabric or background activity, stays slow and continuous so that it never competes with the camera move, and the first frame of the target video starts in the framing that <Video 1> starts in. In the last moments the camera comes to rest as <Video 1> does, and <Subject 1> holds the final pose of the action.\n\noverall_soundscape:\nAmbient sound of {sounds}, kept steady across the whole video.\n\nnon_diegetic_music:\nN/A",
+  "tips_zh": [
+   "參考影片只借「鏡頭怎麼動」，內容、人物、顏色都不會被帶過來。",
+   "參考影片如果有多個切鏡，請把鏡頭拆成對應的 [Shot N] 並加上切鏡秒數，或用單一連續運鏡的影片最穩。",
+   "主角的動作請保持簡單，才不會跟運鏡搶畫面。"
+  ],
+  "icon": "multi",
+  "slots": [
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "主角或場景圖"
+   },
+   {
+    "slot": "ref_video",
+    "kind": "video",
+    "role": "運鏡參考影片（只借鏡頭，不借內容）",
+    "soundtrack": false
+   }
+  ]
+ },
+ {
+  "id": "style_transfer_image",
+  "name_zh": "風格轉換（用一張風格參考圖）",
+  "group_zh": "多圖參考",
+  "mode": "ref2v",
+  "desc_zh": "準備一張風格參考圖（例如水彩畫）和一張主角圖，讓主角用那種畫風動起來，人物長相不變，風格全程穩定。",
+  "inputs": [
+   {
+    "key": "style_desc",
+    "label_zh": "風格的具體樣子",
+    "hint_zh": "寫出媒材、線條、色調，要和圖 1 對得上",
+    "default_en": "a hand-painted watercolor storybook look with soft bleeding edges, visible paper grain, loose ink outlines and a muted pastel palette of dusty rose, sage green and pale blue"
+   },
+   {
+    "key": "subject",
+    "label_zh": "主角",
+    "hint_zh": "要和圖 2 對得上",
+    "default_en": "a young woman with short black hair, wearing a yellow raincoat and green rain boots"
+   },
+   {
+    "key": "scene",
+    "label_zh": "場景",
+    "hint_zh": "用文字描述",
+    "default_en": "a windy meadow with tall grass and a cloudy sky"
+   },
+   {
+    "key": "action",
+    "label_zh": "第一鏡頭主角的動作",
+    "hint_zh": "簡單的一個動作",
+    "default_en": "walking along a narrow path through the scene and stopping to look around"
+   },
+   {
+    "key": "closeup",
+    "label_zh": "第二鏡頭（特寫）主角的動作",
+    "hint_zh": "簡單的一個動作",
+    "default_en": "lifts the face toward the sky and follows the slow drift of the clouds with the eyes"
+   },
+   {
+    "key": "sounds",
+    "label_zh": "環境聲",
+    "hint_zh": "用英文寫幾種聲音",
+    "default_en": "wind moving through the grass, soft footsteps on a dirt path and a distant bird call"
+   }
+  ],
+  "media": {
+   "images": 2,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "圖 1＝風格參考圖（只借畫風，不借內容）；圖 2＝主角圖（長相、服裝）"
+  },
+  "seconds": 10,
+  "template_en": "subject_definitions:\n<Subject 1> is the visual style established by <Picture 1>: {style_desc}. Only the style is taken from <Picture 1>; its people, objects and composition are not.\n<Subject 2> is the main subject of <Picture 2>, {subject}, whose identity, face, hairstyle and clothing are to be followed.\n\nsummary:\n[reference generation] The target video shows <Subject 2> in {scene}, performing a simple action and then a close-up gesture, rendered entirely in the visual style of <Subject 1> for the whole video.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1], [Shot 2]): fully_preserved - this visual language is preserved in every frame, and <Picture 1> supplies style only, so none of its photographic or source-content traits are carried over.\n<Subject 2> (appears in [Shot 1], [Shot 2]): partially_preserved - the identity, hairstyle and clothing from <Picture 2> are retained, while the rendering follows <Subject 1> in medium, line treatment and palette.\n\ndetailed_description:\nThe target video is a living version of the visual style of <Subject 1>: {style_desc}. Every frame keeps the same stylized medium, line treatment, shading and palette, and nothing is reinterpreted as a photograph, a realistic render or a different art style.\n[Shot 1] A wide shot shows <Subject 2>, {subject}, in {scene}, rendered in the style of <Subject 1>. <Subject 2> is {action}. The natural elements of the scene, such as plants, clouds, water or fabric, move gently in rhythmic waves drawn with the same strokes as the rest of the picture, and the figure keeps the face, hairstyle and clothing of <Picture 2>, redrawn with the same strokes and colors as the surroundings. Small details such as the folds of the clothing and loose strands of hair are suggested by a few confident marks rather than photographic detail. The camera tracks right with small amplitude at slow speed.\n[Shot 2] At 00:05.000, the shot cuts to a medium close-up of <Subject 2> from the side, in the same style, as <Subject 2> {closeup}. Loose outlines and soft color edges shape the face and the clothing, the hair moves lightly and the background blurs into soft washes of color. The lips part slightly and the shoulders lift with a quiet breath. The camera pushes in with small amplitude at slow speed. The style stays identical to the opening shot, with the same palette, the same line quality and no drift toward realism.\n\noverall_soundscape:\nAmbient sound of {sounds}, kept soft and steady across the whole video.\n\nnon_diegetic_music:\nA solo piano melody at a slow tempo with a light glockenspiel and a soft sustained string pad, fading gradually during the last two seconds.",
+  "tips_zh": [
+   "風格說明請寫具體的媒材、線條和顏色，不要只寫「好看」。",
+   "圖 1 只借畫風；圖 1 的人和東西不會被帶進影片。",
+   "如果畫風跑掉，把風格說明寫得更具體，或減少鏡頭數。"
+  ],
+  "icon": "multi",
+  "slots": [
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "風格參考圖（只借畫風，不借內容）"
+   },
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "主角圖（長相、服裝）"
+   }
+  ]
+ },
+ {
+  "id": "character_in_new_scene",
+  "name_zh": "角色放進新場景（角色設定圖＋場景圖）",
+  "group_zh": "多圖參考",
+  "mode": "ref2v",
+  "desc_zh": "準備一張角色設定圖（多角度）和一張場景圖，讓同一個角色走進那個場景裡做事，長相和服裝穩定，附一句台詞。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫面類型",
+    "hint_zh": "要和兩張圖一致",
+    "default_en": "live-action cinematic"
+   },
+   {
+    "key": "character",
+    "label_zh": "角色外觀",
+    "hint_zh": "要和圖 1 對得上",
+    "default_en": "a young woman with long orange hair and orange eyes, wearing an orange-and-white short dress with sunflower patterns and holding a thick book"
+   },
+   {
+    "key": "scene",
+    "label_zh": "場景外觀",
+    "hint_zh": "要和圖 2 對得上",
+    "default_en": "a sunny greenhouse full of tall sunflowers and hanging glass lanterns, with a small wooden table in the middle"
+   },
+   {
+    "key": "action_1",
+    "label_zh": "角色進場的動作",
+    "hint_zh": "簡單一個動作",
+    "default_en": "walks in through the entrance, looking around with curiosity"
+   },
+   {
+    "key": "action_2",
+    "label_zh": "角色互動的動作",
+    "hint_zh": "簡單一個動作",
+    "default_en": "sets the book on the table and gently touches a sunflower petal"
+   },
+   {
+    "key": "voice",
+    "label_zh": "聲音特徵",
+    "hint_zh": "音高、語速",
+    "default_en": "a warm, lively mid-pitched voice at a cheerful pace"
+   },
+   {
+    "key": "line",
+    "label_zh": "一句台詞",
+    "hint_zh": "15 字內",
+    "default_en": "哇，這裡的花都在等我呢。"
+   },
+   {
+    "key": "sounds",
+    "label_zh": "環境聲",
+    "hint_zh": "用英文寫幾種聲音",
+    "default_en": "gentle footsteps, a faint rustle of leaves and petals and the soft clink of glass lanterns in a light breeze"
+   }
+  ],
+  "media": {
+   "images": 2,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "圖 1＝角色設定圖（可含多角度、表情）；圖 2＝場景圖"
+  },
+  "seconds": 10,
+  "template_en": "subject_definitions:\n<Subject 1> is the character in <Picture 1>, a character reference sheet showing several views of {character}. Its face, hairstyle, outfit, proportions and accessories are to be followed, while the sheet layout, labels and extra views are not.\n<Subject 2> is the environment in <Picture 2>, {scene}.\n\nsummary:\n[reference generation] The target video places <Subject 1> in <Subject 2>, where the character enters, interacts with the setting and speaks one line, with the character's appearance and the environment taken faithfully from the two references.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - the face, hair, outfit, proportions and accessories from <Picture 1> are retained in every shot, while the sheet's layout, labels and alternate views are not shown.\n<Subject 2> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - the layout, key props, colors and lighting of the environment from <Picture 2> are retained, with the camera showing different parts of the same place.\n\ndetailed_description:\nThe target video is a polished {style} production in the visual medium of the references, with soft light, rich color and a clear sense of depth.\n[Shot 1] A wide shot shows <Subject 2>, {scene}, lit as in <Picture 2>. <Subject 1>, {character}, {action_1}. The face, hairstyle and outfit match <Picture 1>, and the surroundings match <Picture 2>, with the character small in the frame against the depth of the space and the light picking out the hair and the edges of the outfit. The camera pushes in with small amplitude at slow speed.\n[Shot 2] At 00:04.000, the shot cuts to a medium shot of <Subject 1> inside <Subject 2>, where the character {action_2}. The fabric of the outfit and the hair move softly with each movement, the light shifts across the face, and the background keeps its depth with the key props of <Picture 2> clearly visible behind. The character's accessories and proportions stay exactly as in <Picture 1> as the movement completes. The camera trucks right with small amplitude at slow speed.\n[Shot 3] At 00:07.000, the shot cuts to a close-up of the face of <Subject 1>, lit by the light of the setting, with the blurred shapes of <Subject 2> behind. <Subject 1> (S1) looks into the lens and says in {voice}: <d>[Chinese] {line}</d> The mouth shapes follow each syllable with clear lip movement, the eyes brighten and the eyebrows lift slightly on the stressed word, and the lips settle into a gentle smile as the last word ends. The camera holds a static shot, and the face, hair and outfit remain faithful to <Picture 1>.\n\noverall_soundscape:\nAmbient sound of {sounds}, with a quiet thud when an object is set down.\n\nnon_diegetic_music:\nA light acoustic-guitar pattern at a moderate tempo with soft glockenspiel notes and a sustained warm string pad, gradually swelling and fading at the end.",
+  "tips_zh": [
+   "角色設定圖越清楚越好，但設定圖上的文字和排版不會出現在影片裡。",
+   "動作一個鏡頭只做一件事，總共兩個動作加一句台詞最穩。",
+   "想換場景，只換圖 2 和「場景外觀」那格。"
+  ],
+  "icon": "multi",
+  "slots": [
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "角色設定圖（可含多角度、表情）"
+   },
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "場景圖"
+   }
+  ]
+ },
+ {
+  "id": "swap_character",
+  "name_zh": "換成我的角色（影片裡的人換掉）",
+  "group_zh": "換角色與特效",
+  "mode": "swap",
+  "desc_zh": "放一段原影片和一張角色圖：場景、運鏡、動作、嘴型照原片，只把主角換成你的角色。",
+  "inputs": [
+   {
+    "key": "details",
+    "label_zh": "角色外觀（從頭到腳，逗號分隔）",
+    "hint_zh": "開頭寫 Female, 或 Male,；例：Female, petite, long orange hair, orange eyes, white and orange short dress",
+    "default_en": "Female, petite build, long straight orange hair, bright orange eyes, small sunflower hair ornament, white and orange short dress, white thigh-high socks"
+   }
+  ],
+  "media": {
+   "images": 1,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "原影片＝要換人的那段（主角清楚、2～15 秒）；圖 1＝你的角色（全身、背景乾淨最好）"
+  },
+  "seconds": 5,
+  "template_en": "body_swap: subject_definitions: <Subject 1> is the {details} shown in <Picture 1>, whose identity, face, head, hair or fur, skin, body shape, proportions and clothing define the character in the target video. The guide video provides the scene and the performance: its background, environment, lighting, camera, framing, body pose, hand and arm movement, head rotation, gaze direction, lip movement and facial expression, frame by frame; only the main subject of the guide video is replaced: its face, hair, body and clothing become <Subject 1>.  summary: [video generation + reference] Replace the guide subject with <Subject 1>, keeping the scene, camera and the complete motion and performance of the guide video.  detailed_description: [Shot 1] <Subject 1> takes the exact place of the guide subject and moves with the same timing, body pose, gestures, head motion, gaze, speech and facial expressions, while keeping the complete identity from <Picture 1>: facial structure, hair or fur, skin, body shape and clothing stay stable in every frame. The background, lighting, colors and camera of the guide video are preserved. Prevent identity drift, clothing changes, texture crawling and flicker.",
+  "tips_zh": "影片裡有好幾個人時，在外觀後面加一句說要換哪一個。先用 5 秒短片試。動作太快、臉太小容易跑掉。",
+  "source_role": "原影片（要換人的那段，主角清楚）",
+  "keep_audio": true,
+  "icon": "inpaint",
+  "slots": [
+   {
+    "slot": "source",
+    "kind": "video",
+    "role": "原影片（要換人的那段，主角清楚）"
+   },
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "你的角色（全身、背景乾淨最好）",
+    "optional": false
+   }
+  ]
+ },
+ {
+  "id": "vfx_edit",
+  "name_zh": "一句話加特效（手上冒火、變天氣…）",
+  "group_zh": "換角色與特效",
+  "mode": "vfx",
+  "desc_zh": "放一段原影片，用一句話說要加什麼特效，其他保持原樣。",
+  "inputs": [
+   {
+    "key": "edit",
+    "label_zh": "要改什麼",
+    "hint_zh": "例：Add blue lightning crackling around her hands",
+    "default_en": "Add bright orange fire effects burning around the person's hands"
+   },
+   {
+    "key": "keep",
+    "label_zh": "要保留什麼",
+    "hint_zh": "不要寫到要改的那塊",
+    "default_en": "identity, pose, motion, clothing, framing, lighting and background"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "原影片＝要加特效的那段"
+  },
+  "seconds": 5,
+  "template_en": "vfx_edit: {edit} while preserving the {keep}.",
+  "tips_zh": "一句英文就好：先寫要改的，再寫要保留的。字和 Logo 可能會被改掉。",
+  "keep_audio": true,
+  "icon": "inpaint",
+  "slots": [
+   {
+    "slot": "source",
+    "kind": "video",
+    "role": "原影片（2～15 秒）"
+   }
+  ]
+ },
+ {
+  "id": "style_video",
+  "name_zh": "整段影片換畫風",
+  "group_zh": "換角色與特效",
+  "mode": "style",
+  "desc_zh": "放一段原影片和一張風格圖（或只用文字），動作、構圖不變，整段換成新畫風。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫風特徵",
+    "hint_zh": "線條、配色、筆觸、陰影；有放風格圖就不要寫畫家名字",
+    "default_en": "bold graphic style, vibrant flat colours, clean black outlines, flat cel shading, soft halftone texture"
+   }
+  ],
+  "media": {
+   "images": 1,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "原影片＝要換畫風的那段；圖 1＝風格參考圖（不要有明顯的人臉）"
+  },
+  "seconds": 5,
+  "template_en": "style_transfer: Re-render this video with the style of <Picture 1>: {style}. Keep the original scene, background, motion and framing exactly as in the video; do not add any scenery from <Picture 1>.",
+  "tips_zh": "動作被改太多時，到進階把畫風 LoRA 強度調到 0.7。",
+  "image_optional": false,
+  "keep_audio": true,
+  "icon": "inpaint",
+  "slots": [
+   {
+    "slot": "source",
+    "kind": "video",
+    "role": "原影片（2～15 秒）"
+   },
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "風格參考圖（不要有明顯的人臉）",
+    "optional": false
+   }
+  ]
+ },
+ {
+  "id": "live_wallpaper",
+  "name_zh": "圖片變動態桌布",
+  "group_zh": "換角色與特效",
+  "mode": "live",
+  "desc_zh": "一張圖（最多三張：開頭、中間、結尾）變成會動的桌布，構圖不變。",
+  "inputs": [
+   {
+    "key": "camera",
+    "label_zh": "鏡頭",
+    "hint_zh": "一定要寫：固定不動、慢慢推近、慢慢拉遠…",
+    "default_en": "a locked-off camera with no zoom, pan, tilt, tracking, or reframing"
+   },
+   {
+    "key": "motion",
+    "label_zh": "要動的東西",
+    "hint_zh": "例：頭髮輕輕飄、燈光閃爍、粒子往上飄",
+    "default_en": "gentle hair movement, softly swaying clothes and existing lights gently pulsing"
+   }
+  ],
+  "media": {
+   "images": 1,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "圖 1＝要動起來的圖"
+  },
+  "seconds": 5,
+  "template_en": "live_wallpaper: Animate <Picture 1> with {camera}, plus {motion}, while preserving the original subject and composition.",
+  "tips_zh": "鏡頭一定要寫清楚，不然它會自己亂動。",
+  "icon": "inpaint",
+  "slots": [
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "要動起來的圖"
+   }
+  ]
+ },
+ {
+  "id": "control_pose_dance",
+  "name_zh": "照影片的動作跳（骨架控制）",
+  "group_zh": "動作控制",
+  "mode": "control",
+  "control_type": "pose",
+  "desc_zh": "放一段跳舞或做動作的影片，抽出骨架，讓你描述的角色照著做（動作最準）。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫風",
+    "hint_zh": "例：anime cel-shaded / live-action cinematic",
+    "default_en": "2.5D anime style with soft cel shading and warm stage lighting"
+   },
+   {
+    "key": "subject",
+    "label_zh": "角色長相",
+    "hint_zh": "",
+    "default_en": "a petite girl with long orange hair, orange eyes and a white and orange short dress"
+   },
+   {
+    "key": "place",
+    "label_zh": "場景",
+    "hint_zh": "",
+    "default_en": "a small neon-lit stage with a glossy floor"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "原影片＝動作參考（全身入鏡、動作清楚；只借骨架）"
+  },
+  "seconds": 5,
+  "template_en": "integrated_multimodal_description: [Shot 1] {style}. {subject} dances on {place}, following the exact body movement, rhythm and timing of the guide pose, every limb clearly visible, the camera holding a steady full-body frame.\n\noverall_soundscape: Light footsteps and fabric rustle on the stage, faint crowd ambience.\n\nnon_diegetic_music: An upbeat electronic dance track with a steady four-on-the-floor beat.",
+  "tips_zh": "動作照影片、長相照文字。偏離骨架時，到進階把控制強度調高一點。",
+  "source_role": "動作參考影片（全身入鏡）",
+  "icon": "punch",
+  "slots": [
+   {
+    "slot": "source",
+    "kind": "video",
+    "role": "動作參考影片（全身入鏡）"
+   }
+  ]
+ },
+ {
+  "id": "control_canny",
+  "name_zh": "照影片的線條重畫（輪廓控制）",
+  "group_zh": "動作控制",
+  "mode": "control",
+  "control_type": "canny",
+  "desc_zh": "保留原影片的輪廓和構圖，整段重新畫成你描述的樣子。",
+  "inputs": [
+   {
+    "key": "look",
+    "label_zh": "想變成什麼樣子",
+    "hint_zh": "",
+    "default_en": "a hand-painted watercolor fantasy world with soft pastel colors"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "原影片＝構圖參考（只借輪廓）"
+  },
+  "seconds": 5,
+  "template_en": "integrated_multimodal_description: [Shot 1] The whole scene is re-imagined as {look}, keeping the exact outlines, composition, motion and camera of the guide video.\n\noverall_soundscape: Soft ambient sound matching the scene.\n\nnon_diegetic_music: A gentle airy instrumental.",
+  "tips_zh": "適合把實拍變動畫、白天變夜晚這種「構圖不變、外觀全換」的玩法。",
+  "source_role": "構圖參考影片",
+  "icon": "punch",
+  "slots": [
+   {
+    "slot": "source",
+    "kind": "video",
+    "role": "構圖參考影片"
+   }
+  ]
+ },
+ {
+  "id": "dialogue_two_person_scene",
+  "name_zh": "雙人對話戲（咖啡館夜談）",
+  "group_zh": "對話劇",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 15 秒雙人對話戲：兩個角色在下雨的咖啡館交談，鏡頭在雙人構圖與兩人特寫之間切換，四句中文台詞輪流出現。",
+  "inputs": [
+   {
+    "key": "char_a",
+    "label_zh": "角色 A 外觀（先開口，第一次出現用）",
+    "hint_zh": "簡短外觀，例：三十多歲、短黑髮、穿海軍藍風衣的男人",
+    "default_en": "a man in his thirties with short black hair and a navy trench coat"
+   },
+   {
+    "key": "char_a_short",
+    "label_zh": "角色 A 簡稱（後面鏡頭用）",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the man in the navy trench coat"
+   },
+   {
+    "key": "char_b",
+    "label_zh": "角色 B 外觀（第一次出現用）",
+    "hint_zh": "簡短外觀，例：二十多歲、棕色鮑伯頭、穿深綠雨衣的女人",
+    "default_en": "a woman in her late twenties with a shoulder-length brown bob and a dark green raincoat"
+   },
+   {
+    "key": "char_b_short",
+    "label_zh": "角色 B 簡稱（後面鏡頭用）",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the woman in the green raincoat"
+   },
+   {
+    "key": "place",
+    "label_zh": "場景",
+    "hint_zh": "例：下雨的深夜小咖啡館",
+    "default_en": "a small late-night café with rain on the windows and warm amber lamps"
+   },
+   {
+    "key": "line_a1",
+    "label_zh": "A 的第一句",
+    "hint_zh": "15 字內",
+    "default_en": "終於等到妳了。"
+   },
+   {
+    "key": "line_b1",
+    "label_zh": "B 的第一句",
+    "hint_zh": "15 字內",
+    "default_en": "路上下雨，我走得慢了點。"
+   },
+   {
+    "key": "line_a2",
+    "label_zh": "A 的第二句",
+    "hint_zh": "15 字內",
+    "default_en": "我還以為妳不會來了。"
+   },
+   {
+    "key": "line_b2",
+    "label_zh": "B 的第二句",
+    "hint_zh": "15 字內",
+    "default_en": "我答應過的事，從來沒食言。"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 15,
+  "template_en": "integrated_multimodal_description: [Shot 1] Live-action, cinematic, warm low-key lighting with amber lamps, a medium two-shot frames {char_a} seated at a corner table on the left and {char_b} standing beside the opposite chair at the right edge, in {place}. The camera pushes in with small amplitude at slow speed as {char_a_short} lifts the eyes from a cold cup and, with a low, steady, slightly tired voice (S1), says: <d>[Chinese] {line_a1}</d> Across the table, {char_b_short} pauses with one hand still on the chair back, rain streaking the window behind. [Shot 2] At 00:04.000, the camera cuts to a close-up of {char_b_short}, whose eyes lower for a moment and then rise to meet the other's gaze, warm lamp light falling on one side of the face. With a soft, quick, slightly breathless voice (S2), {char_b_short} says: <d>[Chinese] {line_b1}</d> A small, rueful smile appears and fades. [Shot 3] At 00:08.000, the camera cuts to a close-up of {char_a_short}, whose fingers tighten around the cold cup while the gaze stays fixed across the table. In the same low, steady voice (S1), {char_a_short} says: <d>[Chinese] {line_a2}</d> The shoulders ease down in a slow breath after the last word. [Shot 4] At 00:11.500, the camera cuts back to the medium two-shot as {char_b_short} pulls out the chair, shakes the rain from the sleeves and sits down across the table. In the same soft, quick voice (S2), {char_b_short} says: <d>[Chinese] {line_b2}</d> Both hold each other's gaze in silence while the camera pulls out with small amplitude at slow speed.\n\noverall_soundscape: Steady rain taps against the windows over a low room tone, and an espresso machine hisses faintly far behind. A chair scrapes, a cup touches its saucer and damp fabric rustles.\n\nnon_diegetic_music: Sparse piano notes at a slow tempo joined by a sustained low cello, gradually decreasing in volume under the final line.",
+  "tips_zh": [
+   "四句台詞每句 15 字內，總長才塞得進 15 秒。",
+   "兩人的聲音特徵固定寫在第一次開口時，後面只寫 same voice，不要中途改。",
+   "不用在鏡頭裡加太多動作，這種對話戲靠眼神和停頓。"
+  ],
+  "icon": "bubble",
+  "slots": []
+ },
+ {
+  "id": "dialogue_two_characters_ref",
+  "name_zh": "雙人對話戲（兩張角色圖＋場景圖＋兩段音色）",
+  "group_zh": "對話劇",
+  "mode": "ref2v",
+  "desc_zh": "準備兩張角色圖、一張場景圖，和兩段各自的音色參考音訊，做 15 秒雙人對話戲：兩人長相與聲音都固定。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫面類型",
+    "hint_zh": "要和圖片一致",
+    "default_en": "live-action"
+   },
+   {
+    "key": "char_a",
+    "label_zh": "角色 A（先開口）",
+    "hint_zh": "要和圖 1 對得上",
+    "default_en": "a young man with tousled black hair, round glasses and a grey knit cardigan"
+   },
+   {
+    "key": "char_b",
+    "label_zh": "角色 B",
+    "hint_zh": "要和圖 2 對得上",
+    "default_en": "a young woman with long silver hair tied in a low ponytail and a charcoal wool coat"
+   },
+   {
+    "key": "place",
+    "label_zh": "場景",
+    "hint_zh": "要和圖 3 對得上",
+    "default_en": "a quiet old library reading room with tall bookshelves and a green banker's lamp"
+   },
+   {
+    "key": "voice_a",
+    "label_zh": "A 的聲音特徵",
+    "hint_zh": "音高、語速",
+    "default_en": "a calm, gentle, mid-low voice at a measured pace"
+   },
+   {
+    "key": "voice_b",
+    "label_zh": "B 的聲音特徵",
+    "hint_zh": "音高、語速",
+    "default_en": "a clear, cool, slightly lower female voice at a steady pace"
+   },
+   {
+    "key": "line_a1",
+    "label_zh": "A 的第一句",
+    "hint_zh": "15 字內",
+    "default_en": "這本書，妳還記得嗎？"
+   },
+   {
+    "key": "line_b1",
+    "label_zh": "B 的第一句",
+    "hint_zh": "15 字內",
+    "default_en": "當然，是你借我讀的那一本。"
+   },
+   {
+    "key": "line_a2",
+    "label_zh": "A 的第二句",
+    "hint_zh": "15 字內",
+    "default_en": "那一頁，我一直夾著。"
+   },
+   {
+    "key": "line_b2",
+    "label_zh": "B 的第二句",
+    "hint_zh": "15 字內",
+    "default_en": "我知道，我翻到了。"
+   }
+  ],
+  "media": {
+   "images": 3,
+   "videos": 0,
+   "audios": 2,
+   "notes_zh": "圖 1＝角色 A、圖 2＝角色 B、圖 3＝場景；音訊 1＝A 的音色參考、音訊 2＝B 的音色參考（只借音色，不借內容）"
+  },
+  "seconds": 15,
+  "template_en": "subject_definitions:\n<Subject 1> is the first character in <Picture 1>, {char_a}.\n<Subject 2> is the second character in <Picture 2>, {char_b}.\n<Subject 3> is the location in <Picture 3>, {place}.\n<Audio 1> is the voice-timbre reference for <Subject 1> (S1).\n<Audio 2> is the voice-timbre reference for <Subject 2> (S2).\n\nsummary:\n[reference generation + audio reference] The target video is a four-shot two-person conversation in <Subject 3> between <Subject 1> and <Subject 2>. <Subject 1> speaks first and <Subject 2> answers, with <Audio 1> and <Audio 2> referenced only for each speaker's voice timbre and delivery.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1], [Shot 3], [Shot 4]): fully_preserved - the face, hairstyle, glasses and clothing from <Picture 1> are retained in every appearance.\n<Subject 2> (appears in [Shot 1], [Shot 2], [Shot 4]): fully_preserved - the face, hair and coat from <Picture 2> are retained in every appearance.\n<Subject 3> (appears in [Shot 1], [Shot 2], [Shot 3], [Shot 4]): fully_preserved - the bookshelves, lamp and furniture layout from <Picture 3> are retained, with the camera showing different angles of the same room.\n<Audio 1>: reference - the voice timbre and measured delivery of <Audio 1> guide the speech of <Subject 1> without copying the original signal or words.\n<Audio 2>: reference - the voice timbre and measured delivery of <Audio 2> guide the speech of <Subject 2> without copying the original signal or words.\n\ndetailed_description:\nThe target video is a quiet, cinematic {style} drama that keeps the lighting and color of the references, with soft shadows and slow, patient camera moves.\n[Shot 1] A medium two-shot places <Subject 1>, {char_a}, seated at a long reading table on the left and <Subject 2>, {char_b}, standing across from <Subject 1> at the right, in <Subject 3>, with the green lamp glowing between them and bookshelves rising behind. The camera pushes in with small amplitude at slow speed. <Subject 1> (S1) slides a worn book across the table and says in a voice following the timbre of <Audio 1>, {voice_a}: <d>[Chinese] {line_a1}</d> <Subject 2> looks down at the book, one hand resting on the table edge.\n[Shot 2] At 00:04.000, the camera cuts to a close-up of <Subject 2> in <Subject 3>, eyes moving from the book up to <Subject 1>, lamp light on one cheek. <Subject 2> (S2) says in a voice following the timbre of <Audio 2>, {voice_b}: <d>[Chinese] {line_b1}</d> A faint smile appears and settles.\n[Shot 3] At 00:08.000, the camera cuts to a close-up of <Subject 1> in <Subject 3>, gaze lowered to the book, fingers touching its edge. <Subject 1> (S1) says in the same voice following <Audio 1>: <d>[Chinese] {line_a2}</d> Eyes lift slowly to meet the other's gaze.\n[Shot 4] At 00:11.500, the camera cuts back to the medium two-shot in <Subject 3>. <Subject 2> opens the book at a page marked with a pressed leaf. <Subject 2> (S2) answers in the same voice following <Audio 2>: <d>[Chinese] {line_b2}</d> Both hold the gaze in silence while the camera pulls out with small amplitude at slow speed, the lamp light steady on the open page.\n\noverall_soundscape:\nA quiet library room tone with a faint ventilation hum continues throughout, and paper rustles as the book changes hands and the page opens. A chair creaks once and a pen cap clicks softly in the distance.\n\nnon_diegetic_music:\nSparse solo piano at a slow tempo with a sustained low cello underneath, gradually decreasing in volume under the final line.",
+  "tips_zh": [
+   "兩段音訊各自只放一個人的聲音，每段 2～15 秒；音訊只借音色，台詞要自己打在台詞欄裡。",
+   "A 一定要先開口（後面的 S1、S2 編號是照開口順序排的）。",
+   "三張圖的人物和場景要和下面描述對得上，描述欄請照圖片寫。"
+  ],
+  "icon": "bubble",
+  "slots": [
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "角色 A"
+   },
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "角色 B"
+   },
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "場景"
+   },
+   {
+    "slot": "ref_audio",
+    "kind": "audio",
+    "role": "A 的音色參考"
+   },
+   {
+    "slot": "ref_audio",
+    "kind": "audio",
+    "role": "B 的音色參考（只借音色，不借內容）"
+   }
+  ]
+ },
+ {
+  "id": "romance_closeup",
+  "name_zh": "浪漫特寫（黃昏河邊）",
+  "group_zh": "對話劇",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 10 秒溫柔的愛情小片段：黃昏橋邊兩人並肩，指尖相碰、十指相扣，額頭靠近時輕聲對話。",
+  "inputs": [
+   {
+    "key": "lover_a",
+    "label_zh": "角色 A（第一次出現用）",
+    "hint_zh": "外觀簡述",
+    "default_en": "a young man with soft curly dark hair in a grey wool coat"
+   },
+   {
+    "key": "lover_a_short",
+    "label_zh": "角色 A 簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the man in the grey coat"
+   },
+   {
+    "key": "lover_b",
+    "label_zh": "角色 B（第一次出現用）",
+    "hint_zh": "外觀簡述",
+    "default_en": "a young woman with long wavy brown hair and a cream scarf"
+   },
+   {
+    "key": "lover_b_short",
+    "label_zh": "角色 B 簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the woman in the cream scarf"
+   },
+   {
+    "key": "setting",
+    "label_zh": "場景",
+    "hint_zh": "例：黃昏的河邊橋上，串燈剛亮起",
+    "default_en": "a quiet riverside bridge at dusk with string lights beginning to glow"
+   },
+   {
+    "key": "line_a",
+    "label_zh": "A 輕聲說的一句",
+    "hint_zh": "10 字內",
+    "default_en": "妳看，天快黑了。"
+   },
+   {
+    "key": "line_b",
+    "label_zh": "B 的回答",
+    "hint_zh": "10 字內",
+    "default_en": "那再待一會兒吧。"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 10,
+  "template_en": "integrated_multimodal_description: [Shot 1] Live-action, cinematic, golden-hour backlight with a soft warm haze, a medium side-on two-shot frames {lover_a} and {lover_b} leaning side by side against the railing of {setting}. The wind lifts strands of hair and the end of a scarf, and the two glance sideways at each other and quickly look away with small smiles. The camera trucks right with small amplitude at slow speed. [Shot 2] At 00:03.500, the camera cuts to a close-up of two hands resting next to each other on the railing, the little fingers brushing and then the fingers sliding together and interlocking slowly in the warm light. In a quiet murmur, {lover_a_short}, with a low, gentle, slightly nervous voice (S1), says: <d>[Chinese] {line_a}</d> [Shot 3] At 00:07.000, the camera cuts to a close-up of the two faces, foreheads close together, eyes meeting, soft light on the cheeks and the lights of the setting glowing out of focus behind. In a whisper, {lover_b_short}, with a soft, warm, bright voice (S2), answers: <d>[Chinese] {line_b}</d> A gentle smile spreads across both faces and the camera pushes in with small amplitude at slow speed until the end.\n\noverall_soundscape: Soft wind and distant water lapping, with a faint rustle of coat and scarf fabric. A bicycle bell rings once far away and quiet breaths are shared between the lines.\n\nnon_diegetic_music: A slow solo acoustic guitar with warm sustained strings underneath, gradually swelling in the final shot and fading out softly.",
+  "tips_zh": [
+   "兩個角色的描述不要太長，兩人加起來 30 個英文字內最穩。",
+   "台詞放在輕聲的特寫裡效果最好，每句 10 字內。",
+   "這個範本是溫柔的、含蓄的，不含肢體親密動作。"
+  ],
+  "icon": "bubble",
+  "slots": []
+ },
+ {
+  "id": "talking_head_ref_voice",
+  "name_zh": "真人／角色對鏡頭說話（參考音色）",
+  "group_zh": "對話劇",
+  "mode": "ref2v",
+  "desc_zh": "準備一張人像圖和一小段音色參考音訊，做 10 秒對鏡頭說話：長相照圖片、聲音音色照音訊，台詞自己寫。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫面類型",
+    "hint_zh": "要和圖 1 一致，真人寫 live-action，動漫寫 2D-animated anime",
+    "default_en": "live-action"
+   },
+   {
+    "key": "subject",
+    "label_zh": "說話的人",
+    "hint_zh": "要和圖 1 對得上",
+    "default_en": "a young woman with long orange hair and orange eyes, wearing a white-and-orange short dress with sunflower patterns, in a sunlit room with a window behind"
+   },
+   {
+    "key": "delivery",
+    "label_zh": "說話的語氣",
+    "hint_zh": "語速、情緒",
+    "default_en": "a warm, lively and slightly proud delivery at a natural conversational pace"
+   },
+   {
+    "key": "line_1",
+    "label_zh": "第一句台詞",
+    "hint_zh": "15 字內",
+    "default_en": "大家好，我是小克，今天跟你們聊聊天。"
+   },
+   {
+    "key": "line_2",
+    "label_zh": "第二句台詞",
+    "hint_zh": "15 字內",
+    "default_en": "準備好了嗎？我們開始吧！"
+   }
+  ],
+  "media": {
+   "images": 1,
+   "videos": 0,
+   "audios": 1,
+   "notes_zh": "圖 1＝說話的人像；音訊 1＝音色參考（2～15 秒的乾淨人聲，只借音色，不借內容）"
+  },
+  "seconds": 10,
+  "template_en": "subject_definitions:\n<Subject 1> is the speaker in <Picture 1>, {subject}, including the face, hairstyle, clothing and background shown there.\n<Audio 1> is the voice-timbre reference for <Subject 1> (S1).\n\nsummary:\n[reference generation + audio reference] The target video is a ten-second single-shot talking-head clip in which <Subject 1> speaks two lines straight to the camera in a voice that follows the timbre of <Audio 1>, with natural lip, eye and head movement.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): fully_preserved - the identity, face, hairstyle, clothing and background of <Picture 1> are retained for the whole shot.\n<Audio 1>: reference - the voice timbre and measured delivery of <Audio 1> guide the speech of <Subject 1> without copying the original signal or words.\n\ndetailed_description:\nThe target video is a clean {style} talking-head clip that keeps the lighting, color palette and shallow depth of field of <Picture 1>, with the background softly out of focus.\n[Shot 1] A medium close-up frames <Subject 1>, {subject}, facing the camera at eye level in the setting of <Picture 1>, centered in the frame with the shoulders and upper chest visible and a little headroom above. The light on the face and the colors of the background follow <Picture 1> exactly. The camera pushes in with small amplitude at slow speed. <Subject 1> (S1) takes a small breath, the shoulders lifting slightly, and says in a voice following the timbre of <Audio 1>, with {delivery}: <d>[Chinese] {line_1}</d> The mouth shapes follow each syllable with clear lip rounding, spreading and compression, the jaw opens and closes in step with the words, the eyes hold the lens with natural blinks, the eyebrows lift lightly on the stressed words and the head makes a small nod on the beat of the sentence. After a short pause in which the lips close and the eyes soften, <Subject 1> (S1) says in the same voice: <d>[Chinese] {line_2}</d> The head tilts a few degrees to one side on the last phrase, the eyebrows rise slightly, the shoulders settle and a bright smile finishes the shot, while the identity, hair, clothing and background remain exactly those of <Picture 1> from the first frame to the last. A few strands of hair shift slightly with each head tilt, the collar or neckline moves with the breathing, and faint background elements stay out of focus and almost still so that attention stays on the face. The skin tones and the color palette stay natural and consistent from the first frame to the last. Only the face, head and shoulders move, and the hands stay out of the frame.\n\noverall_soundscape:\nA quiet room tone with a faint breath before each sentence and a soft fabric rustle when the speaker's shoulders move.\n\nnon_diegetic_music:\nN/A",
+  "tips_zh": [
+   "音色參考請用乾淨、只有一個人的人聲，背景音樂會讓聲音變怪。",
+   "音訊只借音色，台詞要自己寫在台詞欄；兩句加起來約 30 字內。",
+   "圖 1 要看得到臉和嘴，嘴型才會對；動漫角色請把「畫面類型」改成 2D-animated anime。"
+  ],
+  "icon": "bubble",
+  "slots": [
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "說話的人像"
+   },
+   {
+    "slot": "ref_audio",
+    "kind": "audio",
+    "role": "音色參考（2～15 秒的乾淨人聲，只借音色，不借內容）"
+   }
+  ]
+ },
+ {
+  "id": "talking_head_exact_audio",
+  "name_zh": "照錄音對嘴說話（完整複製聲音）",
+  "group_zh": "對話劇",
+  "mode": "ref2v",
+  "desc_zh": "準備一張人像圖和一段錄好的語音（10 秒內），讓人物照這段錄音一字不差地對嘴說話，聲音原封不動沿用。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫面類型",
+    "hint_zh": "要和圖 1 一致，真人寫 live-action，動漫寫 2D-animated anime",
+    "default_en": "live-action"
+   },
+   {
+    "key": "subject",
+    "label_zh": "說話的人",
+    "hint_zh": "要和圖 1 對得上",
+    "default_en": "a middle-aged man with short grey hair and a trimmed beard, wearing a charcoal blazer over a white shirt, seated in a tidy office with bookshelves behind"
+   },
+   {
+    "key": "line_1",
+    "label_zh": "錄音裡的第一句（逐字照打）",
+    "hint_zh": "必須和錄音一字不差，句尾用句號、問號或驚嘆號",
+    "default_en": "大家好，歡迎收看今天的分享。"
+   },
+   {
+    "key": "line_2",
+    "label_zh": "錄音裡的第二句（逐字照打）",
+    "hint_zh": "必須和錄音一字不差",
+    "default_en": "我們直接進入重點。"
+   }
+  ],
+  "media": {
+   "images": 1,
+   "videos": 0,
+   "audios": 1,
+   "notes_zh": "圖 1＝說話的人像；音訊 1＝要原封不動沿用的錄音（10 秒內）"
+  },
+  "seconds": 10,
+  "template_en": "subject_definitions:\n<Subject 1> is the speaker in <Picture 1>, {subject}, including the face, hairstyle, clothing and background shown there.\n<Audio 1> is the recorded speech belonging exclusively to <Subject 1> (S1), to be reused as the complete audio track.\n\nsummary:\n[reference generation + audio reuse] The target video is a ten-second single-shot talking-head clip in which <Subject 1> lip-syncs precisely to the recorded speech of <Audio 1>, which is reused 1:1 as the final audio.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): fully_preserved - the identity, face, hairstyle, clothing and background of <Picture 1> are retained for the whole shot.\n<Audio 1>: fully_copy - <Audio 1> is reused 1:1 as the target video's complete final audio track, keeping its voice, words, pauses and timing unchanged.\n\ndetailed_description:\nThe target video is a clean, steady {style} talking-head clip that keeps the lighting, color palette and shallow depth of field of <Picture 1>, with the background gently out of focus.\n[Shot 1] A medium close-up frames <Subject 1>, {subject}, facing the camera at eye level in the setting of <Picture 1>, centered in the frame with the shoulders and upper chest visible and a little headroom above. The light on the face and the colors of the background follow <Picture 1> exactly. The camera holds a static shot. <Subject 1> (S1) speaks in the exact voice, timing and pauses of <Audio 1>, saying: <d>[Chinese] {line_1}</d> The mouth shapes follow every syllable of the recording with clear lip rounding, lip compression and jaw movement, the eyes stay on the lens with natural blinks, the eyebrows lift lightly on the stressed words and the head gives a small nod on the beat of the sentence. During the pause present in <Audio 1>, the lips close and the eyes soften without any speech-like mouth motion. Then <Subject 1> (S1) continues in the same voice: <d>[Chinese] {line_2}</d> The eyebrows lift slightly on the last phrase, the shoulders stay relaxed, and the mouth closes at the last syllable of <Audio 1> as the shot ends. No generic talking loops are used: each mouth shape follows the specific syllable of the recording, including held vowels and closed-lip consonants, and a few strands of hair shift slightly with each nod while the collar moves with the breathing. Faint background elements stay out of focus and almost still, and the skin tones and color palette stay natural and consistent. The identity, hair, clothing and background stay unchanged from <Picture 1> throughout, and the hands remain out of the frame.\n\noverall_soundscape:\nThe copied speech of <Audio 1> is the whole audible layer of the video; no extra ambience or effects are added on top of it.\n\nnon_diegetic_music:\nN/A",
+  "tips_zh": [
+   "台詞欄要和錄音一字不差，連標點都最好一樣，嘴型才會準。",
+   "錄音請控制在 10 秒內，剪掉開頭的空白。",
+   "如果只想借聲音的音色而不是整段複製，請改用「參考音色」那個範本。"
+  ],
+  "icon": "bubble",
+  "slots": [
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "說話的人像"
+   },
+   {
+    "slot": "ref_audio",
+    "kind": "audio",
+    "role": "要原封不動沿用的錄音（10 秒內）"
+   }
+  ]
+ },
+ {
+  "id": "mv_reuse_song",
+  "name_zh": "用現成歌曲做 MV（歌手對嘴）",
+  "group_zh": "MV",
+  "mode": "ref2v",
+  "desc_zh": "準備一張歌手圖、一張場景圖和一段 15 秒內的歌曲，讓歌手照原曲對嘴演唱，歌詞同步做成貼字。",
+  "inputs": [
+   {
+    "key": "singer",
+    "label_zh": "歌手長相",
+    "hint_zh": "要和圖 1 對得上，例：黑長直髮、穿紅色外套的女歌手",
+    "default_en": "a young female singer with long straight black hair, wearing a red jacket and silver earrings"
+   },
+   {
+    "key": "scene",
+    "label_zh": "場景外觀",
+    "hint_zh": "要和圖 2 對得上，例：霓虹閃爍的雨夜街角",
+    "default_en": "a rainy night street corner with pink and blue neon signs and a wet reflective road"
+   },
+   {
+    "key": "visual_style",
+    "label_zh": "整體風格",
+    "hint_zh": "例：復古底片感、霓虹、暗角",
+    "default_en": "cinematic neon-lit style with soft film grain and a slightly desaturated color palette"
+   },
+   {
+    "key": "lyric_1",
+    "label_zh": "歌詞第一句",
+    "hint_zh": "必須和歌曲裡實際唱的一字不差",
+    "default_en": "雨停之前請別離開"
+   },
+   {
+    "key": "lyric_2",
+    "label_zh": "歌詞第二句",
+    "hint_zh": "必須和歌曲裡實際唱的一字不差",
+    "default_en": "城市的燈都在等我"
+   },
+   {
+    "key": "lyric_3",
+    "label_zh": "歌詞第三句",
+    "hint_zh": "必須和歌曲裡實際唱的一字不差",
+    "default_en": "我唱到天亮為止"
+   }
+  ],
+  "media": {
+   "images": 2,
+   "videos": 0,
+   "audios": 1,
+   "notes_zh": "圖 1＝歌手、圖 2＝場景、音訊 1＝要用的歌曲片段（15 秒內，含人聲）"
+  },
+  "seconds": 15,
+  "template_en": "subject_definitions:\n<Subject 1> is the singer in <Picture 1>, {singer}.\n<Subject 2> is the environment in <Picture 2>, {scene}.\n<Audio 1> is the supplied song, containing the sung vocal line and the backing track of the music video, and its vocals belong exclusively to <Subject 1> (S1).\n\nsummary:\n[reference generation + audio reuse] The target video is a three-shot music video in which <Subject 1> performs the supplied song in <Subject 2>, singing the lyrics of <Audio 1> with matching lip movements while each lyric line also appears as designed lettering in the frame. <Audio 1> is reused as the complete final audio track.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - the singer's face, hairstyle, clothing and build from <Picture 1> are retained in every shot.\n<Subject 2> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - the colors, layout, surfaces and lighting from <Picture 2> are retained, with the camera showing different parts of the same place.\n<Audio 1>: fully_copy - <Audio 1> is reused 1:1 as the target video's complete final audio track, with its original timing, melody and vocals unchanged.\n\ndetailed_description:\nThe target video is a hard-cut music video in {visual_style}, with the lyric lettering treated as a designed layer inside the frame.\n[Shot 1] A medium close-up frames <Subject 1>, {singer}, standing in <Subject 2>, the place from <Picture 2>, with its lights and reflections glowing behind. One hand holds a microphone close to the lips. The camera pushes in with small amplitude at slow speed. <Subject 1> (S1) sings <d>[Chinese] {lyric_1}</d> in the voice of <Audio 1>, with lips, jaw and breathing following every syllable and the head giving a small nod on each beat. White hand-cut lettering reading \"{lyric_1}\" floats in the foreground beside the shoulder of <Subject 1>, jittering with the beat and staying clear of the eyes and mouth.\n[Shot 2] At 00:05.000, the camera cuts on the beat to a low-angle close shot of <Subject 1> in <Subject 2>, with the background lights glowing behind. The chin lifts as <Subject 1> (S1) sings <d>[Chinese] {lyric_2}</d>, the mouth shapes matching the sustained vowels of <Audio 1> and a free hand rising slowly beside the face. Bold lettering reading \"{lyric_2}\" slams into the frame from the left on the accent and slides to rest across the background, away from the face.\n[Shot 3] At 00:10.000, the camera cuts to a wide shot of <Subject 1> in the middle of <Subject 2>, feet planted on the ground and one arm swinging with the chorus. <Subject 1> (S1) sings <d>[Chinese] {lyric_3}</d> with a fuller delivery that follows <Audio 1>, the shoulders opening on the loudest word. Huge lettering reading \"{lyric_3}\" fills the background, growing larger with each kick while the figure stays sharp in front of it. The camera trucks right with small amplitude at slow speed, and the lettering breaks into small fragments that sweep out of the frame on the final beat.\n\noverall_soundscape:\nThe copied audio of <Audio 1> plays unaltered for the whole video, and its sung vocal belongs only to <Subject 1> (S1); no extra ambience or effects are layered on top.\n\nnon_diegetic_music:\n<Audio 1> is directly reused as the complete audience-only score, keeping its original tempo, instrumentation and dynamics.",
+  "tips_zh": [
+   "歌曲片段要先剪到 15 秒內，而且歌詞要照實打在三個歌詞欄位裡，對嘴才會準。",
+   "圖 1 的臉最好是清楚的正面或四分之三側面，歌手不要被帽子或口罩擋住嘴。",
+   "歌詞超過三句時，可以自己複製「鏡頭」段落，每句歌詞一個鏡頭，切鏡秒數要遞增。"
+  ],
+  "icon": "spk",
+  "slots": [
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "歌手"
+   },
+   {
+    "slot": "ref_image",
+    "kind": "image",
+    "role": "場景"
+   },
+   {
+    "slot": "ref_audio",
+    "kind": "audio",
+    "role": "要用的歌曲片段（15 秒內，含人聲）"
+   }
+  ]
+ },
+ {
+  "id": "three_d_animation_story",
+  "name_zh": "3D 動畫短篇（皮克斯風小故事）",
+  "group_zh": "動畫",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 15 秒 3D 卡通小故事：主角想要某樣東西、遇到阻礙、想辦法、最後得到，內含三句中文台詞。",
+  "inputs": [
+   {
+    "key": "hero",
+    "label_zh": "主角（第一次出現用）",
+    "hint_zh": "例：圓臉小狐狸，琥珀色大眼睛、奶油色蓬尾巴、紅色小圍巾",
+    "default_en": "a small round-faced fox cub with big amber eyes, a fluffy cream-colored tail and a tiny red scarf"
+   },
+   {
+    "key": "hero_short",
+    "label_zh": "主角簡稱（後面鏡頭用）",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the fox cub in the red scarf"
+   },
+   {
+    "key": "other",
+    "label_zh": "對手／配角（第一次出現用）",
+    "hint_zh": "例：戴圓眼鏡的老烏龜攤販",
+    "default_en": "a grumpy old tortoise shopkeeper with round wire glasses and a patched green apron"
+   },
+   {
+    "key": "other_short",
+    "label_zh": "配角簡稱（後面鏡頭用）",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the tortoise shopkeeper in the green apron"
+   },
+   {
+    "key": "setting",
+    "label_zh": "場景",
+    "hint_zh": "例：掛滿燈籠的夜市",
+    "default_en": "a cozy night market strung with warm paper lanterns"
+   },
+   {
+    "key": "goal",
+    "label_zh": "主角想要的東西",
+    "hint_zh": "例：一顆星星形狀的發光包子",
+    "default_en": "a glowing star-shaped steamed bun"
+   },
+   {
+    "key": "offering",
+    "label_zh": "主角拿來交換的東西",
+    "hint_zh": "例：一顆橡果",
+    "default_en": "a single acorn"
+   },
+   {
+    "key": "line_hero",
+    "label_zh": "主角的請求台詞",
+    "hint_zh": "一句 15 字內",
+    "default_en": "請問，這個星星包子可以換這顆橡果嗎？"
+   },
+   {
+    "key": "line_other_1",
+    "label_zh": "配角的刁難台詞",
+    "hint_zh": "一句 15 字內",
+    "default_en": "這可是今晚最後一個了。"
+   },
+   {
+    "key": "line_other_2",
+    "label_zh": "配角心軟的台詞",
+    "hint_zh": "一句 15 字內",
+    "default_en": "拿去吧，小傢伙，今晚算我請客。"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 15,
+  "template_en": "integrated_multimodal_description: [Shot 1] 3D animated, Pixar-inspired 3D cartoon rendering with a C4D and Octane look, stylized Q-version proportions, warm subsurface-scattering skin and fur, a high-end animated-feature quality, a wide shot shows {setting} at dusk, with rows of warm lanterns glowing over the stalls. In the lower left of the frame stands {hero}, wide-eyed, staring at {goal} on a stall counter at the center, where {other} sits behind the counter. The camera pushes in with small amplitude at slow speed as the little hero clutches {offering} in both hands. [Shot 2] At 00:03.500, the camera cuts to a medium shot at the counter, where {hero_short} stands on tiptoe holding {offering} up high, while {other_short} waits behind the counter. Looking up, {hero_short}, with a bright, high-pitched, hopeful voice (S1), says: <d>[Chinese] {line_hero}</d> The little hero's eyes widen and the whole body bounces eagerly on tiptoe. [Shot 3] At 00:07.000, the camera cuts to a close shot of {other_short}, who narrows both eyes and looks down with a stern squint. With a slow, gravelly, deep voice (S2), {other_short} says: <d>[Chinese] {line_other_1}</d> A heavy brow rises as the arms fold across the chest. [Shot 4] At 00:10.000, the camera cuts to a close-up of {hero_short}, eyes filling with shining tears, shoulders drooping and lower lip trembling, then pushing {offering} forward with both hands in a tiny, hopeful offer. The camera pushes in with small amplitude at slow speed toward the face. [Shot 5] At 00:12.500, the camera cuts to a medium shot of {other_short}, whose stern face melts into a gentle smile as the hands pass over {goal}. In the same gravelly voice (S2), {other_short} says: <d>[Chinese] {line_other_2}</d> The little hero jumps up with both arms raised, hugging the glowing treat to the chest while the whole body wiggles with joy. The camera pulls out with small amplitude at slow speed.\n\noverall_soundscape: Soft market chatter and the clink of far-off dishes fill the background, and steam hisses gently from the stall. A small object taps on the wooden counter, and the little hero lets out a happy squeal at the end.\n\nnon_diegetic_music: A pizzicato-string melody at a quick tempo with a xylophone counter-line and soft marimba, swelling with warm strings at the end and finishing on a bright chime.",
+  "tips_zh": [
+   "台詞每句 15 字內，每個角色的聲音特徵第一次開口時就固定，不要中途換。",
+   "想換成別的故事，改「主角想要的東西」「拿來交換的東西」和三句台詞就行。",
+   "3D 風格的標籤已經寫在鏡頭一，不要刪，否則可能變成真人風。"
+  ],
+  "icon": "comic",
+  "slots": []
+ },
+ {
+  "id": "anime_opening",
+  "name_zh": "動漫 OP 片頭",
+  "group_zh": "動畫",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 15 秒日系動畫片頭：日出遠景、眼睛特寫、奔跑追風、躍向天空、兩人背對背、最後出現大標題。",
+  "inputs": [
+   {
+    "key": "heroine",
+    "label_zh": "女主角（第一次出現用）",
+    "hint_zh": "外觀簡述，髮色、服裝要明顯",
+    "default_en": "a young woman with long wind-blown pink hair, bright green eyes, a white blouse with a red ribbon and a light blue jacket"
+   },
+   {
+    "key": "heroine_short",
+    "label_zh": "女主角簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the pink-haired heroine"
+   },
+   {
+    "key": "friend",
+    "label_zh": "夥伴（第一次出現用）",
+    "hint_zh": "外觀簡述",
+    "default_en": "a tall young man with messy black hair and a crimson scarf"
+   },
+   {
+    "key": "friend_short",
+    "label_zh": "夥伴簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the young man in the crimson scarf"
+   },
+   {
+    "key": "world",
+    "label_zh": "世界觀場景",
+    "hint_zh": "例：山丘上的海邊小鎮，天空浮著巨大浮島",
+    "default_en": "a sunlit hillside town above a sparkling sea, with giant floating islands in the sky"
+   },
+   {
+    "key": "title",
+    "label_zh": "標題字（會印在最後一鏡）",
+    "hint_zh": "英文大寫短字最穩",
+    "default_en": "SKYBOUND"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 15,
+  "template_en": "integrated_multimodal_description: [Shot 1] 2D-animated, Japanese TV anime opening style, clean bold outlines, cel shading, glowing lens flares, sparkling particles and a bright palette of cyan, warm gold and soft pink, a wide shot at sunrise shows {world}. In the foreground on a hilltop stands {heroine}, back to the camera, hair and ribbon streaming in the wind. The camera pedestals up with small amplitude at slow speed to reveal the floating scenery glowing in the dawn. [Shot 2] At 00:02.500, the shot cuts to an extreme close-up of the eyes of {heroine_short}, which open slowly, the scenery mirrored in the irises. A hand reaches out in the next frame and tiny points of light gather around the fingertips. [Shot 3] At 00:05.000, the shot cuts to a fast tracking view as {heroine_short} runs down a flower-lined path, the jacket sleeves flying, petals streaming past and speed lines flashing in the background. From the right edge, {friend} bursts into frame and runs alongside, the scarf trailing behind. The camera tracks left with large amplitude at fast speed. [Shot 4] At 00:08.000, the shot cuts to a low angle as {heroine_short} leaps off the edge of the path into the sky, arms wide, with {friend_short} leaping a step behind. The camera rolls clockwise with large amplitude at fast speed and a ring of light bursts outward, as the scenery rotates slowly in the background. [Shot 5] At 00:11.000, the shot cuts to a medium shot of {heroine_short} and {friend_short} standing back to back, arms crossed, wind lifting the scarf and the hair, with a long diagonal lens flare sweeping across the frame. [Shot 6] At 00:13.000, the shot cuts to a wide view of the sky full of drifting sparkles, where the title \"{title}\" appears in large glossy lettering with a burst of light, and the two tiny silhouettes of the heroine and the companion stand on a cloud below it. The camera holds a static shot to the end.\n\noverall_soundscape: Wind whooshes over the hilltop and past the runners, with quick footfalls on the path and the rustle of petals. Each light burst adds a bright shimmer, and a cloth snap marks the leap.\n\nnon_diegetic_music: A fast instrumental J-rock track at about 170 BPM with fast live drums, a driving distorted guitar riff, piano arpeggios and string stabs, ending with a crash cymbal on the title frame. No vocals.",
+  "tips_zh": [
+   "標題字用英文大寫 1 個字最穩，中文字有時會長歪。",
+   "兩位主角的描述要簡單、特徵明顯（髮色、圍巾），才能在快速剪接中保持一致。",
+   "片頭節奏快，每個鏡頭只放一個動作。"
+  ],
+  "icon": "comic",
+  "slots": []
+ },
+ {
+  "id": "action_rooftop_chase",
+  "name_zh": "屋頂追逐（跳躍與翻滾）",
+  "group_zh": "動作",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 10 秒屋頂追逐：外送員衝向屋頂邊緣、起跳、落地翻滾，追兵猶豫後也跳過去，每個鏡頭只做一件事。",
+  "inputs": [
+   {
+    "key": "runner",
+    "label_zh": "逃跑的人（第一次出現用）",
+    "hint_zh": "外觀簡述",
+    "default_en": "a lean courier in a red hooded jacket, black joggers and white sneakers, carrying a small backpack"
+   },
+   {
+    "key": "runner_short",
+    "label_zh": "逃跑的人簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the courier in the red jacket"
+   },
+   {
+    "key": "chaser",
+    "label_zh": "追的人（第一次出現用）",
+    "hint_zh": "外觀簡述",
+    "default_en": "a broad-shouldered pursuer in a dark grey coat and black boots"
+   },
+   {
+    "key": "chaser_short",
+    "label_zh": "追的人簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the pursuer in the grey coat"
+   },
+   {
+    "key": "city",
+    "label_zh": "城市與時間",
+    "hint_zh": "例：黃昏、窗戶亮起暖光的市中心",
+    "default_en": "a dense downtown at dusk with warm window lights and rooftop water tanks"
+   },
+   {
+    "key": "gap",
+    "label_zh": "要跳過的空隙",
+    "hint_zh": "例：兩棟平頂樓之間的窄巷",
+    "default_en": "a wide alley gap between two flat rooftops, each with a low concrete parapet"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 10,
+  "template_en": "integrated_multimodal_description: [Shot 1] Live-action, cinematic action, golden-hour backlight with long shadows, a wide side-on shot shows {runner} sprinting across a gravel rooftop in {city}, arms pumping, the backpack bouncing and gravel kicking up behind each stride, heading for the edge of the roof. Far behind, {chaser} bursts through a rooftop door and starts to run. The camera tracks left with small amplitude at fast speed alongside the runner. [Shot 2] At 00:02.500, the camera cuts to a low-angle front view of {runner_short} reaching {gap}. The left foot plants on the parapet, the knee bends and drives, and the body stretches out horizontally over the drop, jacket flaring and arms forward. The camera tilts up with small amplitude at fast speed as the runner crosses the open gap against the sky. [Shot 3] At 00:05.000, the camera cuts to a side medium shot as {runner_short} lands on the far rooftop on both feet, drops into a shoulder roll across the gravel and springs up into a stride, gravel scattering in a fan. The camera tracks right with small amplitude at fast speed, keeping the runner centered. [Shot 4] At 00:07.500, the camera cuts to a wide shot from the near rooftop as {chaser_short} reaches the parapet, stops short with one foot on the edge and takes two steps back. Then the pursuer sprints, leaps and crosses the gap, landing hard on the far roof with a stumble onto one knee before rising. Far ahead, {runner_short} glances once over the shoulder and keeps running away from the camera. The camera pulls out with small amplitude at slow speed.\n\noverall_soundscape: Gravel crunches under fast footsteps with heavy breathing, jacket swishes and a backpack thump. Wind rushes past during the leaps, boots land with dull thuds and a distant siren wails over the city.\n\nnon_diegetic_music: Driving percussion at about 140 BPM with a pulsing low synth bass, dropping out briefly during the leap and returning with a heavy drum hit on the landing.",
+  "tips_zh": [
+   "每個鏡頭只做一個主要動作：衝刺、起跳、落地、追兵跳，不要再加打鬥。",
+   "起跳與落地的聲音是重點，已經寫在每個鏡頭，別刪。",
+   "想換成河谷、樓梯、屋簷，改「要跳過的空隙」就行。"
+  ],
+  "icon": "punch",
+  "slots": []
+ },
+ {
+  "id": "martial_arts_fight",
+  "name_zh": "武打對決（竹林）",
+  "group_zh": "動作",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 15 秒武打戲：竹林空地上兩人對峙、出拳格擋、旋踢閃避、掃腿反擊，最後互相行禮，不見血、不用武器。",
+  "inputs": [
+   {
+    "key": "fighter_a",
+    "label_zh": "武者 A（第一次出現用）",
+    "hint_zh": "外觀簡述",
+    "default_en": "a lean young man in a white martial-arts tunic with a black sash and short tied-back hair"
+   },
+   {
+    "key": "fighter_a_short",
+    "label_zh": "武者 A 簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the man in the white tunic"
+   },
+   {
+    "key": "fighter_b",
+    "label_zh": "武者 B（第一次出現用）",
+    "hint_zh": "外觀簡述",
+    "default_en": "a tall young woman in a fitted black jacket with red trim, loose trousers and a long braid"
+   },
+   {
+    "key": "fighter_b_short",
+    "label_zh": "武者 B 簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the woman in the black jacket"
+   },
+   {
+    "key": "arena",
+    "label_zh": "場地",
+    "hint_zh": "例：起霧的竹林空地，地上落葉",
+    "default_en": "a misty bamboo-forest clearing with fallen leaves on packed earth"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 15,
+  "template_en": "integrated_multimodal_description: [Shot 1] Live-action, cinematic martial-arts film, soft grey morning mist with slanted light through the bamboo, a wide shot shows {arena}, where {fighter_a} steps in from the left and {fighter_b} from the right. Both stop about three body lengths apart and sink into low stances, sleeves and hair stirring in the wind while leaves drift across the ground. The camera pushes in with small amplitude at slow speed. [Shot 2] At 00:03.000, the camera cuts to a medium side-on shot as {fighter_a_short} steps forward with the right foot and drives a straight right punch at the chest of {fighter_b_short}. In response, {fighter_b_short} turns the torso sideways and deflects the arm with the left forearm, a sharp slap of contact sounding as the fist slides past the shoulder. The camera tracks left with small amplitude at normal speed. [Shot 3] At 00:06.000, the camera cuts to a low-angle medium shot as {fighter_b_short} pivots on the front foot and whips a spinning back kick toward the head of {fighter_a_short}. Leaning back from the waist, {fighter_a_short} lets the heel pass a hand's width from the chin, scattering leaves outward in a ring. The camera arcs left with small amplitude at normal speed. [Shot 4] At 00:09.000, the camera cuts to a wide shot as {fighter_a_short} drops low and sweeps a leg along the ground. Hopping over the sweep, {fighter_b_short} lands and strikes with both open palms to the chest of {fighter_a_short}, who slides backward on the heels across the earth for about two body lengths and stops upright, sleeves snapping. [Shot 5] At 00:12.000, the camera cuts to a medium wide shot as both fighters hold still for a breath, then {fighter_a_short} makes a small bow and {fighter_b_short} returns it, while dust and leaves settle slowly around their feet. The camera pulls out with small amplitude at slow speed.\n\noverall_soundscape: Sleeves and cloth snap sharply with each movement, boots scrape and slide across packed earth and leaves crunch underfoot. Fists and palms land with solid thuds, kicks cut the air with a short whoosh and bamboo creaks in the wind.\n\nnon_diegetic_music: Low taiko drums at a slow tempo with sparse bamboo-flute phrases and a plucked guzheng, building to a rolling drum hit at the sweep and thinning to a single flute note at the bow.",
+  "tips_zh": [
+   "每個鏡頭只放一個主要招式（出拳／旋踢／掃腿），不要一次堆很多招。",
+   "沒有武器、沒有血，要加刀劍請自己補，且建議一鏡一個武器動作。",
+   "打擊音效已經配在每個鏡頭，聲音會跟著動作走。"
+  ],
+  "icon": "punch",
+  "slots": []
+ },
+ {
+  "id": "magic_vfx_spell",
+  "name_zh": "魔法施放特效",
+  "group_zh": "動作",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 10 秒魔法特效片段：法師舉手符文亮起、念咒釋放、光之凰展翅，餘燼落下，光影會映在臉上和場景中。",
+  "inputs": [
+   {
+    "key": "caster",
+    "label_zh": "施法者（第一次出現用）",
+    "hint_zh": "外觀簡述",
+    "default_en": "a young sorceress with long silver hair in a midnight-blue hooded cloak embroidered with gold stars"
+   },
+   {
+    "key": "caster_short",
+    "label_zh": "施法者簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the sorceress in the starry cloak"
+   },
+   {
+    "key": "place",
+    "label_zh": "場景",
+    "hint_zh": "例：夜晚的古老石庭，破碎石柱",
+    "default_en": "an ancient stone courtyard at night with broken pillars and drifting mist"
+   },
+   {
+    "key": "effect",
+    "label_zh": "魔法的樣子",
+    "hint_zh": "具體寫出形狀與顏色",
+    "default_en": "a spiral of glowing golden runes condenses into a blazing phoenix made of light"
+   },
+   {
+    "key": "incantation",
+    "label_zh": "咒語",
+    "hint_zh": "10 字內，中文",
+    "default_en": "以星光為名，現身吧。"
+   },
+   {
+    "key": "aftermath",
+    "label_zh": "魔法的結局",
+    "hint_zh": "寫成一個完整動作",
+    "default_en": "the phoenix soars into the night sky and bursts into drifting golden sparks that settle like snow on the ruins"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 10,
+  "template_en": "integrated_multimodal_description: [Shot 1] Live-action, high-fantasy cinematic VFX, deep blue night with warm gold magical light, a low-angle medium shot frames {caster} standing in {place}, one hand slowly rising. Golden runes ignite in a ring around the wrist and spread outward along the arm, the cloak lifts in a rising wind and the eyes catch the glow. Light from the runes sweeps over the surroundings. The camera pushes in with small amplitude at slow speed. [Shot 2] At 00:03.500, the camera cuts to a wide shot of the same place, with {caster_short} planted at the center, palm thrust forward. The caster, with a calm, resonant, mid-low voice (S1), says: <d>[Chinese] {incantation}</d> In answer, {effect}, its light throwing shadows sweeping across the ground as the cloak and hair whip back. The camera arcs right with large amplitude at slow speed around the glowing center. [Shot 3] At 00:07.000, the camera cuts to a close-up of the face of {caster_short}, lit gold from the front while {aftermath}. Sparks fall past the lens, the light slowly cools to pale blue moonlight, and a long breath leaves the lips before the eyes lift toward the sky. The camera holds a static shot.\n\noverall_soundscape: A low magical hum rises with the glowing runes, crackling softly, then a bright rushing whoosh and a deep resonant boom at the release. Mist hisses faintly, cloth snaps in the wind and tiny sparks tick as they fall.\n\nnon_diegetic_music: Low sustained strings and a slow wordless choir swelling to a single timpani hit at the release, then thinning to a high shimmering pad that fades out.",
+  "tips_zh": [
+   "魔法的樣子要寫成具體的形狀和顏色，不要只寫「華麗」。",
+   "咒語建議 10 字內；最後一鏡不開口，只留表情和光。",
+   "光會照在臉和場景上，是這類特效戲最重要的細節，別刪掉。"
+  ],
+  "icon": "punch",
+  "slots": []
+ },
+ {
+  "id": "bullet_time",
+  "name_zh": "子彈時間（凍結環繞）",
+  "group_zh": "動作",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 5 秒子彈時間：動作瞬間幾乎凍結，鏡頭繞主角轉半圈看見懸在半空的碎片，最後時間恢復。",
+  "inputs": [
+   {
+    "key": "subject",
+    "label_zh": "主角",
+    "hint_zh": "外觀簡述",
+    "default_en": "a stuntwoman in a black leather jacket and fitted dark trousers with a short ponytail"
+   },
+   {
+    "key": "action",
+    "label_zh": "凍結前的動作",
+    "hint_zh": "寫成一個完整的動作",
+    "default_en": "leans far back in a mid-air dodge while a window behind explodes outward in a shower of glass shards"
+   },
+   {
+    "key": "place",
+    "label_zh": "場景",
+    "hint_zh": "例：下雨的霓虹小巷夜晚",
+    "default_en": "a rain-soaked neon alley at night with pink and blue signs"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 5,
+  "template_en": "integrated_multimodal_description: [Shot 1] Live-action, cinematic bullet-time effect, hard neon rim light and glistening rain, a medium shot begins at normal speed in {place} as {subject} runs into frame and {action}. Time then slows to an almost complete stop: glass shards, raindrops and sparks hang motionless in the air with the light glinting on each fragment, while the body of the subject stays frozen in the dodge. The camera arcs around the subject in a half circle with large amplitude at slow speed, moving from the front through the side to the back of the frozen moment, so the suspended shards pass the lens one by one. In the last second, time snaps back, the shards fall, the rain streams down and the subject lands and rolls out of the dodge.\n\noverall_soundscape: A sharp window blast and rain at normal speed, then every sound stretches into a deep, low-pitched hum as time stops, with glass tinkles slowed to long, distorted chimes. The sound snaps back at the end with falling glass, a boot slide and a thud on wet pavement.\n\nnon_diegetic_music: A low electronic pulse at a slow tempo that deepens in pitch as time freezes, then cuts out as the sound snaps back.",
+  "tips_zh": [
+   "只選一個瞬間來凍結，畫面才乾淨。",
+   "鏡頭轉半圈已經寫好，不需要再加其他運鏡。",
+   "若變形，先降低動作複雜度，例如少放碎片。"
+  ],
+  "icon": "punch",
+  "slots": []
+ },
+ {
+  "id": "asmr_ambience",
+  "name_zh": "ASMR 氛圍短片（雨窗、茶、輕敲）",
+  "group_zh": "日常短片",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 10 秒 ASMR 氛圍片：下雨的窗邊、雙手輕敲和刷動小物件、熱茶冒煙，最後一句輕聲細語，重點在細緻的聲音。",
+  "inputs": [
+   {
+    "key": "scene",
+    "label_zh": "場景",
+    "hint_zh": "例：下雨夜的小木屋窗邊書桌",
+    "default_en": "a small wooden cabin at night, lit by a single warm lamp"
+   },
+   {
+    "key": "objects",
+    "label_zh": "發出聲音的小物件",
+    "hint_zh": "例：木頭小鈴鐺、牛皮紙、陶瓷杯",
+    "default_en": "a small wooden bell, a sheet of kraft paper and a ceramic teacup"
+   },
+   {
+    "key": "tea",
+    "label_zh": "熱飲",
+    "hint_zh": "例：冒著熱氣的烏龍茶",
+    "default_en": "steaming oolong tea in a ceramic cup"
+   },
+   {
+    "key": "whisper",
+    "label_zh": "最後的輕聲細語",
+    "hint_zh": "15 字內",
+    "default_en": "今晚下雨了，慢慢來，不急。"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 10,
+  "template_en": "integrated_multimodal_description: [Shot 1] Live-action, very soft low-key lighting, shallow depth of field, a static close shot of a rain-streaked window in {scene}, droplets running down the glass in slow lines and blurry warm lamp light glowing behind them. The camera holds a static shot as one large drop gathers weight and slides down the pane. [Shot 2] At 00:03.500, the camera cuts to a close-up of two bare hands resting on a wooden desk, gently tapping and stroking {objects} one at a time. Fingertips tap the wood, brush across the paper and circle the rim of the cup, each touch slow and clear. The camera pushes in with small amplitude at slow speed. [Shot 3] At 00:07.000, the camera cuts to a macro shot of {tea}, steam curling upward in the lamp light, as the hands lift the cup an inch and set it down again. A woman with a soft, breathy whispering voice (S1) says in an off-screen voiceover: <d>[Chinese] {whisper}</d> while no face appears on screen.\n\noverall_soundscape: Steady rain taps against the window glass with low wind outside and a faint creak of the wooden cabin. Fingertips tap the wood and brush across paper, a ceramic cup scrapes softly on the desk and hot tea steams with a quiet liquid ripple. The wooden bell gives a single dull chime.\n\nnon_diegetic_music: N/A",
+  "tips_zh": [
+   "ASMR 重點在聲音細節，建議「小物件」不要超過 3 樣。",
+   "這個範本沒有配樂，要加輕音樂可自行改最後一行。",
+   "輕聲細語的那句不要太長，10 秒內講完最穩。"
+  ],
+  "icon": "cam",
+  "slots": []
+ },
+ {
+  "id": "timelapse_city",
+  "name_zh": "城市縮時攝影（日落到夜景）",
+  "group_zh": "日常短片",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 10 秒縮時攝影：固定機位拍城市，由傍晚金光到藍調時刻再到夜晚燈火，雲飛快流動、車流變成光軌。",
+  "inputs": [
+   {
+    "key": "location",
+    "label_zh": "拍攝地點與視角",
+    "hint_zh": "例：從高樓天台俯瞰河岸城市的天際線",
+    "default_en": "an elevated rooftop view over a river and a dense skyline of towers"
+   },
+   {
+    "key": "start",
+    "label_zh": "起始時間",
+    "hint_zh": "例：傍晚日落前的金色陽光",
+    "default_en": "golden late-afternoon sunlight just before sunset"
+   },
+   {
+    "key": "end",
+    "label_zh": "結束時間",
+    "hint_zh": "例：深藍夜空與滿城燈火",
+    "default_en": "a deep blue night sky with the whole city lit"
+   },
+   {
+    "key": "traffic",
+    "label_zh": "地面動態",
+    "hint_zh": "例：橋上車流、河上遊船",
+    "default_en": "bridge traffic and a few boats on the river"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 10,
+  "template_en": "integrated_multimodal_description: [Shot 1] Live-action time-lapse photography, ultra-sharp, a wide static shot from a fixed tripod position shows {location}, beginning in {start}. The camera holds a static shot for the entire time-lapse. Clouds race across the sky and their shadows sweep over the buildings, the sunlight turns from gold to orange to pink and then fades into cool blue twilight. Ground-level activity, such as {traffic}, blurs into long streaks of white and red light, small figures flicker past as pale smears, and windows across the towers turn on in rippling waves until the scene ends in {end}, the skyline outlined in glowing points of light.\n\noverall_soundscape: A sped-up city hum swells and recedes, with traffic whooshes passing in rhythmic waves and distant sirens warping as they pass. A faint crowd murmur and the rush of wind over the rooftop run underneath.\n\nnon_diegetic_music: A steady ambient electronic pulse at about 110 BPM with sustained synth pads that slowly rise in volume, a soft arpeggio joining in the second half and ending on a held chord.",
+  "tips_zh": [
+   "縮時攝影只用一個鏡頭、鏡頭固定不動，畫面變化全來自時間流逝。",
+   "起始時間和結束時間差異越大（白天到夜晚），效果越明顯。",
+   "如果想要人群，可以在「地面動態」補上，但人會變成模糊的光影。"
+  ],
+  "icon": "cam",
+  "slots": []
+ },
+ {
+  "id": "slow_motion_splash",
+  "name_zh": "超慢動作水花瞬間",
+  "group_zh": "日常短片",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 5 秒超慢動作：主角跳進積水坑，水珠一顆顆懸在半空，鏡頭慢慢跟拍，聲音也被拉低拉長。",
+  "inputs": [
+   {
+    "key": "subject",
+    "label_zh": "主角",
+    "hint_zh": "例：穿黃色雨衣、紅色雨鞋的年輕女生",
+    "default_en": "a young woman in a bright yellow raincoat and red rain boots"
+   },
+   {
+    "key": "action",
+    "label_zh": "動作",
+    "hint_zh": "例：從路緣跳進一個大水坑",
+    "default_en": "jumping from the curb into a large puddle"
+   },
+   {
+    "key": "place",
+    "label_zh": "地點與天氣",
+    "hint_zh": "例：雨後的石板小巷，午後陽光",
+    "default_en": "a cobblestone alley just after rain in soft afternoon sun"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 5,
+  "template_en": "integrated_multimodal_description: [Shot 1] Live-action, ultra slow-motion at extremely high frame rate, crisp backlight and a shallow depth of field, a low side-angle medium shot follows {subject} in {place}, {action}. The camera tracks right with small amplitude at slow speed as both boots hit the surface and the puddle erupts upward in a thick crown of water. Hundreds of droplets hang separately in the air, each catching a pinpoint of sunlight, with ripples spreading in rings across the water and the raincoat fabric rippling and lifting around the arms. The hair floats up and the laughing face is lit from behind by the sun. The droplets begin to fall back slowly as the shot ends.\n\noverall_soundscape: The sound is stretched and lowered in pitch, with a deep, rounded splash, long trailing drips and a soft rumble of water settling. A muffled laugh bubbles up through the slow-motion hush.\n\nnon_diegetic_music: A slow, spacious piano melody with a long reverb tail and a soft sustained string pad, swelling slightly at the moment of impact and fading out.",
+  "tips_zh": [
+   "慢動作一次只拍一個瞬間，動作不要複雜。",
+   "想換成別的瞬間，例如氣球爆開、咖啡倒入杯中，只要改「動作」。",
+   "聲音已經設定成慢動作的低沉質感，不用再另外加。"
+  ],
+  "icon": "cam",
+  "slots": []
+ },
+ {
+  "id": "comedy_sketch",
+  "name_zh": "搞笑小短劇（吹牛翻車）",
+  "group_zh": "類型片",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 15 秒搞笑短劇：推銷員吹噓商品很耐用，下一秒商品當場噴發，顧客面無表情吐槽，最後罐頭笑聲。",
+  "inputs": [
+   {
+    "key": "seller",
+    "label_zh": "推銷員（第一次出現用）",
+    "hint_zh": "外觀簡述",
+    "default_en": "a loud salesman with slicked-back hair in a checkered orange suit"
+   },
+   {
+    "key": "seller_short",
+    "label_zh": "推銷員簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the salesman in the orange suit"
+   },
+   {
+    "key": "customer",
+    "label_zh": "顧客（第一次出現用）",
+    "hint_zh": "外觀簡述",
+    "default_en": "a deadpan customer in a grey hoodie and square glasses"
+   },
+   {
+    "key": "customer_short",
+    "label_zh": "顧客簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the customer in the grey hoodie"
+   },
+   {
+    "key": "product",
+    "label_zh": "商品（第一次出現用）",
+    "hint_zh": "要會出事的商品，例：果汁機",
+    "default_en": "a shiny silver blender whose glass jar is full of strawberries"
+   },
+   {
+    "key": "product_short",
+    "label_zh": "商品簡稱",
+    "hint_zh": "一個詞",
+    "default_en": "the blender"
+   },
+   {
+    "key": "mess",
+    "label_zh": "噴出來的東西",
+    "hint_zh": "例：粉紅色果汁",
+    "default_en": "pink smoothie"
+   },
+   {
+    "key": "setting",
+    "label_zh": "場景",
+    "hint_zh": "例：粉彩色貨架的家電店",
+    "default_en": "a cheerful home-appliance shop with bright pastel shelves"
+   },
+   {
+    "key": "line_seller_1",
+    "label_zh": "推銷員吹牛的一句",
+    "hint_zh": "15 字內",
+    "default_en": "這台果汁機堅固到連大象都踩不壞！"
+   },
+   {
+    "key": "line_customer",
+    "label_zh": "顧客的吐槽",
+    "hint_zh": "15 字內",
+    "default_en": "那它剛剛為什麼噴到天花板上？"
+   },
+   {
+    "key": "line_seller_2",
+    "label_zh": "推銷員的硬拗",
+    "hint_zh": "10 字內",
+    "default_en": "那、那是附贈的特效。"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 15,
+  "template_en": "integrated_multimodal_description: [Shot 1] Live-action, bright sitcom lighting, a medium shot in {setting} frames {seller} standing proudly behind a counter with {product} in front, one thumb raised, and {customer} standing at the right with arms crossed. The camera pushes in with small amplitude at slow speed as {seller_short}, with a loud, fast, theatrical voice (S1), says: <d>[Chinese] {line_seller_1}</d> and slaps the top of {product_short}. [Shot 2] At 00:04.000, the camera cuts to a close-up of {product_short} as a finger of {seller_short} presses the start button. The motor whines, the contents churn, the lid blows off with a bang and a fountain of {mess} shoots upward and splatters across the ceiling. [Shot 3] At 00:07.500, the camera cuts to a medium shot of {seller_short} frozen in place with {mess} dripping down the clothes and the hair, while {customer_short} stands perfectly still at the right, not a drop on the clothes, and blinks once. With a flat, dry, low voice (S2), {customer_short} says: <d>[Chinese] {line_customer}</d> [Shot 4] At 00:11.000, the camera cuts to a close-up of {seller_short}, a drop of {mess} falling from the tip of the nose, the smile frozen on the face and one eye twitching. In a strained, high-pitched voice (S1), {seller_short} says: <d>[Chinese] {line_seller_2}</d> A classic canned audience laugh begins right after the line and continues through the final frame.\n\noverall_soundscape: A bright shop ambience with a faint music-box jingle, then the whine of the motor, a loud bang as the lid flies off and a thick splatter across the ceiling. Drips fall onto the floor in slow plops, and a canned audience laugh swells at the end.\n\nnon_diegetic_music: A bouncy ragtime-style piano at a quick tempo with a plucked upright bass and a tambourine, cutting abruptly to a single descending trombone slide on the punchline.",
+  "tips_zh": [
+   "喜劇靠節奏：吹牛、翻車、吐槽、硬拗四拍，每一句都要短。",
+   "商品可以換成任何「看起來很穩卻出事」的東西，記得同時改商品簡稱和噴出來的東西。",
+   "顧客一定要面無表情，笑點才出得來。"
+  ],
+  "icon": "clap",
+  "slots": []
+ },
+ {
+  "id": "horror_corridor",
+  "name_zh": "驚悚走廊（不血腥的緊張感）",
+  "group_zh": "類型片",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 10 秒驚悚小片段：廢棄公寓走廊燈光閃爍，主角輕聲呼喊，燈再亮起時遠處的人影更近了，最後全黑。不見血腥。",
+  "inputs": [
+   {
+    "key": "protagonist",
+    "label_zh": "主角（第一次出現用）",
+    "hint_zh": "外觀簡述",
+    "default_en": "a young woman in a beige raincoat with a shoulder-length black bob, holding a small flashlight"
+   },
+   {
+    "key": "protagonist_short",
+    "label_zh": "主角簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the woman in the beige raincoat"
+   },
+   {
+    "key": "place",
+    "label_zh": "場景",
+    "hint_zh": "例：廢棄公寓走廊，牆紙剝落，頂燈閃爍",
+    "default_en": "an abandoned apartment hallway with peeling green wallpaper and flickering ceiling lights"
+   },
+   {
+    "key": "figure",
+    "label_zh": "若隱若現的東西",
+    "hint_zh": "要很克制，例：高瘦蒼白的人影",
+    "default_en": "a tall, thin, pale silhouette"
+   },
+   {
+    "key": "line",
+    "label_zh": "主角輕聲說的話",
+    "hint_zh": "8 字內",
+    "default_en": "有人嗎？"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 10,
+  "template_en": "integrated_multimodal_description: [Shot 1] Live-action, cinematic horror, cold green-grey tones, deep shadows and a single weak flashlight beam, a tracking shot from behind follows {protagonist} walking slowly down {place}, the flashlight beam swaying across the walls and the ceiling lights flickering above. The camera tracks forward at slow speed, keeping a steady distance behind the walker. [Shot 2] At 00:03.500, the camera cuts to a close-up of the face of {protagonist_short}, who stops mid-step, eyes widening at a faint scraping sound ahead. With a hushed, shaky, breathy voice (S1), {protagonist_short} whispers: <d>[Chinese] {line}</d> The eyes slide slowly to the end of the corridor. [Shot 3] At 00:06.500, the camera cuts to a point-of-view shot down the hallway, the flashlight beam trembling on the far wall as the ceiling lights flicker off for a heartbeat. When they return, {figure} stands motionless at the far end of the hallway. The lights flicker off once more, and when they steady again the same silhouette stands noticeably closer than before. The camera pushes in with small amplitude at slow speed. [Shot 4] At 00:08.500, the camera cuts to a close shot of {protagonist_short}, the flashlight trembling in the hand as every light in the corridor dies at once and the frame falls almost completely dark, with only the faint glint of the eyes and the breath fogging in the cold. The camera holds a static shot until the end.\n\noverall_soundscape: A low air-conditioning rumble and the distant drip of water run under slow footsteps on cracked tile. The ceiling lights buzz and tick as they flicker, a faint scrape comes from ahead and a shaky breath trembles in the cold.\n\nnon_diegetic_music: A single sustained low cello note with sparse high string harmonics and no melody, cutting to silence at the final blackout.",
+  "tips_zh": [
+   "驚悚感來自「克制」：只放一個若隱若現的東西，不要加血或怪物特寫。",
+   "燈光閃爍的前後變化是重點，已經寫成『熄滅再亮起，人影更近』。",
+   "最後全黑是故意的，留一個想像空間。"
+  ],
+  "icon": "clap",
+  "slots": []
+ },
+ {
+  "id": "game_trailer",
+  "name_zh": "奇幻遊戲預告片",
+  "group_zh": "遊戲",
+  "mode": "t2v",
+  "desc_zh": "純文字生成 15 秒奇幻動作遊戲預告：廢墟王國遠景、主角特寫與台詞、巨像甦醒、閃避反擊、大標題定格。",
+  "inputs": [
+   {
+    "key": "hero",
+    "label_zh": "主角（第一次出現用）",
+    "hint_zh": "外觀簡述",
+    "default_en": "a lone knight in dented silver armor with a tattered blue cape and a notched longsword"
+   },
+   {
+    "key": "hero_short",
+    "label_zh": "主角簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the knight in the blue cape"
+   },
+   {
+    "key": "monster",
+    "label_zh": "大魔王／怪物（第一次出現用）",
+    "hint_zh": "外觀簡述",
+    "default_en": "a towering stone golem with glowing orange cracks and moss on its shoulders"
+   },
+   {
+    "key": "monster_short",
+    "label_zh": "怪物簡稱",
+    "hint_zh": "3～6 個字加一個明顯特徵",
+    "default_en": "the stone golem"
+   },
+   {
+    "key": "world",
+    "label_zh": "世界觀場景",
+    "hint_zh": "一句話",
+    "default_en": "a ruined mountain kingdom under a stormy twilight sky, with broken bridges and drifting embers"
+   },
+   {
+    "key": "title",
+    "label_zh": "遊戲標題（會印在最後一鏡）",
+    "hint_zh": "英文大寫短字最穩",
+    "default_en": "EMBERFALL"
+   },
+   {
+    "key": "line",
+    "label_zh": "主角的一句台詞",
+    "hint_zh": "15 字內",
+    "default_en": "今天，由我來終結這一切。"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "不需要素材。"
+  },
+  "seconds": 15,
+  "template_en": "integrated_multimodal_description: [Shot 1] 3D CG, cinematic fantasy game trailer, high-contrast stormy twilight lighting, drifting embers, a wide establishing shot shows {world}, with {monster} half-buried and motionless among the rubble in the distance, its cracks pulsing faintly. The camera pushes in with large amplitude at slow speed through the drifting embers. [Shot 2] At 00:03.000, the shot cuts to a close-up of {hero}, standing in the foreground wind, ember light flickering over the face. With a low, gravelly, determined voice (S1), {hero_short} says: <d>[Chinese] {line}</d> The grip tightens on the weapon, and the cape snaps behind. [Shot 3] At 00:06.000, the shot cuts to a low-angle view as {monster_short} tears itself out of the rubble and rises to full height, stones raining off its body, then throws its head back and bellows. The camera pedestals up with large amplitude at normal speed, and the shockwave of the roar ripples the dust across the ground. [Shot 4] At 00:09.000, the shot cuts to a fast side-tracking view as {hero_short} rolls under a huge swinging fist, comes up and slashes a glowing crack in the leg of {monster_short}, sparks and shards of stone bursting outward. The camera tracks left with large amplitude at fast speed. [Shot 5] At 00:12.000, the shot cuts to a wide view of the ruins as the sky lights with orange fire behind the silhouettes of {hero_short} and {monster_short}, and the title \"{title}\" appears in large chiseled-stone lettering with rising embers. The camera pulls out with small amplitude at slow speed and holds on the title to the end.\n\noverall_soundscape: Howling wind carries embers and distant thunder, stones crack and tumble as the monster rises and a deep, grinding roar shakes the ground. Armor clatters on the roll, steel strikes stone with a ringing impact and debris rains down.\n\nnon_diegetic_music: A cinematic trailer score with low sustained strings and slow war drums at a deliberate tempo, building to a layered brass swell and a heavy drum hit at the title, then a single resonant boom that rings out.",
+  "tips_zh": [
+   "標題字用英文大寫 1 個字，印在畫面上最穩。",
+   "打鬥一次只放一次格擋、一次反擊，不要堆很多招。",
+   "沒有血腥，想加武器細節就寫在主角外觀裡。"
+  ],
+  "icon": "die",
+  "slots": []
+ },
+ {
+  "id": "continue_from_last_frame",
+  "name_zh": "接續上一段（用上一段的最後一張圖）",
+  "group_zh": "接續",
+  "mode": "i2v",
+  "desc_zh": "把上一段影片的最後一格截成圖當第一張，讓新片段從那個畫面接著動，角色、場景、光線延續，並多一句新台詞。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫面風格",
+    "hint_zh": "要和上一段一致",
+    "default_en": "Live-action, cinematic"
+   },
+   {
+    "key": "subject",
+    "label_zh": "角色簡述",
+    "hint_zh": "要和圖 1 對得上",
+    "default_en": "a young woman with short black hair in a yellow raincoat"
+   },
+   {
+    "key": "last_state",
+    "label_zh": "圖 1 的畫面（完整句子）",
+    "hint_zh": "一句話",
+    "default_en": "the young woman in the yellow raincoat is closing a clear umbrella in front of the glass door of a small bookshop at dusk, rain falling behind"
+   },
+   {
+    "key": "next_action",
+    "label_zh": "接下來發生的事",
+    "hint_zh": "兩個連續動作",
+    "default_en": "pushes the door open, a small bell ringing, then steps inside and shakes the drops from the raincoat"
+   },
+   {
+    "key": "voice",
+    "label_zh": "聲音特徵",
+    "hint_zh": "要和上一段一致",
+    "default_en": "a warm, slightly breathy, mid-pitched voice"
+   },
+   {
+    "key": "line",
+    "label_zh": "新台詞",
+    "hint_zh": "15 字內",
+    "default_en": "我回來了。"
+   },
+   {
+    "key": "sounds",
+    "label_zh": "接下來的環境聲",
+    "hint_zh": "用英文寫幾種聲音",
+    "default_en": "rain and street ambience at first, then a bell chime, wet footsteps, the rustle of a raincoat and a quiet room tone"
+   }
+  ],
+  "media": {
+   "images": 1,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "圖 1＝上一段影片的最後一格截圖"
+  },
+  "seconds": 10,
+  "template_en": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] {style}, the scene shown in <Picture 1> is the starting frame, in which {last_state}, keeping the face, hairstyle, clothing, framing, lighting and background of <Picture 1> exactly as shown. The subject {next_action}. The camera pushes in with small amplitude at slow speed so the movement flows smoothly out of the opening frame, and the weather and light keep the same direction and color as in <Picture 1>. [Shot 2] At 00:05.000, the camera cuts to a medium close-up of {subject} at the place where the action has just led, in the same light and color as the opening shot. The subject, with {voice} (S1), says: <d>[Chinese] {line}</d> A small natural breath and a slow shift of gaze accompany the line, and the shot holds to the end.\n\noverall_soundscape: Ambient sound of {sounds}, changing naturally with the movement.\n\nnon_diegetic_music: N/A",
+  "tips_zh": [
+   "截圖請用上一段影片真正的最後一格，不要用修過的圖，銜接才不會跳。",
+   "畫面風格要和上一段一致，否則第一秒會突然換風格。",
+   "要接很多段時，請記得每段都換成新的最後一格。"
+  ],
+  "icon": "loop",
+  "slots": [
+   {
+    "slot": "first",
+    "kind": "image",
+    "role": "上一段影片的最後一格截圖"
+   }
+  ]
+ },
+ {
+  "id": "continue_seamless",
+  "name_zh": "無縫接續上一支（畫面＋聲音一起接）",
+  "group_zh": "接續",
+  "mode": "continue",
+  "continue_audio": true,
+  "desc_zh": "放上一支影片：拿它最後不到一秒的畫面和聲音當開頭，接著往下演，接起來不跳。",
+  "inputs": [
+   {
+    "key": "style",
+    "label_zh": "畫風（跟上一支一樣）",
+    "hint_zh": "",
+    "default_en": "the same 2.5D anime style, lighting and color palette as before"
+   },
+   {
+    "key": "subject",
+    "label_zh": "主角長相（每段都要重寫）",
+    "hint_zh": "",
+    "default_en": "the petite girl with long orange hair, orange eyes and the white and orange short dress"
+   },
+   {
+    "key": "next",
+    "label_zh": "接下來發生什麼",
+    "hint_zh": "",
+    "default_en": "turns toward the camera, smiles and waves, then walks slowly to the left as the camera follows"
+   },
+   {
+    "key": "sound",
+    "label_zh": "聲音",
+    "hint_zh": "",
+    "default_en": "soft footsteps and a light breeze continue from before"
+   }
+  ],
+  "media": {
+   "images": 0,
+   "videos": 0,
+   "audios": 0,
+   "notes_zh": "上一支影片（生圖站的成品或自己的影片）"
+  },
+  "seconds": 5,
+  "template_en": "integrated_multimodal_description: [Shot 1] {style}. Continuing seamlessly from the exact final moment of the previous clip with no cut or reset, {subject} {next}.\n\noverall_soundscape: {sound}.\n\nnon_diegetic_music: N/A",
+  "tips_zh": "串很多段時臉會慢慢跑掉：每段都完整重寫主角長相，大約四段重新給一次首幀。",
+  "icon": "loop",
+  "slots": [
+   {
+    "slot": "prev",
+    "kind": "video",
+    "role": "上一支影片（會接它最後一小段的畫面和聲音）"
+   }
+  ]
+ }
+]

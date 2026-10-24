@@ -1,0 +1,11838 @@
+{
+"source": "danbooru tag_implications (active)",
+"built": "2026-10-15",
+"implies": {
+"!!": [
+"!"
+],
+"1970s_(style)": [
+"retro_artstyle"
+],
+"1980s_(style)": [
+"retro_artstyle"
+],
+"1990s_(style)": [
+"retro_artstyle"
+],
+"1koma": [
+"comic"
+],
+"2boys": [
+"multiple_boys"
+],
+"2girls": [
+"multiple_girls"
+],
+"2koma": [
+"comic"
+],
+"2others": [
+"multiple_others"
+],
+"3boys": [
+"multiple_boys"
+],
+"3girls": [
+"multiple_girls"
+],
+"3koma": [
+"comic"
+],
+"3others": [
+"multiple_others"
+],
+"4boys": [
+"multiple_boys"
+],
+"4girls": [
+"multiple_girls"
+],
+"4koma": [
+"comic"
+],
+"4others": [
+"multiple_others"
+],
+"5boys": [
+"multiple_boys"
+],
+"5girls": [
+"multiple_girls"
+],
+"5koma": [
+"comic"
+],
+"6+boys": [
+"multiple_boys"
+],
+"6+girls": [
+"multiple_girls"
+],
+"6+others": [
+"multiple_others"
+],
+":d": [
+"smile"
+],
+":p": [
+"tongue_out"
+],
+":q": [
+"tongue_out"
+],
+":|": [
+"closed_mouth"
+],
+";(": [
+"frown",
+"one_eye_closed"
+],
+";)": [
+"one_eye_closed",
+"smile"
+],
+";3": [
+":3",
+"one_eye_closed"
+],
+";d": [
+":d",
+"one_eye_closed",
+"smile"
+],
+";o": [
+":o",
+"one_eye_closed"
+],
+";p": [
+":p",
+"one_eye_closed",
+"tongue_out"
+],
+";q": [
+":q",
+"one_eye_closed",
+"tongue_out"
+],
+">:(": [
+"v-shaped_eyebrows"
+],
+">:)": [
+"v-shaped_eyebrows"
+],
+">_o": [
+"one_eye_closed"
+],
+"??": [
+"?"
+],
+"\\o/": [
+"arms_up",
+"outstretched_arms"
+],
+"^_^": [
+"closed_eyes"
+],
+"above_clouds": [
+"cloud"
+],
+"absolutely_everyone": [
+"everyone"
+],
+"absurdly_long_hair": [
+"very_long_hair"
+],
+"ace_(playing_card)": [
+"playing_card"
+],
+"ace_of_hearts": [
+"ace_(playing_card)",
+"heart"
+],
+"ace_of_spades": [
+"ace_(playing_card)",
+"spade_(shape)"
+],
+"acoustic_guitar": [
+"guitar"
+],
+"acrylic_paint_(medium)": [
+"painting_(medium)"
+],
+"adjusting_buruma": [
+"adjusting_clothes",
+"buruma"
+],
+"adjusting_gloves": [
+"adjusting_clothes",
+"gloves"
+],
+"adjusting_headwear": [
+"adjusting_clothes"
+],
+"adjusting_legwear": [
+"adjusting_clothes"
+],
+"adjusting_necktie": [
+"adjusting_clothes",
+"necktie"
+],
+"adjusting_panties": [
+"adjusting_clothes",
+"panties"
+],
+"adjusting_scarf": [
+"scarf"
+],
+"adjusting_swimsuit": [
+"adjusting_clothes",
+"swimsuit"
+],
+"aerial_fireworks": [
+"fireworks"
+],
+"against_railing": [
+"railing"
+],
+"against_tree": [
+"tree"
+],
+"age_regression": [
+"aged_down"
+],
+"ahoge_wag": [
+"ahoge",
+"expressive_hair"
+],
+"aiming_at_viewer": [
+"aiming"
+],
+"air_bubble": [
+"bubble"
+],
+"airplane": [
+"aircraft"
+],
+"airship": [
+"aircraft"
+],
+"ajirogasa": [
+"hat"
+],
+"ak-47": [
+"assault_rifle",
+"kalashnikov_rifle"
+],
+"akanbe": [
+"eyelid_pull",
+"tongue_out"
+],
+"akeome": [
+"happy_new_year"
+],
+"alarm_clock": [
+"clock"
+],
+"album_cover": [
+"cover"
+],
+"alpaca_ears": [
+"animal_ears"
+],
+"alphes_(style)": [
+"style_parody"
+],
+"alternate_weapon": [
+"weapon"
+],
+"alternate_wings": [
+"wings"
+],
+"american_flag_bikini": [
+"american_flag_print",
+"flag_print_bikini"
+],
+"american_flag_print": [
+"american_flag",
+"flag_print"
+],
+"ammunition_pouch": [
+"pouch"
+],
+"anal_beads": [
+"sex_toy"
+],
+"anal_fingering": [
+"fingering"
+],
+"anal_object_insertion": [
+"anal",
+"object_insertion"
+],
+"anal_tail": [
+"fake_tail"
+],
+"analog_clock": [
+"clock"
+],
+"anchor_earrings": [
+"earrings"
+],
+"anchor_hair_ornament": [
+"hair_ornament"
+],
+"anchor_necklace": [
+"necklace"
+],
+"ancient_greek_clothes": [
+"greco-roman_clothes"
+],
+"anemone_(flower)": [
+"flower"
+],
+"angel_wings": [
+"wings"
+],
+"anglerfish": [
+"fish"
+],
+"angora_rabbit": [
+"rabbit"
+],
+"animal_collar": [
+"collar"
+],
+"animal_ear_hairband": [
+"fake_animal_ears",
+"hairband"
+],
+"animal_ear_headphones": [
+"fake_animal_ears",
+"headphones"
+],
+"animal_hat": [
+"hat"
+],
+"animal_hood": [
+"hood"
+],
+"animal_on_head": [
+"on_head"
+],
+"animal_on_lap": [
+"on_lap"
+],
+"animal_penis": [
+"penis"
+],
+"animal_slippers": [
+"slippers"
+],
+"ankle_boots": [
+"boots"
+],
+"ankle_bow": [
+"bow"
+],
+"ankle_ribbon": [
+"leg_ribbon"
+],
+"ankle_socks": [
+"socks"
+],
+"anklet": [
+"jewelry"
+],
+"anti-materiel_rifle": [
+"sniper_rifle"
+],
+"antique_firearm": [
+"gun"
+],
+"antique_phone": [
+"phone"
+],
+"antlers": [
+"horns"
+],
+"anus_peek": [
+"anus"
+],
+"apple": [
+"fruit"
+],
+"apron_lift": [
+"apron",
+"clothes_lift"
+],
+"aqua_bikini": [
+"bikini"
+],
+"aqua_bow": [
+"bow"
+],
+"aqua_bowtie": [
+"aqua_bow",
+"bowtie"
+],
+"aqua_bra": [
+"bra"
+],
+"aqua_dress": [
+"dress"
+],
+"aqua_gloves": [
+"gloves"
+],
+"aqua_hairband": [
+"hairband"
+],
+"aqua_jacket": [
+"jacket"
+],
+"aqua_kimono": [
+"kimono"
+],
+"aqua_leotard": [
+"leotard"
+],
+"aqua_neckerchief": [
+"neckerchief"
+],
+"aqua_necktie": [
+"necktie"
+],
+"aqua_panties": [
+"panties"
+],
+"aqua_ribbon": [
+"ribbon"
+],
+"aqua_shirt": [
+"shirt"
+],
+"aqua_shorts": [
+"shorts"
+],
+"aqua_skirt": [
+"skirt"
+],
+"ar-15": [
+"rifle"
+],
+"arachne": [
+"monster_girl",
+"spider_girl",
+"taur"
+],
+"aran_sweater": [
+"cable_knit",
+"sweater"
+],
+"argyle_sweater": [
+"argyle_clothes",
+"sweater"
+],
+"arm_between_breasts": [
+"between_breasts"
+],
+"arm_blade": [
+"weapon"
+],
+"arm_cannon": [
+"weapon"
+],
+"arm_ribbon": [
+"ribbon"
+],
+"arm_tattoo": [
+"tattoo"
+],
+"armchair": [
+"chair"
+],
+"armlet": [
+"jewelry"
+],
+"armored_boots": [
+"boots"
+],
+"armored_dress": [
+"armor",
+"dress"
+],
+"armored_leotard": [
+"leotard"
+],
+"armpit_cutout": [
+"clothing_cutout"
+],
+"art_brush": [
+"paintbrush"
+],
+"artist_logo": [
+"logo"
+],
+"ass_cutout": [
+"clothing_cutout"
+],
+"ass_focus": [
+"ass"
+],
+"assault_rifle": [
+"rifle"
+],
+"asymmetrical_docking": [
+"breast_press"
+],
+"asymmetrical_gloves": [
+"gloves"
+],
+"asymmetrical_horns": [
+"horns"
+],
+"asymmetrical_sidelocks": [
+"sidelocks"
+],
+"asymmetrical_wings": [
+"wings"
+],
+"athletic_leotard": [
+"leotard"
+],
+"autumn_leaves": [
+"leaf"
+],
+"aviator_sunglasses": [
+"sunglasses"
+],
+"baby_bottle": [
+"bottle"
+],
+"back-print_panties": [
+"print_panties"
+],
+"back-seamed_legwear": [
+"seamed_legwear"
+],
+"back_bow": [
+"bow"
+],
+"back_cutout": [
+"clothing_cutout"
+],
+"back_focus": [
+"back"
+],
+"back_tattoo": [
+"tattoo"
+],
+"backboob": [
+"breasts"
+],
+"backless_dress": [
+"backless_outfit",
+"dress"
+],
+"backless_leotard": [
+"leotard"
+],
+"backpack": [
+"bag"
+],
+"backwards_hat": [
+"hat"
+],
+"bacon": [
+"food"
+],
+"bad_hands": [
+"bad_anatomy"
+],
+"bag_charm": [
+"charm_(object)"
+],
+"bagged_fish": [
+"bag",
+"fish"
+],
+"baggy_pants": [
+"pants"
+],
+"baguette": [
+"bread"
+],
+"ball_gag": [
+"gag"
+],
+"ballpoint_pen_(medium)": [
+"pen_(medium)"
+],
+"bamboo_broom": [
+"broom"
+],
+"bamboo_forest": [
+"bamboo",
+"forest"
+],
+"banana": [
+"fruit"
+],
+"bandage_on_face": [
+"bandages"
+],
+"bandaged_arm": [
+"bandages"
+],
+"bandaged_fingers": [
+"bandages"
+],
+"bandaged_hand": [
+"bandages"
+],
+"bandaged_head": [
+"bandages"
+],
+"bandaged_leg": [
+"bandages"
+],
+"bandaged_neck": [
+"bandages"
+],
+"bandaged_wrist": [
+"bandages"
+],
+"bandaid_hair_ornament": [
+"bandaid",
+"hair_ornament"
+],
+"bandaid_on_arm": [
+"bandaid"
+],
+"bandaid_on_cheek": [
+"bandaid_on_face"
+],
+"bandaid_on_face": [
+"bandaid"
+],
+"bandaid_on_forehead": [
+"bandaid_on_face"
+],
+"bandaid_on_hand": [
+"bandaid"
+],
+"bandaid_on_head": [
+"bandaid"
+],
+"bandaid_on_knee": [
+"bandaid_on_leg"
+],
+"bandaid_on_leg": [
+"bandaid"
+],
+"bandaid_on_neck": [
+"bandaid"
+],
+"bandaid_on_nose": [
+"bandaid_on_face"
+],
+"bandaid_on_pussy": [
+"bandaid"
+],
+"bandaids_on_nipples": [
+"bandaid",
+"pasties"
+],
+"bandolier": [
+"belt"
+],
+"bangle": [
+"bracelet"
+],
+"banknote": [
+"money"
+],
+"bar_censor": [
+"censored"
+],
+"bar_stool": [
+"stool"
+],
+"barbell_piercing": [
+"piercing"
+],
+"barcode_tattoo": [
+"barcode",
+"tattoo"
+],
+"bare_pectorals": [
+"pectorals"
+],
+"bare_tree": [
+"tree"
+],
+"baseball_cap": [
+"hat"
+],
+"baseball_uniform": [
+"sportswear"
+],
+"basketball_(object)": [
+"ball"
+],
+"basketball_uniform": [
+"sportswear"
+],
+"bass_guitar": [
+"instrument"
+],
+"bat_ears": [
+"animal_ears"
+],
+"bat_hair_ornament": [
+"hair_ornament"
+],
+"bat_print": [
+"animal_print"
+],
+"bat_wings": [
+"wings"
+],
+"bath_stool": [
+"stool"
+],
+"bath_yukata": [
+"yukata"
+],
+"baton_(weapon)": [
+"weapon"
+],
+"battle_axe": [
+"axe",
+"weapon"
+],
+"battle_rifle": [
+"rifle"
+],
+"battleship": [
+"warship"
+],
+"bayonet": [
+"weapon"
+],
+"bc_freedom_(emblem)": [
+"emblem"
+],
+"beach_towel": [
+"towel"
+],
+"beach_umbrella": [
+"umbrella"
+],
+"beachball": [
+"ball"
+],
+"bead_bracelet": [
+"beads",
+"bracelet"
+],
+"bead_necklace": [
+"beads",
+"necklace"
+],
+"beam_rifle": [
+"energy_gun"
+],
+"beamed_eighth_notes": [
+"musical_note"
+],
+"beamed_sixteenth_notes": [
+"musical_note"
+],
+"beanie": [
+"hat"
+],
+"bear_costume": [
+"animal_costume"
+],
+"bear_ears": [
+"animal_ears"
+],
+"bear_hair_ornament": [
+"hair_ornament"
+],
+"bear_hood": [
+"animal_hood"
+],
+"bear_print": [
+"animal_print"
+],
+"bear_tail": [
+"tail"
+],
+"beard": [
+"facial_hair"
+],
+"beard_stubble": [
+"stubble"
+],
+"bee": [
+"bug"
+],
+"beer": [
+"alcohol"
+],
+"beer_bottle": [
+"bottle"
+],
+"beer_can": [
+"drink_can"
+],
+"beer_mug": [
+"mug"
+],
+"beetle": [
+"bug"
+],
+"behind-the-head_headphones": [
+"headphones"
+],
+"belly_chain": [
+"jewelry"
+],
+"belt_boots": [
+"boots"
+],
+"belt_buckle": [
+"buckle"
+],
+"belt_collar": [
+"collar"
+],
+"belt_pouch": [
+"pouch"
+],
+"belt_skirt": [
+"belt"
+],
+"bendy_straw": [
+"drinking_straw"
+],
+"beret": [
+"hat"
+],
+"beretta_92": [
+"handgun"
+],
+"bespectacled": [
+"glasses"
+],
+"bestiality": [
+"zoophilia"
+],
+"between_breasts": [
+"breasts"
+],
+"between_fingers": [
+"holding"
+],
+"between_pectorals": [
+"pectorals"
+],
+"bicorne": [
+"hat"
+],
+"bike_shorts_under_shorts": [
+"bike_shorts",
+"shorts"
+],
+"bike_shorts_under_skirt": [
+"bike_shorts"
+],
+"bikesuit": [
+"biker_clothes",
+"bodysuit"
+],
+"bikini": [
+"swimsuit"
+],
+"bikini_armor": [
+"armor"
+],
+"bikini_bottom_aside": [
+"bikini",
+"clothing_aside"
+],
+"bikini_bottom_only": [
+"bikini"
+],
+"bikini_shorts": [
+"bikini",
+"shorts"
+],
+"bikini_skirt": [
+"bikini"
+],
+"bikini_tan": [
+"tanlines"
+],
+"bikini_top_lift": [
+"bikini",
+"clothes_lift"
+],
+"bikini_top_only": [
+"bikini"
+],
+"bikini_under_clothes": [
+"bikini"
+],
+"bird_ears": [
+"animal_ears"
+],
+"bird_mask": [
+"mask"
+],
+"bird_on_arm": [
+"animal_on_arm",
+"bird"
+],
+"bird_on_hand": [
+"bird"
+],
+"bird_on_head": [
+"animal_on_head",
+"bird"
+],
+"bird_on_shoulder": [
+"animal_on_shoulder",
+"bird"
+],
+"bird_print": [
+"animal_print"
+],
+"bird_tail": [
+"tail"
+],
+"bird_wings": [
+"wings"
+],
+"birdcage": [
+"cage"
+],
+"birthday_cake": [
+"cake"
+],
+"bishop_(chess)": [
+"chess_piece"
+],
+"bit_gag": [
+"gag"
+],
+"biwa_lute": [
+"lute_(instrument)"
+],
+"black_apron": [
+"apron"
+],
+"black_armband": [
+"armband"
+],
+"black_armor": [
+"armor"
+],
+"black_ascot": [
+"ascot"
+],
+"black_babydoll": [
+"babydoll"
+],
+"black_bag": [
+"bag"
+],
+"black_bandeau": [
+"bandeau"
+],
+"black_belt": [
+"belt"
+],
+"black_bikini": [
+"bikini"
+],
+"black_bodysuit": [
+"bodysuit"
+],
+"black_border": [
+"border"
+],
+"black_bow": [
+"bow"
+],
+"black_bowtie": [
+"black_bow",
+"bowtie"
+],
+"black_bra": [
+"bra"
+],
+"black_buruma": [
+"buruma"
+],
+"black_camisole": [
+"camisole"
+],
+"black_cape": [
+"cape"
+],
+"black_capelet": [
+"capelet"
+],
+"black_cardigan": [
+"cardigan"
+],
+"black_cat": [
+"cat"
+],
+"black_choker": [
+"choker"
+],
+"black_cloak": [
+"cloak"
+],
+"black_coat": [
+"coat"
+],
+"black_collar": [
+"collar"
+],
+"black_corset": [
+"corset"
+],
+"black_dress": [
+"dress"
+],
+"black_feathers": [
+"feathers"
+],
+"black_flower": [
+"flower"
+],
+"black_garter_belt": [
+"garter_belt"
+],
+"black_garter_straps": [
+"garter_straps"
+],
+"black_gloves": [
+"gloves"
+],
+"black_hairband": [
+"hairband"
+],
+"black_hakama": [
+"hakama"
+],
+"black_halo": [
+"halo"
+],
+"black_headband": [
+"headband"
+],
+"black_hoodie": [
+"hoodie"
+],
+"black_horns": [
+"horns"
+],
+"black_jacket": [
+"jacket"
+],
+"black_kimono": [
+"kimono"
+],
+"black_leggings": [
+"leggings"
+],
+"black_leotard": [
+"leotard"
+],
+"black_male_swimwear": [
+"male_swimwear"
+],
+"black_male_underwear": [
+"male_underwear"
+],
+"black_mask": [
+"mask"
+],
+"black_neckerchief": [
+"neckerchief"
+],
+"black_necktie": [
+"necktie"
+],
+"black_one-piece_swimsuit": [
+"one-piece_swimsuit"
+],
+"black_outline": [
+"outline"
+],
+"black_panties": [
+"panties"
+],
+"black_pants": [
+"pants"
+],
+"black_pantyhose": [
+"pantyhose"
+],
+"black_pubic_hair": [
+"pubic_hair"
+],
+"black_ribbon": [
+"ribbon"
+],
+"black_robe": [
+"robe"
+],
+"black_rose": [
+"black_flower",
+"rose"
+],
+"black_sailor_collar": [
+"sailor_collar"
+],
+"black_sash": [
+"sash"
+],
+"black_scarf": [
+"scarf"
+],
+"black_sclera": [
+"colored_sclera"
+],
+"black_scrunchie": [
+"scrunchie"
+],
+"black_serafuku": [
+"serafuku"
+],
+"black_shirt": [
+"shirt"
+],
+"black_shorts": [
+"shorts"
+],
+"black_skin": [
+"colored_skin"
+],
+"black_skirt": [
+"skirt"
+],
+"black_sky": [
+"sky"
+],
+"black_socks": [
+"socks"
+],
+"black_sports_bra": [
+"sports_bra"
+],
+"black_suit": [
+"suit"
+],
+"black_sweater": [
+"sweater"
+],
+"black_sweater_vest": [
+"sweater_vest"
+],
+"black_tank_top": [
+"tank_top"
+],
+"black_thighhighs": [
+"thighhighs"
+],
+"black_tube_top": [
+"tube_top"
+],
+"black_umbrella": [
+"umbrella"
+],
+"black_veil": [
+"veil"
+],
+"black_vest": [
+"vest"
+],
+"black_wings": [
+"wings"
+],
+"blank_censor": [
+"censored"
+],
+"blank_speech_bubble": [
+"speech_bubble"
+],
+"blazer": [
+"jacket"
+],
+"bleeding": [
+"blood"
+],
+"blonde_pubic_hair": [
+"pubic_hair"
+],
+"blood_bag": [
+"blood"
+],
+"blood_from_eyes": [
+"blood"
+],
+"blood_from_mouth": [
+"blood"
+],
+"blood_in_hair": [
+"blood"
+],
+"blood_on_arm": [
+"blood"
+],
+"blood_on_bandages": [
+"bandages",
+"blood"
+],
+"blood_on_clothes": [
+"blood"
+],
+"blood_on_face": [
+"blood"
+],
+"blood_on_ground": [
+"blood"
+],
+"blood_on_knife": [
+"blood",
+"knife"
+],
+"blood_on_leg": [
+"blood"
+],
+"blood_on_weapon": [
+"blood",
+"weapon"
+],
+"blood_splatter": [
+"blood"
+],
+"blood_stain": [
+"blood"
+],
+"blouse": [
+"shirt"
+],
+"blue-tinted_eyewear": [
+"tinted_eyewear"
+],
+"blue_apron": [
+"apron"
+],
+"blue_armor": [
+"armor"
+],
+"blue_ascot": [
+"ascot"
+],
+"blue_bag": [
+"bag"
+],
+"blue_bandana": [
+"bandana"
+],
+"blue_belt": [
+"belt"
+],
+"blue_bikini": [
+"bikini"
+],
+"blue_bodysuit": [
+"bodysuit"
+],
+"blue_border": [
+"border"
+],
+"blue_bow": [
+"bow"
+],
+"blue_bowtie": [
+"blue_bow",
+"bowtie"
+],
+"blue_bra": [
+"bra"
+],
+"blue_buruma": [
+"buruma"
+],
+"blue_butterfly": [
+"butterfly"
+],
+"blue_camisole": [
+"camisole"
+],
+"blue_cape": [
+"cape"
+],
+"blue_capelet": [
+"capelet"
+],
+"blue_cardigan": [
+"cardigan"
+],
+"blue_choker": [
+"choker"
+],
+"blue_cloak": [
+"cloak"
+],
+"blue_coat": [
+"coat"
+],
+"blue_collar": [
+"collar"
+],
+"blue_dress": [
+"dress"
+],
+"blue_eyeshadow": [
+"eyeshadow"
+],
+"blue_feathers": [
+"feathers"
+],
+"blue_fire": [
+"fire"
+],
+"blue_flower": [
+"flower"
+],
+"blue_gloves": [
+"gloves"
+],
+"blue_hairband": [
+"hairband"
+],
+"blue_hakama": [
+"hakama"
+],
+"blue_halo": [
+"halo"
+],
+"blue_headband": [
+"headband"
+],
+"blue_hoodie": [
+"hoodie"
+],
+"blue_horns": [
+"horns"
+],
+"blue_jacket": [
+"jacket"
+],
+"blue_kimono": [
+"kimono"
+],
+"blue_leotard": [
+"leotard"
+],
+"blue_male_underwear": [
+"male_underwear"
+],
+"blue_neckerchief": [
+"neckerchief"
+],
+"blue_necktie": [
+"necktie"
+],
+"blue_one-piece_swimsuit": [
+"one-piece_swimsuit"
+],
+"blue_outline": [
+"outline"
+],
+"blue_overalls": [
+"overalls"
+],
+"blue_pajamas": [
+"pajamas"
+],
+"blue_panties": [
+"panties"
+],
+"blue_pants": [
+"pants"
+],
+"blue_pantyhose": [
+"pantyhose"
+],
+"blue_ribbon": [
+"ribbon"
+],
+"blue_robe": [
+"robe"
+],
+"blue_rose": [
+"blue_flower",
+"rose"
+],
+"blue_sailor_collar": [
+"sailor_collar"
+],
+"blue_sarong": [
+"sarong"
+],
+"blue_sash": [
+"sash"
+],
+"blue_scarf": [
+"scarf"
+],
+"blue_sclera": [
+"colored_sclera"
+],
+"blue_scrunchie": [
+"scrunchie"
+],
+"blue_serafuku": [
+"serafuku"
+],
+"blue_shawl": [
+"shawl"
+],
+"blue_shirt": [
+"shirt"
+],
+"blue_shorts": [
+"shorts"
+],
+"blue_skin": [
+"colored_skin"
+],
+"blue_skirt": [
+"skirt"
+],
+"blue_sky": [
+"sky"
+],
+"blue_socks": [
+"socks"
+],
+"blue_sports_bra": [
+"sports_bra"
+],
+"blue_suit": [
+"suit"
+],
+"blue_sweater": [
+"sweater"
+],
+"blue_sweater_vest": [
+"sweater_vest"
+],
+"blue_tabard": [
+"tabard"
+],
+"blue_tank_top": [
+"tank_top"
+],
+"blue_thighhighs": [
+"thighhighs"
+],
+"blue_tongue": [
+"colored_tongue"
+],
+"blue_tunic": [
+"tunic"
+],
+"blue_umbrella": [
+"umbrella"
+],
+"blue_vest": [
+"vest"
+],
+"blue_wings": [
+"wings"
+],
+"blueberry": [
+"fruit"
+],
+"blur_censor": [
+"censored"
+],
+"blurry_background": [
+"blurry"
+],
+"blurry_foreground": [
+"blurry"
+],
+"boat": [
+"watercraft"
+],
+"bobby_socks": [
+"socks"
+],
+"body_freckles": [
+"freckles"
+],
+"body_switch": [
+"personality_switch"
+],
+"bodysuit_under_clothes": [
+"bodysuit"
+],
+"bokeh": [
+"depth_of_field"
+],
+"bokken": [
+"wooden_sword"
+],
+"bokura_wa_ima_no_naka_de": [
+"love_live!_school_idol_project"
+],
+"bolt_action": [
+"gun"
+],
+"bomb": [
+"explosive"
+],
+"bomber_jacket": [
+"jacket"
+],
+"bondage": [
+"bdsm",
+"bound"
+],
+"bone_hair_ornament": [
+"hair_ornament"
+],
+"boned_meat": [
+"meat"
+],
+"book_stack": [
+"book"
+],
+"bouncing_breasts": [
+"breasts"
+],
+"bound_arms": [
+"bound"
+],
+"bound_legs": [
+"bound"
+],
+"bound_wrists": [
+"bound"
+],
+"bow_(weapon)": [
+"weapon"
+],
+"bow_bikini": [
+"bikini",
+"bow"
+],
+"bow_bra": [
+"bow",
+"bra"
+],
+"bow_choker": [
+"bow",
+"choker"
+],
+"bow_earrings": [
+"bow",
+"earrings"
+],
+"bow_hairband": [
+"hairband"
+],
+"bow_panties": [
+"bow",
+"panties"
+],
+"bowl_hat": [
+"bowl",
+"hat"
+],
+"bowler_hat": [
+"hat"
+],
+"bowtie": [
+"bow"
+],
+"box_of_chocolates": [
+"box"
+],
+"boxer_briefs": [
+"male_underwear"
+],
+"boxers": [
+"male_underwear"
+],
+"boy_sandwich": [
+"sandwiched"
+],
+"bra": [
+"underwear"
+],
+"bra_lift": [
+"bra",
+"clothes_lift"
+],
+"bra_peek": [
+"bra"
+],
+"bra_pull": [
+"bra",
+"clothes_pull"
+],
+"bracelet": [
+"jewelry"
+],
+"braided_bangs": [
+"braid"
+],
+"braided_bun": [
+"braid",
+"hair_bun"
+],
+"braided_hair_rings": [
+"braid",
+"hair_rings"
+],
+"braided_ponytail": [
+"braid"
+],
+"braiding_hair": [
+"hairdressing"
+],
+"bread": [
+"food"
+],
+"bread_slice": [
+"bread"
+],
+"breast_focus": [
+"breasts"
+],
+"breast_pocket": [
+"pocket"
+],
+"breast_rest": [
+"breasts"
+],
+"breast_smother": [
+"face_to_breasts"
+],
+"breast_tattoo": [
+"tattoo"
+],
+"breastplate": [
+"armor"
+],
+"breasts_apart": [
+"breasts"
+],
+"breasts_on_glass": [
+"against_glass",
+"breast_press"
+],
+"breasts_on_head": [
+"breast_rest"
+],
+"breasts_on_table": [
+"breast_rest"
+],
+"breasts_out": [
+"breasts"
+],
+"breasts_squeezed_together": [
+"breasts"
+],
+"breathing_fire": [
+"breath_weapon",
+"fire"
+],
+"bridal_legwear": [
+"toeless_legwear"
+],
+"bridal_lingerie": [
+"lingerie"
+],
+"bridal_veil": [
+"veil"
+],
+"briefs": [
+"male_underwear"
+],
+"broken_armor": [
+"armor"
+],
+"broken_chain": [
+"broken",
+"chain"
+],
+"broken_glass": [
+"glass"
+],
+"broken_halo": [
+"halo"
+],
+"broken_heart": [
+"heart"
+],
+"broken_horn": [
+"horns"
+],
+"broken_sword": [
+"broken_weapon",
+"sword"
+],
+"broken_weapon": [
+"broken",
+"weapon"
+],
+"brooch": [
+"jewelry"
+],
+"broom_riding": [
+"broom"
+],
+"brother_and_sister": [
+"siblings"
+],
+"brothers": [
+"siblings"
+],
+"brown_apron": [
+"apron"
+],
+"brown_bag": [
+"bag"
+],
+"brown_belt": [
+"belt"
+],
+"brown_bikini": [
+"bikini"
+],
+"brown_border": [
+"border"
+],
+"brown_bow": [
+"bow"
+],
+"brown_bowtie": [
+"bowtie",
+"brown_bow"
+],
+"brown_bra": [
+"bra"
+],
+"brown_cape": [
+"cape"
+],
+"brown_capelet": [
+"capelet"
+],
+"brown_cardigan": [
+"cardigan"
+],
+"brown_choker": [
+"choker"
+],
+"brown_cloak": [
+"cloak"
+],
+"brown_coat": [
+"coat"
+],
+"brown_collar": [
+"collar"
+],
+"brown_corset": [
+"corset"
+],
+"brown_dress": [
+"dress"
+],
+"brown_flower": [
+"flower"
+],
+"brown_gloves": [
+"gloves"
+],
+"brown_hairband": [
+"hairband"
+],
+"brown_hoodie": [
+"hoodie"
+],
+"brown_horns": [
+"horns"
+],
+"brown_jacket": [
+"jacket"
+],
+"brown_kimono": [
+"kimono"
+],
+"brown_leotard": [
+"leotard"
+],
+"brown_mittens": [
+"mittens"
+],
+"brown_neckerchief": [
+"neckerchief"
+],
+"brown_necktie": [
+"necktie"
+],
+"brown_panties": [
+"panties"
+],
+"brown_pants": [
+"pants"
+],
+"brown_pantyhose": [
+"pantyhose"
+],
+"brown_ribbon": [
+"ribbon"
+],
+"brown_sailor_collar": [
+"sailor_collar"
+],
+"brown_scarf": [
+"scarf"
+],
+"brown_serafuku": [
+"serafuku"
+],
+"brown_shirt": [
+"shirt"
+],
+"brown_shorts": [
+"shorts"
+],
+"brown_skirt": [
+"skirt"
+],
+"brown_socks": [
+"socks"
+],
+"brown_sweater": [
+"sweater"
+],
+"brown_sweater_vest": [
+"sweater_vest"
+],
+"brown_thighhighs": [
+"thighhighs"
+],
+"brown_vest": [
+"vest"
+],
+"brown_wings": [
+"wings"
+],
+"bruise": [
+"injury"
+],
+"bruise_on_face": [
+"bruise"
+],
+"brushing_another's_hair": [
+"brushing_hair"
+],
+"bubble_skirt": [
+"skirt"
+],
+"buck_teeth": [
+"teeth"
+],
+"bucket_hat": [
+"hat"
+],
+"budget_sarashi": [
+"sarashi"
+],
+"bukkake": [
+"cum"
+],
+"bullpup": [
+"gun"
+],
+"burger": [
+"food"
+],
+"burn_scar": [
+"scar"
+],
+"bursting_breasts": [
+"breasts"
+],
+"buruma_aside": [
+"buruma",
+"clothing_aside"
+],
+"buruma_pull": [
+"buruma",
+"clothes_pull"
+],
+"bus": [
+"motor_vehicle"
+],
+"business_suit": [
+"suit"
+],
+"butt_plug": [
+"sex_toy"
+],
+"butter": [
+"food"
+],
+"butterfly": [
+"bug"
+],
+"butterfly_hair_ornament": [
+"hair_ornament"
+],
+"butterfly_net": [
+"hand_net"
+],
+"butterfly_on_hand": [
+"butterfly"
+],
+"butterfly_print": [
+"animal_print"
+],
+"butterfly_sitting": [
+"sitting"
+],
+"butterfly_tattoo": [
+"tattoo"
+],
+"butterfly_wings": [
+"insect_wings"
+],
+"button_badge": [
+"badge"
+],
+"button_eyes": [
+"buttons"
+],
+"buttoned_cuffs": [
+"buttons"
+],
+"buzz_cut": [
+"very_short_hair"
+],
+"c:": [
+"smile"
+],
+"cable_tail": [
+"cable",
+"mechanical_tail"
+],
+"cake": [
+"food"
+],
+"cake_slice": [
+"cake"
+],
+"calligraphy_brush": [
+"paintbrush"
+],
+"camcorder": [
+"video_camera"
+],
+"camellia": [
+"flower"
+],
+"camisole_lift": [
+"camisole",
+"clothes_lift"
+],
+"camouflage_jacket": [
+"camouflage",
+"jacket"
+],
+"camouflage_pants": [
+"camouflage",
+"pants"
+],
+"candy": [
+"food"
+],
+"candy_apple": [
+"food"
+],
+"candy_cane": [
+"candy"
+],
+"candy_hair_ornament": [
+"food-themed_hair_ornament"
+],
+"canned_coffee": [
+"drink_can"
+],
+"canopy_bed": [
+"bed"
+],
+"capri_pants": [
+"pants"
+],
+"car": [
+"motor_vehicle"
+],
+"card_parody": [
+"card_(medium)"
+],
+"cardboard_box": [
+"box"
+],
+"cardigan_around_waist": [
+"cardigan",
+"clothes_around_waist"
+],
+"caressing_testicles": [
+"testicles"
+],
+"cargo_pants": [
+"pants"
+],
+"carrot_hair_ornament": [
+"food-themed_hair_ornament"
+],
+"carrot_necklace": [
+"necklace"
+],
+"carrying_person": [
+"carrying"
+],
+"carrying_under_arm": [
+"carrying"
+],
+"casing_ejection": [
+"shell_casing"
+],
+"casual_one-piece_swimsuit": [
+"one-piece_swimsuit"
+],
+"cat_bag": [
+"animal_bag"
+],
+"cat_costume": [
+"animal_costume"
+],
+"cat_cutout": [
+"clothing_cutout"
+],
+"cat_ear_headphones": [
+"animal_ear_headphones",
+"cat_ears"
+],
+"cat_ear_legwear": [
+"animal_ear_legwear"
+],
+"cat_ear_panties": [
+"panties"
+],
+"cat_ears": [
+"animal_ears"
+],
+"cat_hair_ornament": [
+"hair_ornament"
+],
+"cat_hat": [
+"animal_hat"
+],
+"cat_hood": [
+"animal_hood"
+],
+"cat_mask": [
+"mask"
+],
+"cat_on_head": [
+"animal_on_head",
+"cat"
+],
+"cat_on_shoulder": [
+"animal_on_shoulder",
+"cat"
+],
+"cat_paws": [
+"animal_hands"
+],
+"cat_print": [
+"animal_print"
+],
+"cat_tail": [
+"tail"
+],
+"cello": [
+"instrument"
+],
+"cellphone": [
+"phone"
+],
+"cellphone_charm": [
+"charm_(object)"
+],
+"censored_nipples": [
+"censored"
+],
+"censored_text": [
+"censored"
+],
+"centaur": [
+"taur"
+],
+"centauroid": [
+"taur"
+],
+"center_frills": [
+"frills"
+],
+"cetacean_tail": [
+"fish_tail"
+],
+"chain-link_fence": [
+"fence"
+],
+"chain_headband": [
+"chain"
+],
+"chain_leash": [
+"chain",
+"leash"
+],
+"chain_necklace": [
+"chain",
+"necklace"
+],
+"chained": [
+"chain"
+],
+"chainmail": [
+"armor"
+],
+"chakram": [
+"weapon"
+],
+"chalice": [
+"cup"
+],
+"champagne": [
+"alcohol"
+],
+"champagne_flute": [
+"drinking_glass"
+],
+"character_censor": [
+"novelty_censor"
+],
+"character_doll": [
+"doll"
+],
+"character_hair_ornament": [
+"hair_ornament"
+],
+"checkerboard_cookie": [
+"cookie"
+],
+"checkered_bow": [
+"bow",
+"checkered_clothes"
+],
+"checkered_dress": [
+"checkered_clothes",
+"dress"
+],
+"checkered_flag": [
+"flag"
+],
+"checkered_kimono": [
+"checkered_clothes",
+"kimono"
+],
+"checkered_legwear": [
+"checkered_clothes"
+],
+"checkered_necktie": [
+"necktie"
+],
+"checkered_scarf": [
+"checkered_clothes",
+"scarf"
+],
+"checkered_shirt": [
+"checkered_clothes",
+"shirt"
+],
+"checkered_skirt": [
+"checkered_clothes",
+"skirt"
+],
+"cheek-to-cheek": [
+"heads_together"
+],
+"cheek_pinching": [
+"pinching"
+],
+"cheek_poking": [
+"poking"
+],
+"cheese": [
+"food"
+],
+"chef_hat": [
+"hat"
+],
+"cherry": [
+"fruit"
+],
+"cherry_blossom_print": [
+"floral_print"
+],
+"cherry_hair_ornament": [
+"food-themed_hair_ornament"
+],
+"chess": [
+"board_game"
+],
+"chest_harness": [
+"harness"
+],
+"chest_sarashi": [
+"sarashi"
+],
+"chest_tattoo": [
+"tattoo"
+],
+"chibi_inset": [
+"chibi"
+],
+"chibi_only": [
+"chibi"
+],
+"chick": [
+"baby_animal",
+"bird"
+],
+"chicken": [
+"bird"
+],
+"chicken_(food)": [
+"food"
+],
+"chikan": [
+"molestation"
+],
+"child_carry": [
+"carrying"
+],
+"chips_(food)": [
+"food"
+],
+"chocolate_bar": [
+"candy",
+"chocolate"
+],
+"chocolate_cake": [
+"cake"
+],
+"chocolate_on_body": [
+"chocolate",
+"food_on_body"
+],
+"chocolate_on_breasts": [
+"chocolate_on_body"
+],
+"choko_(cup)": [
+"cup"
+],
+"christmas_present": [
+"gift"
+],
+"chrysanthemum": [
+"flower"
+],
+"claw_(weapon)": [
+"weapon"
+],
+"claw_foot_bathtub": [
+"bathtub"
+],
+"clawed_gauntlets": [
+"fake_claws"
+],
+"clear_sky": [
+"sky"
+],
+"cleavage": [
+"breasts"
+],
+"cleavage_cutout": [
+"clothing_cutout"
+],
+"cleave_gag": [
+"cloth_gag",
+"gagged"
+],
+"cleft_of_venus": [
+"pussy"
+],
+"clenched_teeth": [
+"teeth"
+],
+"clock_eyes": [
+"symbol-shaped_pupils"
+],
+"clock_tower": [
+"clock",
+"tower"
+],
+"closed_umbrella": [
+"umbrella"
+],
+"cloth_gag": [
+"improvised_gag"
+],
+"clothed_animal": [
+"animal"
+],
+"clothed_female_nude_female": [
+"nude"
+],
+"clothed_female_nude_male": [
+"nude"
+],
+"clothed_male_nude_female": [
+"nude"
+],
+"clothed_male_nude_male": [
+"nude"
+],
+"clothes_between_breasts": [
+"between_breasts"
+],
+"clothes_theft": [
+"theft"
+],
+"cloudy_sky": [
+"cloud",
+"sky"
+],
+"clover_hair_ornament": [
+"hair_ornament"
+],
+"clownfish": [
+"fish"
+],
+"club_(weapon)": [
+"weapon"
+],
+"coat_dress": [
+"dress"
+],
+"coat_on_shoulders": [
+"coat"
+],
+"coattails": [
+"tailcoat"
+],
+"cocktail_dress": [
+"dress"
+],
+"cocktail_glass": [
+"drinking_glass"
+],
+"coconut_tree": [
+"palm_tree"
+],
+"coffee_mug": [
+"mug"
+],
+"coin_hair_ornament": [
+"hair_ornament"
+],
+"coin_on_string": [
+"coin"
+],
+"coke-bottle_glasses": [
+"glasses"
+],
+"collared_cape": [
+"cape"
+],
+"collared_dress": [
+"dress"
+],
+"collared_jacket": [
+"jacket"
+],
+"collared_shirt": [
+"shirt"
+],
+"collared_vest": [
+"vest"
+],
+"colored_inner_hair": [
+"multicolored_hair"
+],
+"colored_pencil_(medium)": [
+"traditional_media"
+],
+"colored_pubic_hair": [
+"pubic_hair"
+],
+"colored_shadow": [
+"shadow"
+],
+"colored_tips": [
+"multicolored_hair"
+],
+"column": [
+"pillar"
+],
+"combat_boots": [
+"boots"
+],
+"combat_helmet": [
+"helmet"
+],
+"combat_knife": [
+"knife",
+"weapon"
+],
+"competition_school_swimsuit": [
+"school_swimsuit"
+],
+"competition_swimsuit": [
+"one-piece_swimsuit"
+],
+"completely_nude": [
+"nude"
+],
+"condom_in_mouth": [
+"condom",
+"mouth_hold"
+],
+"condom_on_penis": [
+"condom",
+"penis"
+],
+"condom_packet_strip": [
+"condom_wrapper"
+],
+"condom_wrapper": [
+"condom"
+],
+"cone_hair_bun": [
+"hair_bun"
+],
+"cone_horns": [
+"horns"
+],
+"consensual_tentacles": [
+"tentacles"
+],
+"convenience_store": [
+"shop"
+],
+"cookie": [
+"food"
+],
+"cooperative_fellatio": [
+"fellatio",
+"teamwork_(sexual)"
+],
+"cooperative_paizuri": [
+"paizuri",
+"teamwork_(sexual)"
+],
+"corded_phone": [
+"phone"
+],
+"costume_switch": [
+"cosplay"
+],
+"cover_page": [
+"cover"
+],
+"covering_ass": [
+"covering_privates"
+],
+"covering_breasts": [
+"covering_privates"
+],
+"covering_crotch": [
+"covering_privates"
+],
+"covering_nipples": [
+"covering_privates"
+],
+"covering_one_breast": [
+"covering_privates"
+],
+"cow_costume": [
+"animal_costume"
+],
+"cow_ears": [
+"animal_ears"
+],
+"cow_horns": [
+"horns"
+],
+"cow_print": [
+"animal_print"
+],
+"cow_print_bikini": [
+"cow_print",
+"print_bikini"
+],
+"cow_tail": [
+"tail"
+],
+"cowbell": [
+"bell"
+],
+"cowboy_boots": [
+"boots"
+],
+"cowboy_hat": [
+"hat"
+],
+"cowgirl_position": [
+"straddling"
+],
+"cracked_floor": [
+"crack"
+],
+"cracked_wall": [
+"crack"
+],
+"crane_(animal)": [
+"bird"
+],
+"crazy_smile": [
+"smile"
+],
+"crazy_straw": [
+"drinking_straw"
+],
+"cream_on_face": [
+"cream",
+"food_on_face"
+],
+"creature_and_personification": [
+"personification"
+],
+"credits_page": [
+"credits"
+],
+"crepe": [
+"food"
+],
+"crescent_earrings": [
+"crescent",
+"earrings"
+],
+"crescent_facial_mark": [
+"crescent",
+"facial_mark"
+],
+"crescent_hair_ornament": [
+"crescent",
+"hair_ornament"
+],
+"crescent_hat_ornament": [
+"crescent",
+"hat_ornament"
+],
+"crescent_moon": [
+"moon"
+],
+"crescent_pin": [
+"crescent"
+],
+"criss-cross_halter": [
+"halterneck"
+],
+"crocodilian_tail": [
+"tail"
+],
+"croissant": [
+"food"
+],
+"crop_top_overhang": [
+"crop_top"
+],
+"cropped_hoodie": [
+"hoodie"
+],
+"cropped_shirt": [
+"shirt"
+],
+"cropped_sweater": [
+"sweater"
+],
+"cropped_vest": [
+"vest"
+],
+"cross-laced_dress": [
+"cross-laced_clothes"
+],
+"cross-laced_legwear": [
+"cross-laced_clothes"
+],
+"cross-laced_skirt": [
+"cross-laced_clothes",
+"skirt"
+],
+"cross-laced_sleeves": [
+"cross-laced_clothes"
+],
+"cross-laced_top": [
+"cross-laced_clothes"
+],
+"cross-shaped_pupils": [
+"symbol-shaped_pupils"
+],
+"cross_choker": [
+"choker",
+"cross"
+],
+"cross_earrings": [
+"cross",
+"earrings"
+],
+"cross_hair_ornament": [
+"hair_ornament"
+],
+"cross_necklace": [
+"cross",
+"necklace"
+],
+"cross_pasties": [
+"cross",
+"pasties"
+],
+"cross_print": [
+"cross"
+],
+"cross_scar": [
+"scar"
+],
+"crossbow": [
+"weapon"
+],
+"crosshatching": [
+"hatching_(texture)"
+],
+"crotch_cutout": [
+"clothing_cutout"
+],
+"crotch_rope": [
+"bondage"
+],
+"crotchless_panties": [
+"crotchless",
+"panties"
+],
+"crotchless_pantyhose": [
+"crotchless",
+"pantyhose"
+],
+"crow": [
+"bird"
+],
+"crown_braid": [
+"braid"
+],
+"crying_with_eyes_open": [
+"crying",
+"tears"
+],
+"crystal_earrings": [
+"earrings"
+],
+"crystal_wings": [
+"wings"
+],
+"cube_hair_ornament": [
+"hair_ornament"
+],
+"cum_in_ass": [
+"cum"
+],
+"cum_in_clothes": [
+"cum"
+],
+"cum_in_container": [
+"cum"
+],
+"cum_in_mouth": [
+"cum"
+],
+"cum_in_nose": [
+"cum"
+],
+"cum_in_pussy": [
+"cum"
+],
+"cum_inflation": [
+"inflation"
+],
+"cum_on_ass": [
+"cum_on_body"
+],
+"cum_on_body": [
+"cum"
+],
+"cum_on_breasts": [
+"breasts",
+"cum_on_body"
+],
+"cum_on_clothes": [
+"cum"
+],
+"cum_on_eyewear": [
+"cum"
+],
+"cum_on_feet": [
+"cum_on_body"
+],
+"cum_on_hair": [
+"cum"
+],
+"cum_on_hands": [
+"cum",
+"cum_on_body"
+],
+"cum_on_legs": [
+"cum",
+"cum_on_body"
+],
+"cum_on_male": [
+"cum"
+],
+"cum_on_pectorals": [
+"cum_on_body",
+"cum_on_male",
+"pectorals"
+],
+"cum_on_penis": [
+"cum_on_body"
+],
+"cum_on_pussy": [
+"cum",
+"cum_on_body"
+],
+"cum_on_self": [
+"cum"
+],
+"cum_on_stomach": [
+"cum_on_body"
+],
+"cum_on_tongue": [
+"cum_in_mouth"
+],
+"cum_overflow": [
+"cum"
+],
+"cum_string": [
+"cum"
+],
+"cumdrip": [
+"cum"
+],
+"cumulonimbus_cloud": [
+"cloud"
+],
+"cunnilingus": [
+"oral"
+],
+"cupcake": [
+"food"
+],
+"cupless_bra": [
+"bra"
+],
+"cupping_hands": [
+"own_hands_together"
+],
+"curled_horns": [
+"horns"
+],
+"curry": [
+"food"
+],
+"curry_rice": [
+"curry",
+"rice"
+],
+"curtain_grab": [
+"curtains"
+],
+"cutout_above_navel": [
+"clothing_cutout"
+],
+"cuts": [
+"injury"
+],
+"cyclops": [
+"one-eyed"
+],
+"d-pad_hair_ornament": [
+"d-pad",
+"hair_ornament"
+],
+"dagger": [
+"knife",
+"weapon"
+],
+"dakimakura_(object)": [
+"pillow"
+],
+"dandelion": [
+"flower"
+],
+"dango": [
+"wagashi"
+],
+"dappled_sunlight": [
+"sunlight"
+],
+"dark-skinned_female": [
+"dark_skin"
+],
+"dark-skinned_male": [
+"dark_skin"
+],
+"dark_aura": [
+"aura"
+],
+"dark_elf": [
+"elf"
+],
+"dark_nipples": [
+"nipples"
+],
+"dark_penis": [
+"penis"
+],
+"deepthroat": [
+"fellatio"
+],
+"deer_antlers": [
+"antlers"
+],
+"deer_ears": [
+"animal_ears"
+],
+"deer_tail": [
+"tail"
+],
+"deerstalker": [
+"hat"
+],
+"demon_horns": [
+"horns"
+],
+"demon_tail": [
+"tail"
+],
+"demon_wings": [
+"wings"
+],
+"denim_jacket": [
+"denim",
+"jacket"
+],
+"denim_shorts": [
+"denim",
+"shorts"
+],
+"denim_skirt": [
+"denim",
+"skirt"
+],
+"depth_of_field": [
+"blurry"
+],
+"desk_lamp": [
+"lamp"
+],
+"dessert": [
+"food"
+],
+"detached_ahoge": [
+"ahoge"
+],
+"detached_wings": [
+"wings"
+],
+"diagonal-striped_bow": [
+"striped_bow"
+],
+"diagonal-striped_bowtie": [
+"diagonal-striped_bow",
+"diagonal-striped_clothes",
+"striped_bowtie"
+],
+"diagonal-striped_clothes": [
+"striped_clothes"
+],
+"diagonal-striped_necktie": [
+"diagonal-striped_clothes",
+"striped_necktie"
+],
+"diamond-shaped_pupils": [
+"diamond_(shape)",
+"symbol-shaped_pupils"
+],
+"diamond_button": [
+"buttons"
+],
+"diamond_cutout": [
+"clothing_cutout"
+],
+"diamond_hair_ornament": [
+"hair_ornament"
+],
+"dice_hair_ornament": [
+"hair_ornament"
+],
+"different_reflection": [
+"reflection"
+],
+"digital_clock": [
+"clock"
+],
+"dilation_tape": [
+"tape"
+],
+"dildo": [
+"sex_toy"
+],
+"dildo_riding": [
+"dildo"
+],
+"dirndl": [
+"german_clothes"
+],
+"dirty_clothes": [
+"dirty"
+],
+"dirty_face": [
+"dirty"
+],
+"dirty_feet": [
+"dirty"
+],
+"disembodied_penis": [
+"penis"
+],
+"disposable_cup": [
+"cup"
+],
+"diving_mask": [
+"goggles"
+],
+"diving_mask_on_head": [
+"diving_mask",
+"goggles_on_head"
+],
+"dixie_cup_hat": [
+"military_hat"
+],
+"dog_ears": [
+"animal_ears"
+],
+"dog_penis": [
+"animal_penis"
+],
+"dog_tail": [
+"tail"
+],
+"doggystyle": [
+"sex_from_behind"
+],
+"doll_joints": [
+"joints"
+],
+"dolphin_shorts": [
+"shorts"
+],
+"domino_mask": [
+"eye_mask"
+],
+"don't_say_\"lazy\"": [
+"k-on!"
+],
+"donation_box": [
+"box"
+],
+"dot_mouth": [
+"closed_mouth"
+],
+"double-breasted": [
+"buttons"
+],
+"double_\\m/": [
+"\\m/"
+],
+"double_amputee": [
+"amputee"
+],
+"double_bun": [
+"hair_bun"
+],
+"double_dildo": [
+"dildo"
+],
+"double_fox_shadow_puppet": [
+"fox_shadow_puppet"
+],
+"double_handjob": [
+"handjob"
+],
+"double_v": [
+"v"
+],
+"double_w": [
+"w"
+],
+"doujin_cover": [
+"cover_page"
+],
+"dove": [
+"bird"
+],
+"down_jacket": [
+"jacket"
+],
+"doyagao": [
+"smug"
+],
+"dragon_horns": [
+"horns"
+],
+"dragon_tail": [
+"tail"
+],
+"dragon_wings": [
+"wings"
+],
+"dragonfly": [
+"bug"
+],
+"drawing_bow": [
+"holding_bow_(weapon)"
+],
+"drawing_sword": [
+"holding_sword"
+],
+"dress_bow": [
+"bow"
+],
+"dress_flower": [
+"flower"
+],
+"dress_lift": [
+"clothes_lift",
+"dress"
+],
+"dress_pull": [
+"clothes_pull"
+],
+"dress_shirt": [
+"shirt"
+],
+"dress_shoes": [
+"shoes"
+],
+"dress_tug": [
+"dress"
+],
+"drill_sidelocks": [
+"drill_hair",
+"sidelocks"
+],
+"drink_can": [
+"can"
+],
+"drinking_glass": [
+"cup"
+],
+"drinking_straw_in_mouth": [
+"drinking_straw"
+],
+"drop-shaped_pupils": [
+"symbol-shaped_pupils"
+],
+"drowning": [
+"asphyxiation"
+],
+"drum": [
+"instrument"
+],
+"drum_magazine": [
+"magazine_(weapon)"
+],
+"drum_set": [
+"drum"
+],
+"drying_hair": [
+"drying"
+],
+"dual_wielding": [
+"holding"
+],
+"duck": [
+"bird"
+],
+"duckling": [
+"baby_animal",
+"duck"
+],
+"dudou": [
+"chinese_clothes"
+],
+"duffel_bag": [
+"bag"
+],
+"duffel_coat": [
+"coat"
+],
+"dumpling": [
+"food"
+],
+"dvd_cover": [
+"cover"
+],
+"eagle": [
+"bird"
+],
+"ear_blush": [
+"blush"
+],
+"ear_bow": [
+"bow"
+],
+"ear_piercing": [
+"piercing"
+],
+"earbuds": [
+"earphones"
+],
+"earrings": [
+"jewelry"
+],
+"earth_(planet)": [
+"planet"
+],
+"east_asian_architecture": [
+"architecture"
+],
+"easter_egg": [
+"egg"
+],
+"eastern_dragon": [
+"dragon"
+],
+"egg_(food)": [
+"food"
+],
+"egg_hair_ornament": [
+"food-themed_hair_ornament"
+],
+"egg_vibrator": [
+"vibrator"
+],
+"ehoumaki": [
+"makizushi"
+],
+"eighth_note": [
+"musical_note"
+],
+"ejaculating_while_penetrated": [
+"ejaculation"
+],
+"ejaculation": [
+"cum"
+],
+"elbow_gloves": [
+"gloves"
+],
+"electric_guitar": [
+"guitar"
+],
+"electrokinesis": [
+"electricity"
+],
+"elezen": [
+"elf"
+],
+"elf": [
+"pointy_ears"
+],
+"elvaan": [
+"elf"
+],
+"energy_gun": [
+"weapon"
+],
+"energy_sword": [
+"sword"
+],
+"engrish_text": [
+"english_text",
+"ranguage"
+],
+"enmaided": [
+"maid"
+],
+"erection_under_clothes": [
+"bulge",
+"erection"
+],
+"evening_gown": [
+"dress"
+],
+"evil_grin": [
+"evil_smile",
+"grin"
+],
+"evil_smile": [
+"smile"
+],
+"excessive_cum": [
+"cum"
+],
+"excessive_pubic_hair": [
+"pubic_hair"
+],
+"exercise_ball": [
+"ball"
+],
+"exhibitionism": [
+"public_indecency"
+],
+"eye_contact": [
+"looking_at_another"
+],
+"eye_mask": [
+"mask"
+],
+"eye_reflection": [
+"reflection"
+],
+"eye_trail": [
+"light_trail"
+],
+"eyebrow_piercing": [
+"face_piercing"
+],
+"eyeliner": [
+"makeup"
+],
+"eyepatch_bikini": [
+"bikini"
+],
+"eyeshadow": [
+"makeup"
+],
+"eyewear_hang": [
+"unworn_eyewear"
+],
+"face_in_pillow": [
+"pillow"
+],
+"faceless_female": [
+"faceless"
+],
+"faceless_male": [
+"faceless"
+],
+"facial": [
+"cum",
+"cum_on_body"
+],
+"facial_tattoo": [
+"tattoo"
+],
+"fairy_wings": [
+"wings"
+],
+"fake_animal_ears": [
+"animal_ears"
+],
+"fake_cover": [
+"cover"
+],
+"fake_horns": [
+"horns"
+],
+"fake_magazine_cover": [
+"fake_cover",
+"magazine_cover"
+],
+"fake_mustache": [
+"fake_facial_hair"
+],
+"fake_phone_screenshot": [
+"fake_screenshot"
+],
+"fake_tail": [
+"tail"
+],
+"fake_wings": [
+"wings"
+],
+"falling_feathers": [
+"feathers"
+],
+"falling_leaves": [
+"leaf"
+],
+"falling_petals": [
+"petals"
+],
+"false_smile": [
+"smile"
+],
+"family_crest": [
+"crest"
+],
+"fang_out": [
+"fang"
+],
+"fangs_out": [
+"fangs"
+],
+"fat_man": [
+"fat"
+],
+"father_and_daughter": [
+"father_and_child"
+],
+"father_and_son": [
+"father_and_child"
+],
+"faulds": [
+"armor"
+],
+"feather_earrings": [
+"earrings",
+"feathers"
+],
+"feather_hair_ornament": [
+"feathers",
+"hair_ornament"
+],
+"feathered_wings": [
+"wings"
+],
+"fedora": [
+"hat"
+],
+"feet_on_chair": [
+"chair"
+],
+"fellatio": [
+"oral"
+],
+"female_goblin": [
+"goblin"
+],
+"female_masturbation": [
+"masturbation"
+],
+"female_orgasm": [
+"orgasm"
+],
+"female_pervert": [
+"pervert"
+],
+"female_pov": [
+"pov"
+],
+"female_pubic_hair": [
+"pubic_hair"
+],
+"fertilization": [
+"ovum"
+],
+"fff_threesome": [
+"threesome",
+"yuri"
+],
+"ffm_threesome": [
+"threesome"
+],
+"fiery_horns": [
+"horns"
+],
+"fiery_wings": [
+"wings"
+],
+"fighter_jet": [
+"airplane",
+"military_vehicle"
+],
+"fine_art_parody": [
+"parody"
+],
+"fingering_through_clothes": [
+"fingering",
+"through_clothes"
+],
+"fingering_through_panties": [
+"fingering_through_clothes"
+],
+"fingerless_gloves": [
+"gloves"
+],
+"firelock": [
+"antique_firearm"
+],
+"fish_hair_ornament": [
+"hair_ornament"
+],
+"fish_print": [
+"animal_print"
+],
+"fish_tail": [
+"fins",
+"tail"
+],
+"fishnet_gloves": [
+"fishnets",
+"gloves"
+],
+"fishnet_pantyhose": [
+"fishnets",
+"pantyhose"
+],
+"fishnet_socks": [
+"fishnets",
+"socks"
+],
+"fishnet_thighhighs": [
+"fishnets",
+"thighhighs"
+],
+"fishnet_top": [
+"fishnets"
+],
+"flame-tipped_tail": [
+"fire",
+"tail"
+],
+"flaming_sword": [
+"flaming_weapon",
+"sword"
+],
+"flaming_weapon": [
+"fire",
+"weapon"
+],
+"flat_ass": [
+"ass"
+],
+"flat_cap": [
+"hat"
+],
+"flat_chest_grab": [
+"flat_chest"
+],
+"flip-flops": [
+"sandals"
+],
+"flip_phone": [
+"cellphone"
+],
+"floating_book": [
+"book",
+"floating_object"
+],
+"floating_object": [
+"floating"
+],
+"floating_scarf": [
+"scarf"
+],
+"floating_weapon": [
+"floating_object"
+],
+"floral_print_kimono": [
+"floral_print",
+"print_kimono"
+],
+"flower-shaped_pupils": [
+"symbol-shaped_pupils"
+],
+"flower_bracelet": [
+"bracelet"
+],
+"flower_brooch": [
+"brooch"
+],
+"flower_choker": [
+"choker"
+],
+"flower_earrings": [
+"earrings"
+],
+"flower_field": [
+"field",
+"flower"
+],
+"flower_in_eye": [
+"symbol_in_eye"
+],
+"flower_in_mouth": [
+"flower"
+],
+"flower_necklace": [
+"flower"
+],
+"flower_on_head": [
+"flower"
+],
+"flower_over_eye": [
+"flower"
+],
+"flower_tattoo": [
+"tattoo"
+],
+"flute": [
+"instrument"
+],
+"flying_fish": [
+"fish"
+],
+"flying_kick": [
+"kicking"
+],
+"flying_paper": [
+"paper"
+],
+"fold-over_boots": [
+"boots"
+],
+"folded_fan": [
+"folding_fan"
+],
+"folding_chair": [
+"chair"
+],
+"folding_fan": [
+"hand_fan"
+],
+"food-themed_earrings": [
+"earrings"
+],
+"food-themed_hair_ornament": [
+"hair_ornament"
+],
+"food_art": [
+"food"
+],
+"food_on_breasts": [
+"food_on_body"
+],
+"food_on_face": [
+"food"
+],
+"food_on_head": [
+"food",
+"object_on_head"
+],
+"foot_focus": [
+"feet"
+],
+"footwear_bow": [
+"bow"
+],
+"forced_orgasm": [
+"orgasm"
+],
+"forehead-to-forehead": [
+"heads_together"
+],
+"forehead_mark": [
+"facial_mark"
+],
+"forehead_tattoo": [
+"tattoo"
+],
+"forest": [
+"nature"
+],
+"forked_tail": [
+"tail"
+],
+"forked_tongue": [
+"tongue"
+],
+"four-leaf_clover": [
+"clover"
+],
+"four-leaf_clover_hair_ornament": [
+"clover_hair_ornament"
+],
+"fox_ears": [
+"animal_ears"
+],
+"fox_mask": [
+"mask"
+],
+"fox_tail": [
+"tail"
+],
+"french_fries": [
+"food"
+],
+"french_kiss": [
+"kiss"
+],
+"fried_chicken": [
+"chicken_(food)"
+],
+"fried_rice": [
+"food"
+],
+"frilled_apron": [
+"apron",
+"frills"
+],
+"frilled_ascot": [
+"ascot",
+"frills"
+],
+"frilled_bikini": [
+"bikini",
+"frills"
+],
+"frilled_bow": [
+"bow",
+"frills"
+],
+"frilled_bra": [
+"bra",
+"frills"
+],
+"frilled_camisole": [
+"camisole",
+"frills"
+],
+"frilled_capelet": [
+"capelet",
+"frills"
+],
+"frilled_choker": [
+"choker",
+"frills"
+],
+"frilled_collar": [
+"collar",
+"frills"
+],
+"frilled_dress": [
+"dress",
+"frills"
+],
+"frilled_gloves": [
+"frills",
+"gloves"
+],
+"frilled_hair_tubes": [
+"frills",
+"hair_tubes"
+],
+"frilled_hairband": [
+"frills",
+"hairband"
+],
+"frilled_hat": [
+"frills",
+"hat"
+],
+"frilled_jacket": [
+"frills",
+"jacket"
+],
+"frilled_kimono": [
+"frills",
+"kimono"
+],
+"frilled_leotard": [
+"frills",
+"leotard"
+],
+"frilled_one-piece_swimsuit": [
+"frills",
+"one-piece_swimsuit"
+],
+"frilled_panties": [
+"frills",
+"panties"
+],
+"frilled_pillow": [
+"frills",
+"pillow"
+],
+"frilled_ribbon": [
+"frills",
+"ribbon"
+],
+"frilled_sailor_collar": [
+"frills",
+"sailor_collar"
+],
+"frilled_shirt": [
+"frills",
+"shirt"
+],
+"frilled_shirt_collar": [
+"frills"
+],
+"frilled_shorts": [
+"frills",
+"shorts"
+],
+"frilled_skirt": [
+"frills",
+"skirt"
+],
+"frilled_sleeves": [
+"frills"
+],
+"frilled_socks": [
+"frills",
+"socks"
+],
+"frilled_thighhighs": [
+"frills",
+"thighhighs"
+],
+"frilled_umbrella": [
+"frills",
+"umbrella"
+],
+"frog_hair_ornament": [
+"hair_ornament"
+],
+"frog_print": [
+"animal_print"
+],
+"frogtie": [
+"bondage"
+],
+"front-print_panties": [
+"print_panties"
+],
+"front-tie_bikini_top": [
+"bikini",
+"front-tie_top"
+],
+"fruit": [
+"food"
+],
+"fruit_on_head": [
+"food_on_head",
+"fruit"
+],
+"full-body_tattoo": [
+"tattoo"
+],
+"full-face_blush": [
+"blush"
+],
+"full-length_zipper": [
+"zipper"
+],
+"full-package_futanari": [
+"futanari"
+],
+"full_armor": [
+"armor"
+],
+"full_beard": [
+"beard"
+],
+"full_moon": [
+"moon"
+],
+"fundoshi": [
+"japanese_clothes"
+],
+"fur-trimmed_bikini": [
+"bikini",
+"fur_trim"
+],
+"fur-trimmed_boots": [
+"boots",
+"fur_trim"
+],
+"fur-trimmed_cape": [
+"cape",
+"fur_trim"
+],
+"fur-trimmed_capelet": [
+"capelet",
+"fur_trim"
+],
+"fur-trimmed_cloak": [
+"cloak",
+"fur_trim"
+],
+"fur-trimmed_coat": [
+"coat",
+"fur_trim"
+],
+"fur-trimmed_collar": [
+"fur_trim"
+],
+"fur-trimmed_dress": [
+"dress",
+"fur_trim"
+],
+"fur-trimmed_gloves": [
+"fur_trim",
+"gloves"
+],
+"fur-trimmed_headwear": [
+"fur_trim"
+],
+"fur-trimmed_hood": [
+"fur_trim",
+"hood"
+],
+"fur-trimmed_jacket": [
+"fur_trim",
+"jacket"
+],
+"fur-trimmed_kimono": [
+"fur_trim",
+"kimono"
+],
+"fur-trimmed_legwear": [
+"fur_trim"
+],
+"fur-trimmed_shirt": [
+"fur_trim",
+"shirt"
+],
+"fur-trimmed_shorts": [
+"fur_trim",
+"shorts"
+],
+"fur-trimmed_skirt": [
+"fur_trim",
+"skirt"
+],
+"fur-trimmed_sleeves": [
+"fur_trim"
+],
+"fur-trimmed_thighhighs": [
+"fur_trim",
+"thighhighs"
+],
+"fur_boots": [
+"boots"
+],
+"fur_cape": [
+"cape"
+],
+"fur_cloak": [
+"cloak"
+],
+"fur_coat": [
+"coat"
+],
+"fur_hat": [
+"hat"
+],
+"fur_jacket": [
+"jacket"
+],
+"furisode": [
+"kimono"
+],
+"furrification": [
+"furry"
+],
+"furry_female": [
+"furry"
+],
+"furry_male": [
+"furry"
+],
+"furry_with_furry": [
+"furry"
+],
+"furry_with_non-furry": [
+"furry",
+"interspecies"
+],
+"fusuma": [
+"sliding_doors"
+],
+"futa_on_male": [
+"futa_with_male"
+],
+"futa_with_female": [
+"futanari"
+],
+"futa_with_futa": [
+"futanari"
+],
+"futa_with_male": [
+"futanari"
+],
+"futanari_masturbation": [
+"futanari",
+"masturbation"
+],
+"futasub": [
+"futanari"
+],
+"g-string": [
+"thong"
+],
+"gakuran": [
+"school_uniform"
+],
+"game_boy": [
+"handheld_game_console"
+],
+"game_controller": [
+"controller"
+],
+"gaming_chair": [
+"swivel_chair"
+],
+"gangbang": [
+"group_sex"
+],
+"ganguro": [
+"gyaru"
+],
+"garrison_cap": [
+"hat"
+],
+"gas_mask": [
+"mask"
+],
+"gathers": [
+"frills"
+],
+"genderswap_(ftm)": [
+"genderswap"
+],
+"genderswap_(mtf)": [
+"genderswap"
+],
+"genderswap_(otf)": [
+"genderswap"
+],
+"german_flag_bikini": [
+"flag_print_bikini"
+],
+"giant_male": [
+"giant"
+],
+"giantess": [
+"giant"
+],
+"gibson_les_paul": [
+"electric_guitar"
+],
+"gift_box": [
+"box",
+"gift"
+],
+"gigantic_breasts": [
+"breasts"
+],
+"ginkgo_leaf": [
+"leaf"
+],
+"girl_sandwich": [
+"sandwiched"
+],
+"girthy_penis": [
+"penis"
+],
+"gladiator_sandals": [
+"sandals"
+],
+"glaive_(polearm)": [
+"polearm"
+],
+"glock": [
+"handgun"
+],
+"glomp": [
+"hug"
+],
+"glory_wall": [
+"through_wall"
+],
+"gloved_handjob": [
+"gloves",
+"handjob"
+],
+"glowing_butterfly": [
+"butterfly"
+],
+"glowing_eye": [
+"glowing"
+],
+"glowing_eyes": [
+"glowing"
+],
+"glowing_hair": [
+"glowing"
+],
+"glowing_hand": [
+"glowing"
+],
+"glowing_horns": [
+"horns"
+],
+"glowing_sword": [
+"glowing_weapon"
+],
+"glowing_tattoo": [
+"glowing",
+"tattoo"
+],
+"glowing_weapon": [
+"glowing",
+"weapon"
+],
+"glowing_wings": [
+"glowing",
+"wings"
+],
+"goat_ears": [
+"animal_ears"
+],
+"goat_horns": [
+"horns"
+],
+"goatee": [
+"facial_hair"
+],
+"goatee_stubble": [
+"stubble"
+],
+"goggles_around_neck": [
+"goggles"
+],
+"goggles_on_head": [
+"goggles"
+],
+"goggles_on_headwear": [
+"goggles"
+],
+"gold_armor": [
+"armor"
+],
+"gold_bikini": [
+"bikini"
+],
+"gold_bracelet": [
+"bracelet"
+],
+"gold_chain": [
+"chain"
+],
+"gold_coin": [
+"coin"
+],
+"gold_earrings": [
+"earrings"
+],
+"gold_hairband": [
+"hairband"
+],
+"gold_necklace": [
+"necklace"
+],
+"goldfish": [
+"fish"
+],
+"gothic_lolita": [
+"lolita_fashion"
+],
+"gown": [
+"dress"
+],
+"grabbing_another's_ass": [
+"groping"
+],
+"grabbing_another's_breast": [
+"groping"
+],
+"grabbing_another's_chin": [
+"hand_on_another's_chin"
+],
+"grabbing_another's_ear": [
+"hand_on_another's_ear"
+],
+"grabbing_another's_hair": [
+"holding_another's_hair"
+],
+"grabbing_own_breast": [
+"breasts"
+],
+"gradient_dress": [
+"dress",
+"gradient_clothes"
+],
+"gradient_eyes": [
+"multicolored_eyes"
+],
+"gradient_hair": [
+"multicolored_hair"
+],
+"gradient_sky": [
+"sky"
+],
+"gradient_wings": [
+"multicolored_wings"
+],
+"grand_piano": [
+"piano"
+],
+"grapes": [
+"fruit"
+],
+"graphite_(medium)": [
+"traditional_media"
+],
+"greatsword": [
+"sword"
+],
+"greaves": [
+"armor"
+],
+"greek_toe": [
+"toes"
+],
+"green-tinted_eyewear": [
+"tinted_eyewear"
+],
+"green_apron": [
+"apron"
+],
+"green_armband": [
+"armband"
+],
+"green_bag": [
+"bag"
+],
+"green_belt": [
+"belt"
+],
+"green_bikini": [
+"bikini"
+],
+"green_bodysuit": [
+"bodysuit"
+],
+"green_bow": [
+"bow"
+],
+"green_bowtie": [
+"bowtie",
+"green_bow"
+],
+"green_bra": [
+"bra"
+],
+"green_cape": [
+"cape"
+],
+"green_capelet": [
+"capelet"
+],
+"green_cardigan": [
+"cardigan"
+],
+"green_choker": [
+"choker"
+],
+"green_cloak": [
+"cloak"
+],
+"green_coat": [
+"coat"
+],
+"green_collar": [
+"collar"
+],
+"green_dress": [
+"dress"
+],
+"green_eyeshadow": [
+"eyeshadow"
+],
+"green_feathers": [
+"feathers"
+],
+"green_fire": [
+"fire"
+],
+"green_flower": [
+"flower"
+],
+"green_gloves": [
+"gloves"
+],
+"green_hairband": [
+"hairband"
+],
+"green_hakama": [
+"hakama"
+],
+"green_halo": [
+"halo"
+],
+"green_headband": [
+"headband"
+],
+"green_hoodie": [
+"hoodie"
+],
+"green_horns": [
+"horns"
+],
+"green_jacket": [
+"jacket"
+],
+"green_kimono": [
+"kimono"
+],
+"green_leotard": [
+"leotard"
+],
+"green_neckerchief": [
+"neckerchief"
+],
+"green_necktie": [
+"necktie"
+],
+"green_one-piece_swimsuit": [
+"one-piece_swimsuit"
+],
+"green_panties": [
+"panties"
+],
+"green_pants": [
+"pants"
+],
+"green_pantyhose": [
+"pantyhose"
+],
+"green_ribbon": [
+"ribbon"
+],
+"green_rose": [
+"green_flower",
+"rose"
+],
+"green_sailor_collar": [
+"sailor_collar"
+],
+"green_scarf": [
+"scarf"
+],
+"green_sclera": [
+"colored_sclera"
+],
+"green_scrunchie": [
+"scrunchie"
+],
+"green_serafuku": [
+"serafuku"
+],
+"green_shirt": [
+"shirt"
+],
+"green_shorts": [
+"shorts"
+],
+"green_skin": [
+"colored_skin"
+],
+"green_skirt": [
+"skirt"
+],
+"green_socks": [
+"socks"
+],
+"green_sweater": [
+"sweater"
+],
+"green_tank_top": [
+"tank_top"
+],
+"green_tea": [
+"tea"
+],
+"green_thighhighs": [
+"thighhighs"
+],
+"green_tunic": [
+"tunic"
+],
+"green_vest": [
+"vest"
+],
+"green_wings": [
+"wings"
+],
+"grenade": [
+"explosive"
+],
+"grenade_launcher": [
+"weapon"
+],
+"grey_apron": [
+"apron"
+],
+"grey_belt": [
+"belt"
+],
+"grey_bikini": [
+"bikini"
+],
+"grey_bodysuit": [
+"bodysuit"
+],
+"grey_border": [
+"border"
+],
+"grey_bow": [
+"bow"
+],
+"grey_bowtie": [
+"bowtie",
+"grey_bow"
+],
+"grey_bra": [
+"bra"
+],
+"grey_cape": [
+"cape"
+],
+"grey_capelet": [
+"capelet"
+],
+"grey_cardigan": [
+"cardigan"
+],
+"grey_coat": [
+"coat"
+],
+"grey_dress": [
+"dress"
+],
+"grey_gloves": [
+"gloves"
+],
+"grey_hairband": [
+"hairband"
+],
+"grey_halo": [
+"halo"
+],
+"grey_hoodie": [
+"hoodie"
+],
+"grey_horns": [
+"horns"
+],
+"grey_jacket": [
+"jacket"
+],
+"grey_kimono": [
+"kimono"
+],
+"grey_leotard": [
+"leotard"
+],
+"grey_neckerchief": [
+"neckerchief"
+],
+"grey_necktie": [
+"necktie"
+],
+"grey_panties": [
+"panties"
+],
+"grey_pants": [
+"pants"
+],
+"grey_pantyhose": [
+"pantyhose"
+],
+"grey_sailor_collar": [
+"sailor_collar"
+],
+"grey_scarf": [
+"scarf"
+],
+"grey_serafuku": [
+"serafuku"
+],
+"grey_shirt": [
+"shirt"
+],
+"grey_shorts": [
+"shorts"
+],
+"grey_skin": [
+"colored_skin"
+],
+"grey_skirt": [
+"skirt"
+],
+"grey_sky": [
+"sky"
+],
+"grey_socks": [
+"socks"
+],
+"grey_sports_bra": [
+"sports_bra"
+],
+"grey_suit": [
+"suit"
+],
+"grey_sweater": [
+"sweater"
+],
+"grey_tank_top": [
+"tank_top"
+],
+"grey_thighhighs": [
+"thighhighs"
+],
+"grey_vest": [
+"vest"
+],
+"grey_wings": [
+"wings"
+],
+"greyscale": [
+"monochrome"
+],
+"grimoire": [
+"book"
+],
+"grin": [
+"smile"
+],
+"grocery_bag": [
+"shopping_bag"
+],
+"group_hug": [
+"hug"
+],
+"guided_breast_grab": [
+"grabbing_another's_breast",
+"guiding_hand"
+],
+"guitar": [
+"instrument"
+],
+"guitar_case": [
+"instrument_case"
+],
+"gun": [
+"weapon"
+],
+"gunblade": [
+"weapon"
+],
+"gym_shirt": [
+"shirt"
+],
+"gym_shorts": [
+"shorts"
+],
+"h&k_hk416": [
+"assault_rifle"
+],
+"h&k_ump": [
+"submachine_gun"
+],
+"hachimaki": [
+"headband"
+],
+"hagoita": [
+"paddle"
+],
+"hagoromo": [
+"shawl"
+],
+"hair_beads": [
+"beads",
+"hair_ornament"
+],
+"hair_bell": [
+"bell",
+"hair_ornament"
+],
+"hair_bobbles": [
+"hair_ornament"
+],
+"hair_bow": [
+"bow"
+],
+"hair_color_connection": [
+"color_connection"
+],
+"hair_flower": [
+"flower",
+"hair_ornament"
+],
+"hair_over_one_breast": [
+"hair_over_breasts"
+],
+"hair_ribbon": [
+"ribbon"
+],
+"hair_scrunchie": [
+"hair_ornament",
+"scrunchie"
+],
+"hair_stick": [
+"hair_ornament"
+],
+"hair_tie_in_mouth": [
+"mouth_hold"
+],
+"hairclip": [
+"hair_ornament"
+],
+"hakama": [
+"japanese_clothes"
+],
+"hakama_pants": [
+"hakama",
+"pants"
+],
+"hakama_short_skirt": [
+"hakama_skirt"
+],
+"hakama_shorts": [
+"hakama",
+"shorts"
+],
+"hakama_skirt": [
+"hakama",
+"skirt"
+],
+"halberd": [
+"polearm"
+],
+"half_gloves": [
+"gloves"
+],
+"half_mask": [
+"mask"
+],
+"halftone_background": [
+"halftone"
+],
+"halter_dress": [
+"dress",
+"halterneck"
+],
+"halter_shirt": [
+"halterneck"
+],
+"hamaya": [
+"arrow_(projectile)"
+],
+"hanbok": [
+"korean_clothes"
+],
+"hand_mirror": [
+"mirror"
+],
+"hand_on_another's_cheek": [
+"hand_on_another's_face"
+],
+"hand_on_eyewear": [
+"adjusting_eyewear"
+],
+"hand_on_glass": [
+"against_glass"
+],
+"hand_on_headphones": [
+"headphones"
+],
+"hand_on_own_cheek": [
+"hand_on_own_face"
+],
+"hand_over_own_mouth": [
+"covering_own_mouth"
+],
+"hand_puppet": [
+"puppet"
+],
+"hand_tattoo": [
+"tattoo"
+],
+"hand_under_shirt": [
+"hand_under_clothes",
+"shirt"
+],
+"handbag": [
+"bag"
+],
+"handcuffs": [
+"cuffs"
+],
+"handgun": [
+"gun"
+],
+"hands_on_another's_cheeks": [
+"hands_on_another's_face"
+],
+"hands_on_own_cheeks": [
+"hands_on_own_face"
+],
+"handsfree_ejaculation": [
+"ejaculation"
+],
+"hanfu": [
+"chinese_clothes"
+],
+"hanging_breasts": [
+"breasts"
+],
+"haori": [
+"japanese_clothes"
+],
+"happi": [
+"japanese_clothes"
+],
+"happy_tears": [
+"tears"
+],
+"hard_hat": [
+"helmet"
+],
+"harem_pants": [
+"pants"
+],
+"harp": [
+"instrument"
+],
+"harpy": [
+"monster_girl"
+],
+"hat_bow": [
+"bow",
+"hat"
+],
+"hat_flower": [
+"flower",
+"hat"
+],
+"hat_ribbon": [
+"hat",
+"ribbon"
+],
+"hat_with_ears": [
+"hat"
+],
+"hawaiian_shirt": [
+"shirt"
+],
+"head_between_breasts": [
+"between_breasts"
+],
+"head_chain": [
+"jewelry"
+],
+"head_fins": [
+"fins"
+],
+"head_on_head": [
+"head_rest"
+],
+"head_on_pillow": [
+"pillow"
+],
+"head_wings": [
+"wings"
+],
+"headphones_around_neck": [
+"headphones"
+],
+"heads-up_display": [
+"user_interface"
+],
+"heart-shaped_box": [
+"box"
+],
+"heart-shaped_chocolate": [
+"candy",
+"chocolate",
+"heart-shaped_food"
+],
+"heart-shaped_eyes": [
+"heart"
+],
+"heart-shaped_eyewear": [
+"heart"
+],
+"heart-shaped_pillow": [
+"heart",
+"pillow"
+],
+"heart-shaped_pupils": [
+"heart",
+"symbol-shaped_pupils"
+],
+"heart_ahoge": [
+"ahoge",
+"heart"
+],
+"heart_background": [
+"heart"
+],
+"heart_balloon": [
+"balloon"
+],
+"heart_brooch": [
+"brooch",
+"heart"
+],
+"heart_button": [
+"buttons"
+],
+"heart_censor": [
+"censored",
+"heart"
+],
+"heart_choker": [
+"choker",
+"heart"
+],
+"heart_cutout": [
+"clothing_cutout"
+],
+"heart_earrings": [
+"earrings",
+"heart"
+],
+"heart_facial_mark": [
+"facial_mark",
+"heart"
+],
+"heart_hair_ornament": [
+"hair_ornament",
+"heart"
+],
+"heart_hands": [
+"heart"
+],
+"heart_hands_duo": [
+"heart_hands"
+],
+"heart_in_eye": [
+"heart",
+"symbol_in_eye"
+],
+"heart_in_mouth": [
+"heart"
+],
+"heart_maebari": [
+"maebari"
+],
+"heart_necklace": [
+"heart",
+"necklace"
+],
+"heart_o-ring": [
+"heart",
+"o-ring"
+],
+"heart_of_string": [
+"heart"
+],
+"heart_pasties": [
+"pasties"
+],
+"heart_print": [
+"heart"
+],
+"heart_tail": [
+"heart",
+"tail"
+],
+"heart_tattoo": [
+"heart",
+"tattoo"
+],
+"helicopter": [
+"aircraft"
+],
+"helm": [
+"helmet"
+],
+"hibiscus": [
+"flower"
+],
+"high-waist_pants": [
+"pants"
+],
+"high-waist_pantyhose": [
+"pantyhose"
+],
+"high-waist_shorts": [
+"shorts"
+],
+"high-waist_skirt": [
+"skirt"
+],
+"high_heel_boots": [
+"boots",
+"high_heels"
+],
+"high_kick": [
+"kicking"
+],
+"high_ponytail": [
+"ponytail"
+],
+"high_side_ponytail": [
+"side_ponytail"
+],
+"high_tops": [
+"sneakers"
+],
+"highleg_bikini": [
+"bikini",
+"highleg"
+],
+"highleg_leotard": [
+"highleg",
+"leotard"
+],
+"highleg_panties": [
+"highleg",
+"panties"
+],
+"hip_vent": [
+"clothing_cutout"
+],
+"historical_name_connection": [
+"name_connection"
+],
+"hitachi_magic_wand": [
+"vibrator"
+],
+"holding_animal": [
+"animal",
+"holding"
+],
+"holding_arrow": [
+"arrow_(projectile)",
+"holding"
+],
+"holding_axe": [
+"axe",
+"holding"
+],
+"holding_bag": [
+"bag",
+"holding"
+],
+"holding_ball": [
+"ball",
+"holding"
+],
+"holding_balloon": [
+"balloon",
+"holding"
+],
+"holding_baseball_bat": [
+"baseball_bat",
+"holding"
+],
+"holding_basket": [
+"basket",
+"holding"
+],
+"holding_beachball": [
+"beachball",
+"holding_ball"
+],
+"holding_behind_back": [
+"holding"
+],
+"holding_bell": [
+"bell",
+"holding"
+],
+"holding_book": [
+"book",
+"holding"
+],
+"holding_bottle": [
+"bottle",
+"holding"
+],
+"holding_bouquet": [
+"bouquet",
+"holding"
+],
+"holding_bow_(weapon)": [
+"bow_(weapon)",
+"holding_weapon"
+],
+"holding_bowl": [
+"bowl",
+"holding"
+],
+"holding_box": [
+"box",
+"holding"
+],
+"holding_bra": [
+"bra",
+"holding_underwear"
+],
+"holding_branch": [
+"branch",
+"holding"
+],
+"holding_briefcase": [
+"briefcase",
+"holding"
+],
+"holding_broom": [
+"broom",
+"holding"
+],
+"holding_brush": [
+"holding"
+],
+"holding_bucket": [
+"bucket",
+"holding"
+],
+"holding_cake": [
+"cake",
+"holding_food"
+],
+"holding_camera": [
+"camera",
+"holding"
+],
+"holding_can": [
+"can",
+"holding"
+],
+"holding_candy": [
+"candy",
+"holding_food"
+],
+"holding_cane": [
+"cane",
+"holding"
+],
+"holding_card": [
+"card",
+"holding"
+],
+"holding_cat": [
+"cat",
+"holding_animal"
+],
+"holding_chain": [
+"chain",
+"holding"
+],
+"holding_chocolate": [
+"chocolate",
+"holding_food"
+],
+"holding_chopsticks": [
+"chopsticks",
+"holding"
+],
+"holding_cigarette": [
+"cigarette",
+"holding"
+],
+"holding_clipboard": [
+"clipboard",
+"holding"
+],
+"holding_coin": [
+"coin",
+"holding"
+],
+"holding_condom": [
+"condom",
+"holding"
+],
+"holding_controller": [
+"controller",
+"holding"
+],
+"holding_creature": [
+"creature",
+"holding"
+],
+"holding_cross": [
+"cross",
+"holding"
+],
+"holding_cup": [
+"cup",
+"holding"
+],
+"holding_dagger": [
+"dagger",
+"holding_knife",
+"holding_weapon"
+],
+"holding_doll": [
+"doll",
+"holding"
+],
+"holding_drink": [
+"drink",
+"holding"
+],
+"holding_drumsticks": [
+"drumsticks",
+"holding"
+],
+"holding_envelope": [
+"envelope",
+"holding"
+],
+"holding_fan": [
+"hand_fan",
+"holding"
+],
+"holding_fireworks": [
+"fireworks",
+"holding"
+],
+"holding_fish": [
+"fish",
+"holding_animal"
+],
+"holding_fishing_rod": [
+"fishing_rod",
+"holding"
+],
+"holding_flag": [
+"flag",
+"holding"
+],
+"holding_flower": [
+"flower",
+"holding"
+],
+"holding_food": [
+"food",
+"holding"
+],
+"holding_fork": [
+"fork",
+"holding"
+],
+"holding_fruit": [
+"fruit",
+"holding_food"
+],
+"holding_frying_pan": [
+"frying_pan",
+"holding"
+],
+"holding_game_controller": [
+"game_controller",
+"holding_controller"
+],
+"holding_gift": [
+"gift",
+"holding"
+],
+"holding_gohei": [
+"gohei",
+"holding"
+],
+"holding_gun": [
+"gun",
+"holding_weapon"
+],
+"holding_hammer": [
+"hammer",
+"holding"
+],
+"holding_handheld_game_console": [
+"handheld_game_console",
+"holding"
+],
+"holding_heart": [
+"heart",
+"holding"
+],
+"holding_hose": [
+"holding",
+"hose"
+],
+"holding_ice_cream": [
+"holding_food",
+"ice_cream"
+],
+"holding_instrument": [
+"holding",
+"instrument"
+],
+"holding_jewelry": [
+"holding",
+"jewelry"
+],
+"holding_key": [
+"holding",
+"key"
+],
+"holding_knife": [
+"holding",
+"knife"
+],
+"holding_ladle": [
+"holding",
+"ladle"
+],
+"holding_lantern": [
+"holding",
+"lantern"
+],
+"holding_leaf": [
+"holding",
+"leaf"
+],
+"holding_leash": [
+"holding",
+"leash"
+],
+"holding_letter": [
+"holding",
+"letter"
+],
+"holding_lipstick_tube": [
+"holding",
+"lipstick_tube"
+],
+"holding_lollipop": [
+"holding_candy",
+"lollipop"
+],
+"holding_magnifying_glass": [
+"holding",
+"magnifying_glass"
+],
+"holding_map": [
+"holding",
+"map"
+],
+"holding_mask": [
+"holding",
+"mask"
+],
+"holding_megaphone": [
+"holding",
+"megaphone"
+],
+"holding_microphone": [
+"holding",
+"microphone"
+],
+"holding_microphone_stand": [
+"holding",
+"microphone_stand"
+],
+"holding_mirror": [
+"holding",
+"mirror"
+],
+"holding_money": [
+"holding",
+"money"
+],
+"holding_mop": [
+"holding",
+"mop"
+],
+"holding_necklace": [
+"holding_jewelry",
+"necklace"
+],
+"holding_needle": [
+"holding",
+"needle"
+],
+"holding_newspaper": [
+"holding",
+"newspaper"
+],
+"holding_notebook": [
+"holding",
+"notebook"
+],
+"holding_own_tail": [
+"tail"
+],
+"holding_paintbrush": [
+"holding",
+"paintbrush"
+],
+"holding_panties": [
+"holding_underwear",
+"panties"
+],
+"holding_paper": [
+"holding",
+"paper"
+],
+"holding_pen": [
+"holding",
+"pen"
+],
+"holding_pencil": [
+"holding",
+"pencil"
+],
+"holding_phone": [
+"holding",
+"phone"
+],
+"holding_photo": [
+"holding",
+"photo_(object)"
+],
+"holding_pillow": [
+"holding",
+"pillow"
+],
+"holding_pizza": [
+"holding_food",
+"pizza"
+],
+"holding_plate": [
+"holding",
+"plate"
+],
+"holding_plectrum": [
+"holding",
+"plectrum"
+],
+"holding_poke_ball": [
+"holding",
+"poke_ball"
+],
+"holding_pokemon": [
+"holding",
+"pokemon_(creature)"
+],
+"holding_pole": [
+"holding",
+"pole"
+],
+"holding_polearm": [
+"holding_weapon",
+"polearm"
+],
+"holding_pom_poms": [
+"holding",
+"pom_pom_(cheerleading)"
+],
+"holding_popsicle": [
+"holding_food",
+"popsicle"
+],
+"holding_remote_control": [
+"holding_controller",
+"remote_control"
+],
+"holding_removed_eyewear": [
+"holding",
+"unworn_eyewear"
+],
+"holding_ribbon": [
+"holding",
+"ribbon"
+],
+"holding_riding_crop": [
+"holding",
+"riding_crop"
+],
+"holding_sack": [
+"holding",
+"sack"
+],
+"holding_saucer": [
+"holding",
+"saucer"
+],
+"holding_scissors": [
+"holding",
+"scissors"
+],
+"holding_scroll": [
+"holding",
+"scroll"
+],
+"holding_scythe": [
+"holding",
+"scythe"
+],
+"holding_sex_toy": [
+"holding",
+"sex_toy"
+],
+"holding_sheath": [
+"holding",
+"sheath"
+],
+"holding_shield": [
+"holding",
+"shield"
+],
+"holding_shirt": [
+"holding_unworn_clothes",
+"unworn_shirt"
+],
+"holding_shovel": [
+"holding",
+"shovel"
+],
+"holding_sign": [
+"holding",
+"sign"
+],
+"holding_skull": [
+"holding",
+"skull"
+],
+"holding_smoking_pipe": [
+"holding",
+"smoking_pipe"
+],
+"holding_spoon": [
+"holding",
+"spoon"
+],
+"holding_staff": [
+"holding",
+"staff"
+],
+"holding_stick": [
+"holding",
+"stick"
+],
+"holding_stuffed_toy": [
+"holding",
+"stuffed_toy"
+],
+"holding_stylus": [
+"holding",
+"stylus"
+],
+"holding_suitcase": [
+"holding",
+"suitcase"
+],
+"holding_surfboard": [
+"holding",
+"surfboard"
+],
+"holding_swim_ring": [
+"holding",
+"swim_ring"
+],
+"holding_swimsuit": [
+"holding_unworn_clothes",
+"unworn_swimsuit"
+],
+"holding_sword": [
+"holding_weapon",
+"sword"
+],
+"holding_syringe": [
+"holding",
+"syringe"
+],
+"holding_tablet_pc": [
+"holding",
+"tablet_pc"
+],
+"holding_teapot": [
+"holding",
+"teapot"
+],
+"holding_test_tube": [
+"holding",
+"test_tube"
+],
+"holding_toothbrush": [
+"holding",
+"toothbrush"
+],
+"holding_torch": [
+"holding",
+"torch"
+],
+"holding_towel": [
+"holding",
+"towel"
+],
+"holding_toy": [
+"holding",
+"toy"
+],
+"holding_tray": [
+"holding",
+"tray"
+],
+"holding_umbrella": [
+"holding",
+"umbrella"
+],
+"holding_underwear": [
+"holding_unworn_clothes",
+"underwear"
+],
+"holding_vegetable": [
+"holding_food",
+"vegetable"
+],
+"holding_violin": [
+"holding_instrument",
+"violin"
+],
+"holding_wand": [
+"holding",
+"wand"
+],
+"holding_water_gun": [
+"holding",
+"water_gun"
+],
+"holding_weapon": [
+"holding",
+"weapon"
+],
+"holding_whip": [
+"holding",
+"whip"
+],
+"holding_with_tail": [
+"holding",
+"prehensile_tail"
+],
+"holding_wrench": [
+"holding",
+"wrench"
+],
+"holed_coin": [
+"coin"
+],
+"holly_hair_ornament": [
+"hair_ornament"
+],
+"honeycomb_background": [
+"honeycomb_(pattern)"
+],
+"hood_down": [
+"hood"
+],
+"hood_up": [
+"hood"
+],
+"hooded_bodysuit": [
+"bodysuit",
+"hood"
+],
+"hooded_cape": [
+"cape",
+"hood"
+],
+"hooded_capelet": [
+"capelet",
+"hood"
+],
+"hooded_cardigan": [
+"cardigan",
+"hood"
+],
+"hooded_cloak": [
+"cloak",
+"hood"
+],
+"hooded_coat": [
+"hood"
+],
+"hooded_jacket": [
+"hood",
+"jacket"
+],
+"hooded_robe": [
+"robe"
+],
+"hooded_sweater": [
+"hood",
+"sweater"
+],
+"hooded_track_jacket": [
+"hood",
+"track_jacket"
+],
+"hooded_vest": [
+"hoodie",
+"vest"
+],
+"hoodie": [
+"hood"
+],
+"hoodie_lift": [
+"clothes_lift",
+"hoodie"
+],
+"hoop_earrings": [
+"earrings"
+],
+"horn_bow": [
+"bow",
+"horn_ornament"
+],
+"horn_ornament": [
+"horns"
+],
+"horn_ribbon": [
+"horn_ornament",
+"ribbon"
+],
+"horn_ring": [
+"horn_ornament"
+],
+"horned_headwear": [
+"fake_horns"
+],
+"horned_helmet": [
+"fake_horns",
+"helmet"
+],
+"horns_through_headwear": [
+"horns"
+],
+"horse_ears": [
+"animal_ears"
+],
+"horse_penis": [
+"animal_penis"
+],
+"horse_tail": [
+"tail"
+],
+"horseback_riding": [
+"riding"
+],
+"hospital_bed": [
+"bed"
+],
+"hug_from_behind": [
+"hug"
+],
+"huge_ahoge": [
+"ahoge"
+],
+"huge_ass": [
+"ass"
+],
+"huge_breasts": [
+"breasts"
+],
+"huge_dildo": [
+"dildo"
+],
+"huge_moon": [
+"moon"
+],
+"huge_penis": [
+"penis"
+],
+"huge_testicles": [
+"testicles"
+],
+"huge_weapon": [
+"weapon"
+],
+"hugging_book": [
+"holding_book",
+"hugging_object"
+],
+"hugging_doll": [
+"hugging_object"
+],
+"hugging_tail": [
+"tail"
+],
+"humanoid_robot": [
+"robot"
+],
+"hydrangea": [
+"flower"
+],
+"hydrokinesis": [
+"water"
+],
+"hypnosis": [
+"mind_control"
+],
+"ice_cream": [
+"food"
+],
+"ice_cream_float": [
+"ice_cream"
+],
+"ice_cube": [
+"ice"
+],
+"ice_skates": [
+"skates"
+],
+"ice_wings": [
+"ice",
+"wings"
+],
+"imminent_anal": [
+"imminent_penetration"
+],
+"imminent_vaginal": [
+"imminent_penetration"
+],
+"impossible_bodysuit": [
+"bodysuit",
+"impossible_clothes"
+],
+"impossible_dress": [
+"dress",
+"impossible_clothes"
+],
+"impossible_leotard": [
+"impossible_clothes",
+"leotard"
+],
+"impossible_shirt": [
+"impossible_clothes",
+"shirt"
+],
+"impossible_swimsuit": [
+"impossible_clothes",
+"swimsuit"
+],
+"improvised_gag": [
+"gag"
+],
+"in_box": [
+"box",
+"in_container"
+],
+"in_bucket": [
+"bucket",
+"in_container"
+],
+"in_cup": [
+"cup",
+"in_container"
+],
+"in_food": [
+"food"
+],
+"in_tree": [
+"tree"
+],
+"indian_style": [
+"sitting"
+],
+"industrial_piercing": [
+"barbell_piercing",
+"ear_piercing"
+],
+"inline_skates": [
+"roller_skates"
+],
+"innertube": [
+"swim_ring"
+],
+"insect_wings": [
+"wings"
+],
+"internal_cumshot": [
+"cum"
+],
+"inverted_bob": [
+"bob_cut"
+],
+"inverted_cross": [
+"cross"
+],
+"invisible_chair": [
+"sitting"
+],
+"iphone": [
+"smartphone"
+],
+"ipod": [
+"mp3_player"
+],
+"iron_cross": [
+"cross"
+],
+"irrumatio": [
+"fellatio"
+],
+"jackal_ears": [
+"animal_ears"
+],
+"jacket_around_waist": [
+"clothes_around_waist",
+"jacket"
+],
+"jacket_lift": [
+"clothes_lift",
+"jacket"
+],
+"jacket_on_shoulders": [
+"jacket"
+],
+"jacket_over_swimsuit": [
+"jacket",
+"swimsuit"
+],
+"jacket_partially_removed": [
+"jacket"
+],
+"jacket_pull": [
+"clothes_pull",
+"jacket"
+],
+"jaguar_ears": [
+"animal_ears"
+],
+"jaguar_tail": [
+"tail"
+],
+"japanese_armor": [
+"armor"
+],
+"japari_bun": [
+"food"
+],
+"jeans": [
+"denim",
+"pants"
+],
+"jester_cap": [
+"hat"
+],
+"jeweled_branch_of_hourai": [
+"branch"
+],
+"jingasa": [
+"hat"
+],
+"jingle_bell": [
+"bell"
+],
+"jockstrap": [
+"male_underwear"
+],
+"joestar_birthmark": [
+"birthmark"
+],
+"joy-con": [
+"game_controller"
+],
+"joystick": [
+"controller"
+],
+"juice_box": [
+"drink_carton"
+],
+"juliet_sleeves": [
+"long_sleeves",
+"puffy_sleeves"
+],
+"jungle": [
+"nature"
+],
+"kabuto_(helmet)": [
+"helmet",
+"japanese_armor"
+],
+"kamiyama_high_school_uniform_(hyouka)": [
+"school_uniform"
+],
+"kamiyama_high_school_uniform_(project_sekai)": [
+"school_uniform"
+],
+"kanabou": [
+"club_(weapon)"
+],
+"kanzashi": [
+"hair_ornament"
+],
+"kappougi": [
+"apron"
+],
+"karakasa_obake": [
+"umbrella"
+],
+"karate_gi": [
+"dougi"
+],
+"kariginu": [
+"japanese_clothes"
+],
+"katana": [
+"sword"
+],
+"kepi": [
+"military_hat"
+],
+"key_necklace": [
+"key",
+"necklace"
+],
+"keyboard_(instrument)": [
+"instrument"
+],
+"kimono": [
+"japanese_clothes"
+],
+"kimono_lift": [
+"clothes_lift",
+"kimono"
+],
+"kimono_pull": [
+"kimono"
+],
+"kimono_skirt": [
+"kimono"
+],
+"kinchaku": [
+"pouch"
+],
+"kine": [
+"mallet"
+],
+"king_(chess)": [
+"chess_piece"
+],
+"kiseru": [
+"smoking_pipe"
+],
+"kissing_cheek": [
+"kiss"
+],
+"kissing_forehead": [
+"kiss"
+],
+"kissing_hand": [
+"kiss"
+],
+"kissing_neck": [
+"kiss"
+],
+"kitchen_knife": [
+"knife"
+],
+"kittysuit": [
+"nontraditional_playboy_bunny"
+],
+"kiwi_(fruit)": [
+"fruit"
+],
+"knee_boots": [
+"boots"
+],
+"kneehighs": [
+"socks"
+],
+"knife_sheath": [
+"sheath"
+],
+"knight_(chess)": [
+"chess_piece"
+],
+"knives_between_fingers": [
+"between_fingers",
+"holding_knife"
+],
+"knotted_penis": [
+"animal_penis"
+],
+"kogal": [
+"gyaru"
+],
+"kotatsu": [
+"table"
+],
+"kote": [
+"japanese_armor"
+],
+"kotoyoro": [
+"new_year"
+],
+"kouhaku_nawa": [
+"shimenawa"
+],
+"kunai": [
+"weapon"
+],
+"kurokote": [
+"kote"
+],
+"kusazuri": [
+"japanese_armor"
+],
+"kyuubi": [
+"kitsune",
+"multiple_tails"
+],
+"kyuudou": [
+"archery"
+],
+"lace-trimmed_bra": [
+"bra",
+"lace_trim"
+],
+"lace-trimmed_choker": [
+"choker",
+"lace_trim"
+],
+"lace-trimmed_dress": [
+"dress",
+"lace_trim"
+],
+"lace-trimmed_gloves": [
+"gloves",
+"lace_trim"
+],
+"lace-trimmed_hairband": [
+"hairband",
+"lace_trim"
+],
+"lace-trimmed_panties": [
+"lace_trim",
+"panties"
+],
+"lace-trimmed_skirt": [
+"lace_trim",
+"skirt"
+],
+"lace-trimmed_sleeves": [
+"lace_trim"
+],
+"lace-trimmed_thighhighs": [
+"lace_trim",
+"thighhighs"
+],
+"lace-up_boots": [
+"boots"
+],
+"lace_bra": [
+"bra",
+"lace"
+],
+"lace_choker": [
+"choker",
+"lace"
+],
+"lace_gloves": [
+"gloves",
+"lace"
+],
+"lace_panties": [
+"lace",
+"panties"
+],
+"lactation_through_clothes": [
+"lactation"
+],
+"ladybug": [
+"bug"
+],
+"lamia": [
+"monster_girl"
+],
+"lance": [
+"polearm"
+],
+"laptop": [
+"computer"
+],
+"large_bow": [
+"bow"
+],
+"large_breasts": [
+"breasts"
+],
+"large_pectorals": [
+"pectorals"
+],
+"large_penis": [
+"penis"
+],
+"large_tail": [
+"tail"
+],
+"large_testicles": [
+"testicles"
+],
+"latex_bodysuit": [
+"bodysuit",
+"latex"
+],
+"latex_gloves": [
+"gloves",
+"latex"
+],
+"latex_legwear": [
+"latex"
+],
+"latin_cross": [
+"cross"
+],
+"layered_bikini": [
+"bikini"
+],
+"layered_dress": [
+"dress"
+],
+"layered_kimono": [
+"kimono"
+],
+"layered_skirt": [
+"skirt"
+],
+"leaf_background": [
+"leaf"
+],
+"leaf_hair_ornament": [
+"hair_ornament"
+],
+"leaf_on_head": [
+"leaf"
+],
+"leash_pull": [
+"leash"
+],
+"leather_boots": [
+"boots",
+"leather"
+],
+"leather_gloves": [
+"gloves",
+"leather"
+],
+"leather_jacket": [
+"jacket",
+"leather"
+],
+"leather_pants": [
+"leather",
+"pants"
+],
+"leg_ribbon": [
+"ribbon"
+],
+"leg_tattoo": [
+"tattoo"
+],
+"lemon": [
+"fruit"
+],
+"lemon_slice": [
+"lemon"
+],
+"leopard_ears": [
+"animal_ears"
+],
+"leopard_print": [
+"animal_print"
+],
+"leopard_tail": [
+"tail"
+],
+"leotard_aside": [
+"clothing_aside",
+"leotard"
+],
+"leotard_peek": [
+"leotard"
+],
+"leotard_pull": [
+"leotard"
+],
+"leotard_under_clothes": [
+"leotard"
+],
+"letterman_jacket": [
+"jacket"
+],
+"levitation": [
+"floating"
+],
+"licking_another's_face": [
+"licking"
+],
+"licking_armpit": [
+"licking"
+],
+"licking_ear": [
+"licking"
+],
+"licking_finger": [
+"licking"
+],
+"licking_foot": [
+"licking"
+],
+"licking_lips": [
+"tongue_out"
+],
+"licking_nipple": [
+"licking",
+"nipple_stimulation"
+],
+"licking_penis": [
+"fellatio",
+"licking",
+"penis"
+],
+"lifebuoy": [
+"swim_ring"
+],
+"light_machine_gun": [
+"machine_gun"
+],
+"lightning_bolt_hair_ornament": [
+"hair_ornament",
+"lightning_bolt_symbol"
+],
+"lightsaber": [
+"energy_sword"
+],
+"lily_(flower)": [
+"flower"
+],
+"lily_of_the_valley": [
+"flower"
+],
+"lime_(fruit)": [
+"fruit"
+],
+"linear_hatching": [
+"hatching_(texture)"
+],
+"lingerie": [
+"underwear"
+],
+"linked_piercing": [
+"piercing"
+],
+"lion_ears": [
+"animal_ears"
+],
+"lion_tail": [
+"tail"
+],
+"lip_piercing": [
+"face_piercing"
+],
+"lipstick": [
+"makeup"
+],
+"lipstick_tube": [
+"cosmetics"
+],
+"lizard_tail": [
+"tail"
+],
+"loaded_interior": [
+"absurdly_detailed_composition"
+],
+"loafers": [
+"shoes"
+],
+"locker_room": [
+"locker"
+],
+"lolita_hairband": [
+"hairband"
+],
+"lollipop": [
+"candy"
+],
+"long_beard": [
+"beard"
+],
+"long_dress": [
+"dress"
+],
+"long_fingernails": [
+"fingernails"
+],
+"long_pointy_ears": [
+"pointy_ears"
+],
+"long_sideburns": [
+"sideburns"
+],
+"long_skirt": [
+"skirt"
+],
+"long_toenails": [
+"toenails"
+],
+"long_tongue": [
+"tongue"
+],
+"looking_at_mirror": [
+"mirror"
+],
+"looking_at_phone": [
+"phone"
+],
+"loose_belt": [
+"belt"
+],
+"loose_bowtie": [
+"bowtie"
+],
+"loose_necktie": [
+"necktie"
+],
+"loose_shirt": [
+"loose_clothes",
+"shirt"
+],
+"loose_socks": [
+"socks"
+],
+"lop_rabbit_ears": [
+"floppy_ears",
+"rabbit_ears"
+],
+"lotus": [
+"flower"
+],
+"lounge_chair": [
+"chair"
+],
+"low-braided_long_hair": [
+"braid",
+"low-tied_long_hair"
+],
+"low-tied_long_hair": [
+"long_hair"
+],
+"low-tied_sidelocks": [
+"sidelocks"
+],
+"low_ponytail": [
+"ponytail"
+],
+"low_twin_braids": [
+"twin_braids"
+],
+"low_twintails": [
+"twintails"
+],
+"low_wings": [
+"wings"
+],
+"lower_teeth_only": [
+"teeth"
+],
+"lowleg_bikini": [
+"bikini",
+"lowleg"
+],
+"lowleg_panties": [
+"lowleg",
+"panties"
+],
+"lowleg_pants": [
+"lowleg",
+"pants"
+],
+"lowleg_skirt": [
+"lowleg",
+"skirt"
+],
+"lute_(instrument)": [
+"instrument"
+],
+"lyre": [
+"instrument"
+],
+"m16": [
+"assault_rifle"
+],
+"m1911": [
+"handgun"
+],
+"m4_carbine": [
+"assault_rifle"
+],
+"m_legs": [
+"spread_legs"
+],
+"macaron": [
+"food"
+],
+"mace": [
+"weapon"
+],
+"machine_gun": [
+"gun"
+],
+"magatama_earrings": [
+"earrings",
+"magatama"
+],
+"magatama_necklace": [
+"magatama",
+"necklace"
+],
+"magazine_cover": [
+"cover_page"
+],
+"mage_staff": [
+"staff"
+],
+"maid_apron": [
+"apron"
+],
+"maid_bikini": [
+"bikini",
+"unconventional_maid"
+],
+"makizushi": [
+"sushi"
+],
+"male_maid": [
+"crossdressing_(mtf)",
+"maid"
+],
+"male_masturbation": [
+"masturbation"
+],
+"male_pubic_hair": [
+"pubic_hair"
+],
+"male_underwear": [
+"underwear"
+],
+"male_underwear_peek": [
+"male_underwear"
+],
+"male_underwear_pull": [
+"male_underwear"
+],
+"mandarin_orange": [
+"fruit"
+],
+"manga_cover": [
+"cover_page"
+],
+"maple_leaf": [
+"leaf"
+],
+"maple_leaf_print": [
+"leaf_print"
+],
+"marker_(medium)": [
+"traditional_media"
+],
+"marshmallow": [
+"food"
+],
+"mary_janes": [
+"shoes"
+],
+"mascara": [
+"makeup"
+],
+"mask_around_neck": [
+"mask"
+],
+"mask_on_head": [
+"mask"
+],
+"masturbation_through_clothes": [
+"masturbation"
+],
+"meat": [
+"food"
+],
+"mecha": [
+"robot"
+],
+"mecha_focus": [
+"mecha"
+],
+"mechanical_halo": [
+"halo"
+],
+"mechanical_horns": [
+"horns"
+],
+"mechanical_pencil": [
+"pencil"
+],
+"mechanical_tail": [
+"tail"
+],
+"mechanical_wings": [
+"wings"
+],
+"medical_eyepatch": [
+"eyepatch"
+],
+"medium_breasts": [
+"breasts"
+],
+"medium_dress": [
+"dress"
+],
+"medium_skirt": [
+"skirt"
+],
+"melon": [
+"fruit"
+],
+"melon_bread": [
+"bread"
+],
+"mermaid": [
+"merfolk",
+"monster_girl"
+],
+"merman": [
+"merfolk",
+"monster_boy"
+],
+"messenger_bag": [
+"shoulder_bag"
+],
+"metal_collar": [
+"collar"
+],
+"mg42": [
+"machine_gun"
+],
+"micro_bikini": [
+"bikini"
+],
+"micro_panties": [
+"panties"
+],
+"micro_shorts": [
+"shorts"
+],
+"microdress": [
+"dress"
+],
+"microskirt": [
+"skirt"
+],
+"midriff_sarashi": [
+"sarashi"
+],
+"miko": [
+"japanese_clothes"
+],
+"military_hat": [
+"hat"
+],
+"military_jacket": [
+"jacket"
+],
+"milk_bottle": [
+"bottle"
+],
+"milk_carton": [
+"drink_carton"
+],
+"milky_way": [
+"star_(sky)"
+],
+"millipen_(medium)": [
+"pen_(medium)"
+],
+"mini_crown": [
+"crown"
+],
+"mini_hat": [
+"hat"
+],
+"mini_top_hat": [
+"mini_hat",
+"top_hat"
+],
+"mini_wings": [
+"wings"
+],
+"mini_witch_hat": [
+"mini_hat",
+"witch_hat"
+],
+"miniboy": [
+"mini_person"
+],
+"minigirl": [
+"mini_person"
+],
+"miniskirt": [
+"skirt"
+],
+"mismatched_bikini": [
+"bikini"
+],
+"mismatched_footwear": [
+"asymmetrical_footwear"
+],
+"mismatched_gloves": [
+"asymmetrical_gloves"
+],
+"mismatched_legwear": [
+"asymmetrical_legwear"
+],
+"mismatched_sleeves": [
+"asymmetrical_sleeves"
+],
+"mitre": [
+"hat"
+],
+"mitsudomoe_(shape)": [
+"tomoe_(symbol)"
+],
+"mixed-sex_bathing": [
+"shared_bathing"
+],
+"mmf_threesome": [
+"threesome"
+],
+"mmm_threesome": [
+"threesome",
+"yaoi"
+],
+"mob_cap": [
+"hat"
+],
+"mochi": [
+"food"
+],
+"mochi_trail": [
+"mochi"
+],
+"mole_above_mouth": [
+"mole"
+],
+"mole_on_arm": [
+"mole"
+],
+"mole_on_ass": [
+"mole"
+],
+"mole_on_breast": [
+"breasts",
+"mole"
+],
+"mole_on_cheek": [
+"mole"
+],
+"mole_on_neck": [
+"mole"
+],
+"mole_on_stomach": [
+"mole"
+],
+"mole_on_thigh": [
+"mole"
+],
+"mole_under_each_eye": [
+"mole_under_eye",
+"multiple_moles"
+],
+"mole_under_eye": [
+"mole"
+],
+"mole_under_mouth": [
+"mole"
+],
+"monkey_ears": [
+"animal_ears"
+],
+"monkey_tail": [
+"tail"
+],
+"moose_ears": [
+"animal_ears"
+],
+"morning_glory": [
+"flower"
+],
+"mosaic_censoring": [
+"censored"
+],
+"moth": [
+"bug"
+],
+"moth_girl": [
+"arthropod_girl"
+],
+"mother_and_daughter": [
+"mother_and_child"
+],
+"mother_and_son": [
+"mother_and_child"
+],
+"motorcycle": [
+"motor_vehicle"
+],
+"motorcycle_helmet": [
+"helmet"
+],
+"mouse_ears": [
+"animal_ears"
+],
+"mouse_tail": [
+"tail"
+],
+"mouth_drool": [
+"drooling"
+],
+"mouth_mask": [
+"mask"
+],
+"mouth_veil": [
+"veil"
+],
+"mtu_virus": [
+"multiple_views"
+],
+"mug": [
+"cup"
+],
+"multi-strapped_bikini_bottom": [
+"bikini"
+],
+"multi-strapped_bikini_top": [
+"bikini"
+],
+"multi-strapped_panties": [
+"panties"
+],
+"multicolored_bikini": [
+"bikini"
+],
+"multicolored_bodysuit": [
+"bodysuit"
+],
+"multicolored_bow": [
+"bow"
+],
+"multicolored_cape": [
+"cape"
+],
+"multicolored_coat": [
+"coat"
+],
+"multicolored_dress": [
+"dress"
+],
+"multicolored_gloves": [
+"gloves"
+],
+"multicolored_hairband": [
+"hairband"
+],
+"multicolored_horns": [
+"horns"
+],
+"multicolored_jacket": [
+"jacket"
+],
+"multicolored_kimono": [
+"kimono"
+],
+"multicolored_leotard": [
+"leotard"
+],
+"multicolored_scarf": [
+"scarf"
+],
+"multicolored_shirt": [
+"shirt"
+],
+"multicolored_skin": [
+"colored_skin"
+],
+"multicolored_skirt": [
+"skirt"
+],
+"multicolored_swimsuit": [
+"swimsuit"
+],
+"multicolored_tail": [
+"tail"
+],
+"multicolored_wings": [
+"wings"
+],
+"multiple_4koma": [
+"4koma"
+],
+"multiple_belts": [
+"belt"
+],
+"multiple_bracelets": [
+"bracelet"
+],
+"multiple_braids": [
+"braid"
+],
+"multiple_condoms": [
+"condom"
+],
+"multiple_crossover": [
+"crossover"
+],
+"multiple_earrings": [
+"earrings"
+],
+"multiple_hair_bows": [
+"hair_bow"
+],
+"multiple_horns": [
+"horns"
+],
+"multiple_rings": [
+"ring"
+],
+"multiple_scars": [
+"scar"
+],
+"multiple_swords": [
+"sword"
+],
+"multiple_tails": [
+"tail"
+],
+"multiple_torii": [
+"torii"
+],
+"multiple_weapons": [
+"weapon"
+],
+"multiple_wings": [
+"wings"
+],
+"muscular_female": [
+"muscular"
+],
+"muscular_male": [
+"muscular"
+],
+"musical_note_hair_ornament": [
+"hair_ornament",
+"musical_note"
+],
+"musical_note_print": [
+"musical_note"
+],
+"musket": [
+"gun"
+],
+"mustache": [
+"facial_hair"
+],
+"mustache_stubble": [
+"stubble"
+],
+"mutual_hug": [
+"hug"
+],
+"muzzle_flash": [
+"firing"
+],
+"naginata": [
+"polearm"
+],
+"nail_bat": [
+"baseball_bat",
+"nail_(hardware)"
+],
+"naked_apron": [
+"apron"
+],
+"naked_bandage": [
+"bandages"
+],
+"naked_cape": [
+"cape"
+],
+"naked_cloak": [
+"cloak"
+],
+"naked_coat": [
+"coat"
+],
+"naked_hoodie": [
+"hoodie"
+],
+"naked_jacket": [
+"jacket"
+],
+"naked_kimono": [
+"kimono"
+],
+"naked_overalls": [
+"overalls"
+],
+"naked_ribbon": [
+"ribbon"
+],
+"naked_scarf": [
+"scarf"
+],
+"naked_sheet": [
+"bed_sheet"
+],
+"naked_shirt": [
+"shirt"
+],
+"naked_sweater": [
+"sweater"
+],
+"naked_tabard": [
+"tabard"
+],
+"naked_towel": [
+"towel"
+],
+"naval_uniform": [
+"military_uniform"
+],
+"navel_cutout": [
+"clothing_cutout"
+],
+"navel_piercing": [
+"piercing"
+],
+"nearly_naked_apron": [
+"apron"
+],
+"neck_bell": [
+"bell"
+],
+"neck_ribbon": [
+"ribbon"
+],
+"neck_ring": [
+"jewelry"
+],
+"neck_tassel": [
+"tassel"
+],
+"neck_tattoo": [
+"tattoo"
+],
+"necklace": [
+"jewelry"
+],
+"necktie_between_breasts": [
+"clothes_between_breasts",
+"necktie"
+],
+"necktie_grab": [
+"necktie",
+"neckwear_grab"
+],
+"neckwear_grab": [
+"clothes_grab"
+],
+"nengajou": [
+"new_year"
+],
+"nervous_smile": [
+"smile"
+],
+"nervous_sweating": [
+"sweat"
+],
+"new_school_swimsuit": [
+"school_swimsuit"
+],
+"nib_pen_(medium)": [
+"pen_(medium)"
+],
+"nib_pen_(object)": [
+"pen"
+],
+"nightcap": [
+"hat"
+],
+"ninja_mask": [
+"mouth_mask"
+],
+"nintendo_3ds": [
+"handheld_game_console"
+],
+"nintendo_ds": [
+"handheld_game_console"
+],
+"nipple_bar": [
+"barbell_piercing",
+"nipple_piercing"
+],
+"nipple_piercing": [
+"piercing"
+],
+"nipple_pull": [
+"nipple_stimulation"
+],
+"nipple_rings": [
+"nipple_piercing",
+"ring_piercing"
+],
+"nipple_slip": [
+"nipples"
+],
+"nipple_tweak": [
+"nipple_stimulation"
+],
+"noh_mask": [
+"mask"
+],
+"non-humanoid_robot": [
+"robot"
+],
+"noodles": [
+"food"
+],
+"nose_blush": [
+"blush"
+],
+"nose_piercing": [
+"face_piercing"
+],
+"nose_ring": [
+"nose_piercing"
+],
+"nosebleed": [
+"blood"
+],
+"notched_lapels": [
+"lapels"
+],
+"novel_cover": [
+"cover_page"
+],
+"novelty_censor": [
+"censored"
+],
+"nude_cover": [
+"covering_privates"
+],
+"number_tattoo": [
+"tattoo"
+],
+"nurse_cap": [
+"hat"
+],
+"nursing_handjob": [
+"handjob"
+],
+"o-ring_belt": [
+"belt",
+"o-ring"
+],
+"o-ring_bikini": [
+"bikini",
+"o-ring"
+],
+"o-ring_bottom": [
+"o-ring"
+],
+"o-ring_choker": [
+"choker",
+"o-ring"
+],
+"o-ring_thigh_strap": [
+"o-ring",
+"thigh_strap"
+],
+"o-ring_top": [
+"o-ring"
+],
+"obi": [
+"sash"
+],
+"object_namesake": [
+"name_connection"
+],
+"off-shoulder_bikini": [
+"bikini",
+"off_shoulder"
+],
+"off-shoulder_dress": [
+"dress",
+"off_shoulder"
+],
+"off-shoulder_jacket": [
+"off_shoulder"
+],
+"off-shoulder_one-piece_swimsuit": [
+"off_shoulder",
+"one-piece_swimsuit"
+],
+"off-shoulder_shirt": [
+"off_shoulder",
+"shirt"
+],
+"off-shoulder_sweater": [
+"off_shoulder",
+"sweater"
+],
+"office_chair": [
+"swivel_chair"
+],
+"ofuda_on_clothes": [
+"ofuda"
+],
+"oil-paper_umbrella": [
+"umbrella"
+],
+"okamisty": [
+"mystia_lorelei"
+],
+"okobo": [
+"platform_sandals"
+],
+"old_man": [
+"old"
+],
+"old_school_swimsuit": [
+"school_swimsuit"
+],
+"old_woman": [
+"old"
+],
+"omelet": [
+"food"
+],
+"omurice": [
+"omelet"
+],
+"on_back": [
+"lying"
+],
+"on_chair": [
+"chair"
+],
+"on_couch": [
+"couch"
+],
+"on_desk": [
+"desk"
+],
+"on_motorcycle": [
+"motorcycle"
+],
+"on_railing": [
+"railing"
+],
+"on_scooter": [
+"scooter"
+],
+"on_side": [
+"lying"
+],
+"on_stomach": [
+"lying"
+],
+"on_stool": [
+"stool"
+],
+"on_table": [
+"table"
+],
+"one-piece_swimsuit": [
+"swimsuit"
+],
+"one-piece_swimsuit_pull": [
+"clothes_pull"
+],
+"one-piece_tan": [
+"tanlines"
+],
+"one-piece_thong": [
+"thong"
+],
+"onee-loli": [
+"age_difference"
+],
+"onee-shota": [
+"age_difference"
+],
+"oni_mask": [
+"mask"
+],
+"onigiri": [
+"food"
+],
+"onii-shota": [
+"age_difference"
+],
+"ooarai_(emblem)": [
+"emblem"
+],
+"oonusa": [
+"gohei"
+],
+"opaque_glasses": [
+"glasses"
+],
+"open-chest_sweater": [
+"sweater"
+],
+"open_belt": [
+"belt"
+],
+"open_bodysuit": [
+"bodysuit",
+"open_clothes"
+],
+"open_book": [
+"book"
+],
+"open_bra": [
+"bra"
+],
+"open_cardigan": [
+"cardigan",
+"open_clothes"
+],
+"open_coat": [
+"coat",
+"open_clothes"
+],
+"open_dress": [
+"dress",
+"open_clothes"
+],
+"open_hoodie": [
+"hoodie",
+"open_clothes"
+],
+"open_jacket": [
+"jacket",
+"open_clothes"
+],
+"open_kimono": [
+"kimono",
+"open_clothes"
+],
+"open_pants": [
+"open_fly",
+"pants"
+],
+"open_robe": [
+"open_clothes",
+"robe"
+],
+"open_shirt": [
+"open_clothes"
+],
+"open_shorts": [
+"open_clothes",
+"open_fly",
+"shorts"
+],
+"open_skirt": [
+"open_clothes",
+"skirt"
+],
+"open_vest": [
+"open_clothes",
+"vest"
+],
+"open_window": [
+"window"
+],
+"oppai_loli": [
+"breasts"
+],
+"orange-tinted_eyewear": [
+"tinted_eyewear"
+],
+"orange_(fruit)": [
+"fruit"
+],
+"orange_ascot": [
+"ascot"
+],
+"orange_belt": [
+"belt"
+],
+"orange_bikini": [
+"bikini"
+],
+"orange_bodysuit": [
+"bodysuit"
+],
+"orange_bow": [
+"bow"
+],
+"orange_bowtie": [
+"bowtie",
+"orange_bow"
+],
+"orange_bra": [
+"bra"
+],
+"orange_cape": [
+"cape"
+],
+"orange_choker": [
+"choker"
+],
+"orange_dress": [
+"dress"
+],
+"orange_flower": [
+"flower"
+],
+"orange_gloves": [
+"gloves"
+],
+"orange_hairband": [
+"hairband"
+],
+"orange_headband": [
+"headband"
+],
+"orange_hoodie": [
+"hoodie"
+],
+"orange_jacket": [
+"jacket"
+],
+"orange_jumpsuit": [
+"jumpsuit"
+],
+"orange_kimono": [
+"kimono"
+],
+"orange_leotard": [
+"leotard"
+],
+"orange_neckerchief": [
+"neckerchief"
+],
+"orange_necktie": [
+"necktie"
+],
+"orange_panties": [
+"panties"
+],
+"orange_pants": [
+"pants"
+],
+"orange_pantyhose": [
+"pantyhose"
+],
+"orange_ribbon": [
+"ribbon"
+],
+"orange_rose": [
+"orange_flower",
+"rose"
+],
+"orange_sailor_collar": [
+"sailor_collar"
+],
+"orange_scarf": [
+"scarf"
+],
+"orange_scrunchie": [
+"scrunchie"
+],
+"orange_shirt": [
+"shirt"
+],
+"orange_shorts": [
+"shorts"
+],
+"orange_skin": [
+"colored_skin"
+],
+"orange_skirt": [
+"skirt"
+],
+"orange_sky": [
+"sky"
+],
+"orange_slice": [
+"orange_(fruit)"
+],
+"orange_socks": [
+"socks"
+],
+"orange_sweater": [
+"sweater"
+],
+"orange_thighhighs": [
+"thighhighs"
+],
+"orange_vest": [
+"vest"
+],
+"orgy": [
+"group_sex"
+],
+"oripathy_lesion_(arknights)": [
+"material_growth"
+],
+"ornate_border": [
+"border"
+],
+"ornate_ring": [
+"ring"
+],
+"otter_ears": [
+"animal_ears"
+],
+"otter_tail": [
+"tail"
+],
+"over-kneehighs": [
+"thighhighs"
+],
+"over-rim_eyewear": [
+"semi-rimless_eyewear"
+],
+"overall_shorts": [
+"overalls"
+],
+"overall_skirt": [
+"overalls"
+],
+"overcast": [
+"sky"
+],
+"overcoat": [
+"coat"
+],
+"oversized_animal": [
+"animal"
+],
+"oversized_food": [
+"oversized_object"
+],
+"oversized_shirt": [
+"oversized_clothes",
+"shirt"
+],
+"owl": [
+"bird"
+],
+"own_hands_clasped": [
+"own_hands_together"
+],
+"padlock": [
+"lock"
+],
+"paint_splatter_on_face": [
+"paint_splatter"
+],
+"painting_(medium)": [
+"traditional_media"
+],
+"paizuri_under_clothes": [
+"paizuri"
+],
+"palm_tree": [
+"tree"
+],
+"pancake": [
+"food"
+],
+"pancake_stack": [
+"pancake"
+],
+"panda_ears": [
+"animal_ears"
+],
+"panda_hood": [
+"animal_hood"
+],
+"pant_suit": [
+"pants",
+"suit"
+],
+"panties": [
+"underwear"
+],
+"panties_around_one_leg": [
+"panties"
+],
+"panties_aside": [
+"clothing_aside",
+"panties"
+],
+"panties_on_head": [
+"object_on_head",
+"panties"
+],
+"panties_over_pantyhose": [
+"panties",
+"pantyhose"
+],
+"panties_under_buruma": [
+"buruma",
+"panties"
+],
+"panties_under_pantyhose": [
+"panties",
+"pantyhose"
+],
+"pants_pull": [
+"clothes_pull",
+"pants"
+],
+"pants_rolled_up": [
+"pants"
+],
+"pants_tucked_in": [
+"pants"
+],
+"pants_under_skirt": [
+"pants"
+],
+"panty_lift": [
+"panties"
+],
+"panty_peek": [
+"panties"
+],
+"panty_pull": [
+"panties"
+],
+"pantyhose_pull": [
+"clothes_pull",
+"pantyhose"
+],
+"pantyhose_under_shorts": [
+"pantyhose",
+"shorts"
+],
+"pantyhose_under_swimsuit": [
+"pantyhose",
+"swimsuit"
+],
+"pantyshot": [
+"panties"
+],
+"panzer_iv": [
+"tank"
+],
+"papakha": [
+"fur_hat"
+],
+"paper_bag": [
+"bag"
+],
+"paper_crane": [
+"origami"
+],
+"paper_fan": [
+"hand_fan"
+],
+"paper_lantern": [
+"lantern"
+],
+"parasol": [
+"umbrella"
+],
+"parfait": [
+"food"
+],
+"park_bench": [
+"bench"
+],
+"parrot": [
+"bird"
+],
+"partially_fingerless_gloves": [
+"gloves"
+],
+"party_hat": [
+"hat"
+],
+"pasta": [
+"food"
+],
+"pastel_(medium)": [
+"traditional_media"
+],
+"pastry": [
+"food"
+],
+"pauldrons": [
+"shoulder_armor"
+],
+"paw_gloves": [
+"animal_hands",
+"gloves"
+],
+"paw_print_background": [
+"paw_print"
+],
+"paw_print_pattern": [
+"paw_print"
+],
+"pawn_(chess)": [
+"chess_piece"
+],
+"peach": [
+"fruit"
+],
+"peaked_cap": [
+"hat"
+],
+"pearl_bracelet": [
+"bracelet"
+],
+"pearl_earrings": [
+"earrings"
+],
+"pearl_necklace": [
+"necklace"
+],
+"pectoral_cleavage": [
+"pectorals"
+],
+"pectoral_focus": [
+"pectorals"
+],
+"peeing_self": [
+"peeing"
+],
+"pelvic_curtain_lift": [
+"clothes_lift",
+"pelvic_curtain"
+],
+"pencil_dress": [
+"dress"
+],
+"pencil_skirt": [
+"skirt"
+],
+"pendant": [
+"jewelry"
+],
+"penguin": [
+"bird"
+],
+"penguin_hood": [
+"animal_hood"
+],
+"penis_in_panties": [
+"panties"
+],
+"penis_on_ass": [
+"penis"
+],
+"penis_over_eyes": [
+"penis_on_face"
+],
+"penis_peek": [
+"penis"
+],
+"penises_touching": [
+"penis"
+],
+"peony_(flower)": [
+"flower"
+],
+"perfume_bottle": [
+"bottle"
+],
+"perky_breasts": [
+"breasts"
+],
+"perpendicular_paizuri": [
+"paizuri"
+],
+"person_on_head": [
+"on_head"
+],
+"pet_bowl": [
+"bowl"
+],
+"petals_on_liquid": [
+"petals"
+],
+"phimosis": [
+"foreskin"
+],
+"phoenix": [
+"bird"
+],
+"photorealistic": [
+"realistic"
+],
+"piano": [
+"instrument"
+],
+"pie": [
+"food"
+],
+"pig_ears": [
+"animal_ears"
+],
+"pigeon": [
+"bird"
+],
+"piggyback": [
+"carrying"
+],
+"pill_earrings": [
+"earrings"
+],
+"pillow_grab": [
+"pillow"
+],
+"pillow_hug": [
+"hugging_object",
+"pillow"
+],
+"pinafore_dress": [
+"sleeveless_dress"
+],
+"pine_tree": [
+"tree"
+],
+"pineapple": [
+"fruit"
+],
+"pink-tinted_eyewear": [
+"tinted_eyewear"
+],
+"pink_apron": [
+"apron"
+],
+"pink_ascot": [
+"ascot"
+],
+"pink_bag": [
+"bag"
+],
+"pink_belt": [
+"belt"
+],
+"pink_bikini": [
+"bikini"
+],
+"pink_blood": [
+"colored_blood"
+],
+"pink_bodysuit": [
+"bodysuit"
+],
+"pink_border": [
+"border"
+],
+"pink_bow": [
+"bow"
+],
+"pink_bowtie": [
+"bowtie",
+"pink_bow"
+],
+"pink_bra": [
+"bra"
+],
+"pink_camisole": [
+"camisole"
+],
+"pink_cape": [
+"cape"
+],
+"pink_capelet": [
+"capelet"
+],
+"pink_cardigan": [
+"cardigan"
+],
+"pink_choker": [
+"choker"
+],
+"pink_coat": [
+"coat"
+],
+"pink_collar": [
+"collar"
+],
+"pink_dress": [
+"dress"
+],
+"pink_eyeshadow": [
+"eyeshadow"
+],
+"pink_flower": [
+"flower"
+],
+"pink_gloves": [
+"gloves"
+],
+"pink_hairband": [
+"hairband"
+],
+"pink_hakama": [
+"hakama"
+],
+"pink_halo": [
+"halo"
+],
+"pink_hoodie": [
+"hoodie"
+],
+"pink_horns": [
+"horns"
+],
+"pink_jacket": [
+"jacket"
+],
+"pink_kimono": [
+"kimono"
+],
+"pink_leotard": [
+"leotard"
+],
+"pink_neckerchief": [
+"neckerchief"
+],
+"pink_necktie": [
+"necktie"
+],
+"pink_one-piece_swimsuit": [
+"one-piece_swimsuit"
+],
+"pink_pajamas": [
+"pajamas"
+],
+"pink_panties": [
+"panties"
+],
+"pink_pants": [
+"pants"
+],
+"pink_pantyhose": [
+"pantyhose"
+],
+"pink_ribbon": [
+"ribbon"
+],
+"pink_rose": [
+"pink_flower",
+"rose"
+],
+"pink_sailor_collar": [
+"sailor_collar"
+],
+"pink_sash": [
+"sash"
+],
+"pink_scarf": [
+"scarf"
+],
+"pink_scrunchie": [
+"scrunchie"
+],
+"pink_shirt": [
+"shirt"
+],
+"pink_shorts": [
+"shorts"
+],
+"pink_skin": [
+"colored_skin"
+],
+"pink_skirt": [
+"skirt"
+],
+"pink_sky": [
+"sky"
+],
+"pink_socks": [
+"socks"
+],
+"pink_sports_bra": [
+"sports_bra"
+],
+"pink_sweater": [
+"sweater"
+],
+"pink_tank_top": [
+"tank_top"
+],
+"pink_thighhighs": [
+"thighhighs"
+],
+"pink_umbrella": [
+"umbrella"
+],
+"pink_vest": [
+"vest"
+],
+"pink_wings": [
+"wings"
+],
+"pinstripe_shirt": [
+"pinstripe_pattern",
+"shirt"
+],
+"pinstripe_suit": [
+"pinstripe_pattern",
+"suit"
+],
+"pirate_hat": [
+"hat"
+],
+"pith_helmet": [
+"helmet"
+],
+"pizza": [
+"food"
+],
+"pizza_slice": [
+"pizza"
+],
+"plaid_bikini": [
+"bikini",
+"plaid_clothes"
+],
+"plaid_bow": [
+"bow"
+],
+"plaid_bowtie": [
+"bowtie",
+"plaid_bow",
+"plaid_clothes"
+],
+"plaid_bra": [
+"bra",
+"plaid_clothes"
+],
+"plaid_dress": [
+"dress",
+"plaid_clothes"
+],
+"plaid_jacket": [
+"jacket",
+"plaid_clothes"
+],
+"plaid_necktie": [
+"necktie",
+"plaid_clothes"
+],
+"plaid_panties": [
+"panties",
+"plaid_clothes"
+],
+"plaid_pants": [
+"pants",
+"plaid_clothes"
+],
+"plaid_ribbon": [
+"ribbon"
+],
+"plaid_scarf": [
+"plaid_clothes",
+"scarf"
+],
+"plaid_shirt": [
+"plaid_clothes",
+"shirt"
+],
+"plaid_skirt": [
+"plaid_clothes",
+"skirt"
+],
+"plaid_vest": [
+"plaid_clothes",
+"vest"
+],
+"planet_hair_ornament": [
+"hair_ornament"
+],
+"plant_girl": [
+"monster_girl"
+],
+"planted_sword": [
+"planted",
+"sword"
+],
+"plastic_bag": [
+"bag"
+],
+"plate_armor": [
+"armor"
+],
+"platform_boots": [
+"boots"
+],
+"player_2": [
+"alternate_color"
+],
+"playing_card": [
+"card"
+],
+"playing_instrument": [
+"instrument"
+],
+"playstation_controller": [
+"game_controller"
+],
+"playstation_portable": [
+"handheld_game_console"
+],
+"pleated_dress": [
+"dress"
+],
+"pleated_skirt": [
+"skirt"
+],
+"plum_blossoms": [
+"flower"
+],
+"pocket_watch": [
+"watch"
+],
+"pocky": [
+"food"
+],
+"pocky_in_mouth": [
+"food_in_mouth",
+"pocky"
+],
+"pocky_kiss": [
+"pocky"
+],
+"pointing_at_another": [
+"pointing"
+],
+"pointing_at_self": [
+"pointing"
+],
+"pointing_at_viewer": [
+"pointing"
+],
+"pointing_forward": [
+"pointing"
+],
+"pointing_up": [
+"pointing"
+],
+"pointless_censoring": [
+"censored"
+],
+"pointless_condom": [
+"condom"
+],
+"poke_ball_(basic)": [
+"poke_ball"
+],
+"pokemon_on_head": [
+"on_head",
+"pokemon_(creature)"
+],
+"pokemon_on_shoulder": [
+"on_shoulder",
+"pokemon_(creature)"
+],
+"polar_bear": [
+"bear"
+],
+"polearm": [
+"weapon"
+],
+"police_car": [
+"car"
+],
+"police_hat": [
+"hat"
+],
+"police_uniform": [
+"police"
+],
+"policeman": [
+"police_uniform"
+],
+"policewoman": [
+"police_uniform"
+],
+"polka_dot_background": [
+"polka_dot"
+],
+"polka_dot_bikini": [
+"bikini",
+"polka_dot"
+],
+"polka_dot_bow": [
+"bow",
+"polka_dot"
+],
+"polka_dot_bra": [
+"bra",
+"polka_dot"
+],
+"polka_dot_dress": [
+"dress",
+"polka_dot"
+],
+"polka_dot_panties": [
+"panties",
+"polka_dot"
+],
+"polka_dot_ribbon": [
+"polka_dot",
+"ribbon"
+],
+"polka_dot_scrunchie": [
+"polka_dot",
+"scrunchie"
+],
+"polka_dot_shirt": [
+"polka_dot",
+"shirt"
+],
+"polka_dot_skirt": [
+"polka_dot",
+"skirt"
+],
+"polka_dot_swimsuit": [
+"polka_dot",
+"swimsuit"
+],
+"pom_pom_earrings": [
+"earrings",
+"pom_pom_(clothes)"
+],
+"pom_pom_hair_ornament": [
+"hair_ornament",
+"pom_pom_(clothes)"
+],
+"pool_of_blood": [
+"blood"
+],
+"popcorn": [
+"food"
+],
+"popsicle": [
+"food"
+],
+"popsicle_in_mouth": [
+"food_in_mouth",
+"popsicle"
+],
+"porkpie_hat": [
+"hat"
+],
+"potara_earrings": [
+"earrings"
+],
+"potato_chips": [
+"chips_(food)"
+],
+"potted_plant": [
+"plant"
+],
+"pouring_onto_self": [
+"pouring"
+],
+"pov_crotch": [
+"pov"
+],
+"pov_doorway": [
+"doorway"
+],
+"pov_hands": [
+"pov"
+],
+"power_armor": [
+"armor"
+],
+"prayer_beads": [
+"beads"
+],
+"precum_drip": [
+"precum"
+],
+"prehensile_tail": [
+"tail"
+],
+"princess_carry": [
+"carrying"
+],
+"print_bikini": [
+"bikini"
+],
+"print_bow": [
+"bow"
+],
+"print_bowtie": [
+"bowtie",
+"print_bow"
+],
+"print_bra": [
+"bra"
+],
+"print_dress": [
+"dress"
+],
+"print_gloves": [
+"gloves"
+],
+"print_hoodie": [
+"hoodie"
+],
+"print_jacket": [
+"jacket"
+],
+"print_kimono": [
+"kimono"
+],
+"print_mug": [
+"mug"
+],
+"print_necktie": [
+"necktie"
+],
+"print_panties": [
+"panties"
+],
+"print_pantyhose": [
+"pantyhose"
+],
+"print_sarong": [
+"sarong"
+],
+"print_scarf": [
+"scarf"
+],
+"print_shirt": [
+"shirt"
+],
+"print_shorts": [
+"shorts"
+],
+"print_skirt": [
+"skirt"
+],
+"print_swimsuit": [
+"swimsuit"
+],
+"print_thighhighs": [
+"thighhighs"
+],
+"projectile_cum": [
+"cum"
+],
+"projectile_lactation": [
+"lactation"
+],
+"propeller_hair_ornament": [
+"hair_ornament"
+],
+"prosthetic_arm": [
+"prosthesis"
+],
+"prosthetic_leg": [
+"prosthesis"
+],
+"pubic_hair_peek": [
+"pubic_hair"
+],
+"pubic_tattoo": [
+"tattoo"
+],
+"public_nudity": [
+"public_indecency"
+],
+"pudding": [
+"food"
+],
+"puff_and_slash_sleeves": [
+"puffy_sleeves"
+],
+"puffy_detached_sleeves": [
+"detached_sleeves",
+"puffy_sleeves"
+],
+"puffy_long_sleeves": [
+"long_sleeves",
+"puffy_sleeves"
+],
+"puffy_short_sleeves": [
+"puffy_sleeves",
+"short_sleeves"
+],
+"puffy_shorts": [
+"shorts"
+],
+"pumpkin_hair_ornament": [
+"food-themed_hair_ornament"
+],
+"pumps": [
+"high_heels"
+],
+"puppy": [
+"baby_animal",
+"dog"
+],
+"purple-tinted_eyewear": [
+"tinted_eyewear"
+],
+"purple_ascot": [
+"ascot"
+],
+"purple_belt": [
+"belt"
+],
+"purple_bikini": [
+"bikini"
+],
+"purple_bodysuit": [
+"bodysuit"
+],
+"purple_bow": [
+"bow"
+],
+"purple_bowtie": [
+"bowtie",
+"purple_bow"
+],
+"purple_bra": [
+"bra"
+],
+"purple_butterfly": [
+"butterfly"
+],
+"purple_cape": [
+"cape"
+],
+"purple_capelet": [
+"capelet"
+],
+"purple_cardigan": [
+"cardigan"
+],
+"purple_choker": [
+"choker"
+],
+"purple_coat": [
+"coat"
+],
+"purple_collar": [
+"collar"
+],
+"purple_dress": [
+"dress"
+],
+"purple_eyeshadow": [
+"eyeshadow"
+],
+"purple_fire": [
+"fire"
+],
+"purple_flower": [
+"flower"
+],
+"purple_gloves": [
+"gloves"
+],
+"purple_hairband": [
+"hairband"
+],
+"purple_hakama": [
+"hakama"
+],
+"purple_halo": [
+"halo"
+],
+"purple_hoodie": [
+"hoodie"
+],
+"purple_horns": [
+"horns"
+],
+"purple_jacket": [
+"jacket"
+],
+"purple_kimono": [
+"kimono"
+],
+"purple_leotard": [
+"leotard"
+],
+"purple_neckerchief": [
+"neckerchief"
+],
+"purple_necktie": [
+"necktie"
+],
+"purple_one-piece_swimsuit": [
+"one-piece_swimsuit"
+],
+"purple_panties": [
+"panties"
+],
+"purple_pants": [
+"pants"
+],
+"purple_pantyhose": [
+"pantyhose"
+],
+"purple_ribbon": [
+"ribbon"
+],
+"purple_robe": [
+"robe"
+],
+"purple_rose": [
+"purple_flower",
+"rose"
+],
+"purple_sailor_collar": [
+"sailor_collar"
+],
+"purple_sash": [
+"sash"
+],
+"purple_scarf": [
+"scarf"
+],
+"purple_scrunchie": [
+"scrunchie"
+],
+"purple_serafuku": [
+"serafuku"
+],
+"purple_shirt": [
+"shirt"
+],
+"purple_shorts": [
+"shorts"
+],
+"purple_skin": [
+"colored_skin"
+],
+"purple_skirt": [
+"skirt"
+],
+"purple_sky": [
+"sky"
+],
+"purple_socks": [
+"socks"
+],
+"purple_sweater": [
+"sweater"
+],
+"purple_thighhighs": [
+"thighhighs"
+],
+"purple_tongue": [
+"colored_tongue"
+],
+"purple_umbrella": [
+"umbrella"
+],
+"purple_vest": [
+"vest"
+],
+"purple_wings": [
+"wings"
+],
+"pussy_juice_drip_through_clothes": [
+"pussy_juice"
+],
+"pussy_juice_puddle": [
+"pussy_juice"
+],
+"pussy_juice_trail": [
+"pussy_juice"
+],
+"pussy_peek": [
+"pussy"
+],
+"pussy_piercing": [
+"piercing"
+],
+"pyrokinesis": [
+"fire"
+],
+"qingdai_guanmao": [
+"hat"
+],
+"qingxin_flower": [
+"flower"
+],
+"quarter_note": [
+"musical_note"
+],
+"queen_(chess)": [
+"chess_piece"
+],
+"rabbit-shaped_pupils": [
+"symbol-shaped_pupils"
+],
+"rabbit_costume": [
+"animal_costume"
+],
+"rabbit_ears": [
+"animal_ears"
+],
+"rabbit_hair_ornament": [
+"hair_ornament"
+],
+"rabbit_hat": [
+"animal_hat"
+],
+"rabbit_hood": [
+"animal_hood"
+],
+"rabbit_on_head": [
+"animal_on_head",
+"rabbit"
+],
+"rabbit_print": [
+"animal_print"
+],
+"rabbit_tail": [
+"tail"
+],
+"raccoon_ears": [
+"animal_ears"
+],
+"raccoon_tail": [
+"tail"
+],
+"racecar": [
+"car",
+"race_vehicle"
+],
+"raimon_soccer_uniform": [
+"raimon",
+"soccer_uniform"
+],
+"rainbow_hair": [
+"multicolored_hair"
+],
+"ramen": [
+"noodles"
+],
+"randoseru": [
+"backpack"
+],
+"rapier": [
+"sword"
+],
+"raspberry": [
+"fruit"
+],
+"ray_gun": [
+"energy_gun"
+],
+"reaching_towards_viewer": [
+"reaching"
+],
+"ready_to_draw": [
+"fighting_stance"
+],
+"recorder": [
+"flute"
+],
+"red-tinted_eyewear": [
+"tinted_eyewear"
+],
+"red_apron": [
+"apron"
+],
+"red_armband": [
+"armband"
+],
+"red_armor": [
+"armor"
+],
+"red_ascot": [
+"ascot"
+],
+"red_bag": [
+"bag"
+],
+"red_bandana": [
+"bandana"
+],
+"red_bandeau": [
+"bandeau"
+],
+"red_belt": [
+"belt"
+],
+"red_bikini": [
+"bikini"
+],
+"red_bodysuit": [
+"bodysuit"
+],
+"red_border": [
+"border"
+],
+"red_bow": [
+"bow"
+],
+"red_bowtie": [
+"bowtie",
+"red_bow"
+],
+"red_bra": [
+"bra"
+],
+"red_buruma": [
+"buruma"
+],
+"red_cape": [
+"cape"
+],
+"red_capelet": [
+"capelet"
+],
+"red_cardigan": [
+"cardigan"
+],
+"red_choker": [
+"choker"
+],
+"red_cloak": [
+"cloak"
+],
+"red_coat": [
+"coat"
+],
+"red_collar": [
+"collar"
+],
+"red_cross": [
+"cross"
+],
+"red_dress": [
+"dress"
+],
+"red_eyeliner": [
+"eyeliner"
+],
+"red_eyeshadow": [
+"eyeshadow"
+],
+"red_feathers": [
+"feathers"
+],
+"red_flower": [
+"flower"
+],
+"red_gloves": [
+"gloves"
+],
+"red_hairband": [
+"hairband"
+],
+"red_hakama": [
+"hakama"
+],
+"red_halo": [
+"halo"
+],
+"red_headband": [
+"headband"
+],
+"red_hoodie": [
+"hoodie"
+],
+"red_horns": [
+"horns"
+],
+"red_jacket": [
+"jacket"
+],
+"red_kimono": [
+"kimono"
+],
+"red_leotard": [
+"leotard"
+],
+"red_male_underwear": [
+"male_underwear"
+],
+"red_mask": [
+"mask"
+],
+"red_mittens": [
+"mittens"
+],
+"red_moon": [
+"moon"
+],
+"red_neckerchief": [
+"neckerchief"
+],
+"red_necktie": [
+"necktie"
+],
+"red_one-piece_swimsuit": [
+"one-piece_swimsuit"
+],
+"red_oni": [
+"oni"
+],
+"red_panties": [
+"panties"
+],
+"red_pants": [
+"pants"
+],
+"red_pantyhose": [
+"pantyhose"
+],
+"red_ribbon": [
+"ribbon"
+],
+"red_robe": [
+"robe"
+],
+"red_rope": [
+"rope"
+],
+"red_rose": [
+"red_flower",
+"rose"
+],
+"red_sailor_collar": [
+"sailor_collar"
+],
+"red_sash": [
+"sash"
+],
+"red_scarf": [
+"scarf"
+],
+"red_sclera": [
+"colored_sclera"
+],
+"red_scrunchie": [
+"scrunchie"
+],
+"red_shirt": [
+"shirt"
+],
+"red_shorts": [
+"shorts"
+],
+"red_skin": [
+"colored_skin"
+],
+"red_skirt": [
+"skirt"
+],
+"red_sky": [
+"sky"
+],
+"red_socks": [
+"socks"
+],
+"red_sports_bra": [
+"sports_bra"
+],
+"red_star": [
+"star_(symbol)"
+],
+"red_suit": [
+"suit"
+],
+"red_sweater": [
+"sweater"
+],
+"red_tank_top": [
+"tank_top"
+],
+"red_thighhighs": [
+"thighhighs"
+],
+"red_track_suit": [
+"track_suit"
+],
+"red_umbrella": [
+"umbrella"
+],
+"red_vest": [
+"vest"
+],
+"red_wine": [
+"wine"
+],
+"red_wings": [
+"wings"
+],
+"reindeer_antlers": [
+"antlers"
+],
+"reindeer_costume": [
+"animal_costume"
+],
+"remote_control": [
+"controller"
+],
+"remote_control_vibrator": [
+"vibrator"
+],
+"respirator": [
+"mask"
+],
+"reverse_bunnysuit": [
+"reverse_outfit"
+],
+"reverse_cowgirl_position": [
+"straddling"
+],
+"revolver": [
+"gun"
+],
+"ribbed_bodysuit": [
+"bodysuit"
+],
+"ribbed_dress": [
+"dress"
+],
+"ribbed_leotard": [
+"leotard"
+],
+"ribbed_shirt": [
+"shirt"
+],
+"ribbed_socks": [
+"socks"
+],
+"ribbed_sweater": [
+"sweater"
+],
+"ribbed_thighhighs": [
+"thighhighs"
+],
+"ribbon-trimmed_collar": [
+"ribbon_trim"
+],
+"ribbon-trimmed_dress": [
+"dress",
+"ribbon_trim"
+],
+"ribbon-trimmed_headwear": [
+"ribbon_trim"
+],
+"ribbon-trimmed_skirt": [
+"ribbon_trim"
+],
+"ribbon-trimmed_sleeves": [
+"ribbon_trim"
+],
+"ribbon_bondage": [
+"bound",
+"ribbon"
+],
+"ribbon_choker": [
+"choker"
+],
+"ribbon_in_mouth": [
+"mouth_hold",
+"ribbon"
+],
+"rice_bowl": [
+"bowl"
+],
+"rice_hat": [
+"hat"
+],
+"rice_on_face": [
+"food_on_face",
+"rice"
+],
+"riding_bicycle": [
+"on_bicycle",
+"riding"
+],
+"riding_pokemon": [
+"riding"
+],
+"rifle": [
+"gun"
+],
+"ring": [
+"jewelry"
+],
+"ring_gag": [
+"gag"
+],
+"rising_sun_flag": [
+"sunburst"
+],
+"road_sign": [
+"sign"
+],
+"roasted_sweet_potato": [
+"sweet_potato"
+],
+"robot_animal": [
+"non-humanoid_robot"
+],
+"robot_joints": [
+"joints"
+],
+"rocket_launcher": [
+"weapon"
+],
+"roller_skates": [
+"skates"
+],
+"rolling_suitcase": [
+"suitcase"
+],
+"rook_(chess)": [
+"chess_piece"
+],
+"rooster": [
+"chicken"
+],
+"rose": [
+"flower"
+],
+"rose_petals": [
+"petals"
+],
+"rose_print": [
+"floral_print"
+],
+"rotary_phone": [
+"antique_phone"
+],
+"round-bottom_flask": [
+"flask"
+],
+"round_teeth": [
+"teeth"
+],
+"round_window": [
+"window"
+],
+"rubber_boots": [
+"boots"
+],
+"rubber_gloves": [
+"gloves"
+],
+"runny_makeup": [
+"makeup"
+],
+"runny_nose": [
+"snot"
+],
+"saber_(weapon)": [
+"sword"
+],
+"sagging_breasts": [
+"breasts"
+],
+"sailor_bikini": [
+"bikini",
+"sailor_collar"
+],
+"sailor_dress": [
+"dress"
+],
+"sailor_hat": [
+"hat"
+],
+"sailor_shirt": [
+"sailor_collar",
+"shirt"
+],
+"sakazuki": [
+"cup"
+],
+"sake": [
+"alcohol"
+],
+"sake_bottle": [
+"bottle"
+],
+"saliva_trail": [
+"saliva"
+],
+"sam_browne_belt": [
+"belt"
+],
+"same-sex_bathing": [
+"shared_bathing"
+],
+"sample_watermark": [
+"watermark"
+],
+"sand_castle": [
+"sand_sculpture"
+],
+"sandwich": [
+"food"
+],
+"sanshoku_dango": [
+"dango"
+],
+"santa_bikini": [
+"bikini",
+"santa_costume"
+],
+"santa_dress": [
+"dress",
+"santa_costume"
+],
+"santa_hat": [
+"hat"
+],
+"satchel": [
+"bag"
+],
+"saury": [
+"fish"
+],
+"sausage": [
+"food"
+],
+"scabbard": [
+"sheath"
+],
+"scar_across_eye": [
+"scar",
+"scar_on_face"
+],
+"scar_on_arm": [
+"scar"
+],
+"scar_on_cheek": [
+"scar_on_face"
+],
+"scar_on_chest": [
+"scar"
+],
+"scar_on_face": [
+"scar"
+],
+"scar_on_forehead": [
+"scar_on_face"
+],
+"scar_on_hand": [
+"scar"
+],
+"scar_on_leg": [
+"scar"
+],
+"scar_on_mouth": [
+"scar_on_face"
+],
+"scar_on_neck": [
+"scar"
+],
+"scar_on_nose": [
+"scar_on_face"
+],
+"scar_on_stomach": [
+"scar"
+],
+"scarf_over_mouth": [
+"scarf"
+],
+"school_bag": [
+"bag"
+],
+"school_briefcase": [
+"briefcase"
+],
+"school_chair": [
+"chair"
+],
+"school_desk": [
+"desk"
+],
+"school_hat": [
+"hat"
+],
+"school_swimsuit": [
+"swimsuit"
+],
+"scooter": [
+"motor_vehicle"
+],
+"scylla": [
+"monster_girl"
+],
+"seagull": [
+"bird"
+],
+"seashell": [
+"shell"
+],
+"seductive_smile": [
+"smile"
+],
+"see-through_cleavage": [
+"see-through_clothes"
+],
+"see-through_dress": [
+"dress",
+"see-through_clothes"
+],
+"see-through_jacket": [
+"jacket",
+"see-through_clothes"
+],
+"see-through_legwear": [
+"see-through_clothes"
+],
+"see-through_leotard": [
+"leotard",
+"see-through_clothes"
+],
+"see-through_shirt": [
+"see-through_clothes",
+"shirt"
+],
+"see-through_skirt": [
+"see-through_clothes",
+"skirt"
+],
+"see-through_sleeves": [
+"see-through_clothes"
+],
+"segmented_comic": [
+"comic"
+],
+"seiza": [
+"sitting"
+],
+"senbei": [
+"food"
+],
+"serafuku": [
+"school_uniform"
+],
+"sewing_needle": [
+"needle"
+],
+"sex_from_behind": [
+"sex"
+],
+"sextuplets": [
+"siblings"
+],
+"shackles": [
+"cuffs"
+],
+"shako_cap": [
+"hat"
+],
+"shallow_water": [
+"water"
+],
+"shared_earphones": [
+"earphones"
+],
+"shared_object_insertion": [
+"object_insertion"
+],
+"shared_scarf": [
+"scarf",
+"shared_clothes"
+],
+"shared_speech_bubble": [
+"speech_bubble"
+],
+"shared_umbrella": [
+"umbrella"
+],
+"shark_costume": [
+"animal_costume"
+],
+"shark_hair_ornament": [
+"hair_ornament"
+],
+"shark_hood": [
+"animal_hood"
+],
+"shark_tail": [
+"fish_tail"
+],
+"sharp_fingernails": [
+"fingernails"
+],
+"sharp_teeth": [
+"teeth"
+],
+"sharp_toenails": [
+"toenails"
+],
+"shaved_ice": [
+"food"
+],
+"sheathed": [
+"sheath"
+],
+"sheep_ears": [
+"animal_ears"
+],
+"sheep_horns": [
+"horns"
+],
+"shell_bikini": [
+"bikini",
+"shell"
+],
+"shell_hair_ornament": [
+"hair_ornament",
+"shell"
+],
+"shell_necklace": [
+"necklace",
+"shell"
+],
+"shibari_over_clothes": [
+"shibari"
+],
+"shield_on_back": [
+"shield"
+],
+"shimenawa": [
+"rope"
+],
+"shinai": [
+"sword"
+],
+"shiny_and_normal": [
+"shiny_pokemon"
+],
+"shiny_legwear": [
+"shiny_clothes"
+],
+"shiny_pokemon": [
+"alternate_color"
+],
+"ship": [
+"watercraft"
+],
+"shirt_around_waist": [
+"clothes_around_waist",
+"shirt"
+],
+"shirt_in_mouth": [
+"clothes_in_mouth",
+"mouth_hold"
+],
+"shirt_lift": [
+"clothes_lift"
+],
+"shirt_pull": [
+"clothes_pull"
+],
+"shogi": [
+"board_game"
+],
+"shopping_bag": [
+"bag"
+],
+"short_dress": [
+"dress"
+],
+"short_kimono": [
+"kimono"
+],
+"short_necktie": [
+"necktie"
+],
+"short_over_long_sleeves": [
+"layered_sleeves",
+"long_sleeves",
+"short_sleeves"
+],
+"short_ponytail": [
+"ponytail"
+],
+"short_shorts": [
+"shorts"
+],
+"short_sword": [
+"sword"
+],
+"short_twintails": [
+"twintails"
+],
+"shorts_around_one_leg": [
+"shorts"
+],
+"shorts_pull": [
+"clothes_pull",
+"shorts"
+],
+"shorts_under_dress": [
+"dress"
+],
+"shorts_under_skirt": [
+"shorts"
+],
+"shotgun": [
+"gun"
+],
+"shotgun_shell": [
+"ammunition"
+],
+"shouji": [
+"sliding_doors"
+],
+"shoulder_armor": [
+"armor"
+],
+"shoulder_bag": [
+"bag"
+],
+"shoulder_carry": [
+"carrying"
+],
+"shoulder_cutout": [
+"clothing_cutout"
+],
+"shoulder_holster": [
+"holster"
+],
+"shoulder_sash": [
+"sash"
+],
+"shoulder_spikes": [
+"spikes"
+],
+"shoulder_tattoo": [
+"tattoo"
+],
+"shrimp_tempura": [
+"shrimp",
+"tempura"
+],
+"shuriken": [
+"weapon"
+],
+"shushing": [
+"finger_to_mouth"
+],
+"side-tie_bikini_bottom": [
+"bikini"
+],
+"side-tie_leotard": [
+"leotard"
+],
+"side-tie_panties": [
+"panties"
+],
+"side_braid": [
+"braid"
+],
+"side_braids": [
+"braid"
+],
+"side_cutout": [
+"clothing_cutout"
+],
+"side_drill": [
+"drill_hair"
+],
+"side_slit_shorts": [
+"shorts",
+"side_slit"
+],
+"sideboob": [
+"breasts"
+],
+"sideburns_stubble": [
+"stubble"
+],
+"sidecut": [
+"asymmetrical_hair",
+"undercut"
+],
+"sidepec": [
+"pectorals"
+],
+"silent_comic": [
+"comic"
+],
+"silver_dress": [
+"dress"
+],
+"simulated_fellatio": [
+"fellatio"
+],
+"single_boot": [
+"boots"
+],
+"single_braid": [
+"braid"
+],
+"single_detached_sleeve": [
+"detached_sleeves"
+],
+"single_ear_cover": [
+"ear_covers"
+],
+"single_earring": [
+"earrings"
+],
+"single_elbow_glove": [
+"elbow_gloves"
+],
+"single_epaulette": [
+"epaulettes"
+],
+"single_fingerless_glove": [
+"fingerless_gloves"
+],
+"single_garter_strap": [
+"garter_straps"
+],
+"single_gauntlet": [
+"gauntlets"
+],
+"single_glove": [
+"gloves"
+],
+"single_hair_bun": [
+"hair_bun"
+],
+"single_hair_ring": [
+"hair_rings"
+],
+"single_head_wing": [
+"head_wings"
+],
+"single_horn": [
+"horns"
+],
+"single_knee_pad": [
+"knee_pads"
+],
+"single_kneehigh": [
+"kneehighs",
+"single_sock"
+],
+"single_mechanical_arm": [
+"mechanical_arms"
+],
+"single_pantsleg": [
+"asymmetrical_clothes"
+],
+"single_pauldron": [
+"pauldrons"
+],
+"single_shoe": [
+"shoes"
+],
+"single_side_bun": [
+"hair_bun"
+],
+"single_sock": [
+"socks"
+],
+"single_thigh_boot": [
+"thigh_boots"
+],
+"single_thighhigh": [
+"thighhighs"
+],
+"single_wing": [
+"wings"
+],
+"single_wrist_cuff": [
+"wrist_cuffs"
+],
+"sisters": [
+"siblings"
+],
+"sitting_backwards": [
+"sitting"
+],
+"sitting_in_tree": [
+"in_tree",
+"sitting"
+],
+"sitting_on_lap": [
+"sitting_on_person"
+],
+"sitting_on_object": [
+"sitting"
+],
+"sitting_on_person": [
+"sitting"
+],
+"sitting_on_stairs": [
+"sitting",
+"stairs"
+],
+"sitting_on_table": [
+"sitting"
+],
+"sixteenth_note": [
+"musical_note"
+],
+"ski_goggles": [
+"goggles"
+],
+"skin-covered_horns": [
+"horns"
+],
+"skin_fang": [
+"fang"
+],
+"skin_fangs": [
+"fangs"
+],
+"skirt_around_one_leg": [
+"skirt"
+],
+"skirt_flip": [
+"skirt"
+],
+"skirt_lift": [
+"clothes_lift",
+"skirt"
+],
+"skirt_pull": [
+"clothes_pull",
+"skirt"
+],
+"skirt_set": [
+"skirt"
+],
+"skirt_suit": [
+"skirt",
+"suit"
+],
+"skirt_tug": [
+"skirt"
+],
+"skull_earrings": [
+"earrings"
+],
+"skull_hair_ornament": [
+"hair_ornament"
+],
+"skull_mask": [
+"mask"
+],
+"skull_necklace": [
+"necklace"
+],
+"sky_lantern": [
+"paper_lantern"
+],
+"skyscraper": [
+"building"
+],
+"sleeping_on_person": [
+"sleeping"
+],
+"sleeping_upright": [
+"sleeping"
+],
+"sleeveless_coat": [
+"coat",
+"sleeveless"
+],
+"sleeveless_dress": [
+"dress",
+"sleeveless"
+],
+"sleeveless_hoodie": [
+"hoodie",
+"sleeveless"
+],
+"sleeveless_jacket": [
+"sleeveless"
+],
+"sleeveless_kimono": [
+"kimono",
+"sleeveless"
+],
+"sleeveless_shirt": [
+"shirt",
+"sleeveless"
+],
+"sleeveless_sweater": [
+"sleeveless",
+"sweater"
+],
+"sleeveless_turtleneck": [
+"sleeveless",
+"turtleneck"
+],
+"sleeves_past_fingers": [
+"sleeves_past_wrists"
+],
+"slime_girl": [
+"monster_girl"
+],
+"slingshot_swimsuit": [
+"swimsuit"
+],
+"small_breasts": [
+"breasts"
+],
+"small_penis": [
+"penis"
+],
+"smartphone": [
+"cellphone"
+],
+"smelling_clothes": [
+"smelling"
+],
+"smoke_trail": [
+"smoke"
+],
+"snake_hair_ornament": [
+"hair_ornament"
+],
+"snake_tail": [
+"tail"
+],
+"snap-fit_buckle": [
+"buckle"
+],
+"sneakers": [
+"shoes"
+],
+"sniper_rifle": [
+"rifle"
+],
+"snowflake_hair_ornament": [
+"hair_ornament"
+],
+"soap_censor": [
+"convenient_censoring",
+"soap_bubbles"
+],
+"soccer_ball": [
+"ball"
+],
+"soccer_uniform": [
+"sportswear"
+],
+"soda_bottle": [
+"bottle"
+],
+"soda_can": [
+"drink_can"
+],
+"sode": [
+"japanese_armor",
+"shoulder_armor"
+],
+"soft_serve": [
+"ice_cream"
+],
+"soup": [
+"food"
+],
+"space_helmet": [
+"helmet"
+],
+"spade_hair_ornament": [
+"hair_ornament"
+],
+"spaghetti": [
+"pasta"
+],
+"sparkler": [
+"fireworks"
+],
+"sparrow": [
+"bird"
+],
+"sparse_pubic_hair": [
+"pubic_hair"
+],
+"spear": [
+"polearm"
+],
+"speed_lines": [
+"motion_lines"
+],
+"sphere_earrings": [
+"earrings"
+],
+"spider": [
+"bug"
+],
+"spider_girl": [
+"arthropod_girl"
+],
+"spider_lily": [
+"flower"
+],
+"spider_web": [
+"silk"
+],
+"spiked_armlet": [
+"armlet"
+],
+"spiked_bracelet": [
+"bracelet",
+"spikes"
+],
+"spiked_choker": [
+"choker",
+"spikes"
+],
+"spiked_club": [
+"club_(weapon)"
+],
+"spiked_collar": [
+"collar",
+"spikes"
+],
+"spiked_hairband": [
+"hairband",
+"spikes"
+],
+"spiked_tail": [
+"tail"
+],
+"spit_take": [
+"spitting"
+],
+"split-color_hair": [
+"multicolored_hair"
+],
+"spoken_anger_vein": [
+"anger_vein"
+],
+"spoken_ellipsis": [
+"..."
+],
+"spoken_exclamation_mark": [
+"!"
+],
+"spoken_food": [
+"food"
+],
+"spoken_heart": [
+"heart"
+],
+"spoken_interrobang": [
+"!?"
+],
+"spoken_musical_note": [
+"musical_note"
+],
+"spoken_question_mark": [
+"?"
+],
+"spoken_squiggle": [
+"squiggle"
+],
+"spoken_sweatdrop": [
+"sweatdrop"
+],
+"sports_bra_lift": [
+"clothes_lift",
+"sports_bra"
+],
+"sports_car": [
+"car"
+],
+"spread_arms": [
+"outstretched_arms"
+],
+"spread_ass": [
+"ass"
+],
+"spread_pussy_under_clothes": [
+"spread_pussy"
+],
+"spread_toes": [
+"toes"
+],
+"square_4koma": [
+"4koma"
+],
+"squatting_cowgirl_position": [
+"squatting"
+],
+"squirrel_ears": [
+"animal_ears"
+],
+"squirrel_tail": [
+"tail"
+],
+"st._gloriana's_(emblem)": [
+"emblem"
+],
+"stained_panties": [
+"panties"
+],
+"stalk_in_mouth": [
+"mouth_hold"
+],
+"standing_on_liquid": [
+"standing"
+],
+"standing_on_one_leg": [
+"standing"
+],
+"standing_sex": [
+"sex",
+"standing"
+],
+"standing_split": [
+"split",
+"standing_on_one_leg"
+],
+"star-shaped_eyewear": [
+"star_(symbol)"
+],
+"star-shaped_pupils": [
+"star_(symbol)",
+"symbol-shaped_pupils"
+],
+"star_brooch": [
+"brooch"
+],
+"star_choker": [
+"choker",
+"star_(symbol)"
+],
+"star_earrings": [
+"earrings",
+"star_(symbol)"
+],
+"star_facial_mark": [
+"facial_mark",
+"star_(symbol)"
+],
+"star_hair_ornament": [
+"hair_ornament",
+"star_(symbol)"
+],
+"star_halo": [
+"halo"
+],
+"star_hat_ornament": [
+"hat_ornament",
+"star_(symbol)"
+],
+"star_in_eye": [
+"star_(symbol)",
+"symbol_in_eye"
+],
+"star_necklace": [
+"necklace",
+"star_(symbol)"
+],
+"star_of_david": [
+"hexagram"
+],
+"star_pasties": [
+"pasties",
+"star_(symbol)"
+],
+"star_print": [
+"star_(symbol)"
+],
+"star_sticker": [
+"star_(symbol)",
+"sticker"
+],
+"star_tattoo": [
+"star_(symbol)",
+"tattoo"
+],
+"starfish_hair_ornament": [
+"hair_ornament"
+],
+"starry_sky": [
+"sky",
+"star_(sky)"
+],
+"stationary_restraints": [
+"restrained"
+],
+"steak": [
+"food"
+],
+"steam_censor": [
+"convenient_censoring",
+"steam"
+],
+"sticker_on_face": [
+"sticker"
+],
+"stiletto_(weapon)": [
+"dagger"
+],
+"stiletto_heels": [
+"high_heels"
+],
+"stirrup_legwear": [
+"toeless_legwear"
+],
+"stitched_arm": [
+"stitches"
+],
+"stitched_face": [
+"stitches"
+],
+"stitched_mouth": [
+"stitches"
+],
+"stomach_cutout": [
+"clothing_cutout"
+],
+"stomach_tattoo": [
+"tattoo"
+],
+"stone_stairs": [
+"stairs"
+],
+"straddling_paizuri": [
+"paizuri"
+],
+"strap-on": [
+"dildo"
+],
+"strap_between_breasts": [
+"between_breasts"
+],
+"strapless_bikini": [
+"bikini",
+"strapless"
+],
+"strapless_bra": [
+"bra",
+"strapless"
+],
+"strapless_dress": [
+"dress",
+"strapless"
+],
+"strapless_leotard": [
+"leotard",
+"strapless"
+],
+"strapless_one-piece_swimsuit": [
+"one-piece_swimsuit",
+"strapless"
+],
+"strapless_shirt": [
+"shirt",
+"strapless"
+],
+"straw_hat": [
+"hat"
+],
+"strawberry": [
+"fruit"
+],
+"strawberry_hair_ornament": [
+"food-themed_hair_ornament"
+],
+"strawberry_print": [
+"fruit_print"
+],
+"strawberry_shortcake": [
+"cake"
+],
+"streaked_hair": [
+"multicolored_hair"
+],
+"streaming_tears": [
+"crying",
+"tears"
+],
+"street": [
+"road"
+],
+"string_bikini": [
+"bikini"
+],
+"string_of_fate": [
+"string"
+],
+"string_panties": [
+"panties"
+],
+"striped_bikini": [
+"bikini",
+"striped_clothes"
+],
+"striped_bow": [
+"bow"
+],
+"striped_bowtie": [
+"bowtie",
+"striped_bow",
+"striped_clothes"
+],
+"striped_bra": [
+"bra",
+"striped_clothes"
+],
+"striped_coat": [
+"coat"
+],
+"striped_dress": [
+"dress",
+"striped_clothes"
+],
+"striped_gloves": [
+"gloves",
+"striped_clothes"
+],
+"striped_hairband": [
+"hairband",
+"striped_clothes"
+],
+"striped_headwear": [
+"striped_clothes"
+],
+"striped_hoodie": [
+"hoodie",
+"striped_clothes"
+],
+"striped_horns": [
+"horns"
+],
+"striped_jacket": [
+"jacket",
+"striped_clothes"
+],
+"striped_kimono": [
+"kimono",
+"striped_clothes"
+],
+"striped_necktie": [
+"necktie",
+"striped_clothes"
+],
+"striped_one-piece_swimsuit": [
+"one-piece_swimsuit",
+"striped_clothes"
+],
+"striped_panties": [
+"panties",
+"striped_clothes"
+],
+"striped_pants": [
+"pants",
+"striped_clothes"
+],
+"striped_pantyhose": [
+"pantyhose",
+"striped_clothes"
+],
+"striped_ribbon": [
+"ribbon"
+],
+"striped_scarf": [
+"scarf",
+"striped_clothes"
+],
+"striped_shirt": [
+"shirt",
+"striped_clothes"
+],
+"striped_shorts": [
+"shorts",
+"striped_clothes"
+],
+"striped_skirt": [
+"skirt",
+"striped_clothes"
+],
+"striped_socks": [
+"socks",
+"striped_clothes"
+],
+"striped_sweater": [
+"striped_clothes",
+"sweater"
+],
+"striped_tail": [
+"tail"
+],
+"striped_thighhighs": [
+"striped_clothes",
+"thighhighs"
+],
+"striped_vest": [
+"striped_clothes",
+"vest"
+],
+"stripper_pole": [
+"pole"
+],
+"stroking_own_chin": [
+"hand_on_own_chin"
+],
+"stubble": [
+"facial_hair"
+],
+"stud_earrings": [
+"earrings"
+],
+"studded_belt": [
+"belt",
+"studs"
+],
+"studded_bracelet": [
+"bracelet",
+"studs"
+],
+"studded_choker": [
+"choker",
+"studs"
+],
+"studded_collar": [
+"collar",
+"studs"
+],
+"stuffed_animal": [
+"stuffed_toy"
+],
+"stuffed_cat": [
+"stuffed_animal"
+],
+"stuffed_dog": [
+"stuffed_animal"
+],
+"stuffed_panda": [
+"stuffed_animal"
+],
+"stuffed_penguin": [
+"stuffed_animal"
+],
+"stuffed_rabbit": [
+"stuffed_animal"
+],
+"stuffed_shark": [
+"stuffed_animal"
+],
+"style_parody": [
+"parody"
+],
+"submachine_gun": [
+"gun"
+],
+"suit_jacket": [
+"jacket"
+],
+"sukajan": [
+"jacket"
+],
+"sun_hat": [
+"hat"
+],
+"sunbeam": [
+"light_rays",
+"sunlight"
+],
+"sunburst_background": [
+"sunburst"
+],
+"sundae": [
+"ice_cream"
+],
+"sundress": [
+"dress"
+],
+"sunflower": [
+"flower"
+],
+"sunflower_field": [
+"flower_field",
+"sunflower"
+],
+"sunflower_hair_ornament": [
+"hair_flower",
+"sunflower"
+],
+"sunscreen": [
+"lotion"
+],
+"super_robot": [
+"mecha"
+],
+"super_saiyan_1": [
+"super_saiyan"
+],
+"super_saiyan_4": [
+"super_saiyan"
+],
+"surgical_mask": [
+"mouth_mask"
+],
+"surprise_kiss": [
+"kiss",
+"surprised"
+],
+"surrounded_by_penises": [
+"penis"
+],
+"sushi": [
+"food"
+],
+"suspender_shorts": [
+"shorts",
+"suspenders"
+],
+"suspender_skirt": [
+"skirt",
+"suspenders"
+],
+"suspenders_slip": [
+"suspenders"
+],
+"sweater_around_waist": [
+"clothes_around_waist",
+"sweater"
+],
+"sweater_dress": [
+"dress",
+"sweater"
+],
+"sweater_lift": [
+"clothes_lift",
+"sweater"
+],
+"sweater_pull": [
+"clothes_pull",
+"sweater"
+],
+"sweatpants": [
+"pants"
+],
+"sweet_lolita": [
+"lolita_fashion"
+],
+"sweet_potato": [
+"food"
+],
+"sweets": [
+"food"
+],
+"swim_briefs": [
+"male_swimwear"
+],
+"swim_trunks": [
+"male_swimwear"
+],
+"swimsuit_aside": [
+"clothing_aside",
+"swimsuit"
+],
+"swimsuit_under_clothes": [
+"swimsuit"
+],
+"swirl_lollipop": [
+"lollipop"
+],
+"swiss_roll": [
+"cake"
+],
+"swivel_chair": [
+"chair"
+],
+"sword": [
+"weapon"
+],
+"sword_on_back": [
+"sword",
+"weapon_on_back"
+],
+"sword_over_shoulder": [
+"sword",
+"weapon_over_shoulder"
+],
+"symmetrical_docking": [
+"breast_press"
+],
+"t-shirt": [
+"shirt"
+],
+"table_humping": [
+"crotch_rub",
+"masturbation"
+],
+"tail_bell": [
+"bell",
+"tail_ornament"
+],
+"tail_between_legs": [
+"between_legs",
+"tail"
+],
+"tail_bow": [
+"bow",
+"tail_ornament"
+],
+"tail_grab": [
+"tail"
+],
+"tail_ornament": [
+"tail"
+],
+"tail_piercing": [
+"piercing",
+"tail_ornament"
+],
+"tail_ribbon": [
+"ribbon",
+"tail_ornament"
+],
+"tail_ring": [
+"tail_ornament"
+],
+"tail_through_clothes": [
+"tail"
+],
+"tail_wagging": [
+"tail"
+],
+"tail_wrap": [
+"tail"
+],
+"taiyaki": [
+"wagashi"
+],
+"takoyaki": [
+"food"
+],
+"tam_o'_shanter": [
+"hat"
+],
+"tamagoyaki": [
+"omelet"
+],
+"tambourine": [
+"instrument"
+],
+"tangzhuang": [
+"chinese_clothes"
+],
+"tank": [
+"military_vehicle",
+"motor_vehicle"
+],
+"tankini": [
+"bikini"
+],
+"tantou": [
+"short_sword"
+],
+"tape_gag": [
+"improvised_gag",
+"tape"
+],
+"tape_on_nipples": [
+"pasties",
+"tape"
+],
+"tapir_tail": [
+"tail"
+],
+"tarot_(medium)": [
+"card_(medium)",
+"tarot"
+],
+"tassel_earrings": [
+"earrings",
+"tassel"
+],
+"tassel_hair_ornament": [
+"hair_ornament",
+"tassel"
+],
+"tate_eboshi": [
+"hat"
+],
+"taut_dress": [
+"dress",
+"taut_clothes"
+],
+"taut_leotard": [
+"leotard",
+"taut_clothes"
+],
+"taut_shirt": [
+"shirt",
+"taut_clothes"
+],
+"taut_swimsuit": [
+"swimsuit",
+"taut_clothes"
+],
+"teacup": [
+"cup"
+],
+"team_rocket_uniform": [
+"team_rocket"
+],
+"teardrop_facial_mark": [
+"facial_mark"
+],
+"teardrop_tattoo": [
+"tattoo"
+],
+"tearing_clothes": [
+"torn_clothes"
+],
+"teddy_bear": [
+"stuffed_animal"
+],
+"teeth_hold": [
+"mouth_hold"
+],
+"temari_ball": [
+"ball"
+],
+"tempura": [
+"food"
+],
+"tengu-geta": [
+"geta"
+],
+"tengu_mask": [
+"mask"
+],
+"tennis_ball": [
+"ball"
+],
+"tennis_racket": [
+"racket"
+],
+"tennis_uniform": [
+"sportswear"
+],
+"tentacle_pit": [
+"tentacles"
+],
+"tentacle_sex": [
+"tentacles"
+],
+"tentacles_on_male": [
+"tentacles"
+],
+"tentacles_under_clothes": [
+"tentacles"
+],
+"testicle_sucking": [
+"oral"
+],
+"the_pose": [
+"on_stomach"
+],
+"thick_beard": [
+"beard"
+],
+"thick_lips": [
+"lips"
+],
+"thick_mustache": [
+"mustache"
+],
+"thick_thighs": [
+"thighs"
+],
+"thigh_belt": [
+"belt",
+"thigh_strap"
+],
+"thigh_boots": [
+"boots"
+],
+"thigh_cutout": [
+"clothing_cutout"
+],
+"thigh_holster": [
+"holster"
+],
+"thigh_pouch": [
+"pouch"
+],
+"thigh_ribbon": [
+"leg_ribbon"
+],
+"thighband_pantyhose": [
+"pantyhose"
+],
+"thighhighs_over_pantyhose": [
+"pantyhose",
+"thighhighs"
+],
+"thighhighs_under_boots": [
+"boots",
+"thighhighs"
+],
+"thighlet": [
+"jewelry"
+],
+"thong_aside": [
+"clothing_aside"
+],
+"thong_bikini": [
+"bikini",
+"thong"
+],
+"thong_leotard": [
+"leotard",
+"thong"
+],
+"thought_bubble": [
+"speech_bubble"
+],
+"threesome": [
+"group_sex"
+],
+"through_screen": [
+"through_medium"
+],
+"throwing_knife": [
+"knife",
+"weapon"
+],
+"thumb_ring": [
+"ring"
+],
+"tickling_armpits": [
+"tickling"
+],
+"tied_jacket": [
+"jacket"
+],
+"tied_shirt": [
+"shirt"
+],
+"tied_up_(nonsexual)": [
+"bound"
+],
+"tiger_ears": [
+"animal_ears"
+],
+"tiger_print": [
+"animal_print"
+],
+"tiger_tail": [
+"tail"
+],
+"tight_dress": [
+"dress",
+"tight_clothes"
+],
+"tight_pants": [
+"pants",
+"tight_clothes"
+],
+"tight_shirt": [
+"shirt",
+"tight_clothes"
+],
+"tile_floor": [
+"tiles"
+],
+"tile_wall": [
+"tiles"
+],
+"title_parody": [
+"parody"
+],
+"toast": [
+"bread_slice"
+],
+"toast_in_mouth": [
+"food_in_mouth",
+"mouth_hold",
+"toast"
+],
+"toe_ring": [
+"jewelry"
+],
+"toenail_polish": [
+"nail_polish",
+"toenails"
+],
+"tokin_hat": [
+"hat"
+],
+"toned_male": [
+"toned"
+],
+"tonfa": [
+"weapon"
+],
+"tongue_out": [
+"tongue"
+],
+"tongue_piercing": [
+"piercing"
+],
+"tooth_necklace": [
+"necklace"
+],
+"top_hat": [
+"hat"
+],
+"torn_bodystocking": [
+"bodystocking",
+"torn_clothes"
+],
+"torn_bodysuit": [
+"bodysuit",
+"torn_clothes"
+],
+"torn_cape": [
+"cape",
+"torn_clothes"
+],
+"torn_cloak": [
+"cloak",
+"torn_clothes"
+],
+"torn_coat": [
+"torn_clothes"
+],
+"torn_dress": [
+"dress",
+"torn_clothes"
+],
+"torn_gloves": [
+"gloves",
+"torn_clothes"
+],
+"torn_jacket": [
+"jacket",
+"torn_clothes"
+],
+"torn_jeans": [
+"jeans",
+"torn_pants"
+],
+"torn_leotard": [
+"leotard",
+"torn_clothes"
+],
+"torn_panties": [
+"panties",
+"torn_clothes"
+],
+"torn_pants": [
+"pants",
+"torn_clothes"
+],
+"torn_pantyhose": [
+"pantyhose",
+"torn_clothes"
+],
+"torn_scarf": [
+"scarf",
+"torn_clothes"
+],
+"torn_shirt": [
+"shirt",
+"torn_clothes"
+],
+"torn_shorts": [
+"shorts",
+"torn_clothes"
+],
+"torn_skirt": [
+"skirt",
+"torn_clothes"
+],
+"torn_sleeves": [
+"torn_clothes"
+],
+"torn_swimsuit": [
+"swimsuit",
+"torn_clothes"
+],
+"torn_thighhighs": [
+"thighhighs",
+"torn_clothes"
+],
+"torn_wings": [
+"wings"
+],
+"towel_around_neck": [
+"towel"
+],
+"towel_on_head": [
+"towel"
+],
+"track_jacket": [
+"jacket"
+],
+"track_pants": [
+"pants"
+],
+"traditional_bowtie": [
+"bowtie"
+],
+"traditional_chinese_text": [
+"chinese_text"
+],
+"traditional_nun": [
+"nun"
+],
+"training_bra": [
+"bra"
+],
+"transparent_umbrella": [
+"transparent",
+"umbrella"
+],
+"transparent_wings": [
+"wings"
+],
+"trench_coat": [
+"coat"
+],
+"tress_ribbon": [
+"hair_ribbon"
+],
+"tri_braids": [
+"multiple_braids"
+],
+"triangle_earrings": [
+"earrings"
+],
+"triangle_hair_ornament": [
+"hair_ornament"
+],
+"tribal_tattoo": [
+"tattoo"
+],
+"tricorne": [
+"hat"
+],
+"trident": [
+"polearm"
+],
+"triplets": [
+"siblings"
+],
+"truck": [
+"motor_vehicle"
+],
+"trumpet": [
+"instrument"
+],
+"tube_dress": [
+"strapless_dress"
+],
+"tube_top": [
+"strapless"
+],
+"tulip": [
+"flower"
+],
+"turnaround": [
+"multiple_views"
+],
+"turtleneck_dress": [
+"dress",
+"turtleneck"
+],
+"turtleneck_jacket": [
+"jacket",
+"turtleneck"
+],
+"turtleneck_leotard": [
+"leotard",
+"turtleneck"
+],
+"turtleneck_sweater": [
+"sweater",
+"turtleneck"
+],
+"tweaking_own_nipple": [
+"nipple_tweak"
+],
+"twin_braids": [
+"braid"
+],
+"twin_drills": [
+"drill_hair"
+],
+"twincest": [
+"incest",
+"twins"
+],
+"twins": [
+"siblings"
+],
+"two-finger_salute": [
+"salute"
+],
+"two-footed_footjob": [
+"footjob"
+],
+"two-handed": [
+"holding"
+],
+"two-handed_handjob": [
+"handjob"
+],
+"two-sided_cape": [
+"cape",
+"two-sided_fabric"
+],
+"two-sided_cloak": [
+"cloak",
+"two-sided_fabric"
+],
+"two-sided_coat": [
+"coat",
+"two-sided_fabric"
+],
+"two-sided_dress": [
+"dress",
+"two-sided_fabric"
+],
+"two-sided_jacket": [
+"jacket",
+"two-sided_fabric"
+],
+"two-sided_skirt": [
+"two-sided_fabric"
+],
+"two-tone_bikini": [
+"bikini",
+"multicolored_bikini"
+],
+"two-tone_bodysuit": [
+"multicolored_bodysuit"
+],
+"two-tone_bowtie": [
+"bowtie",
+"two-tone_bow"
+],
+"two-tone_coat": [
+"multicolored_coat"
+],
+"two-tone_dress": [
+"dress"
+],
+"two-tone_eyes": [
+"multicolored_eyes"
+],
+"two-tone_gloves": [
+"gloves",
+"multicolored_gloves"
+],
+"two-tone_hair": [
+"multicolored_hair"
+],
+"two-tone_hairband": [
+"hairband",
+"multicolored_hairband"
+],
+"two-tone_jacket": [
+"multicolored_jacket"
+],
+"two-tone_leotard": [
+"multicolored_leotard"
+],
+"two-tone_ribbon": [
+"ribbon"
+],
+"two-tone_skin": [
+"multicolored_skin"
+],
+"two-tone_sports_bra": [
+"sports_bra"
+],
+"two_tails": [
+"multiple_tails"
+],
+"u_u": [
+"closed_eyes"
+],
+"uchikake": [
+"kimono"
+],
+"uchiwa": [
+"paper_fan"
+],
+"ultra_ball": [
+"poke_ball"
+],
+"unaligned_breasts": [
+"breasts"
+],
+"unbuttoned_shirt": [
+"unbuttoned"
+],
+"unconventional_maid": [
+"maid"
+],
+"under-rim_eyewear": [
+"semi-rimless_eyewear"
+],
+"under_kotatsu": [
+"kotatsu",
+"under_table"
+],
+"under_tree": [
+"tree"
+],
+"underboob": [
+"breasts"
+],
+"underboob_cutout": [
+"clothing_cutout"
+],
+"underwear_only": [
+"underwear"
+],
+"undone_neck_ribbon": [
+"neck_ribbon"
+],
+"undone_necktie": [
+"necktie"
+],
+"uneven_gloves": [
+"asymmetrical_gloves"
+],
+"uneven_horns": [
+"asymmetrical_horns"
+],
+"uneven_legwear": [
+"asymmetrical_legwear"
+],
+"uneven_sleeves": [
+"asymmetrical_sleeves"
+],
+"uneven_twintails": [
+"twintails"
+],
+"unsheathing": [
+"sheath"
+],
+"untied_panties": [
+"side-tie_panties"
+],
+"untucked_shirt": [
+"shirt"
+],
+"unworn_backpack": [
+"backpack",
+"unworn_bag"
+],
+"unworn_bag": [
+"bag"
+],
+"unworn_bikini": [
+"bikini"
+],
+"unworn_bikini_bottom": [
+"bikini"
+],
+"unworn_bikini_top": [
+"bikini"
+],
+"unworn_boots": [
+"boots"
+],
+"unworn_bra": [
+"bra"
+],
+"unworn_coat": [
+"coat"
+],
+"unworn_dress": [
+"dress"
+],
+"unworn_eyepatch": [
+"eyepatch"
+],
+"unworn_gloves": [
+"gloves"
+],
+"unworn_goggles": [
+"goggles"
+],
+"unworn_hair_ornament": [
+"hair_ornament"
+],
+"unworn_hat": [
+"hat",
+"unworn_headwear"
+],
+"unworn_helmet": [
+"helmet",
+"unworn_headwear"
+],
+"unworn_jacket": [
+"jacket"
+],
+"unworn_jewelry": [
+"jewelry"
+],
+"unworn_mask": [
+"mask"
+],
+"unworn_necktie": [
+"necktie"
+],
+"unworn_panties": [
+"panties"
+],
+"unworn_sandals": [
+"sandals"
+],
+"unworn_shirt": [
+"shirt"
+],
+"unworn_shoes": [
+"shoes"
+],
+"unworn_shorts": [
+"shorts"
+],
+"unworn_skirt": [
+"skirt"
+],
+"unworn_socks": [
+"socks"
+],
+"unworn_thighhighs": [
+"thighhighs"
+],
+"upper_teeth_only": [
+"teeth"
+],
+"upright_straddle": [
+"straddling"
+],
+"used_condom": [
+"condom"
+],
+"used_condom_on_penis": [
+"condom_on_penis",
+"used_condom"
+],
+"ushanka": [
+"hat"
+],
+"utility_belt": [
+"belt"
+],
+"uwabaki": [
+"shoes"
+],
+"v_over_eye": [
+"v"
+],
+"v_over_mouth": [
+"v"
+],
+"vaginal_object_insertion": [
+"object_insertion",
+"vaginal"
+],
+"van": [
+"motor_vehicle"
+],
+"varia_suit": [
+"power_suit_(metroid)"
+],
+"vegetable": [
+"food"
+],
+"vehicle_and_personification": [
+"personification"
+],
+"veiny_arms": [
+"veins"
+],
+"veiny_breasts": [
+"breasts",
+"veins"
+],
+"veiny_penis": [
+"penis",
+"veins"
+],
+"vertical-striped_bikini": [
+"striped_bikini",
+"vertical-striped_clothes"
+],
+"vertical-striped_clothes": [
+"striped_clothes"
+],
+"vertical-striped_dress": [
+"striped_dress",
+"vertical-striped_clothes"
+],
+"vertical-striped_jacket": [
+"striped_jacket",
+"vertical-striped_clothes"
+],
+"vertical-striped_kimono": [
+"striped_kimono",
+"vertical-striped_clothes"
+],
+"vertical-striped_panties": [
+"striped_panties",
+"vertical-striped_clothes"
+],
+"vertical-striped_pants": [
+"striped_pants",
+"vertical-striped_clothes"
+],
+"vertical-striped_pantyhose": [
+"striped_pantyhose",
+"vertical-striped_clothes"
+],
+"vertical-striped_shirt": [
+"striped_shirt",
+"vertical-striped_clothes"
+],
+"vertical-striped_shorts": [
+"striped_shorts",
+"vertical-striped_clothes"
+],
+"vertical-striped_skirt": [
+"striped_skirt",
+"vertical-striped_clothes"
+],
+"vertical-striped_socks": [
+"striped_socks",
+"vertical-striped_clothes"
+],
+"vertical-striped_thighhighs": [
+"striped_thighhighs",
+"vertical-striped_clothes"
+],
+"vertical_foregrip": [
+"foregrip"
+],
+"very_dark_skin": [
+"dark_skin"
+],
+"very_long_fingernails": [
+"long_fingernails"
+],
+"very_long_hair": [
+"long_hair"
+],
+"very_short_hair": [
+"short_hair"
+],
+"very_sweaty": [
+"sweat"
+],
+"vibrator": [
+"sex_toy"
+],
+"vibrator_in_thighhighs": [
+"thighhighs",
+"vibrator"
+],
+"vibrator_on_nipple": [
+"nipple_stimulation",
+"vibrator"
+],
+"vibrator_under_clothes": [
+"vibrator"
+],
+"vibrator_under_panties": [
+"panties",
+"vibrator_under_clothes"
+],
+"viewer_holding_leash": [
+"leash"
+],
+"vines": [
+"plant"
+],
+"violin": [
+"instrument"
+],
+"voile": [
+"library"
+],
+"volleyball_(object)": [
+"ball"
+],
+"volleyball_uniform": [
+"sportswear"
+],
+"wa_lolita": [
+"japanese_clothes",
+"lolita_fashion"
+],
+"wa_maid": [
+"japanese_clothes",
+"maid"
+],
+"wafer_stick": [
+"food"
+],
+"wagashi": [
+"food"
+],
+"waist_apron": [
+"apron"
+],
+"waist_bow": [
+"bow"
+],
+"waistcoat": [
+"vest"
+],
+"wakizashi": [
+"sword"
+],
+"walker_(robot)": [
+"mecha"
+],
+"walking_on_liquid": [
+"walking"
+],
+"wall_clock": [
+"clock"
+],
+"war_hammer": [
+"hammer",
+"weapon"
+],
+"wariza": [
+"sitting"
+],
+"warning_sign": [
+"sign"
+],
+"warship": [
+"military_vehicle",
+"ship"
+],
+"water_bottle": [
+"bottle"
+],
+"watercolor_(medium)": [
+"painting_(medium)"
+],
+"watercolor_pencil_(medium)": [
+"traditional_media"
+],
+"waterfall": [
+"water"
+],
+"watermelon": [
+"fruit"
+],
+"watermelon_bar": [
+"popsicle"
+],
+"watermelon_slice": [
+"watermelon"
+],
+"watson_cross": [
+"crossed_legs"
+],
+"weapon_on_back": [
+"weapon"
+],
+"weapon_over_shoulder": [
+"over_shoulder",
+"weapon"
+],
+"weasel_ears": [
+"animal_ears"
+],
+"weasel_tail": [
+"tail"
+],
+"wedding_dress": [
+"dress"
+],
+"wedding_ring": [
+"ring"
+],
+"weightlifting": [
+"exercising"
+],
+"wet_clothes": [
+"wet"
+],
+"wet_dress": [
+"dress",
+"wet_clothes"
+],
+"wet_hair": [
+"wet"
+],
+"wet_panties": [
+"panties",
+"wet_clothes"
+],
+"wet_shirt": [
+"shirt",
+"wet_clothes"
+],
+"wet_skirt": [
+"skirt",
+"wet_clothes"
+],
+"wet_swimsuit": [
+"swimsuit",
+"wet_clothes"
+],
+"wetsuit": [
+"bodysuit",
+"diving_suit"
+],
+"whip_sword": [
+"weapon"
+],
+"whisker_markings": [
+"facial_mark"
+],
+"whiskey": [
+"alcohol"
+],
+"whistle_around_neck": [
+"whistle"
+],
+"white_apron": [
+"apron"
+],
+"white_armor": [
+"armor"
+],
+"white_ascot": [
+"ascot"
+],
+"white_bag": [
+"bag"
+],
+"white_bandeau": [
+"bandeau"
+],
+"white_belt": [
+"belt"
+],
+"white_bikini": [
+"bikini"
+],
+"white_bird": [
+"bird"
+],
+"white_bloomers": [
+"bloomers"
+],
+"white_bodysuit": [
+"bodysuit"
+],
+"white_border": [
+"border"
+],
+"white_bow": [
+"bow"
+],
+"white_bowtie": [
+"bowtie",
+"white_bow"
+],
+"white_bra": [
+"bra"
+],
+"white_butterfly": [
+"butterfly"
+],
+"white_camisole": [
+"camisole"
+],
+"white_cape": [
+"cape"
+],
+"white_capelet": [
+"capelet"
+],
+"white_cardigan": [
+"cardigan"
+],
+"white_cat": [
+"cat"
+],
+"white_choker": [
+"choker"
+],
+"white_cloak": [
+"cloak"
+],
+"white_coat": [
+"coat"
+],
+"white_collar": [
+"collar"
+],
+"white_dress": [
+"dress"
+],
+"white_feathers": [
+"feathers"
+],
+"white_flower": [
+"flower"
+],
+"white_garter_belt": [
+"garter_belt"
+],
+"white_garter_straps": [
+"garter_straps"
+],
+"white_gloves": [
+"gloves"
+],
+"white_hairband": [
+"hairband"
+],
+"white_halo": [
+"halo"
+],
+"white_headband": [
+"headband"
+],
+"white_hoodie": [
+"hoodie"
+],
+"white_horns": [
+"horns"
+],
+"white_jacket": [
+"jacket"
+],
+"white_kimono": [
+"kimono"
+],
+"white_leotard": [
+"leotard"
+],
+"white_male_underwear": [
+"male_underwear"
+],
+"white_mask": [
+"mask"
+],
+"white_mittens": [
+"mittens"
+],
+"white_neckerchief": [
+"neckerchief"
+],
+"white_necktie": [
+"necktie"
+],
+"white_one-piece_swimsuit": [
+"one-piece_swimsuit"
+],
+"white_outline": [
+"outline"
+],
+"white_panties": [
+"panties"
+],
+"white_pants": [
+"pants"
+],
+"white_pantyhose": [
+"pantyhose"
+],
+"white_pubic_hair": [
+"pubic_hair"
+],
+"white_pupils": [
+"bright_pupils"
+],
+"white_ribbon": [
+"ribbon"
+],
+"white_robe": [
+"robe"
+],
+"white_romper": [
+"romper"
+],
+"white_rose": [
+"rose",
+"white_flower"
+],
+"white_sailor_collar": [
+"sailor_collar"
+],
+"white_sarong": [
+"sarong"
+],
+"white_sash": [
+"sash"
+],
+"white_scarf": [
+"scarf"
+],
+"white_scrunchie": [
+"scrunchie"
+],
+"white_serafuku": [
+"serafuku"
+],
+"white_shirt": [
+"shirt"
+],
+"white_shorts": [
+"shorts"
+],
+"white_skin": [
+"colored_skin"
+],
+"white_skirt": [
+"skirt"
+],
+"white_sky": [
+"sky"
+],
+"white_snake": [
+"snake"
+],
+"white_socks": [
+"socks"
+],
+"white_sports_bra": [
+"sports_bra"
+],
+"white_suit": [
+"suit"
+],
+"white_sweater": [
+"sweater"
+],
+"white_tank_top": [
+"tank_top"
+],
+"white_thighhighs": [
+"thighhighs"
+],
+"white_tiger": [
+"tiger"
+],
+"white_tube_top": [
+"tube_top"
+],
+"white_umbrella": [
+"umbrella"
+],
+"white_veil": [
+"veil"
+],
+"white_vest": [
+"vest"
+],
+"white_wings": [
+"wings"
+],
+"white_wrist_cuffs": [
+"wrist_cuffs"
+],
+"wide_spread_legs": [
+"spread_legs"
+],
+"wiffle_gag": [
+"gag"
+],
+"wind_lift": [
+"wind"
+],
+"wine": [
+"alcohol"
+],
+"wine_bottle": [
+"bottle"
+],
+"wine_glass": [
+"drinking_glass"
+],
+"wing_brooch": [
+"brooch"
+],
+"wing_hair_ornament": [
+"hair_ornament"
+],
+"winged_arms": [
+"wings"
+],
+"winged_helmet": [
+"helmet"
+],
+"winter_coat": [
+"coat",
+"winter_clothes"
+],
+"wiping_tears": [
+"tears"
+],
+"wisteria": [
+"flower"
+],
+"witch_hat": [
+"hat"
+],
+"wizard_hat": [
+"hat"
+],
+"wolf_ears": [
+"animal_ears"
+],
+"wolf_tail": [
+"tail"
+],
+"wooden_bucket": [
+"bucket"
+],
+"wooden_chair": [
+"chair"
+],
+"wooden_fence": [
+"fence"
+],
+"wooden_sword": [
+"sword"
+],
+"wooden_table": [
+"table"
+],
+"wrapped_candy": [
+"candy"
+],
+"wrist_ribbon": [
+"ribbon"
+],
+"wrist_scrunchie": [
+"scrunchie"
+],
+"wristwatch": [
+"watch"
+],
+"wrong_foot": [
+"artistic_error"
+],
+"x-shaped_pupils": [
+"symbol-shaped_pupils"
+],
+"x3": [
+":3",
+">_<"
+],
+"x_hair_ornament": [
+"hair_ornament"
+],
+"xd": [
+":d",
+">_<"
+],
+"yarn_ball": [
+"yarn"
+],
+"year_of_the_dog": [
+"chinese_zodiac"
+],
+"year_of_the_dragon": [
+"chinese_zodiac"
+],
+"year_of_the_ox": [
+"chinese_zodiac"
+],
+"year_of_the_pig": [
+"chinese_zodiac"
+],
+"year_of_the_rabbit": [
+"chinese_zodiac"
+],
+"year_of_the_rat": [
+"chinese_zodiac"
+],
+"year_of_the_rooster": [
+"chinese_zodiac"
+],
+"year_of_the_tiger": [
+"chinese_zodiac"
+],
+"yellow-tinted_eyewear": [
+"tinted_eyewear"
+],
+"yellow_apron": [
+"apron"
+],
+"yellow_armband": [
+"armband"
+],
+"yellow_ascot": [
+"ascot"
+],
+"yellow_bag": [
+"bag"
+],
+"yellow_belt": [
+"belt"
+],
+"yellow_bikini": [
+"bikini"
+],
+"yellow_bodysuit": [
+"bodysuit"
+],
+"yellow_border": [
+"border"
+],
+"yellow_bow": [
+"bow"
+],
+"yellow_bowtie": [
+"bowtie",
+"yellow_bow"
+],
+"yellow_bra": [
+"bra"
+],
+"yellow_butterfly": [
+"butterfly"
+],
+"yellow_camisole": [
+"camisole"
+],
+"yellow_cape": [
+"cape"
+],
+"yellow_cardigan": [
+"cardigan"
+],
+"yellow_choker": [
+"choker"
+],
+"yellow_coat": [
+"coat"
+],
+"yellow_dress": [
+"dress"
+],
+"yellow_flower": [
+"flower"
+],
+"yellow_gloves": [
+"gloves"
+],
+"yellow_hairband": [
+"hairband"
+],
+"yellow_halo": [
+"halo"
+],
+"yellow_hoodie": [
+"hoodie"
+],
+"yellow_horns": [
+"horns"
+],
+"yellow_jacket": [
+"jacket"
+],
+"yellow_kimono": [
+"kimono"
+],
+"yellow_leotard": [
+"leotard"
+],
+"yellow_neckerchief": [
+"neckerchief"
+],
+"yellow_necktie": [
+"necktie"
+],
+"yellow_one-piece_swimsuit": [
+"one-piece_swimsuit"
+],
+"yellow_panties": [
+"panties"
+],
+"yellow_pants": [
+"pants"
+],
+"yellow_pantyhose": [
+"pantyhose"
+],
+"yellow_raincoat": [
+"raincoat"
+],
+"yellow_ribbon": [
+"ribbon"
+],
+"yellow_rose": [
+"rose",
+"yellow_flower"
+],
+"yellow_sash": [
+"sash"
+],
+"yellow_scarf": [
+"scarf"
+],
+"yellow_sclera": [
+"colored_sclera"
+],
+"yellow_scrunchie": [
+"scrunchie"
+],
+"yellow_shirt": [
+"shirt"
+],
+"yellow_shorts": [
+"shorts"
+],
+"yellow_skin": [
+"colored_skin"
+],
+"yellow_skirt": [
+"skirt"
+],
+"yellow_sky": [
+"sky"
+],
+"yellow_socks": [
+"socks"
+],
+"yellow_sweater": [
+"sweater"
+],
+"yellow_sweater_vest": [
+"sweater_vest"
+],
+"yellow_tank_top": [
+"tank_top"
+],
+"yellow_thighhighs": [
+"thighhighs"
+],
+"yellow_vest": [
+"vest"
+],
+"yellow_wings": [
+"wings"
+],
+"yes-no_pillow": [
+"pillow"
+],
+"yin_yang_orb": [
+"orb",
+"yin_yang"
+],
+"yoga_pants": [
+"pants"
+],
+"yokozuwari": [
+"sitting"
+],
+"yugake": [
+"partially_fingerless_gloves"
+],
+"yukata": [
+"kimono"
+],
+"yumi_(bow)": [
+"bow_(weapon)"
+],
+"yunomi": [
+"cup"
+],
+"zabuton": [
+"cushion"
+],
+"zombie_pose": [
+"outstretched_arms"
+],
+"zouri": [
+"sandals"
+]
+}
+}

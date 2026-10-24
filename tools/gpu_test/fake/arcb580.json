@@ -1,0 +1,1 @@
+{"vc":[{"name":"Intel(R) Arc(TM) B580 Graphics","pnp":"PCI\\VEN_8086&DEV_E20B&SUBSYS_10208086&REV_00\\6&20E1F2A3&0&00000019","vendor":"Intel Corporation","driver":"32.0.101.8132","ram":4293918720}],"reg":[{"id":"pci\\ven_8086&dev_e20b","desc":"Intel(R) Arc(TM) B580 Graphics","qw":12750684160,"mem":null,"radeon":""}]}

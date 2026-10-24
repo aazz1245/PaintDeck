@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>繪匣 PaintDeck：安裝與修復</title>
+<link rel="stylesheet" href="/static/css/fonts.css">
+<link rel="stylesheet" href="/static/css/app.css">
+<style>
+  /* 精靈專用：左邊步驟燈、右邊內容 */
+  .wiz { display: grid; grid-template-columns: 210px 1fr; grid-template-rows: minmax(0, 1fr); gap: 12px; min-height: 0; }
+  .steps { display: flex; flex-direction: column; gap: 10px; padding: 26px 12px 12px; }
+  .step { display: grid; grid-template-columns: 26px 1fr; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 6px; background: var(--case); color: var(--label-dim);
+    box-shadow: 0 2px 0 var(--case-lo); font-weight: 700; }
+  .step .n { font: 20px/1 var(--f-vfd); color: var(--label-dim); }
+  .step.on { color: var(--label); background: var(--key); box-shadow: 0 3px 0 var(--key-side), inset 0 1px 0 rgba(255,255,255,.5); }
+  .step.on .n { color: var(--acc); }
+  .step.done .n { color: var(--ok); }
+  .main { display: grid; grid-template-rows: 1fr auto; min-height: 0; padding: 0; }
+  .body { overflow-y: auto; padding: 24px 22px 18px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  .body h2 { margin: 0; font: 900 20px/1.3 var(--f-ui); text-wrap: balance; }
+  .body p { margin: 0; max-width: 70ch; }
+  .wnav { display: flex; gap: 10px; align-items: center; padding: 12px 18px 14px; border-top: 1px solid var(--groove); }
+  .screen { background: var(--screen); border-radius: 6px; padding: 10px 12px; color: var(--ph-green); font: 18px/1.35 var(--f-vfd);
+    box-shadow: inset 0 2px 5px rgba(0,0,0,.8), 0 1px 0 var(--case-hi); overflow-x: auto; }
+  .screen .a { color: var(--ph-amber); } .screen .r { color: var(--ph-red); }
+  .screen .zh, .zh { font-family: var(--f-ui); font-size: 13px; }
+  .opts { display: flex; flex-direction: column; gap: 8px; }
+  .opt { display: grid; grid-template-columns: 22px 1fr; gap: 6px 10px; align-items: start; padding: 10px 12px; border-radius: 8px; background: var(--case); cursor: pointer;
+    box-shadow: 0 2px 0 var(--case-lo); font-weight: 400; }
+  .opt:has(input:checked) { outline: 2px solid var(--acc); outline-offset: -2px; }
+  .opt input[type=radio], .opt input[type=checkbox] { margin: 3px 0 0; accent-color: var(--acc); width: 16px; height: 16px; }
+  .opt:has(input:disabled) { cursor: default; opacity: .8; }
+  .opt b { font-weight: 800; }
+  .opt .path { font: 12.5px/1.4 var(--f-data); word-break: break-all; }
+  .opt input[type=text] { width: 100%; margin-top: 6px; font-family: var(--f-data); font-size: 12.5px; }
+  .pickrow { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
+  .pickrow input[type=text] { flex: 1; min-width: 0; margin-top: 0; }
+  .pickrow .akey { white-space: nowrap; }
+  .wiz-lang { width: auto; font-size: 12.5px; padding: 3px 6px; }
+  .gpu-sel { width: auto; max-width: 100%; }
+  .items { display: flex; flex-direction: column; gap: 6px; }
+  .it { display: grid; grid-template-columns: 1fr 160px 120px; gap: 10px; align-items: center; padding: 6px 10px; border-radius: 6px; background: var(--case); }
+  .it .name { font: 12.5px/1.35 var(--f-data); word-break: break-all; }
+  .it .bar { height: 8px; border-radius: 4px; background: var(--key-dark); box-shadow: inset 0 1px 2px rgba(0,0,0,.7); overflow: hidden; }
+  .it .bar > i { display: block; height: 100%; width: 0; background: var(--ph-amber); }
+  .it.done .bar > i, .it.skip .bar > i { background: var(--ph-green); width: 100%; }
+  .it.error .bar > i { background: var(--ph-red); width: 100%; }
+  .it .num { text-align: right; font: 12px/1.2 var(--f-data); font-variant-numeric: tabular-nums; }
+  .it .errmsg { grid-column: 1 / -1; color: var(--err); font-size: 12px; }
+  .it .hintmsg { grid-column: 1 / -1; color: var(--ph-amber); font-size: 12px; }
+  .overall { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 6px; background: var(--case); }
+  .overall .bar { height: 10px; border-radius: 5px; background: var(--key-dark); box-shadow: inset 0 1px 2px rgba(0,0,0,.7); overflow: hidden; }
+  .overall .bar > i { display: block; height: 100%; width: 0; background: var(--ph-amber); }
+  .log { max-height: 180px; overflow-y: auto; white-space: pre-wrap; font-size: 16px; }
+  .note { border-left: 4px solid var(--stripe-1); padding: 8px 12px; background: var(--case); border-radius: 4px; }
+  @media (max-width: 760px) { .wiz { grid-template-columns: 1fr; } .steps { flex-direction: row; overflow-x: auto; padding: 18px 10px 8px; } .it { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="unit">
+  <header class="unit-head" data-tauri-drag-region>
+    <div class="stripes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="top" data-tauri-drag-region>
+      <div class="badge" data-tauri-drag-region><span data-app="24"></span><b>繪匣 PaintDeck</b><span class="model-no">SETUP</span></div>
+      <div class="vents" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <span class="grow" data-tauri-drag-region></span>
+      <select id="wizLang" class="wiz-lang" aria-label="介面語言" translate="no"></select>
+      <a class="akey sm" id="backHome" href="/" hidden>回主畫面</a>
+      <div class="wctl" id="wctl" hidden><button class="minikey" type="button" data-ic="min" data-win="min" aria-label="最小化"></button><button class="minikey" type="button" data-ic="max" data-win="max" aria-label="最大化"></button><button class="minikey red" type="button" data-ic="power" data-win="close" aria-label="關閉"></button></div>
+    </div>
+  </header>
+
+  <div class="wiz">
+    <nav class="panel screws steps" aria-label="步驟">
+      <div class="step on" data-s="0"><span class="n">01</span>檢查電腦</div>
+      <div class="step" data-s="1"><span class="n">02</span>資料與 ComfyUI</div>
+      <div class="step" data-s="2"><span class="n">03</span>生圖模型</div>
+      <div class="step" data-s="3"><span class="n">04</span>安裝</div>
+    </nav>
+
+    <section class="panel screws main">
+      <div class="body" id="body">
+        <!-- 1. 檢查電腦 -->
+        <div data-page="0">
+          <h2>歡迎！先看看這台電腦</h2>
+          <p class="muted">繪匣 PaintDeck 在你自己的電腦上用 AI 畫圖，畫圖的引擎是 ComfyUI。接下來幾步會決定資料放哪裡、裝好需要的東西。每一步都可以重來，已經有的不會重複下載。</p>
+          <div class="screen" id="sysScreen" aria-live="polite">正在檢查這台電腦…</div>
+          <div id="sysWarn"></div>
+          <div class="note">
+            <b>網路</b>
+            <div class="muted sm">模型從 Hugging Face、GitHub、Civitai 下載。在中國大陸要開梯子（系統代理、PAC、TUN 模式都可以）；Hugging Face 連不上會自動改用鏡像 hf-mirror.com。下面會先測一次連線。</div>
+            <div id="netBox" style="margin-top:6px"></div>
+          </div>
+        </div>
+
+        <!-- 2. 位置 -->
+        <div data-page="1" hidden>
+          <h2>資料和 ComfyUI 要放哪裡？</h2>
+          <p class="muted">「資料」是圖庫紀錄、設定、預設組、反推模型；生成的圖本身存在 ComfyUI 的 output 資料夾。電腦裡找到舊版生圖站的話，直接沿用就能看到以前的圖。</p>
+          <div>
+            <div class="lbl" style="margin-bottom:6px">資料</div>
+            <div class="opts" id="dataOpts"></div>
+          </div>
+          <div>
+            <div class="lbl" style="margin-bottom:6px">ComfyUI 版本</div>
+            <div class="row gap wrap"><select id="gpuSel" class="gpu-sel" aria-label="ComfyUI 版本"></select><span id="gfxRow" class="row gap" hidden><span class="muted sm">A 卡架構</span><select id="gfxSel" class="gpu-sel" aria-label="A 卡架構"></select></span></div>
+            <div id="gpuNote"></div>
+          </div>
+          <div>
+            <div class="lbl" style="margin-bottom:6px">ComfyUI</div>
+            <div class="opts" id="comfyOpts"></div>
+          </div>
+          <div id="checkOut"></div>
+        </div>
+
+        <!-- 3. 模型 -->
+        <div data-page="2" hidden>
+          <h2>要下載哪些生圖模型？</h2>
+          <p class="muted">模型從官方來源（Hugging Face、GitHub、Civitai）下載到 ComfyUI 的 models 資料夾。已經有的會跳過，網路斷掉之後再按一次會接著下載。</p>
+          <div class="note">
+            <b>這台電腦已經有模型了？</b>
+            <div class="muted sm">別的 ComfyUI、A1111／Forge 裡已經有的模型可以原地使用，不用再下載一份，也不會搬動檔案。進到這頁會自動掃描每顆硬碟，大概要一兩分鐘。</div>
+            <div class="row gap wrap" style="margin-top:6px"><button class="akey sm" id="mdScan" type="button">重新掃描這台電腦已有的模型</button></div>
+            <div id="mdScanOut" class="md-scan" hidden></div>
+          </div>
+          <div>
+            <div class="lbl" style="margin-bottom:6px">要裝哪些功能？打勾自選，或用下面的快速鈕選</div>
+            <div class="row gap wrap" id="packQuick"><button class="akey sm" type="button" data-set="anima">只裝動漫（Anima）</button><button class="akey sm" type="button" data-set="basic">基本版</button><button class="akey sm" type="button" data-set="full">完整版（全部）</button><button class="akey sm" type="button" data-set="none">全不選（先不下載）</button></div>
+          </div>
+          <div class="opts" id="modelOpts"></div>
+          <div class="note sm">全不選的話，只裝 ComfyUI、節點、反推模型，之後隨時可以回來這頁補勾。常用 LoRA 裡有些在 Civitai 上要登入才能下載：沒填 Civitai API key 的話，那幾個會顯示「要登入」，其他照常下載；之後到「設定」填好 key，再回來這裡按一次安裝就會補上。</div>
+          <div id="diskWarn"></div>
+        </div>
+
+        <!-- 4. 安裝 -->
+        <div data-page="3" hidden>
+          <h2 id="runTitle">準備安裝</h2>
+          <div class="screen" id="runPhase">—</div>
+          <div class="overall" id="overall" hidden><div class="sm" id="overallText"></div><div class="bar"><i id="overallBar"></i></div></div>
+          <div class="muted sm">安裝期間生圖站會讓電腦不進入睡眠（螢幕可以自己關掉）。</div>
+          <div id="problems"></div>
+          <div class="items" id="items"></div>
+          <details><summary class="sm muted">詳細紀錄</summary><div class="screen log" id="log"></div></details>
+        </div>
+      </div>
+      <div class="wnav">
+        <button class="akey" id="prevBtn" type="button" hidden>上一步</button>
+        <span class="grow"></span>
+        <span class="muted sm" id="navHint"></span>
+        <button class="akey warn" id="cancelBtn" type="button" hidden>停止下載</button>
+        <button class="akey" id="skipBtn" type="button" hidden>先開始使用</button>
+        <button class="akey go" id="nextBtn" type="button">下一步</button>
+      </div>
+    </section>
+  </div>
+</div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<script type="module" src="/static/js/setup.js"></script>
+</body>
+</html>

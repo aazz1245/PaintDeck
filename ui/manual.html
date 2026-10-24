@@ -1,0 +1,1582 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- 繪匣 PaintDeck 使用手冊 -->
+<title>繪匣 PaintDeck操作手冊</title>
+<link rel="stylesheet" href="css/fonts.css">
+<style>
+/* 版面：一本 80 年代家電的操作手冊。左欄是說明與步驟，右欄是一台會自己操作的迷你機台（跟生圖站本體同一套卡帶未來主義配色）。 */
+:root {
+  --case: #e6dfcd; --case-2: #d8cfb8; --case-3: #cbc1a7; --case-hi: #f7f2e4; --case-lo: #a99f86;
+  --label: #3b3428; --label-dim: #6e6553; --groove: rgba(60,50,30,.28);
+  --key: #efe8d6; --key-side: #b5aa8f; --key-dark: #4a4438;
+  --s1: #e2a72b; --s2: #e6742c; --s3: #c8412d; --s4: #6b4a2b;
+  --acc: #e6742c; --go: #e6742c; --go-side: #8d3e12; --red: #c8412d;
+  --bezel: #2b2823; --screen: #0b120d; --viewer: #22201c; --mount: #f4efe2; --mount-side: #b5aa8f;
+  --ph-green: #8dffb0; --ph-amber: #ffb547; --ph-red: #ff5a4a; --ph-dim: #6fae84; --led-off: #4b4234;
+  --field: #f6f1e4; --field-line: #b9ad92;
+  --f-ui: "Noto Sans TC", "Microsoft JhengHei UI", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  --f-label: "Barlow Condensed", "Noto Sans TC", sans-serif;
+  --f-data: "IBM Plex Mono", "Noto Sans TC", ui-monospace, Consolas, monospace;
+  --f-vfd: "VT323", "IBM Plex Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --case: #2a2925; --case-2: #23221e; --case-3: #1b1a17; --case-hi: #3c3a34; --case-lo: #0f0e0c;
+    --label: #e1dac6; --label-dim: #a39b88; --groove: rgba(0,0,0,.55);
+    --key: #3a3832; --key-side: #151410; --key-dark: #1d1c18;
+    --s2: #1d1a15; --s3: #e2a72b; --s4: #1d1a15; --acc: #e2a72b;
+    --bezel: #121110; --viewer: #0e0d0c; --led-off: #2d2a24; --field: #1f1e1a; --field-line: #4a463d; --mount: #e9e3d3; --mount-side: #6d6656;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --case: #2a2925; --case-2: #23221e; --case-3: #1b1a17; --case-hi: #3c3a34; --case-lo: #0f0e0c;
+  --label: #e1dac6; --label-dim: #a39b88; --groove: rgba(0,0,0,.55);
+  --key: #3a3832; --key-side: #151410; --key-dark: #1d1c18;
+  --s2: #1d1a15; --s3: #e2a72b; --s4: #1d1a15; --acc: #e2a72b;
+  --bezel: #121110; --viewer: #0e0d0c; --led-off: #2d2a24; --field: #1f1e1a; --field-line: #4a463d; --mount: #e9e3d3; --mount-side: #6d6656;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: var(--case-3); color: var(--label); font: 15px/1.7 var(--f-ui); margin: 0; padding: 20px 16px 40px;
+  background-image: radial-gradient(var(--groove) 1px, transparent 1.2px); background-size: 6px 6px; }
+.unit { max-width: 1180px; margin: 0 auto; background: var(--case); border-radius: 18px; padding: 0 clamp(16px, 3vw, 34px) 30px;
+  box-shadow: 0 1px 0 var(--case-hi) inset, 0 -3px 0 var(--case-lo) inset, 0 3px 0 var(--case-lo), 0 26px 50px -18px rgba(0,0,0,.5); }
+.stripes { height: 9px; width: 240px; display: grid; grid-template-columns: repeat(4, 1fr); border-radius: 0 0 3px 3px; overflow: hidden; }
+.stripes i:nth-child(1) { background: var(--s1); } .stripes i:nth-child(2) { background: var(--s2); } .stripes i:nth-child(3) { background: var(--s3); } .stripes i:nth-child(4) { background: var(--s4); }
+:focus-visible { outline: 2px dashed var(--acc); outline-offset: 3px; }
+code, kbd { font-family: var(--f-data); }
+kbd { display: inline-block; font: 600 12px/1 var(--f-data); padding: 4px 6px 3px; border-radius: 4px; background: var(--key); color: var(--label);
+  box-shadow: 0 2px 0 var(--key-side), inset 0 1px 0 rgba(255,255,255,.45); margin: 0 1px; white-space: nowrap; }
+
+/* ---------- 頁首 ---------- */
+.head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 0 6px; }
+.badge { display: flex; align-items: center; gap: 10px; }
+.badge b { font: 900 18px/1 var(--f-ui); letter-spacing: .05em; }
+.badge .mn { font: 700 13px/1 var(--f-label); letter-spacing: .3em; color: var(--label-dim); }
+.grow { flex: 1; }
+.rocker { display: grid; grid-template-columns: repeat(3, 38px); position: relative; height: 28px; border-radius: 6px; background: var(--key-dark); padding: 2px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.6), 0 1px 0 var(--case-hi); }
+.rocker button { position: relative; z-index: 1; border: 0; background: none; cursor: pointer; font: 700 12px/1 var(--f-ui); color: #9b937f; padding: 0; }
+.rocker button[aria-checked="true"] { color: var(--label); }
+.rocker .cap { position: absolute; top: 2px; left: 2px; width: 38px; height: 24px; border-radius: 4px; background: var(--key);
+  box-shadow: 0 2px 0 var(--key-side), inset 0 1px 0 rgba(255,255,255,.5); transform: translateX(calc(var(--pos, 1) * 38px)); transition: transform .18s cubic-bezier(.4,1.6,.5,1); }
+
+.hero { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.25fr); gap: clamp(18px, 3vw, 40px); align-items: center; padding: 22px 0 10px; }
+.eyebrow { font: 600 13px/1 var(--f-label); letter-spacing: .28em; text-transform: uppercase; color: var(--label-dim); }
+h1 { font: 900 clamp(30px, 4.4vw, 50px)/1.15 var(--f-ui); margin: 12px 0 14px; text-wrap: balance; letter-spacing: .01em; }
+h1 em { font-style: normal; color: var(--acc); }
+.lead { max-width: 34em; margin: 0; color: var(--label); }
+.vfdline { display: inline-flex; gap: 14px; flex-wrap: wrap; margin-top: 18px; padding: 7px 14px; border-radius: 6px; background: var(--screen); color: var(--ph-green);
+  font: 20px/1 var(--f-vfd); box-shadow: 0 0 0 4px var(--bezel), inset 0 2px 5px rgba(0,0,0,.7); }
+.vfdline .a { color: var(--ph-amber); }
+
+/* ---------- 目錄：像左邊那排功能鍵 ---------- */
+.toc { display: flex; gap: 10px; flex-wrap: wrap; margin: 26px 0 8px; padding: 12px; border-radius: 10px; background: var(--case-2); box-shadow: inset 0 2px 3px var(--groove), inset 0 -1px 0 var(--case-hi); }
+.toc a { position: relative; flex: 1 1 108px; text-decoration: none; color: var(--label); background: var(--key); border-radius: 6px; padding: 16px 8px 8px; text-align: center;
+  font: 700 13px/1.2 var(--f-ui); box-shadow: 0 5px 0 var(--key-side), 0 6px 8px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.5); transition: transform .12s, box-shadow .12s; }
+.toc a .n { position: absolute; top: 4px; left: 7px; font: 600 11px/1 var(--f-label); color: var(--label-dim); }
+.toc a .led { position: absolute; top: 6px; right: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--led-off); }
+.toc a:hover { transform: translateY(-1px); }
+.toc a:active, .toc a.on { transform: translateY(4px); box-shadow: 0 1px 0 var(--key-side), inset 0 2px 4px rgba(0,0,0,.18); }
+.toc a.on .led { background: var(--ph-amber); box-shadow: 0 0 6px var(--ph-amber); }
+
+/* ---------- 章節 ---------- */
+.ch { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.25fr); gap: clamp(18px, 3vw, 40px); padding: 40px 0 8px; border-top: 1px solid var(--groove); margin-top: 34px;
+  box-shadow: 0 1px 0 var(--case-hi) inset; scroll-margin-top: 12px; }
+.ch-no { font: 700 15px/1 var(--f-label); letter-spacing: .3em; color: var(--acc); }
+h2 { font: 900 clamp(24px, 3vw, 32px)/1.25 var(--f-ui); margin: 8px 0 10px; text-wrap: balance; }
+.txt { min-width: 0; }
+.txt p { margin: 0 0 12px; max-width: 36em; }
+h3 { font: 700 12.5px/1.2 var(--f-label); letter-spacing: .2em; text-transform: uppercase; color: var(--label-dim); margin: 20px 0 8px; display: flex; align-items: center; gap: 10px; }
+h3::after { content: ""; flex: 1; height: 1px; background: var(--groove); box-shadow: 0 1px 0 var(--case-hi); }
+.tips { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.tips li { padding-left: 18px; position: relative; max-width: 36em; }
+.tips li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 7px; height: 7px; border-radius: 2px; background: var(--acc); }
+.note { background: var(--case-2); border-radius: 6px; padding: 9px 12px; font-size: 14px; box-shadow: inset 0 1px 3px var(--groove); max-width: 36em; margin: 12px 0 0; }
+.note b { color: var(--label); }
+/* 照順序做的步驟（申請金鑰、接雲端）：數字是琥珀色小方塊 */
+.how { margin: 0; padding: 0; list-style: none; counter-reset: how; display: grid; gap: 8px; }
+.how li { counter-increment: how; padding-left: 30px; position: relative; max-width: 36em; }
+.how li::before { content: counter(how); position: absolute; left: 0; top: .1em; width: 20px; height: 20px; border-radius: 4px; background: var(--acc); color: var(--case); font: 700 12px/20px var(--f-label); text-align: center; }
+/* 版面框示意（第 05 章）：深色點陣畫布＋三種顏色的框，配色跟生圖站本體一樣（角色珊瑚橘、物件青綠、文字琥珀） */
+.laymock { margin: 4px 0 0; max-width: 36em; }
+.lm-canvas { position: relative; aspect-ratio: 16 / 9; border-radius: 6px; background: #14120f radial-gradient(rgba(255,255,255,.13) 1px, transparent 1.3px) 0 0 / 14px 14px;
+  box-shadow: 0 0 0 4px var(--bezel), inset 0 2px 6px rgba(0,0,0,.7); overflow: hidden; }
+.lm-box { position: absolute; border: 2px solid var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); border-radius: 3px; }
+.lm-box.c { --c: #ff7f66; } .lm-box.o { --c: #3fc6b4; } .lm-box.t { --c: #ffb547; }
+.lm-box b { position: absolute; left: -2px; top: -2px; background: var(--c); color: #1b1714; font: 700 11px/1 var(--f-ui); padding: 3px 6px; border-radius: 3px 0 3px 0; white-space: nowrap; }
+.lm-box span { position: absolute; left: 6px; right: 6px; bottom: 5px; color: #f2e6d0; font: 12px/1.35 var(--f-ui); text-shadow: 0 1px 2px #000; }
+.laymock figcaption { font-size: 13px; color: var(--label-dim); margin-top: 10px; }
+@media (max-width: 560px) { .lm-box span { font-size: 10.5px; left: 5px; right: 4px; bottom: 4px; } }
+
+/* 步驟清單（跟著動畫亮） */
+.steps { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; counter-reset: s; }
+.steps li { counter-increment: s; }
+.steps button { width: 100%; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; text-align: left; cursor: pointer; border: 0; border-radius: 6px; padding: 8px 10px;
+  background: transparent; color: var(--label); font: 14.5px/1.55 var(--f-ui); transition: background .2s; }
+.steps button::before { content: counter(s, decimal-leading-zero); font: 19px/1.1 var(--f-vfd); color: var(--ph-dim); background: var(--screen); border-radius: 3px; text-align: center; padding: 2px 0;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.8); }
+.steps button:hover { background: var(--case-2); }
+.steps button.now { background: var(--case-2); box-shadow: inset 3px 0 0 var(--acc), inset 0 1px 3px var(--groove); }
+.steps button.now::before { color: var(--ph-amber); }
+.steps button.done::before { color: var(--ph-green); }
+
+/* 舞台（右欄的迷你機台） */
+.stage-w { min-width: 0; position: sticky; top: 14px; align-self: start; }
+.stage { position: relative; width: 100%; border-radius: 12px; background: var(--bezel); padding: 10px; box-shadow: inset 0 2px 0 rgba(255,255,255,.08), inset 0 -3px 6px rgba(0,0,0,.6), 0 2px 0 var(--case-hi); }
+.stage .fit { position: relative; overflow: hidden; border-radius: 6px; }
+.ctl { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ctl button { border: 0; border-radius: 5px; background: var(--key); color: var(--label); cursor: pointer; padding: 7px 12px 6px; font: 700 13px/1 var(--f-ui);
+  box-shadow: 0 4px 0 var(--key-side), 0 5px 7px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.5); transition: transform .06s, box-shadow .06s; }
+.ctl button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--key-side); }
+.ctl button.play { background: var(--go); color: #fff; box-shadow: 0 4px 0 var(--go-side), 0 5px 7px rgba(0,0,0,.25); min-width: 82px; }
+.ctl .pos { margin-left: auto; font: 18px/1 var(--f-vfd); color: var(--ph-amber); background: var(--screen); padding: 4px 9px; border-radius: 4px; box-shadow: inset 0 1px 3px rgba(0,0,0,.8); }
+
+/* ================= 迷你機台（舞台內部，設計尺寸 560×360，用 --k 縮放） ================= */
+.si { position: absolute; left: 0; top: 0; width: 560px; height: 360px; transform: scale(var(--k, 1)); transform-origin: 0 0; background: var(--case); color: var(--label);
+  font: 11px/1.45 var(--f-ui); overflow: hidden; }
+.si.fast *, .si.fast *::before, .si.fast *::after { transition: none !important; animation: none !important; }
+.si [hidden] { display: none !important; }
+.cur { position: absolute; z-index: 40; left: 470px; top: 300px; width: 20px; height: 22px; pointer-events: none; transition: left .55s cubic-bezier(.3,.7,.2,1), top .55s cubic-bezier(.3,.7,.2,1);
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.45)); }
+.cur svg { width: 100%; height: 100%; display: block; }
+.cur::after { content: ""; position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--ph-amber); opacity: 0; transform: scale(.4); }
+.cur.dn::after { animation: ring .45s ease-out; }
+@keyframes ring { 0% { opacity: 1; transform: scale(.4); } 100% { opacity: 0; transform: scale(1.8); } }
+.keycap { position: absolute; z-index: 41; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 5px; padding: 6px 9px; border-radius: 6px; background: rgba(20,18,14,.82); }
+.keycap kbd { font-size: 13px; }
+.keycap:empty { display: none; }
+.cap-bub { position: absolute; z-index: 39; max-width: 210px; padding: 6px 9px; border-radius: 5px; background: var(--screen); color: var(--ph-green); font: 11.5px/1.45 var(--f-ui);
+  box-shadow: 0 0 0 2px var(--bezel), 0 6px 14px rgba(0,0,0,.4); }
+.cap-bub:empty { display: none; }
+.hl { outline: 2px solid var(--ph-amber); outline-offset: 2px; box-shadow: 0 0 0 9999px rgba(10,8,6,.45) !important; z-index: 30; transition: outline-color .2s; }
+
+.m-top { height: 26px; display: flex; align-items: center; gap: 8px; padding: 0 10px; background: linear-gradient(var(--case-hi), var(--case)); }
+.m-top .stripes { width: 70px; height: 5px; align-self: flex-start; }
+.m-top b { font: 900 11px/1 var(--f-ui); letter-spacing: .05em; }
+.m-top .mn { font: 700 8px/1 var(--f-label); letter-spacing: .25em; color: var(--label-dim); }
+.m-prog { width: 70px; height: 4px; border-radius: 2px; background: var(--key-dark); overflow: hidden; }
+.m-prog i { display: block; height: 100%; width: 0; background: var(--ph-amber); transition: width .25s; }
+.m-body { position: absolute; left: 0; right: 0; top: 26px; bottom: 22px; display: grid; grid-template-columns: 38px 196px 1fr 50px; gap: 7px; padding: 4px 8px 6px; }
+.m-pan { background: var(--case-2); border-radius: 7px; box-shadow: inset 0 2px 3px var(--groove), inset 0 -1px 0 var(--case-hi); padding: 7px; min-width: 0; min-height: 0; position: relative; }
+.m-rail { display: flex; flex-direction: column; gap: 4px; padding: 6px 5px; }
+.m-rail span { position: relative; height: 25px; border-radius: 4px; background: var(--key); box-shadow: 0 3px 0 var(--key-side); font: 700 8.5px/25px var(--f-ui); text-align: center; }
+.m-rail span::after { content: ""; position: absolute; top: 3px; right: 3px; width: 4px; height: 4px; border-radius: 50%; background: var(--led-off); }
+.m-rail span.on { transform: translateY(2px); box-shadow: 0 1px 0 var(--key-side); }
+.m-rail span.on::after { background: var(--ph-amber); box-shadow: 0 0 4px var(--ph-amber); }
+.m-rail .sp { flex: 1; height: auto; background: none; box-shadow: none; } .m-rail .sp::after { display: none; }
+.m-ctrl { display: flex; flex-direction: column; gap: 5px; }
+.m-piano { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; padding: 2px; border-radius: 4px; background: var(--key-dark); }
+.m-piano span { background: var(--key); border-radius: 0 0 3px 3px; font: 700 8.5px/1 var(--f-ui); text-align: center; padding: 7px 0 4px; box-shadow: 0 3px 0 var(--key-side); position: relative; white-space: nowrap; }
+.m-piano span::before { content: ""; position: absolute; top: 2px; left: 50%; width: 10px; height: 2px; margin-left: -5px; border-radius: 1px; background: var(--led-off); }
+.m-piano span.on { transform: translateY(2px); box-shadow: 0 1px 0 var(--key-side); }
+.m-piano span.on::before { background: var(--ph-green); box-shadow: 0 0 4px var(--ph-green); }
+.m-lbl { font: 600 8px/1 var(--f-label); letter-spacing: .16em; text-transform: uppercase; color: var(--label-dim); display: flex; justify-content: space-between; align-items: center; margin-top: 2px; }
+.m-scr { background: var(--screen); color: var(--ph-green); border-radius: 4px; padding: 5px 7px; font: 9.5px/1.5 var(--f-data); box-shadow: 0 0 0 2px var(--bezel), inset 0 2px 4px rgba(0,0,0,.7); margin: 2px;
+  min-height: 62px; white-space: pre-wrap; overflow-wrap: anywhere; position: relative; }
+.m-ctrl .m-scr { height: 52px; min-height: 0; overflow: hidden; flex: none; }
+.m-scr.caret::after { content: "▌"; color: var(--ph-green); animation: blink .9s steps(1) infinite; }
+.m-scr mark { color: inherit; border-radius: 2px; }
+.w-up { background: rgba(255,181,71,.32); } .w-rand { background: rgba(200,140,255,.32); } .w-img { background: rgba(120,200,255,.3); } .w-artist { background: rgba(80,220,220,.28); }
+.w-bad { background: rgba(255,90,74,.35); text-decoration: underline wavy var(--ph-red); }
+@keyframes blink { 50% { opacity: 0; } }
+.m-chips { display: flex; flex-wrap: wrap; gap: 3px; }
+.chipm { background: var(--key); border-radius: 3px; padding: 2px 5px 1px; font-size: 8.5px; box-shadow: 0 2px 0 var(--key-side); white-space: nowrap; transition: transform .08s, background .15s; }
+.chipm.on { background: var(--acc); color: #fff; transform: translateY(2px); box-shadow: none; }
+.m-knobs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.knobm { display: grid; justify-items: center; gap: 2px; font-size: 8.5px; font-weight: 600; }
+.dialm { width: 30px; height: 30px; border-radius: 50%; position: relative; background: radial-gradient(circle at 40% 30%, var(--case-hi), var(--key) 45%, var(--key-side));
+  box-shadow: 0 3px 0 var(--key-side), 0 4px 6px rgba(0,0,0,.3); }
+.dialm::after { content: ""; position: absolute; left: 50%; top: 3px; width: 2px; height: 9px; margin-left: -1px; border-radius: 1px; background: var(--acc); transform-origin: 1px 12px; transform: rotate(var(--r, -40deg)); transition: transform .4s; }
+.vfdm { font: 14px/1 var(--f-vfd); color: var(--ph-amber); background: var(--screen); padding: 1px 4px; border-radius: 2px; min-width: 22px; text-align: center; }
+.m-big { margin-top: auto; border: 0; border-radius: 6px; background: var(--go); color: #fff; font: 900 13px/1 var(--f-ui); letter-spacing: .3em; padding: 10px 0 8px; position: relative;
+  box-shadow: 0 5px 0 var(--go-side), 0 6px 9px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.4); transition: transform .08s, box-shadow .08s; }
+.m-big small { display: block; font: 600 7px/1 var(--f-label); letter-spacing: .2em; margin-top: 4px; opacity: .9; }
+.m-big::before { content: ""; position: absolute; top: 5px; left: 7px; width: 6px; height: 6px; border-radius: 50%; background: #6d2a0c; }
+.m-big.busy::before { background: #fff6d0; box-shadow: 0 0 6px #ffd27a; animation: blink .5s steps(1) infinite; }
+.pr { transform: translateY(3px) !important; box-shadow: 0 1px 0 var(--key-side) !important; filter: brightness(.95); }
+.m-big.pr { box-shadow: 0 1px 0 var(--go-side) !important; }
+.m-view { position: relative; display: grid; grid-template-rows: auto 1fr auto; gap: 5px; }
+.m-osd { display: flex; gap: 8px; padding: 3px 7px; border-radius: 3px; background: var(--screen); color: var(--ph-green); font: 13px/1 var(--f-vfd); white-space: nowrap; overflow: hidden; }
+.m-osd .r { color: var(--ph-red); } .m-osd .a { color: var(--ph-amber); }
+.m-win { position: relative; border-radius: 6px; background: var(--bezel); padding: 6px; min-height: 0; }
+.m-win .w { position: relative; height: 100%; border-radius: 3px; background: var(--viewer); overflow: hidden; display: grid; place-items: center; }
+.m-win img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.m-win .w::after { content: ""; position: absolute; inset: 0; background: var(--bezel); transform: scaleY(0); z-index: 2; }
+.m-win.swap .w::after { animation: shutter .3s ease-in-out; }
+@keyframes shutter { 40% { transform: scaleY(1); } }
+.m-win.swap img { animation: develop 1.2s linear .08s backwards; }
+@keyframes develop { 0% { opacity: 0; filter: brightness(2) saturate(0) blur(4px); animation-timing-function: ease-out; } 22% { opacity: 1; filter: brightness(1.6) saturate(.15) blur(3px); animation-timing-function: cubic-bezier(.35,0,.25,1); } }
+.m-empty { color: #8d8574; font-size: 9.5px; text-align: center; padding: 10px; }
+.m-acts { display: flex; flex-wrap: wrap; gap: 3px; }
+.m-acts span, .mbtn { background: var(--key); border-radius: 3px; padding: 3px 6px 2px; font: 700 8.5px/1.2 var(--f-ui); box-shadow: 0 2px 0 var(--key-side); white-space: nowrap; display: inline-block; transition: transform .08s; }
+.mbtn.go { background: var(--go); color: #fff; box-shadow: 0 2px 0 var(--go-side); }
+.mbtn.warn { background: var(--red); color: #fff; box-shadow: 0 2px 0 #7d2418; }
+.m-mag { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px 4px; }
+.m-cas { width: 40px; border-radius: 4px; background: #1d1b17; padding: 3px; }
+.m-cas .wn { height: 16px; border-radius: 2px; background: #2c2a24; display: flex; justify-content: space-around; align-items: center; }
+.reel { width: 11px; height: 11px; border-radius: 50%; background: radial-gradient(circle, #e6dfcd 0 2px, #4a3a28 2.5px); position: relative; }
+.reel::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: conic-gradient(#1d1b17 0 30deg, transparent 30deg 120deg, #1d1b17 120deg 150deg, transparent 150deg 240deg, #1d1b17 240deg 270deg, transparent 270deg); }
+.play .reel::after { animation: spin 1.1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.m-slides { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.m-slides img { width: 100%; aspect-ratio: 2/3; object-fit: cover; padding: 2px 2px 6px; background: var(--mount); border-radius: 2px; box-shadow: 0 2px 0 var(--mount-side); animation: drop .45s cubic-bezier(.3,1.45,.5,1) backwards; }
+.m-slides img:nth-child(2) { animation-delay: .08s; } .m-slides img:nth-child(3) { animation-delay: .16s; } .m-slides img:nth-child(4) { animation-delay: .24s; }
+@keyframes drop { from { opacity: 0; transform: translateY(-14px) rotate(-3deg); } }
+.m-status { position: absolute; left: 8px; right: 8px; bottom: 4px; height: 16px; border-radius: 3px; background: var(--screen); color: var(--ph-green); display: flex; gap: 10px; align-items: center; padding: 0 7px;
+  font: 12px/1 var(--f-vfd); white-space: nowrap; overflow: hidden; }
+.m-status .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--ph-green); }
+.m-status .a { color: var(--ph-amber); }
+.busy-stripes .stripes i { animation: chase 1.2s ease-in-out infinite; }
+.busy-stripes .stripes i:nth-child(2) { animation-delay: .15s; } .busy-stripes .stripes i:nth-child(3) { animation-delay: .3s; } .busy-stripes .stripes i:nth-child(4) { animation-delay: .45s; }
+@keyframes chase { 25% { filter: brightness(1.5); } }
+
+/* 其他場景用的零件 */
+.full { position: absolute; inset: 26px 8px 22px; display: flex; flex-direction: column; gap: 6px; padding: 8px; }
+.row { display: flex; gap: 6px; align-items: center; }
+.ta { background: var(--field); border-radius: 3px; padding: 5px 7px; min-height: 30px; box-shadow: inset 0 1px 3px rgba(0,0,0,.25), 0 0 0 1px var(--field-line); font-size: 10px; white-space: pre-wrap; }
+.ta.mono { font: 9.5px/1.55 var(--f-data); }
+.st { font-size: 9.5px; min-height: 14px; color: var(--label-dim); }
+.st.run { color: #9c5a07; } .st.ok { color: #2c7a43; }
+:root[data-theme="dark"] .st.run, :root[data-theme="dark"] .st.ok { color: var(--ph-amber); }
+.ac { position: absolute; z-index: 20; background: var(--case); border-radius: 4px; box-shadow: 0 3px 0 var(--case-lo), 0 10px 20px rgba(0,0,0,.4); font-size: 9.5px; min-width: 170px; overflow: hidden; }
+.ac div { display: flex; gap: 6px; padding: 4px 8px; } .ac div.sel { background: var(--case-2); box-shadow: inset 3px 0 0 var(--acc); }
+.ac i { font-style: normal; color: var(--label-dim); flex: 1; } .ac small { font: 8.5px var(--f-data); color: var(--label-dim); }
+.pe { background: var(--case-3); border-radius: 5px; padding: 6px 8px; box-shadow: inset 0 1px 3px var(--groove); display: flex; flex-direction: column; gap: 4px; }
+.zh { background: var(--case-2); border-left: 3px solid var(--acc); padding: 4px 7px; border-radius: 3px; font-size: 9.5px; }
+ins { background: rgba(44,122,67,.25); text-decoration: none; border-radius: 2px; }
+.thumb { border-radius: 2px; padding: 3px 3px 9px; background: var(--mount); box-shadow: 0 2px 0 var(--mount-side), 0 3px 5px rgba(0,0,0,.25); position: relative; transition: transform .2s, box-shadow .2s, opacity .3s; }
+.thumb img { display: block; width: 100%; aspect-ratio: 2/3; object-fit: cover; }
+.thumb.sel { box-shadow: 0 0 0 2px var(--acc), 0 2px 0 var(--mount-side); }
+.thumb .star { position: absolute; top: 5px; right: 6px; color: #ffcc4d; font-size: 11px; text-shadow: 0 1px 2px #000; }
+.slider { position: relative; height: 14px; }
+.slider::before { content: ""; position: absolute; left: 0; right: 0; top: 6px; height: 3px; border-radius: 2px; background: var(--key-dark); }
+.slider i { position: absolute; top: 0; left: var(--v, 0%); width: 9px; height: 14px; margin-left: -4px; border-radius: 2px; background: var(--key); box-shadow: 0 2px 0 var(--key-side), inset 0 -6px 0 -4px var(--acc); transition: left .6s cubic-bezier(.3,.7,.2,1); }
+.bar { height: 5px; border-radius: 2px; background: var(--key-dark); overflow: hidden; }
+.bar i { display: block; height: 100%; width: var(--v, 0%); background: var(--ph-amber); transition: width .5s linear; }
+.bar.g i { background: var(--ph-green); }
+.box { background: var(--case); border-radius: 5px; padding: 6px 8px; box-shadow: 0 1px 0 var(--case-hi) inset, 0 2px 0 var(--case-lo); display: flex; flex-direction: column; gap: 4px; }
+.box > b { font-size: 10px; }
+.badge-s { font: 600 8px/1 var(--f-ui); padding: 2px 5px; border-radius: 2px; background: var(--key-dark); color: #e4dccb; white-space: nowrap; }
+.badge-s.ok { background: #1d4a2a; color: var(--ph-green); } .badge-s.run { background: #5a3d0b; color: var(--ph-amber); } .badge-s.no { background: #5a1d16; color: #ffb4a8; }
+.tog { width: 10px; height: 16px; border-radius: 3px; background: var(--key-dark); position: relative; flex: none; }
+.tog::before { content: ""; position: absolute; left: 2px; top: 1px; width: 6px; height: 7px; border-radius: 2px; background: #e8e1cf; transition: top .15s; }
+.tog.on::before { top: 8px; }
+.toast { position: absolute; right: 12px; bottom: 30px; z-index: 35; background: var(--screen); color: var(--ph-green); padding: 6px 10px; border-radius: 5px; font-size: 10px; box-shadow: 0 0 0 2px var(--bezel), 0 8px 18px rgba(0,0,0,.4);
+  animation: tin .3s cubic-bezier(.3,1.45,.5,1); }
+@keyframes tin { from { opacity: 0; transform: translateX(20px); } }
+.drawer { position: absolute; top: 30px; right: 10px; bottom: 26px; width: 250px; z-index: 25; background: var(--case); border-radius: 7px; padding: 0 9px 8px; display: flex; flex-direction: column; gap: 6px;
+  box-shadow: 0 1px 0 var(--case-hi) inset, 0 3px 0 var(--case-lo), 0 14px 28px rgba(0,0,0,.45); animation: din .3s cubic-bezier(.3,1.45,.5,1); }
+@keyframes din { from { opacity: 0; transform: translateX(24px); } }
+.drawer .stripes { width: 90px; height: 5px; }
+.job { background: var(--case-2); border-radius: 4px; padding: 5px 7px; display: flex; flex-direction: column; gap: 3px; box-shadow: inset 0 1px 2px var(--groove); font-size: 9px; }
+.job.run { box-shadow: inset 3px 0 0 var(--ph-amber), inset 0 1px 2px var(--groove); }
+.lb { position: absolute; inset: 30px 14px 26px; z-index: 25; display: grid; grid-template-columns: 1fr 170px; background: var(--case); border-radius: 7px; overflow: hidden;
+  box-shadow: 0 3px 0 var(--case-lo), 0 14px 28px rgba(0,0,0,.5); animation: cin .32s cubic-bezier(.3,1.45,.5,1); }
+@keyframes cin { from { opacity: 0; transform: translateY(14px) scale(.98); } }
+.lb .im { background: var(--viewer); margin: 7px; border-radius: 4px; box-shadow: 0 0 0 5px var(--bezel); display: grid; place-items: center; overflow: hidden; position: relative; }
+.lb .im img { max-height: 100%; max-width: 100%; }
+.meta { font-size: 8.5px; display: flex; flex-direction: column; gap: 3px; padding: 8px 8px 8px 0; }
+.meta .v { background: var(--screen); color: var(--ph-green); border-radius: 3px; padding: 3px 5px; font: 8.5px/1.4 var(--f-data); }
+.cmp { position: absolute; inset: 30px 14px 26px; z-index: 26; background: var(--viewer); border-radius: 7px; overflow: hidden; animation: cin .32s cubic-bezier(.3,1.45,.5,1); }
+.cmp img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.cmp .b { position: absolute; inset: 0; clip-path: inset(0 0 0 var(--x, 50%)); transition: clip-path .9s cubic-bezier(.45,0,.2,1); }
+.cmp .h { position: absolute; top: 0; bottom: 0; left: var(--x, 50%); width: 2px; margin-left: -1px; background: var(--ph-amber); transition: left .9s cubic-bezier(.45,0,.2,1); }
+.cmp .tg { position: absolute; top: 6px; background: var(--screen); color: var(--ph-green); font: 13px/1 var(--f-vfd); padding: 2px 6px; border-radius: 2px; z-index: 1; }
+.selbar { position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%); z-index: 22; display: flex; gap: 4px; align-items: center; padding: 5px 7px; border-radius: 5px; background: var(--case);
+  box-shadow: 0 3px 0 var(--case-lo), 0 8px 16px rgba(0,0,0,.35); font-size: 9px; white-space: nowrap; }
+.mask-path { fill: none; stroke: rgba(255,60,60,.7); stroke-width: 16; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 520; stroke-dashoffset: 520; transition: stroke-dashoffset 1.3s ease-in-out; }
+.mask-path.on { stroke-dashoffset: 0; }
+.refc { width: 64px; padding: 3px 3px 0; border-radius: 2px; background: var(--mount); box-shadow: 0 2px 0 var(--mount-side), 0 3px 5px rgba(0,0,0,.3); position: relative; animation: drop .45s cubic-bezier(.3,1.45,.5,1) backwards; color: #3b3428; }
+.refc img { width: 100%; height: 72px; object-fit: cover; display: block; }
+.refc .num { position: absolute; top: 5px; left: 5px; font: 12px/1 var(--f-vfd); padding: 2px 4px; border-radius: 2px; background: var(--screen); color: var(--ph-green); }
+.refc small { display: block; font-size: 8px; padding: 2px; text-align: center; }
+.card { background: var(--key); border-radius: 5px; padding: 5px; box-shadow: 0 3px 0 var(--key-side), 0 4px 7px rgba(0,0,0,.22); display: flex; flex-direction: column; gap: 3px; font-size: 9px; }
+.card .ph { height: 92px; border-radius: 3px; background-size: cover; background-position: center; box-shadow: 0 0 0 2px var(--bezel); }
+.card .trig { font: 8.5px/1.3 var(--f-data); color: #9c5a07; }
+:root[data-theme="dark"] .card .trig { color: var(--ph-amber); }
+.lora-row { display: grid; grid-template-columns: 10px 1fr 64px 30px; gap: 5px; align-items: center; background: var(--key); border-radius: 4px; padding: 4px 6px; box-shadow: 0 2px 0 var(--key-side); font-size: 9px; animation: drop .4s cubic-bezier(.3,1.45,.5,1) backwards; }
+.lora-row input { width: 100%; }
+.trigchip { display: inline-block; background: var(--key); border-radius: 3px; padding: 2px 6px; font: 8.5px/1.3 var(--f-data); box-shadow: 0 2px 0 var(--key-side); }
+.trigchip.on { background: var(--acc); color: #fff; box-shadow: none; transform: translateY(2px); }
+
+/* 表格 */
+.tbl-w { overflow-x: auto; margin-top: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 460px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--groove); vertical-align: top; }
+th { font: 700 12px/1.2 var(--f-label); letter-spacing: .14em; text-transform: uppercase; color: var(--label-dim); }
+td:first-child { min-width: 5.4em; }
+td.num { font: 600 13.5px/1.4 var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-top: 14px; }
+.kgrp { background: var(--case-2); border-radius: 8px; padding: 12px 14px; box-shadow: inset 0 1px 3px var(--groove); }
+.kgrp h4 { margin: 0 0 8px; font: 700 13px/1.2 var(--f-label); letter-spacing: .18em; color: var(--acc); }
+.kgrp dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 7px 12px; font-size: 14px; align-items: baseline; }
+.kgrp dd { margin: 0; color: var(--label-dim); }
+.foot { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--groove); font-size: 13px; color: var(--label-dim); display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; }
+
+@media (max-width: 860px) {
+  .hero, .ch { grid-template-columns: 1fr; }
+  .stage-w { position: relative; top: 0; order: -1; }
+  .ch .stage-w { order: 0; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<div class="unit">
+  <header class="head">
+    <div class="stripes" aria-hidden="true" style="align-self:flex-start;margin-top:-14px"><i></i><i></i><i></i><i></i></div>
+  </header>
+  <div class="head" style="padding-top:0">
+    <div class="badge"><b>繪匣 PaintDeck</b><span class="mn">AW-2000</span></div>
+    <span class="grow"></span>
+    <div class="rocker" role="radiogroup" aria-label="頁面外觀" id="rocker"><span class="cap"></span>
+      <button type="button" role="radio" data-t="light" aria-checked="false">淺</button><button type="button" role="radio" data-t="auto" aria-checked="true">自動</button><button type="button" role="radio" data-t="dark" aria-checked="false">深</button>
+    </div>
+  </div>
+
+  <section class="hero" id="first">
+    <div class="txt">
+      <div class="eyebrow">操作手冊・1.1 版</div>
+      <h1>按下<em>生成</em>，<br>三十秒後拿到一張圖。</h1>
+      <p class="lead">這份手冊每一章都放了一台會自己操作的迷你生圖站。看它按哪顆鍵、畫面怎麼變，跟著做一次就會了。右邊這台示範最基本的事：寫提示詞、挑尺寸、按生成。</p>
+      <ol class="steps" data-for="s-first"></ol>
+      <div class="vfdline" aria-label="預設值"><span>MODEL <span class="a">ANIMA TURBO</span></span><span>STEPS <span class="a">8</span></span><span>CFG <span class="a">1</span></span><span>張數 <span class="a">4</span></span></div>
+    </div>
+    <div class="stage-w" id="s-first"></div>
+  </section>
+
+  <nav class="toc" aria-label="章節">
+    <a href="#install"><span class="n">01</span><span class="led"></span>安裝</a>
+    <a href="#tour"><span class="n">02</span><span class="led"></span>認識機台</a>
+    <a href="#prompt"><span class="n">03</span><span class="led"></span>寫提示詞</a>
+    <a href="#pe"><span class="n">04</span><span class="led"></span>AI 改寫</a>
+    <a href="#layout"><span class="n">05</span><span class="led"></span>版面框</a>
+    <a href="#modes"><span class="n">06</span><span class="led"></span>七種模式</a>
+    <a href="#play"><span class="n">07</span><span class="led"></span>生圖玩法</a>
+    <a href="#lora"><span class="n">08</span><span class="led"></span>LoRA</a>
+    <a href="#lib"><span class="n">09</span><span class="led"></span>提示詞庫</a>
+    <a href="#gallery"><span class="n">10</span><span class="led"></span>圖庫</a>
+    <a href="#agent"><span class="n">11</span><span class="led"></span>生圖助手</a>
+    <a href="#cloud"><span class="n">12</span><span class="led"></span>雲端顯卡</a>
+    <a href="#comic"><span class="n">13</span><span class="led"></span>漫畫台</a>
+    <a href="#director"><span class="n">14</span><span class="led"></span>影片與導演台</a>
+    <a href="#jobs"><span class="n">15</span><span class="led"></span>任務面板</a>
+    <a href="#settings"><span class="n">16</span><span class="led"></span>設定</a>
+    <a href="#keys"><span class="n">17</span><span class="led"></span>快捷鍵</a>
+    <a href="#faq"><span class="n">18</span><span class="led"></span>疑難排解</a>
+  </nav>
+
+  <section class="ch" id="install" style="grid-template-columns:1fr">
+    <div class="txt">
+      <div class="ch-no">01</div>
+      <h2>安裝：雙擊一次，精靈帶你走完</h2>
+      <p>生圖站在你自己的電腦上畫圖，不用連到別人的伺服器，畫什麼都只有你看得到。畫圖的引擎是 ComfyUI，安裝精靈會幫你準備好；電腦裡已經有 ComfyUI 的話，也可以直接沿用。</p>
+      <div class="tbl-w"><table>
+        <thead><tr><th>項目</th><th>需要</th><th>說明</th></tr></thead>
+        <tbody>
+          <tr><td>系統</td><td>Windows 10／11（64 位元）</td><td>—</td></tr>
+          <tr><td>顯示卡</td><td>NVIDIA，顯存 8GB 以上，驅動 580 版以上</td><td>開發時用 RTX 3070 8GB 實測；顯存越大越快。驅動太舊精靈會提醒，要自己到 NVIDIA 官網更新</td></tr>
+          <tr><td>A 卡（AMD）</td><td>實驗性支援：RX 5000 以後的獨顯（RX 5000／6000／7000／9000）、680M／780M／860M／890M／8060S 這類內顯；要最新的 AMD Adrenalin 驅動</td><td>作者手上沒有 A 卡，還沒在 A 卡上實際畫過圖。RX 7000、RX 9000 和 Ryzen AI 300／Max 內顯直接用官方 AMD 版；其他的裝完會再換一套支援那張卡的 PyTorch（多下載約 1～1.4GB）。Vega、RX 500 以前的卡沒有能用的 PyTorch</td></tr>
+          <tr><td>Intel 顯示卡</td><td>實驗性支援：Arc 獨顯（A／B 系列）、Core Ultra 的 Arc 內顯</td><td>還沒實際測過。UHD、Iris Xe 內顯不支援</td></tr>
+          <tr><td>沒有能用的顯示卡</td><td>照樣能裝：圖庫、提示詞庫、雲端顯卡都能用</td><td>ComfyUI 會用 CPU 跑（畫一張要好幾分鐘）；生圖助手可以接「雲端顯卡」</td></tr>
+          <tr><td>記憶體</td><td>16GB 起跳，建議 32GB</td><td>做影片時最吃記憶體</td></tr>
+          <tr><td>硬碟</td><td>基本版約 50GB；完整版約 80GB</td><td>模型很大，建議放 SSD</td></tr>
+        </tbody>
+      </table></div>
+      <h3>步驟</h3>
+      <ul class="tips">
+        <li>雙擊 <code>繪匣 PaintDeck_26.10.24_x64-setup.exe</code>。安裝檔沒有付費簽章，Windows 可能跳出「Windows 已保護您的電腦」：按「其他資訊」→「仍要執行」。</li>
+        <li>第一次打開會進安裝精靈，一共四步：<b>檢查電腦</b> → <b>資料與 ComfyUI 放哪裡</b> → <b>要下載哪些模型</b> → <b>安裝</b>。右上角可以切換繁體中文／简体中文／English。</li>
+        <li><b>檢查電腦</b>會看顯示卡、驅動版本、硬碟空間，還有 Windows 有沒有 Visual C++ 執行階段。缺 Visual C++ 的話，安裝時精靈會從微軟官網下載（約 18MB）幫你裝，會跳出一次系統確認視窗，按「是」就好。</li>
+        <li><b>不是 NVIDIA 顯示卡？</b>精靈會自己看是哪一家、哪一代，第一頁就講清楚會怎麼裝。A 卡和 Intel 都是<b>實驗性支援</b>，作者手上沒有這些卡，還沒在上面實際畫過圖；開不起來時，狀態列「顯存」那格會寫 ComfyUI 關掉的原因，麻煩截圖回報。
+          <ul>
+            <li><b>A 卡（AMD）</b>：「自動下載 ComfyUI」會改裝官方的 AMD 版免安裝包（約 1.5GB），AI 改寫改裝 llama.cpp 的 Vulkan 版（約 30MB）。RX 7000、RX 9000、Ryzen AI 300／Max 內顯直接能用；RX 5000、RX 6000、680M、780M、860M 這些官方 AMD 版沒附的，裝完會再從 AMD 官方的套件庫把 PyTorch 換成支援那張卡的 ROCm 10 版（多下載約 1～1.4GB）。Vega、RX 500 以前的卡太舊，沒有能用的 PyTorch。</li>
+            <li><b>Intel 顯示卡</b>：Arc 獨顯、Core Ultra 的 Arc 內顯會改裝官方的 Intel 版免安裝包（約 1.3GB）；UHD、Iris Xe 內顯不支援。</li>
+            <li><b>沒有能用的顯示卡</b>：照樣能裝，ComfyUI 會用 CPU 跑（很慢，只適合試試看），生圖模型預設不勾，生圖助手可以改用「雲端顯卡」。</li>
+            <li><b>比較舊的 N 卡（GTX 10 系列以前）</b>：新版 PyTorch 不支援這些卡，精靈會自動改下載官方給舊卡的版本（CUDA 12.6，約 1.9GB），驅動版本的門檻也比較低。舊卡顯存多半不大，畫 Qwen、MOSS 會很慢或不夠。</li>
+            <li><b>精靈認錯、或偵測不到</b>（例如精簡版 Windows）：第二頁「ComfyUI 版本」可以自己選 NVIDIA／NVIDIA 舊卡／AMD／Intel／用 CPU 跑／用我自己已經能跑的 ComfyUI；選 AMD 時旁邊還能選「A 卡架構」（照型號挑）。選過的會記住，之後的「安裝與修復」都照它。</li>
+            <li><b>已經在用 A 卡的 ComfyUI</b>：秋葉 A 卡整合包這類 ZLUDA 版、DirectML 版精靈都認得，選它就好，不會被標成用不了；生圖站會照它的方式開（ZLUDA 版用它的 <code>zluda.exe</code>，DirectML 版自動加 <code>--directml</code>）。</li>
+            <li>AMD、Intel 版 ComfyUI 官方只寫 Windows 11，Windows 10 沒驗證過，精靈會提醒但不會擋。</li>
+          </ul>
+        </li>
+        <li><b>電腦裡已經有 ComfyUI？</b>精靈認得官方免安裝版、秋葉整合包、StabilityMatrix、Pinokio、SwarmUI、官方桌面版和自己 git clone 的（venv）。掃描沒找到的話，選「自己指定 ComfyUI 資料夾」，按「選資料夾…」挑整包的最外層就好。ComfyUI 的 Python 放在別的地方（conda 環境、ComfyUI 外面的 venv）的話，在底下填那個 <code>python.exe</code> 的位置；平常用它自己的啟動器開的（例如繪世啟動器），勾「我自己開這份 ComfyUI」，生圖站只連過去。沿用的 ComfyUI 比 0.38 舊時會標紅：有些內建功能會缺節點，建議改選自動下載或先更新。</li>
+        <li>模型分成好幾包，<b>想要哪個功能就勾哪一包</b>（每包的內容和大小見下面的表）。上面的快速鈕可以一次選好：<b>只裝動漫（Anima）</b>＝只有 Anima 那一包，約 11GB；<b>基本版</b>＝Anima 動漫、Qwen 2.1 編輯、MOSS-Image 文生圖繪圖三種模型的全部生圖功能，約 42GB；<b>完整版</b>＝全部勾，約 67GB；<b>全不選</b>＝只裝引擎，模型之後再回來補勾。勾了要靠別包的（例如「Qwen 2.1 姿勢參考」要先有 Qwen 2.1），那一包會自動跟著勾；已經裝好的包會打勾鎖住。顯存 8GB 以下或記憶體 16GB 以下的電腦，精靈會先幫你選「只裝動漫」（Qwen、MOSS 的模型很大，這種電腦跑起來很吃力），想要別的自己再勾。</li>
+        <li>兩包常用 LoRA 有幾個檔放在 Civitai，要登入才能下載（基本版不用）。沒填 Civitai API key 的那幾個會顯示「要登入」，其他照常下載。之後到「設定」填好 key（申請方法見下一段），再回精靈按一次就會補齊。</li>
+        <li><b>在中國大陸：</b>Hugging Face、GitHub、Civitai 要開梯子才連得到。梯子開「系統代理」「PAC」或「TUN（虛擬網卡）」模式都可以，生圖站會自動跟著用；精靈第一頁會先測一次連線，告訴你哪幾個網站連不到。Hugging Face 連不到時會自動改從鏡像 <code>hf-mirror.com</code> 下載。梯子關了但系統代理忘了關，生圖站會自動改成直連。要手動填代理，到「設定」→「網路」。</li>
+        <li>安裝時最上面有<b>總進度</b>、速度和大約還要多久；安裝期間電腦不會自己睡著（螢幕會照常關）。</li>
+        <li>下載中途斷網沒關係：有項目沒裝好或按了「停止下載」，標題會寫「安裝還沒完成」，按「重試」會接著裝，已經下載的不會重抓。只有幾項沒裝好、其他都能用時，也可以先按「先開始使用」。GitHub 上的檔連不到時，訊息會寫網址和要放的資料夾，可以用別的方法下載好放進去再按「重試」。</li>
+        <li><b>電腦裡已經有模型？</b>進到「要下載哪些模型」那一步會自動掃描：它會看過每顆硬碟，找出別的 ComfyUI、A1111／Forge 裡的模型（用捷徑、junction 連到別顆硬碟的也找得到）。勾選的資料夾<b>原地使用</b>，不搬動、不複製，下面的「還缺幾個」會扣掉找到的，就不用再下載一份。</li>
+      </ul>
+      <h3 id="civitai-key">申請 Civitai API key（免費，五分鐘）</h3>
+      <p>Civitai 是最大的模型、LoRA 分享站。很多檔案要登入才能下載，生圖站用「API key」代替你登入。安裝精靈裝常用 LoRA，還有「下載」頁抓 LoRA 都會用到。</p>
+      <ol class="how">
+        <li>打開 <code>civitai.com</code>，右上角 <b>Sign In</b> 註冊或登入（Google、Discord 帳號都可以）。</li>
+        <li>點右上角自己的頭像 → 選單裡的齒輪 <b>Settings</b>（帳號設定頁，網址是 <code>civitai.com/user/account</code>）。</li>
+        <li>往下捲到 <b>API Keys</b> 那一塊，按 <b>+ Add API key</b>，名字隨便取（例如 anima），按 <b>Save</b>。</li>
+        <li>畫面會出現一長串金鑰，<b>只會顯示這一次</b>：按旁邊的複製鈕。不小心關掉了就刪掉重建一組。</li>
+        <li>回到生圖站：左邊「設定」→ 最上面的 <b>Civitai API key</b> 欄位貼上 → 按 <b>儲存</b>，下面會顯示已設定。</li>
+      </ol>
+      <p class="note"><b>金鑰只存在你這台電腦：</b>用 Windows 的加密存起來，匯出設定檔、恢復原廠都不會帶走它。別把金鑰貼給別人或貼到網路上；外洩了就到同一頁刪掉重建。</p>
+      <h3>每一包裝了什麼</h3>
+      <div class="tbl-w"><table>
+        <thead><tr><th>功能包</th><th>能用的功能</th><th>大約大小</th><th>基本版有</th></tr></thead>
+        <tbody>
+          <tr><td>Anima 動漫</td><td>動漫生圖、圖生圖、局部重繪、擴圖、構圖控制、放大（大部分功能的基礎）</td><td>11GB</td><td>✓</td></tr>
+          <tr><td>Qwen 2.1 編輯</td><td>改圖、多圖參考、四視圖、差分，也能畫寫實照片（官方 Qwen Image 2.1 Turbo）</td><td>13GB</td><td>✓</td></tr>
+          <tr><td>Qwen 2.1 姿勢參考</td><td>照人偶的姿勢畫（要先有 Qwen 2.1）</td><td>3.5GB</td><td>✓</td></tr>
+          <tr><td>MOSS-Image 文生圖繪圖</td><td>用文字畫圖：海報、招牌、版面框、漫畫台的對白</td><td>12GB</td><td>✓</td></tr>
+          <tr><td>修臉／修手</td><td>生成後自動修臉、「玩法…」的修臉修手</td><td>1.6GB</td><td>✓</td></tr>
+          <tr><td>一鍵去背</td><td>「玩法…」的一鍵去背</td><td>0.4GB</td><td>✓</td></tr>
+          <tr><td>AI 改寫、生圖助手</td><td>AI 改寫、反推的 AI 寫說明、生圖助手、導演台分段（語言模型＋llama.cpp）</td><td>18GB</td><td>—</td></tr>
+          <tr><td>影音工作台、剪輯台工具</td><td>剪輯台、拆幀台（Node.js、ffmpeg；剪輯台按「下載剪輯工具」也能補）</td><td>0.6GB</td><td>—</td></tr>
+          <tr><td>Anima 常用 LoRA</td><td>畫風、細節、光影、身材滑桿…（部分在 Civitai）</td><td>4.6GB</td><td>—</td></tr>
+          <tr><td>Qwen 2.1 常用 LoRA</td><td>寫實風、加速、滑桿…（部分在 Civitai）</td><td>3.7GB</td><td>—</td></tr>
+          <tr><td colspan="4">擴圖、變體、塗鴉畫布、X/Y 對照表、批次提示詞不用另外下載。動起來（影片）、導演台做影片要另外下載影片模型（見下面）。</td></tr>
+        </tbody>
+      </table></div>
+      <h3>影片模型要自己下載</h3>
+      <p>影片模型三個檔加起來約 43GB，安裝精靈不會幫你下載。想用「動起來」和導演台，請照檔名到 Civitai 或 Hugging Face 搜尋，放進 ComfyUI 的 <code>models</code> 底下對應的資料夾，再重開生圖站：</p>
+      <div class="tbl-w"><table>
+        <thead><tr><th>檔名</th><th>放哪裡</th><th>大小</th></tr></thead>
+        <tbody>
+          <tr><td><code>10Eros_v1.5_DMD_INT8_checkpoint.safetensors</code></td><td><code>models\checkpoints</code></td><td class="num">約 29GB</td></tr>
+          <tr><td><code>gemma-3-12b-it-ablit-norms-biproj-fp8mixed.safetensors</code></td><td><code>models\text_encoders</code></td><td class="num">約 13GB</td></tr>
+          <tr><td><code>ltx-2.3-spatial-upscaler-x2-1.1.safetensors</code></td><td><code>models\latent_upscale_models</code></td><td class="num">約 1GB</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note"><b>之後想補模型、搬資料夾：</b>到「設定」頁最下面按「安裝與修復…」，會回到同一個精靈。</p>
+    </div>
+  </section>
+
+  <section class="ch" id="tour">
+    <div class="txt">
+      <div class="ch-no">02</div>
+      <h2>先認識這台機器</h2>
+      <p>畫面分成五塊。左邊一排是功能鍵：生成、圖庫、LoRA、下載、導演、漫畫、助手，下面是任務和設定。按鍵左上角的小數字就是快捷鍵：<kbd>Alt</kbd>＋那個數字直接跳過去。生成頁從左到右是控制台、觀景窗、幻燈片匣（視窗比較窄時，幻燈片匣改排在觀景窗下面），最下面那條綠字螢幕是狀態列。</p>
+      <ol class="steps" data-for="s-tour"></ol>
+      <p class="note"><b>右上角三個小東西：</b>「淺／自動／深」換外觀，喇叭開關按鍵音效，「?」打開快捷鍵說明，裡面也有這份手冊的連結。</p>
+    </div>
+    <div class="stage-w" id="s-tour"></div>
+  </section>
+
+  <section class="ch" id="prompt">
+    <div class="txt">
+      <div class="ch-no">03</div>
+      <h2>提示詞：看你用哪個模型</h2>
+      <p>生圖站有三家模型，寫法不一樣。控制台下面的「模型」選單換模型，步數、CFG 會自動換成那個模型的預設值。</p>
+      <div class="tbl-w"><table>
+        <thead><tr><th>模型</th><th>擅長</th><th>提示詞</th></tr></thead>
+        <tbody>
+          <tr><td>Anima</td><td>動漫、插畫，速度最快</td><td>英文 tag，逗號隔開</td></tr>
+          <tr><td>Qwen 2.1</td><td>寫實照片、改圖、多圖參考</td><td>完整的英文句子</td></tr>
+          <tr><td>MOSS-Image</td><td>寫實、排版、在圖上寫字</td><td>完整的英文句子，字放在引號裡</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Anima 的寫法</h3>
+      <ul class="tips">
+        <li>開頭放品質和評級：<code>masterpiece, best quality, score_7, safe,</code>。評級一定要寫，可選 safe、sensitive、nsfw、explicit。</li>
+        <li>畫師名字前面加 <code>@</code>，例如 <code>@kyomu</code>，不加幾乎沒效果。</li>
+        <li>不知道英文 tag，就直接在框裡打中文，例如「貓耳」，下面會列出對應的 tag。</li>
+        <li>游標停在某個 tag 上按 <kbd>Ctrl</kbd><kbd>↑</kbd>，每按一次權重加 0.05。</li>
+        <li><code>{red|blue}</code> 會讓每張圖隨機挑一個。</li>
+      </ul>
+      <h3>Qwen 2.1、MOSS-Image 的寫法</h3>
+      <ul class="tips">
+        <li>像在描述一張已經拍好的照片：先講媒材和主體，人物寫明是成年人並給年紀（例如 a woman in her mid twenties），再講背景、姿勢、衣服、光線。</li>
+        <li>五官、皮膚、頭髮一樣一樣寫清楚，臉會更漂亮也更穩。</li>
+        <li>要畫在圖上的字直接寫進句子、用引號框起來，例如 <code>a shop sign that reads 「小克的咖啡店」</code>。MOSS 寫字最準，繁中、英文都行。</li>
+        <li>這兩家都不吃權重，<code>(tag:1.2)</code> 會被當成文字，框裡會畫紅色波浪線提醒你。想強調什麼，就多用一句話描述它。</li>
+        <li>Noct Q Anime（Qwen 的動漫版）開頭要寫 <code>An anime illustration of…</code>，沒寫會畫成照片。</li>
+      </ul>
+      <ol class="steps" data-for="s-prompt"></ol>
+    </div>
+    <div class="stage-w" id="s-prompt"></div>
+  </section>
+
+  <section class="ch" id="pe">
+    <div class="txt">
+      <div class="ch-no">04</div>
+      <h2>AI 改寫：一句中文變成完整提示詞</h2>
+      <p>不想自己寫英文，就打開提示詞框下面的「AI 改寫提示詞」。用一句話說你想要什麼，改寫模型會寫成一段完整的英文提示詞。不滿意可以一直微調，每一版都會留著，最多 30 版。</p>
+      <ol class="steps" data-for="s-pe"></ol>
+      <h3>改寫預設</h3>
+      <ul class="tips">
+        <li>「改寫預設」選單決定交給 AI 哪一份工作說明。選「自動」時，括號裡會寫出現在用的是哪一份，例如「自動（現在＝Anima 版）」。</li>
+        <li>可以手動選文生圖版（Qwen 2.1／MOSS）、改圖版（Qwen 2.1，會看參考圖）、Anima 版或成人（體位）。選的跟模型對不上時會跳出 ⚠ 提示。</li>
+        <li>成人（體位）三種模型都能用：Qwen 2.1、MOSS-Image 寫成英文句子，Anima 寫成 tag 加句子。姿勢從 110 種的「姿勢大彙整」挑，選單裡標 ◆ 的有 3D 人偶參考圖。</li>
+        <li>勾「姿勢參考圖」會照 3D 人偶擺姿勢，身體貼合更準：Qwen 2.1 用 ControlNet，MOSS-Image 從人偶的深度圖重畫。Anima 不能用。</li>
+        <li>要改工作說明的內容，按旁邊的「自訂改寫規則」，會跳到設定頁對應的那一份。</li>
+      </ul>
+      <h3>三個勾選</h3>
+      <ul class="tips">
+        <li><b>中文對照</b>：多寫一段中文，讓你看得懂它寫了什麼。</li>
+        <li><b>深度思考</b>：先想再寫，比較慢，可以看思考過程。</li>
+        <li><b>生成時自動改寫</b>：按生成前先改寫一次。同樣的想法會直接用上次的結果。</li>
+      </ul>
+      <p class="note"><b>顯卡只有 8GB 也能用：</b>改寫前會先請 ComfyUI 卸載模型，按生成前會先關掉改寫模型，兩邊輪流用顯存。在想法框裡按 <kbd>Ctrl</kbd><kbd>Enter</kbd> 是「改寫」，不是生成。</p>
+    </div>
+    <div class="stage-w" id="s-pe"></div>
+  </section>
+
+  <section class="ch" id="layout" style="grid-template-columns:1fr">
+    <div class="txt">
+      <div class="ch-no">05</div>
+      <h2>版面框：指定誰、什麼東西放在畫面哪裡</h2>
+      <p>提示詞只能說「畫面裡有什麼」，很難說「放在哪裡」。版面框讓你在一塊畫布上拉框：這個框是角色、那個框是一樣東西、下面那個框寫一行字，MOSS-Image 就會照框的位置畫。不畫框也沒關係，就是一般的 MOSS 生圖。</p>
+      <figure class="laymock" aria-label="版面框示意圖：右邊一個角色框，左上一個物件框，左下一個文字框">
+        <div class="lm-canvas">
+          <div class="lm-box o" style="left:7%;top:12%;width:24%;height:34%"><b>02 物件</b><span>一個紅色方塊</span></div>
+          <div class="lm-box c" style="left:52%;top:9%;width:36%;height:84%"><b>01 角色</b><span>穿黃色雨衣的女生，雙手插口袋</span></div>
+          <div class="lm-box t" style="left:7%;top:62%;width:38%;height:26%"><b>03 文字</b><span>「OPEN」霓虹字</span></div>
+        </div>
+        <figcaption>示意圖：拉三個框，提示詞寫「一間下雨天的空房間」，畫出來方塊在左上、女生在右邊、OPEN 在左下。</figcaption>
+      </figure>
+      <h3>步驟</h3>
+      <ol class="how">
+        <li>「模型」選 MOSS-Image，模式選「文生圖」或「圖生圖」。提示詞框下面會多一格 <b>版面框</b>；換成 Anima、Qwen 2.1 或其他模式時，這一格會藏起來（框還留著，換回來就出現）。</li>
+        <li>先在提示詞框寫<b>整張圖</b>：場景、氣氛、光線、畫風。框裡只寫那一樣東西本身。</li>
+        <li>點開「版面框」，會看到一塊小預覽。<b>點預覽（或按「打開畫框視窗」）會跳出一個大視窗</b>：左邊是放到最大的畫布，右邊是每個框的設定。畫布的形狀跟你設的寬高一樣，右下角會顯示尺寸；圖生圖選自動尺寸時，形狀跟輸入圖一樣。</li>
+        <li>上面「新畫的框是」先選角色、物件或文字，在畫布上按住滑鼠拖一個框，放開。右邊多一行設定，游標會直接跳到描述欄（文字框跳到「要畫的字」）。</li>
+        <li>那一行最前面可以再改類型：<b>角色</b>、<b>物件</b>或<b>文字</b>，後面寫描述。角色寫「誰、長相、穿著、動作」，物件寫「什麼東西、長什麼樣子」，中文英文都可以。</li>
+        <li>選「文字」會多一格「要畫的字（照抄）」：把要出現在圖上的字一字不差打進去。描述欄改寫字的樣子（字型、顏色、大小），不寫也行。</li>
+        <li>要幾個就拉幾個，最多 16 個。都寫好了按右上角 <b>完成</b>（或 <kbd>Esc</kbd>、點視窗外面）回到生成頁，小預覽和底下的清單會照你畫的顯示；點清單的某一行，會打開大視窗並選好那個框。照平常按「生成」。</li>
+      </ol>
+      <h3>調整框</h3>
+      <ul class="tips">
+        <li>拖框左上角的標籤（例如「01 角色」）＝移動；拖右下角＝改大小；點一下＝選取。</li>
+        <li>選取後按 <kbd>Delete</kbd> 刪掉，方向鍵一次挪一點，按住 <kbd>Shift</kbd> 一次挪多一點，<kbd>Esc</kbd> 取消選取。也可以按那一行最後面的 ✕ 刪掉。</li>
+        <li>大框裡面可以再拉小框，例如整個人一個框、手上拿的杯子再一個框。小框會疊在上面，點得到。</li>
+        <li><b>全部清除</b> 一次刪光（會先問一次）。</li>
+        <li>畫面上寫著「（還沒寫描述）」的框不會送出去。拉得太小的框會直接消失。</li>
+      </ul>
+      <h3>框會跟著存</h3>
+      <ul class="tips">
+        <li>重新整理、關掉再開，框都還在。「存成整套」會連框一起存進提示詞庫。</li>
+        <li>圖庫按「重用參數」：有框的圖會把框帶回來並自動展開；沒框的圖會清掉現在的框。</li>
+        <li>AI 改寫只改提示詞，框不會動。開「高解析修復」也沒關係，框會跟著放大後的尺寸換算。</li>
+      </ul>
+      <h3>導演台：每段的第一格也能拉框</h3>
+      <ol class="how">
+        <li>在生成頁選好 MOSS-Image，到「導演」頁「第一格的畫法」按 <b>用生成頁目前的設定</b>。</li>
+        <li>每一段的卡片會多一格可以收合的 <b>版面框</b>。點開，點小預覽跳出大視窗，照上面的方法拉框、選類型、寫描述。畫布固定是橫的 16:9，跟第一格一樣。</li>
+        <li>按這一段的 <b>重寫提示詞</b>，AI 會照框的位置重寫這段第一格的畫面描述。之後畫第一格時，框也會一起交給 MOSS。</li>
+      </ol>
+      <ul class="tips">
+        <li>勾了「接上一段」、或用「指定第一格…」挑好圖的段落，不會另外畫第一格，所以沒有版面框。</li>
+        <li>框跟著專案存。導演台正在跑的時候不能改框。</li>
+      </ul>
+      <p class="note"><b>為什麼只有 MOSS：</b>MOSS-Image 訓練時就學過「照框排版」，Anima、Qwen 2.1 沒學過，送過去也看不懂，所以選它們時版面框會藏起來。</p>
+    </div>
+  </section>
+
+  <section class="ch" id="modes">
+    <div class="txt">
+      <div class="ch-no">06</div>
+      <h2>七種模式，一排琴鍵切換</h2>
+      <p>控制台最上面那排鍵決定這次要做什麼。除了文生圖，其他都要先放一張圖：拖進框裡、按 <kbd>Ctrl</kbd><kbd>V</kbd> 貼上，或按「從圖庫選」。觀景窗和圖庫大圖下面也有同名的按鈕，按一下就把那張圖送過去（擴圖在「玩法…」裡面）。</p>
+      <ol class="steps" data-for="s-modes"></ol>
+      <div class="tbl-w"><table>
+        <thead><tr><th>模式</th><th>適合</th><th>關鍵設定</th></tr></thead>
+        <tbody>
+          <tr><td>圖生圖</td><td>照一張圖重畫</td><td>重繪幅度：Anima 預設 0.6；MOSS 0.7 以下構圖不變、0.8 以上幾乎整張重畫</td></tr>
+          <tr><td>局部重繪</td><td>只改一小塊</td><td>畫遮罩；範圍選「只重繪遮罩區」最適合修臉、修手</td></tr>
+          <tr><td>擴圖</td><td>把畫面往外延伸：橫圖變直圖、補出被裁掉的身體或背景</td><td>四邊各往外擴幾像素，或按快捷鈕；步驟見第 07 章</td></tr>
+          <tr><td>多圖參考</td><td>人、衣服、場景各取一張重組</td><td>只有 Qwen 2.1；第 1 張是底圖，提示詞用 <code>&lt;image1&gt;</code> 指名</td></tr>
+          <tr><td>放大</td><td>把圖放大變清楚</td><td>倍率 1.5／2／3／4，可加 AI 精修</td></tr>
+          <tr><td>四視圖</td><td>角色設定稿一次改：換衣、改色</td><td>每個視角同步改；要點名改哪件，例如「紅色西裝外套」</td></tr>
+        </tbody>
+      </table></div>
+      <h3>附加功能</h3>
+      <ul class="tips">
+        <li><b>高解析修復</b>：先畫小圖，放大後再畫一次細節。倍率 1.5、重繪 0.4 最常用。</li>
+        <li><b>構圖控制</b>（只有 Anima）：照另一張圖的線條、塗鴉或深度擺構圖。控制圖留空，就用輸入圖。</li>
+        <li><b>生成後自動修臉</b>、<b>X/Y 對照表</b>、<b>塗鴉畫布</b>：也在「附加」這一區，用法見下一章。</li>
+        <li><b>拿去 ComfyUI 改…</b>（模型那一格下面）：把目前這個功能照目前的設定存成 ComfyUI 工作流，存的位置自己選，視窗裡有三步說明。想在 ComfyUI 裡自己改內建的流程時用，改好可以匯回來取代內建的（第 16 章）。還沒放輸入圖、遮罩也能存，會先用佔位圖代替。</li>
+      </ul>
+      <p class="note"><b>四視圖不用切模型：</b>它會自動用 Qwen 2.1 官方 Turbo，所以要先裝好它（基本版就有）。</p>
+    </div>
+    <div class="stage-w" id="s-modes"></div>
+  </section>
+
+  <section class="ch" id="play" style="grid-template-columns:1fr">
+    <div class="txt">
+      <div class="ch-no">07</div>
+      <h2>生圖玩法：擴圖、修臉、差分、去背、對照表</h2>
+      <p>畫好一張圖之後，還能拿它玩很多花樣。大部分在觀景窗或圖庫大圖下面的 <b>玩法…</b> 按鈕裡；X/Y 對照表、塗鴉畫布在生成頁的「附加」區；批次在提示詞框下面。做出來的圖都會進圖庫，原圖不會被蓋掉。</p>
+      <div class="tbl-w"><table>
+        <thead><tr><th>玩法</th><th>在哪裡</th><th>要先有</th></tr></thead>
+        <tbody>
+          <tr><td>擴圖</td><td>模式鍵「擴圖」，或「玩法…」→「擴圖」</td><td>不用另外下載；三種模型都能用</td></tr>
+          <tr><td>變體（4 張）</td><td>「玩法…」</td><td>不用另外下載</td></tr>
+          <tr><td>修臉、修手</td><td>「玩法…」；或「附加」勾「生成後自動修臉」</td><td>偵測模型 SAM3.1（功能包「修臉／修手」）</td></tr>
+          <tr><td>差分（表情／動作）</td><td>「玩法…」</td><td>Qwen 2.1 官方 Turbo（功能包「Qwen 2.1 編輯」）</td></tr>
+          <tr><td>一鍵去背</td><td>「玩法…」</td><td>去背模型 BiRefNet（功能包「一鍵去背」）</td></tr>
+          <tr><td>塗鴉畫布</td><td>「附加」的「塗鴉畫布」、輸入圖旁的「畫草圖」</td><td>不用另外下載</td></tr>
+          <tr><td>X/Y 對照表</td><td>「附加」的「X/Y 對照表」</td><td>不用另外下載</td></tr>
+          <tr><td>批次提示詞</td><td>提示詞框下面的勾選框</td><td>不用另外下載</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>擴圖：把畫面往外延伸</h3>
+      <ol class="how">
+        <li>兩種開法：控制台最上面那排鍵按 <b>擴圖</b>，再放一張圖（拖進框、<kbd>Ctrl</kbd><kbd>V</kbd> 或「從圖庫選」）；或在觀景窗、大圖按 <b>玩法…</b> → <b>擴圖</b>，那張圖會直接送過來。</li>
+        <li>「擴圖」區有四格：往上、往下、往左、往右，各填要多補幾像素（照原圖的大小算）。</li>
+        <li>懶得算就按快捷鈕：<b>四邊各 +25%</b>、<b>左右 +50%（變寬）</b>、<b>上下 +50%（變高）</b>、<b>往下補一半（補身體）</b>、<b>變成 16:9</b>、<b>變成 9:16</b>、<b>變成 1:1</b>。<b>清除</b> 全部歸零。</li>
+        <li>看下面的預覽：斜線的地方就是要補出來的部分，「擴圖」標題旁邊會顯示擴完的尺寸。</li>
+        <li>提示詞寫<b>整張圖</b>要長什麼樣，連補出來的地方一起寫，例如補出來的腳、地板、天空。</li>
+        <li>按「生成」。</li>
+      </ol>
+      <ul class="tips">
+        <li>新舊交界看得出接縫，就把「接縫柔化」調大一點。</li>
+        <li>Anima 接得最順。Qwen 2.1 會自動在提示詞前面加一句「把灰邊延伸成場景」，你不用自己寫。</li>
+        <li>擴完的圖最大 4096×4096，超過會叫你改小。</li>
+      </ul>
+
+      <h3>變體：同一張圖，再來 4 張差不多的</h3>
+      <ul class="tips">
+        <li>「玩法…」→ <b>變體（4 張）</b>。照原圖的模型、提示詞、LoRA，用圖生圖輕輕重畫一次，每張換一個種子。</li>
+        <li>構圖幾乎一樣、細節各有不同，適合「這張很好，但想看看別的可能」。</li>
+        <li>去背、對照表、影片、放大、四視圖、差分做出來的圖不能直接做變體，會請你先按「圖生圖」自己調。</li>
+      </ul>
+
+      <h3>修臉、修手：自動找出來，放大重畫</h3>
+      <ol class="how">
+        <li>觀景窗或大圖按 <b>玩法…</b>，選 <b>修臉</b>、<b>修手</b> 或 <b>修臉＋修手</b>。</li>
+        <li>生圖站先用 SAM3.1 找出每張臉（每隻手）。第一次要載入偵測模型，多等十幾秒。</li>
+        <li>右下角會跳出「找到幾處」，接著每一處裁下來、放大重畫、再貼回去，一次最多 8 處，大的先修。</li>
+        <li>修好的是一張新圖，圖庫裡的模式叫「修細節」，原圖留著可以對照。</li>
+      </ol>
+      <ul class="tips">
+        <li>想每張都自動修：「附加」區勾 <b>生成後自動修臉</b>。之後文生圖、圖生圖每畫完一張，就會自動多排一張修好臉的。</li>
+        <li>重畫的力道在「生成後自動修臉」那一格展開後的「修臉重繪幅度」，預設 0.4。調大改得多，但臉可能變成另一個人。</li>
+        <li>說「找不到臉」：臉太小、太側面或被擋住時會找不到。改用「局部重繪」自己塗遮罩修。</li>
+      </ul>
+
+      <h3>差分：同一個角色換表情、換動作</h3>
+      <ol class="how">
+        <li>觀景窗或大圖按 <b>玩法…</b> → <b>差分（表情／動作）</b>，會跳出一個視窗，左邊是原圖。</li>
+        <li>點選要的表情：微笑、大笑、生氣、哭泣、害羞、驚訝、得意、無奈、眨眼、睡著；或動作：揮手、比讚、比 V、比愛心、雙手抱胸、托腮、回頭看、舉手。可以選很多個，點到的會亮起來，再點一下取消。</li>
+        <li>清單裡沒有的，寫在「自訂」框，一行一個，例如「把頭髮改成雙馬尾」「讓角色戴上眼鏡」，中文英文都可以。</li>
+        <li>最下面選每一項要畫幾張（每項 1／2／3 張），旁邊會算出「共幾張」，按右邊的 <b>送出</b>。</li>
+      </ol>
+      <ul class="tips">
+        <li>用 Qwen 2.1 改圖：臉、髮型、衣服、畫風盡量跟原圖一樣，只改你選的那件事。做角色表情包、立繪差分很好用。</li>
+        <li>生成頁選的是 Qwen 2.1 時，步數、CFG、LoRA 都照生成頁；選別的模型時，自動換成官方 Qwen 2.1 Turbo（8 步），不用自己切。</li>
+      </ul>
+
+      <h3>一鍵去背</h3>
+      <ul class="tips">
+        <li>觀景窗或大圖按 <b>玩法…</b> → <b>一鍵去背</b>。去掉背景，存成透明背景的 PNG。</li>
+        <li>圖庫和大圖用灰白棋盤格表示透明的地方。下載下來就是透明的，可以直接拿去做貼圖、頭像，或疊到別的圖上。</li>
+      </ul>
+
+      <h3>塗鴉畫布：自己畫草圖，AI 幫你畫完</h3>
+      <ol class="how">
+        <li>三個地方都能打開：「附加」區的 <b>塗鴉畫布</b>、圖生圖輸入圖旁的 <b>畫草圖</b>、構圖控制裡的 <b>自己畫草圖</b>。</li>
+        <li>畫布的形狀跟生成頁設的寬高一樣。上面選 <b>筆</b> 或 <b>橡皮擦</b>，挑顏色、拉「粗細」。畫錯按 <b>復原</b>（或 <kbd>Ctrl</kbd><kbd>Z</kbd>），<b>清空</b> 整張重來。</li>
+        <li>想照一張圖描：勾 <b>墊輸入圖描</b>，生成頁的輸入圖會淡淡墊在下面，不會畫進草圖。</li>
+        <li>畫好按其中一個：<b>當構圖控制</b>（只有 Anima）照你的線條構圖、AI 自己上色，黑線白底的線稿最準；<b>當圖生圖底圖</b>（每種模型都行）可以畫色塊，會自動切到圖生圖、重繪幅度設成 0.85。</li>
+        <li>回到生成頁寫好提示詞，按「生成」。</li>
+      </ol>
+
+      <h3>X/Y 對照表：一次比較兩種設定</h3>
+      <ol class="how">
+        <li>先在生成頁把模型、提示詞、LoRA、模式都設好。對照表會照這些設定畫，只改你選的那一兩樣。</li>
+        <li>「附加」區按 <b>X/Y 對照表</b>。</li>
+        <li><b>X 軸</b>選要比較什麼，後面填幾個值，用逗號隔開，例如 CFG 填 <code>1, 3, 5</code>。可以比：種子、步數、CFG、取樣器、排程、LoRA 強度、提示詞替換、重繪強度。選好會先幫你填一組常用的值。</li>
+        <li>想同時比第二樣，<b>Y 軸</b>也選一個；不用就留「（不用）」。下面會顯示「共幾格」，最多 36 格。</li>
+        <li>按 <b>開始</b>。每一格各畫一張，全部畫完會自動拼成一張大表存進圖庫（模式叫「對照表」），視窗裡也可以按 <b>下載</b>。</li>
+      </ol>
+      <ul class="tips">
+        <li>種子沒選成軸的話，所有格子用同一個種子，比較才公平。</li>
+        <li>比 LoRA 強度：先在生成頁掛好那個 LoRA，軸旁邊再選要比哪一個。</li>
+        <li>提示詞替換：第一個值是提示詞裡要被換掉的字，後面每個值各畫一格，例如 <code>red hair, blue hair, silver hair</code>。第一格就是原本那句。</li>
+        <li>重繪強度只有圖生圖、局部重繪能比。放大、四視圖不能做對照表。</li>
+        <li>有幾格失敗也照樣拼，那一格會寫「失敗」。</li>
+      </ul>
+
+      <h3>批次提示詞：一次排很多句</h3>
+      <ol class="how">
+        <li>在提示詞框裡，一行寫一句提示詞。</li>
+        <li>勾提示詞框下面的 <b>批次：每行一句提示詞，各畫一組</b>。</li>
+        <li>按「生成」：每一行各畫「張數」那麼多張。例如 5 行、張數 4，就是 20 張，全部排進任務面板。</li>
+      </ol>
+      <ul class="tips">
+        <li>一次最多 50 行。</li>
+        <li>勾著批次時，「生成時自動改寫」不會跑（改寫會把整框換成一段）。</li>
+        <li>用完記得取消勾選，不然下次寫好幾行的提示詞，會被拆成好幾句分開畫。</li>
+      </ul>
+      <p class="note"><b>修臉、去背、差分說找不到模型：</b>修臉要 <code>sam3.1_multiplex_fp16.safetensors</code>（放 <code>models\checkpoints</code>），去背要 <code>birefnet.safetensors</code>（放 <code>models\background_removal</code>），差分要 Qwen 2.1 官方 Turbo。安裝精靈勾「修臉／修手」「一鍵去背」「Qwen 2.1 編輯」就會下載（基本版都有）；已經裝好的，到「設定」→「安裝與修復…」補勾再按一次安裝。</p>
+    </div>
+  </section>
+
+  <section class="ch" id="lora">
+    <div class="txt">
+      <div class="ch-no">08</div>
+      <h2>LoRA：幫模型換一套畫風</h2>
+      <p>LoRA 是小小的外掛檔，可以讓模型學會某種畫風、某個角色或某件衣服。在「下載」頁從 Civitai 找，下載完會自動出現在 LoRA 清單，觸發詞也一起存好。</p>
+      <ol class="steps" data-for="s-lora"></ol>
+      <ul class="tips">
+        <li>搜尋前先在左邊選基底模型：Anima、Qwen 2.1 或 MOSS Image。三家的 LoRA 不能混用，家族不對的會被劃掉，生成時會略過。</li>
+        <li>預設強度 0.8。不確定要多少，按卡匣上的 <code>⇆</code>，用同一個種子各畫一張不同強度來比。</li>
+        <li>「LoRA」頁可以替每個 LoRA 寫標題、觸發詞、建議強度和備註，生圖助手也會讀這些說明。</li>
+        <li>有些模型要登入 Civitai 才能下載：到設定頁貼上 Civitai API key，只存在這台電腦（申請步驟見第 01 章）。</li>
+        <li>LoRA 已經放在別的地方（A1111 的 <code>models\Lora</code>、別的 ComfyUI）？到「設定 → 模型與工作流」把那個資料夾加進「外部模型資料夾」就能直接用。手上的單一檔案，拖進同一區的「加裝模型」框，生圖站看檔案內容自動放進對的資料夾。</li>
+      </ul>
+      <p class="note"><b>MOSS 想快一點：</b>選 MOSS 模型時會出現「MOSS 快速」勾選框，勾了自動掛加速 LoRA 0.35、步數改 10，一張從約 40 秒變約 16 秒。要先有那顆加速 LoRA（檔名 <code>moss_speed_dmd…</code>）。</p>
+    </div>
+    <div class="stage-w" id="s-lora"></div>
+  </section>
+
+  <section class="ch" id="lib">
+    <div class="txt">
+      <div class="ch-no">09</div>
+      <h2>提示詞庫和反推：好用的設定存起來</h2>
+      <p>畫出喜歡的圖，就按「存成整套」：提示詞、模型、LoRA、尺寸、步數全部存進提示詞庫，下次從「套用整套設定…」選單一鍵套回來。常用的一小段字（例如光影、構圖）可以存成「片段」，從提示詞框上面的「＋插入片段」加進去。</p>
+      <ol class="steps" data-for="s-lib"></ol>
+      <ul class="tips">
+        <li>每一筆可以放資料夾、標籤、適用模型和縮圖。「置頂收藏」的會排第一。</li>
+        <li>搜尋用空格隔開幾個字，就會找「全部都有」的那幾筆。</li>
+        <li>排序選「自訂順序」就能拖拉；拖到左邊的資料夾上會直接搬過去。</li>
+      </ul>
+      <h3>反推：從一張圖找出提示詞</h3>
+      <ul class="tips">
+        <li>在輸入圖或大圖上按「反推」，會列出這張圖的 tag，旁邊附中文。門檻調高，tag 會變少、變準。</li>
+        <li>「自動清理」會拿掉簽名、浮水印、重複和互相衝突的 tag。</li>
+        <li>按「AI 寫英文說明」會多寫一段英文句子，連畫風一起描述，適合拿去給 Qwen、MOSS 用。</li>
+      </ul>
+    </div>
+    <div class="stage-w" id="s-lib"></div>
+  </section>
+
+  <section class="ch" id="gallery">
+    <div class="txt">
+      <div class="ch-no">10</div>
+      <h2>圖庫：每一張都記得怎麼畫的</h2>
+      <p>畫過的圖都在圖庫，連提示詞、種子、模型、LoRA、花了幾秒都存著。點一張打開大圖，按「重用參數」就能回到生成頁照原樣再畫。</p>
+      <ol class="steps" data-for="s-gallery"></ol>
+      <ul class="tips">
+        <li>按 <kbd>/</kbd> 跳到搜尋框，可以搜提示詞、想法或種子。「篩選」可以挑模式、模型家族、LoRA、日期。</li>
+        <li>圖多的時候會分頁：右上角選每頁 10／30／50／100 張，<kbd>←</kbd> <kbd>→</kbd> 換頁。</li>
+        <li>刪掉的圖先進「回收區」，還救得回來。在回收區裡再刪，才會丟進 Windows 的資源回收筒。</li>
+        <li>直接在 ComfyUI 畫的圖也會出現，篩選裡的模式叫「其他（ComfyUI）」。</li>
+      </ul>
+    </div>
+    <div class="stage-w" id="s-gallery"></div>
+  </section>
+
+  <section class="ch" id="agent">
+    <div class="txt">
+      <div class="ch-no">11</div>
+      <h2>生圖助手：用中文說，它自己畫到滿意</h2>
+      <p>「助手」頁像在跟一位畫師聊天。用中文說你想要什麼，它會自己寫提示詞、畫一輪、看圖挑毛病、再改下一輪。預設最多 3 輪、每輪 2 張，全部畫好的圖都進圖庫，搜尋「助手」就找得到。</p>
+      <ol class="steps" data-for="s-agent"></ol>
+      <ul class="tips">
+        <li><b>腦袋</b>：9B 快、35B 精細（要數東西、分左右手時比較準）、雲端是接一張雲端的大顯卡來跑（怎麼接看第 12 章）。</li>
+        <li>可以附圖：按「加圖片」、從圖庫選、直接貼上或拖進來，一次最多 4 張。例如「照第 1 張的人，換成第 2 張的衣服」。</li>
+        <li>模型、步數、固定掛的 LoRA 照生成頁；先在生成頁設好，再按「用生成頁目前的設定」。</li>
+        <li>「讓助手認識 LoRA」會讀每個 LoRA 的說明，看不出來的就同一個種子掛／不掛各畫一張比較，之後它就會自己挑。</li>
+      </ul>
+      <p class="note"><b>雲端會花錢：</b>用 RunPod 時按「開雲端」會先顯示每小時價格，按「確定開機」才開始計費。不用時記得關掉。雲端只能畫 MOSS-Image。三種接法和申請步驟在下一章。</p>
+    </div>
+    <div class="stage-w" id="s-agent"></div>
+  </section>
+
+  <section class="ch" id="cloud" style="grid-template-columns:1fr">
+    <div class="txt">
+      <div class="ch-no">12</div>
+      <h2>雲端顯卡：電腦不夠力，就接一張大卡</h2>
+      <p>生圖助手選「雲端」腦袋時，35B 的腦袋和 MOSS-Image 生圖都改在雲端的大顯卡上跑：一輪十幾秒，眼力跟本機 35B 一樣，畫好的圖照樣存回你電腦的圖庫。8GB 的卡跑 35B 要好幾分鐘一輪，這時候接雲端最划算。</p>
+      <p>到「助手」頁右邊的「雲端顯卡」（或導演頁「H3 影片」分頁右邊）按 <b>雲端設定…</b>，三種接法選一種：</p>
+      <div class="tbl-w"><table>
+        <thead><tr><th>接法</th><th>適合誰</th><th>生圖站幫你做什麼</th></tr></thead>
+        <tbody>
+          <tr><td><b>RunPod 自動租</b></td><td>第一次用、想最省事</td><td>租卡、安裝、閒置太久自動刪機，全包</td></tr>
+          <tr><td><b>任何雲端主機</b></td><td>已經在用 Vast.ai、AutoDL、Lambda、TensorDock 這類，或有自己的伺服器</td><td>用 SSH 連進你租好的機器自動安裝；開關機和計費在那家網站</td></tr>
+          <tr><td><b>直接連網址</b></td><td>已經有在跑的 ComfyUI＋LLM（Colab、Kaggle、朋友的電腦…）</td><td>只負責連過去用，什麼都不裝</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>接法一：RunPod 自動租</h3>
+      <ol class="how">
+        <li>到 <code>runpod.io</code> 註冊，左邊 <b>Billing</b> 先儲值一點錢（用多少扣多少）。</li>
+        <li>左邊 <b>Settings</b> → <b>API Keys</b> → <b>Create API Key</b>，權限選 <b>All</b>（舊介面叫 Read/Write），建好後複製那串 <code>rpa_</code> 開頭的金鑰（只顯示一次）。</li>
+        <li>生圖站「助手」頁 → 雲端顯卡的 <b>雲端設定…</b> → 選 <b>RunPod 自動租</b> → 貼上金鑰 → <b>儲存並測試連線</b>，出現「RunPod 金鑰可以用」就好了。</li>
+        <li>選一張卡（RTX A6000 每小時約 0.59 美元最划算），按 <b>開雲端</b>，看過價格按 <b>確定開機</b>。大約 3～5 分鐘燈號變綠，就能把腦袋切到「雲端」開始聊。</li>
+        <li>用完按 <b>關機刪除</b>；忘了關也沒關係，閒置超過設定的分鐘數（預設 20）會自動刪機。</li>
+      </ol>
+      <p class="note"><b>RunPod 關機＝刪機：</b>下次開機會重新下載約 32GB 模型（機房網路很快，幾分鐘），這段時間也算錢。生圖站只會動自己開的那一台，你帳號裡的其他機器不會碰。</p>
+      <h3>雲端要裝哪些功能</h3>
+      <p>「雲端設定…」最上面可以勾這台雲端要裝什麼，勾越多開機下載越久：</p>
+      <div class="tbl-w"><table>
+        <thead><tr><th>功能</th><th>用在哪</th><th>下載量</th></tr></thead>
+        <tbody>
+          <tr><td><b>生圖助手</b></td><td>助手頁的「雲端」腦袋（35B）和 MOSS-Image 生圖</td><td>約 32GB</td></tr>
+          <tr><td><b>H3 影片</b></td><td>導演頁「H3 影片」分頁（第 14 章）</td><td>約 42GB</td></tr>
+          <tr><td><b>H3 進階玩法</b></td><td>H3 的換角色、特效、換畫風、動態桌布、動作控制</td><td>再加約 32GB</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note"><b>48GB 的卡一次只能裝一個：</b>生圖助手和 H3 一起勾要 96GB 的 RTX PRO 6000，選 A6000、L40S 時開機前會擋下來。機器開著時改了勾選，要關機再開才會裝。</p>
+
+      <h3>接法二：任何一家雲端的主機（SSH）</h3>
+      <p>先在那家網站租一台機器，條件：</p>
+      <div class="tbl-w"><table>
+        <thead><tr><th>項目</th><th>需要</th></tr></thead>
+        <tbody>
+          <tr><td>顯示卡</td><td>NVIDIA 48GB 等級（RTX A6000、A40、L40S、RTX 6000 Ada、A100 80GB、H100…）</td></tr>
+          <tr><td>系統</td><td>Linux（Ubuntu 22.04 以上），映像檔選有 CUDA 的（例如 PyTorch 映像檔）；驅動要支援 CUDA 12.8 以上</td></tr>
+          <tr><td>硬碟</td><td>60GB 以上</td></tr>
+          <tr><td>連線</td><td>能用 SSH 登入（大部分雲端都有）</td></tr>
+        </tbody>
+      </table></div>
+      <ol class="how">
+        <li>生圖站「雲端設定…」選 <b>任何雲端主機</b> → 按一次 <b>儲存</b>，上面會出現生圖站專用的公鑰 → 按 <b>複製公鑰</b>。</li>
+        <li>把公鑰加到那家雲端：Vast.ai 在帳號的 <b>Keys → SSH Keys</b>；Lambda 在 <b>SSH keys</b>；TensorDock、Paperspace 建機器時有欄位可以貼；AutoDL 這類用密碼登入的，先用網站上的終端機執行 <code>mkdir -p ~/.ssh &amp;&amp; echo "貼上公鑰" &gt;&gt; ~/.ssh/authorized_keys</code>。（多數網站的帳號金鑰只套用到之後新開的機器：先加金鑰再開機最保險。）</li>
+        <li>網站上會有一行 SSH 連線指令，像 <code>ssh -p 41234 root@123.45.67.89</code>。整行貼到「SSH 連線指令」那格，主機、埠、帳號會自動填好。</li>
+        <li>按 <b>儲存並測試連線</b>：會顯示那台的顯卡、剩多少硬碟。連不上的話看下面的疑難排解。</li>
+        <li>按 <b>連線並安裝</b>。第一次會在主機上下載 llama.cpp、ComfyUI 和約 32GB 模型，快慢看那家的網路；裝過的同一台再連只要一兩分鐘。</li>
+        <li>用完按 <b>停止</b>：會停掉主機上的程式並斷線，裝好的檔案留著。<b>主機本身要到那家網站關機或刪除才會停止計費。</b></li>
+      </ol>
+      <p class="note"><b>想讓它閒置時自動關機：</b>在「進階」勾「順便叫主機關機」。AutoDL 這類關機就停止計費；Vast.ai、Lambda 關機後可能還收硬碟費或照樣計費，要到網站刪除才算數。</p>
+
+      <h3>接法三：直接連網址</h3>
+      <ul class="tips">
+        <li>你要先有：一個能從外面連的 <b>ComfyUI 網址</b>（最新版，裝好 MOSS-Image 三個檔），和一個 <b>OpenAI 相容的 LLM 網址</b>（llama-server、vLLM 都行，要看得懂圖，例如 Qwen3.6-35B-A3B 加 mmproj）。</li>
+        <li>MOSS-Image 三個檔都在 Hugging Face 的 <code>Comfy-Org/MOSS-Image</code>：<code>moss_image_sft_int8_convrot.safetensors</code> 放 <code>diffusion_models</code>、<code>qwen3.5_9b_w4a8_gptq.safetensors</code> 放 <code>text_encoders</code>、<code>flux2-vae.safetensors</code> 放 <code>vae</code>。</li>
+        <li>「雲端設定…」選 <b>直接連網址</b>，填兩個網址（有 token、金鑰才填），按 <b>儲存並測試連線</b>，它會檢查 ComfyUI 有沒有那三個檔、LLM 有沒有回應。</li>
+        <li>按 <b>連線</b> 就能用。LoRA 不會自動上傳，要用的 LoRA 自己放進遠端的 <code>models/loras</code>。</li>
+      </ul>
+      <p class="note"><b>金鑰都存在你這台電腦：</b>RunPod 金鑰、網址模式的 token 用 Windows 的加密存起來，畫面上只會顯示「已存」，不會再秀出來。舊版用 Windows 環境變數 <code>RUNPOD_API_KEY</code> 的照樣認得。</p>
+    </div>
+  </section>
+
+  <section class="ch" id="comic">
+    <div class="txt">
+      <div class="ch-no">13</div>
+      <h2>漫畫台：一張圖畫出整頁分格漫畫</h2>
+      <p>選一個版型，每一格寫景別、內容、台詞和狀聲詞，按「畫這一頁」，MOSS-Image 就把格子、人物和台詞一次畫成整頁漫畫，字直接畫在對話框裡。不用自己組提示詞，下面的「組好的提示詞」可以複製到生成頁自己改。漫畫台只用 MOSS-Image，要先把 MOSS 模型裝好。</p>
+      <ol class="steps" data-for="s-comic"></ol>
+      <ul class="tips">
+        <li>格子照閱讀順序排，右上先。內容用英文寫最準；台詞寫中文，小格子的台詞放 8 個字以內最不會錯。</li>
+        <li>角色外貌在「整頁共用」的「角色外貌」欄，每個角色完整寫一次（髮色、眼睛、衣服）；每一格的內容只寫這一格在做什麼，人物就不會每格長得不一樣。</li>
+        <li>MOSS 不吃權重，<code>(tag:1.2)</code> 這種寫法會被當成文字，整句用英文句子寫。有掛畫風 LoRA 的話，把觸發詞填在「畫風觸發詞」。</li>
+        <li>不知道從哪開始，就從「套用範例…」挑一個改。</li>
+      </ul>
+    </div>
+    <div class="stage-w" id="s-comic"></div>
+  </section>
+
+  <section class="ch" id="director" style="grid-template-columns:1fr">
+    <div class="txt">
+      <div class="ch-no">14</div>
+      <h2>讓圖動起來，再接成一部短片</h2>
+      <p>影片模型要另外下載，見第 01 章「影片模型要自己下載」。準備好之後，在觀景窗或大圖下面按「動起來」，寫一段「接下來發生什麼」：誰怎麼動、鏡頭怎麼移、聽得到什麼聲音。這張圖會變成一支有聲音的短影片（LTX-2.3），長度 3～8 秒，720p 一支約 3～5 分鐘。</p>
+      <ul class="tips">
+        <li>動作和聲音用英文寫效果最好。不用再描述圖裡已經有的東西。</li>
+        <li>勾「先出 3 支低解析度預覽」，挑中的那支到圖庫按「放大成正式版」，動作會一樣（只有內建的 LTX 有預覽）。</li>
+        <li>做影片前會先清空 ComfyUI 的記憶體，這段時間不能同時生圖。</li>
+        <li>不想用 LTX？Wan、HunyuanVideo 這些也行：先在 ComfyUI 把影片工作流調到能跑，到「設定 → 影片模型」匯入：一般「儲存」的 JSON、「匯出（API）」的 JSON、ComfyUI 畫出來的 PNG／WebP 都可以（一般「儲存」的要開著 ComfyUI 才轉得了），匯入後會問要不要馬上改用。在正面提示詞的文字框寫 <code>{{prompt}}</code>，生圖站就知道你寫的東西要放哪裡；匯入後設定頁會列出它看懂了哪些地方（提示詞、首格圖、種子、長寬、長度）。</li>
+      </ul>
+      <h3>導演台：一整段故事變成長片</h3>
+      <ul class="tips">
+        <li>貼上整段故事或小說片段，按「AI 分段＋寫提示詞」，它會照劇情切成好幾個鏡頭，每段寫好提示詞。</li>
+        <li>在「管理角色…」建角色卡：放一張原圖、寫外觀描述，或按「做多視圖設定圖」。每段都會照這張卡畫，長相比較穩。</li>
+        <li>按「全部生成」：每段先畫第一格，再做成影片；接上一段的鏡頭直接拿上一段的最後一格。最後按「接成長片」。</li>
+        <li>720p 一段約 4～5 分鐘，段數多的話整部片要跑很久，建議睡前或出門前開跑。</li>
+      </ul>
+      <p class="note"><b>導演頁上面有五個分頁：</b>分鏡（上面說的長片）、剪輯台、拆幀台、H3 影片、長片（H3 一段一段接著拍）。</p>
+      <h3>H3 影片台：素材板＋分鏡，一支片用滿 H3</h3>
+      <p>「H3 影片」分頁用 MiniMax H3（預設 10Eros 無審核版）做 1～15 秒、有聲音的影片。左邊是<b>素材板</b>：圖、影片、聲音丟進來，每一格選「拿來幹嘛」；中間是<b>分鏡卡</b>：一鏡一張，寫從第幾秒、鏡頭、畫面、台詞、聲音；程式照這兩樣自動組成 H3 官方格式的提示詞。參考圖、首尾幀、關鍵幀、聲線、動作參考、接續、改造原片可以全部疊在同一支片上。H3 很吃顯存，一般都在雲端跑（8GB 卡可以用 GGUF 量化版慢慢跑）。</p>
+      <ol class="how">
+        <li>右邊「在哪跑」選 <b>雲端顯卡</b>，按 <b>雲端設定…</b>，勾 <b>H3 影片</b>（用到換角色、特效、換畫風、動態桌布、骨架控制還要勾 <b>H3 進階玩法</b>），按儲存，再按 <b>開雲端</b>。</li>
+        <li>點一個<b>起手式</b>（空白開始、用某人的聲音講新台詞、照影片的動作、首尾幀、接著上一支拍、換角色、加特效、骨架控制、照聲音對嘴、動態桌布）。它只是幫你先擺好素材格和長度，之後全部能改。舊的 39 個範本在「舊範本」下拉。</li>
+        <li>素材板每一格按「圖庫」或「上傳」放素材，再選<b>用途</b>：圖可以當角色、服裝、場景、道具、分鏡板、畫風，或「釘在第幾秒」（首幀、尾幀、關鍵幀）；影片可以取動作、取運鏡、取角色、從它結尾接著拍、整段改造、骨架控制；聲音可以取音色、當背景音樂、當音效，或「原封不動放進去」讓畫面對嘴。角色可以取名字、指定誰是說話的人（S1、S2…）。</li>
+        <li>在「點子」用中文寫想要的片，按 <b>AI 幫我寫滿分鏡</b>：它照素材的用途把每一鏡寫滿（已經寫的會留著）。分鏡卡每一格都能改：台詞照原文寫，不用翻。</li>
+        <li>右邊選長度、畫質，按 <b>開始做影片</b>。做好的影片進圖庫、也出現在「成品」；成品下面的 <b>接著拍</b> 會開新的一支，從這支的結尾接下去。用完記得 <b>關機刪除</b>。</li>
+      </ol>
+      <ul class="tips">
+        <li>上限照 H3：參考圖 9 張、參考影片 3 段、參考聲音 3 段，合計 12 個；釘在時間點的圖 6 張。素材板上方即時算，超過或互相衝突（例如接續又在第 0 秒釘圖）會標紅、送出前擋下。</li>
+        <li><code>&lt;Picture 1&gt;</code>、<code>&lt;Video 1&gt;</code>、<code>&lt;Audio 1&gt;</code> 這些編號程式自己算，素材格左上角看得到；分鏡的畫面裡可以直接寫它們。</li>
+        <li>「完整提示詞」可以展開來看、直接手改；手改後分鏡卡不會再蓋掉它，按「照分鏡重組」才會重新組。</li>
+        <li><b>角色的聲音：</b>角色格可以寫「聲音」（例：少女聲，偏低，性感知性），它會寫進提示詞，那個角色每句台詞都用這種聲音。只靠文字描述，每支片的聲音會有點差；要每支都同一把聲音，在聲音格按 <b>聲音庫</b>：把一段滿意的聲音「存進聲音庫」，以後每支片都從聲音庫挑同一段當「取音色」。</li>
+        <li><b>用 TTS 做聲音：</b>聲音庫可以「匯入 TTS 工作流…」（ComfyUI 的文字轉語音工作流，要念的文字欄位寫 <code>{{text}}</code>、聲音描述欄位寫 <code>{{voice}}</code>），之後寫名字、聲音描述、一句台詞按「用 TTS 做一段」，做好的聲音存進聲音庫、放進這格。這個功能目前只做好接口，還沒用真的 TTS 節點測過。</li>
+        <li>畫質：快（16:9 約 864×480）、標準（約 1056×608）、高（約 1344×768）。「進階」的「高畫質二采」只能用在沒有釘圖、接續、改造原片的片；「SelfLift 兩段取樣」「加速」在 8GB 卡實測快很多。</li>
+        <li>「設定 → 影片模型」選 <b>MiniMax H3（H3 影片台）</b>，生成頁和圖庫的「動起來」會把圖帶到 H3 分頁當首幀。</li>
+        <li>標「進階玩法」的社群 LoRA（換角色、特效、換畫風、動態桌布）還沒在雲端完整驗過，結果可能不穩。</li>
+      </ul>
+      <h3>長片：一段一段接著拍，接成一支</h3>
+      <p>「長片」分頁把好幾段排成一條，按一次就在雲端一段一段拍下去：第 2 段起直接接著上一段的結尾拍（不是取最後一格重畫，畫質不會一段一段掉），每段拍完自動切掉重疊的開頭和定住的尾巴，最後在這台電腦接成一支放進圖庫。只能用雲端。</p>
+      <ol class="how">
+        <li>先到「H3 影片」分頁開好雲端（要勾 <b>H3 影片</b>）。</li>
+        <li>回到「長片」按 <b>＋ 新的</b>。上面填整條共用的：角色參考圖、第 1 段的第一格（可不放）、角色外觀、場景與鏡頭、畫風、角色的聲音、環境音、比例、畫質。外觀和場景用英文寫最穩，每段的提示詞都從它們開始。</li>
+        <li>中間一段一段寫：秒數（10 秒最穩）、這段發生什麼、台詞（第幾秒、什麼語言、說什麼）。尾幀可以不放，<b>預設不放</b>：釘了不同狀態的尾幀，模型會在半路瞬移。</li>
+        <li>按 <b>開拍整條</b>（右邊會先算好大約要多久、多少錢）。拍好的段會出現預覽和檢查結果；按 <b>停</b> 可以中途停下，拍好的段都留著。</li>
+        <li>全部拍好會自動接成一支進圖庫；按 <b>看接好的長片</b> 打開。</li>
+      </ol>
+      <ul class="tips">
+        <li>每段拍完會用拆幀台檢查硬剪接和跳點，有問題標紅（只標出來，不會自動重拍）；按 <b>拆幀台看</b> 一格一格看。</li>
+        <li>不滿意哪一段，按那段的 <b>從這段重拍</b>：後面的段是接著它拍的，會一起作廢重拍。</li>
+        <li>換場景、換姿勢寫成動作（轉身、起身、走過去、低頭擋住鏡頭），比硬接兩個不同的畫面自然。</li>
+        <li>第一次開拍時，生圖站會把接續用的社群節點（Herrgotts H3 Infinite，生圖站自己帶的固定版本）裝到雲端並重開雲端的 ComfyUI，多等一兩分鐘。</li>
+        <li>L40S 實測：每 1 秒影片大約要算 25 秒；第一次載入模型另外要十幾分鐘。</li>
+      </ul>
+      <h3>剪輯台：把影片剪成一部片</h3>
+      <ul class="tips">
+        <li>第一次打開會請你按「下載剪輯工具」（Node.js 和 ffmpeg，約 150MB，只要下載一次，放在生圖站自己的資料夾）。用安裝精靈裝的話已經順便裝好了。</li>
+        <li>在觀景窗、大圖或圖庫按「送到剪輯台」，圖和影片就會出現在剪輯台左上的「專案」素材區，拖到下面的時間軸就能剪。</li>
+        <li>常用鍵：<kbd>空白鍵</kbd> 播放、<kbd>S</kbd> 切一刀、<kbd>Del</kbd> 刪掉、<kbd>Shift</kbd>＋<kbd>Del</kbd> 刪掉並把後面補上來、<kbd>Alt</kbd>＋<kbd>T</kbd> 加轉場。剪輯台是開源的 FableCut，介面語言跟著生圖站切換（設定頁最上面），右上「操作提示」有常用鍵整理。</li>
+        <li>字幕、圖形、字型、音效、字卡範本都在素材區上面的分頁。自己找的免費音效丟進音效資料夾（「操作提示」裡有按鈕打開）。</li>
+        <li>剪好按右上「⬇ 匯出」存成 MP4，回到生圖站按「匯出的影片…」→「存回圖庫」。「放大」可以讓剪輯台佔滿整個視窗，右下角的紅色按鈕縮回來。</li>
+      </ul>
+      <h3>拆幀台：一格一格修 AI 影片</h3>
+      <ul class="tips">
+        <li>大圖或圖庫裡的影片按「拆幀修片」，或在拆幀台按「拆一支影片…」。10 秒 24fps 的影片會拆成 240 張。</li>
+        <li>不是生圖站做的影片也能拆：按「從電腦選影片…」挑任何影片檔（原檔不會動）。</li>
+        <li>長片一次最多拆 3600 幀（30fps 約 2 分鐘）：旁邊填「從／到（秒）」只拆一段；填「每秒幾幀」先抽樣粗看整支；填「最高（像素）」把大圖縮小，省硬碟。</li>
+        <li>點右邊的格子，或按 <kbd>←</kbd> <kbd>→</kbd> 一格一格看，<kbd>空白鍵</kbd> 播放，最容易找到閃一下的壞幀。</li>
+        <li>閃一下、糊掉的單一幀：按「前後平均補幀」；也可以用前一幀或後一幀蓋掉。</li>
+        <li>整張壞掉：按「拿去局部重繪」塗掉重畫，畫好回到拆幀台，按黃框裡的「選畫好的圖換進去」。</li>
+        <li>按「接回影片」：用原本的聲音和幀率接成一支新影片存進圖庫，原本那支不動。改過的幀標號是橘色，「換回原本的」可以還原。</li>
+      </ul>
+      <h3>讓 AI 幫你操作</h3>
+      <ul class="tips">
+        <li>按導演頁右上（或設定頁）的「給 AI 操作…」，把 MCP 設定複製到 Claude Desktop、Claude Code 或 Codex CLI，AI 就能操作整個生圖站：生圖、看圖庫、漫畫台、導演台、H3 影片，也能剪接、配樂、加字幕、匯出，你在剪輯台看得到它即時在改。</li>
+        <li>會花錢、刪東西、改設定的事，AI 一定會先問你，你說好才會做。以前貼過 <code>fablecut</code> 設定的，換成新的 <code>anima</code> 那一段。</li>
+        <li>接不了 MCP 的 AI，按「複製說明」貼給它，它就知道全站每個功能的網址和用法。</li>
+        <li>ChatGPT 網頁版和手機 App 連不到你電腦裡的程式，用不了。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="ch" id="jobs">
+    <div class="txt">
+      <div class="ch-no">15</div>
+      <h2>任務面板：一次排很多張</h2>
+      <p>生成鍵可以連按，每次送出的都會排隊。按 <kbd>Q</kbd> 打開任務面板，看哪張在畫、還要等多久、哪張失敗了。</p>
+      <ol class="steps" data-for="s-jobs"></ol>
+      <ul class="tips">
+        <li>面板上面勾「提示音」，畫好會響鐘聲，失敗是兩下悶響。</li>
+        <li>勾「完成時通知我」，視窗縮小時畫好會跳 Windows 通知。</li>
+        <li>「全停」會清空佇列並停掉目前這張；「清掉已結束的」只清紀錄，不會刪圖。</li>
+      </ul>
+    </div>
+    <div class="stage-w" id="s-jobs"></div>
+  </section>
+
+  <section class="ch" id="settings">
+    <div class="txt">
+      <div class="ch-no">16</div>
+      <h2>設定：改壞了也救得回來</h2>
+      <p>設定頁由上到下：介面語言（繁體中文／简体中文／English，換了會重新整理一次；教學手冊維持繁中）、Civitai API key、網路（代理、下載來源）、ComfyUI 啟動方式、成人預覽模糊、AI 改寫的執行方式、自訂改寫規則、影片模型、模型與工作流、等圖時的小玩具、關閉視窗時要做什麼、預設負面提示詞、匯出匯入設定、恢復原廠，最後是資料位置和「安裝與修復」。</p>
+      <ol class="steps" data-for="s-settings"></ol>
+      <ul class="tips">
+        <li><b>網路（代理、下載來源）</b>：在中國大陸下載模型要開梯子。預設「自動」：跟著系統代理、PAC、環境變數走；梯子開 TUN（虛擬網卡）模式也能通；梯子關了但系統代理忘了關，會自動改直連。讀不到的話選「手動」填代理（例如 <code>http://127.0.0.1:7897</code> 或 <code>socks5://127.0.0.1:7898</code>）。Hugging Face 下載來源預設「自動」：連不上就改用鏡像 <code>hf-mirror.com</code>。按「測試連線」會逐一測 Hugging Face、鏡像、GitHub、Civitai、Node.js，連不到的會寫原因和怎麼辦。</li>
+        <li><b>ComfyUI 啟動方式</b>：最上面會寫目前這份 ComfyUI 是哪一種（NVIDIA、AMD、Intel、ZLUDA、DirectML、CPU 版）。「ComfyUI 額外啟動參數」會接在生圖站自己的參數後面，例如顯存小可以填 <code>--lowvram</code>；<code>--port</code>、<code>--output-directory</code> 這些由生圖站管，不能放。勾「我自己開 ComfyUI」的話，生圖站不會自己開，你用平常的方式開在同一個連接埠，它會自己連上。「Python 位置」給 Python 放在別處的 ComfyUI（conda、外面的 venv），空白＝自動找。「ComfyUI 的連接埠」空白＝自動：用 8188，被另一份 ComfyUI 占走時生圖站自己這份會換一個空的；自己開在別的連接埠（SwarmUI、改過的整合包）就填它。最上面也會寫這份 ComfyUI 的版本，比生圖站測過的舊會提醒。「用 CPU 跑」是給沒有能用的顯示卡的電腦。改完按「儲存並重開 ComfyUI」才生效。</li>
+        <li><b>AI 改寫執行方式</b>：GPU 最快（約 6～8 秒，占 5.5GB 顯存），CPU 不占顯存但很慢。成人（體位）和導演台用的通用模型，有 35B 就自動用 35B。</li>
+        <li><b>自訂改寫規則</b>：可以改改寫模型的系統提示詞。寫壞了按「還原預設」就回來。</li>
+        <li><b>模型與工作流</b>：
+          <ul>
+            <li><b>外部模型資料夾</b>：電腦裡別的地方已經有模型（別的 ComfyUI、A1111／Forge），把資料夾路徑貼進來就能原地使用，不搬也不複製。選「自動判斷分類」時，整個 ComfyUI 或 A1111 資料夾會自動拆成 LoRA、VAE、Checkpoint…各一筆。不知道放在哪？按「掃描這台電腦已有的模型」，勾選要用的。改完要重開 ComfyUI 才讀得到（會出現「重開 ComfyUI」按鈕）。移除只是不再讀，資料夾和檔案都不會被刪。</li>
+            <li><b>加裝模型</b>：把模型檔拖進框裡（或按「選檔案」），生圖站看權重自動判斷是 LoRA、VAE、主模型還是其他，放進 ComfyUI 對的資料夾；看不出來的會請你選分類。也可以貼 Hugging Face、Civitai 的網址直接下載（Civitai 要登入的會用設定頁的 API key），或填電腦裡某個檔的路徑複製一份進來。</li>
+            <li><b>生圖工作流</b>：自己的 ComfyUI 工作流（SDXL、Pony、Illustrious、Flux、SD1.5 都行）匯進來，就能在生成頁用。詳細見本章最後「用自己的 ComfyUI 工作流」。</li>
+            <li><b>取代內建功能</b>：例如想讓 Anima 的局部重繪改用你自己調的流程：先在生成頁按「拿去 ComfyUI 改…」把內建的存下來，在 ComfyUI 改好，用「匯入工作流…」匯進來（模式選「自動判斷」就會認出是局部重繪），匯入完按「取代」；也可以到這裡把 Anima 那一列「局部重繪」的選單從「內建」換成那一組。之後照常選 Anima、按局部重繪，跑的就是你的版本；選回「內建」就恢復。</li>
+            <li><b>模型總覽</b>：展開就列出生圖站看得到的所有模型（哪些在外部資料夾），還有安裝精靈清單裡還缺哪些。</li>
+          </ul>
+        </li>
+        <li><b>軟糖小熊</b>：等圖時掉進觀景窗的小熊，可以用滑鼠抓起來甩。嫌吵可以在這裡關掉。</li>
+        <li><b>匯出設定檔</b>：設定、提示詞庫、LoRA 觸發詞與備註、生圖工作流組、影片工作流、改過的 AI 改寫規則，全部存成一個檔，換電腦或重灌後匯入就還原。不含 Civitai API key、代理設定和模型資料夾位置；工作流裡像金鑰的欄位會清空。匯入時同名但內容不同的舊檔，會先搬進資料夾裡的「待刪除\匯入前_日期時間」，不會直接蓋掉。</li>
+        <li><b>恢復原廠</b>不會真的刪檔，舊資料搬到資料夾裡的「待刪除」，下面的清單可以按「救回」。Civitai key 一定保留。</li>
+      </ul>
+      <h3>用自己的 ComfyUI 工作流</h3>
+      <p>到「設定 → 模型與工作流 → 生圖工作流」匯入。ComfyUI 存的工作流（.json）、「匯出（API）」的 JSON、ComfyUI 畫出來的 PNG／WebP（圖裡帶著工作流）都可以。一組工作流可以有好幾種模式：先匯入文生圖，再匯入一次、「放進哪一組」選「加進『那一組』」，補圖生圖、局部重繪、放大、多圖參考。生成頁的模型選單最下面會出現「⚙ 工作流組名字」，選它時只有這組有的模式能按。</p>
+      <ul class="tips">
+        <li><b>生圖站自己會找</b>：正面、負面提示詞、種子、寬高（文生圖）、Load Image、Save Image 大多自動認得。認錯或認不到時，在節點的標題或文字框裡寫標記告訴它：</li>
+        <li><code>{{prompt}}</code>、<code>{{negative}}</code>：正面、負面提示詞放這裡。<code>{{image}}</code>：輸入圖（圖生圖、局部重繪、放大）。<code>{{mask}}</code>：遮罩（局部重繪；也可以用同一張 Load Image 的遮罩輸出）。<code>{{ref1}}</code>、<code>{{ref2}}</code>…：多圖參考的第幾張。<code>{{model}}</code>：主模型的載入節點（LoRA 接在它後面）。<code>{{sampler}}</code>：要吃生成頁步數、CFG、取樣器的取樣節點。</li>
+        <li><b>LoRA</b>：生成頁掛的 LoRA 會自動接在主模型載入節點後面，只接同家族的（例如 SDXL 的工作流只接 SDXL 的 LoRA；看不出家族的都接）。</li>
+        <li><b>工作流參數</b>：生成頁會多一格「工作流參數」，列出這個工作流的步數、CFG、取樣器、模型檔…可以直接改，改的值會記住；按「還原工作流原本的值」就回來。紅字是這台電腦沒有的檔案或節點。勾「用生成頁的步數、CFG、取樣器」就改用生成頁那幾個旋鈕。</li>
+        <li><b>模式選「自動判斷」</b>：生圖站匯出的檔自己認得；其他的檔看節點猜，例如 Load Image 接到 VAE Encode 當圖生圖、有 Set Latent Noise Mask 這類節點當局部重繪，猜不出來當文生圖。猜的結果會寫在匯入結果裡，不對就移除那個模式、選對再匯入一次。</li>
+        <li><b>找不到提示詞、輸入圖這些地方</b>：匯入失敗的訊息底下會列出工作流裡的節點，直接選「哪一格是正面提示詞」「哪一個 Load Image 放輸入圖」，按「照這樣匯入」就好，不用回 ComfyUI 改標記。</li>
+        <li><b>缺節點</b>：工作流用到你的 ComfyUI 沒裝的自訂節點、而且接在出圖的路上時，會告訴你缺哪幾個。用 ComfyUI Manager 裝好、重開 ComfyUI 再匯入。旁邊沒接到存圖或預覽的缺節點會自動拿掉，只提醒一聲。</li>
+        <li><b>模型檔名對不上</b>：別人的工作流寫 <code>SDXL/xxx.safetensors</code>、你的是 <code>SDXL\xxx.safetensors</code>，或你把模型放在子資料夾裡，生圖站會自動換成你那一個；真的沒有的檔，到「工作流參數」把標紅的欄位換掉。</li>
+        <li><b>匯出</b>：每一組都可以按「匯出」存成檔分享給別人，對方直接匯入就能用（標記都在裡面）。</li>
+      </ul>
+    </div>
+    <div class="stage-w" id="s-settings"></div>
+  </section>
+
+  <section class="ch" id="keys" style="grid-template-columns:1fr">
+    <div class="txt">
+      <div class="ch-no">17</div>
+      <h2>快捷鍵總表</h2>
+      <p>在輸入框裡打字的時候，單一字母的快捷鍵不會作用，放心打字。</p>
+      <div class="keys">
+        <div class="kgrp"><h4>到處都能用</h4><dl>
+          <dt><kbd>?</kbd></dt><dd>打開說明</dd>
+          <dt><kbd>Alt</kbd><kbd>1</kbd>～<kbd>7</kbd></dt><dd>生成、圖庫、LoRA、下載、導演、漫畫、助手（跟按鍵上的編號一樣）</dd>
+          <dt><kbd>Alt</kbd><kbd>0</kbd></dt><dd>設定</dd>
+          <dt><kbd>Q</kbd>／<kbd>Alt</kbd><kbd>9</kbd></dt><dd>開關任務面板</dd>
+          <dt><kbd>Esc</kbd></dt><dd>關掉最上面的視窗</dd></dl></div>
+        <div class="kgrp"><h4>生成</h4><dl>
+          <dt><kbd>Ctrl</kbd><kbd>Enter</kbd></dt><dd>生成（在 AI 改寫想法框裡＝改寫）</dd>
+          <dt><kbd>Ctrl</kbd><kbd>V</kbd></dt><dd>貼上圖片，自動切成圖生圖（多圖參考時＝加一張參考圖）</dd>
+          <dt><kbd>Ctrl</kbd><kbd>↑</kbd><kbd>↓</kbd></dt><dd>游標所在 tag 權重 ±0.05</dd>
+          <dt><kbd>↑</kbd><kbd>↓</kbd> <kbd>Enter</kbd></dt><dd>選 tag 建議</dd>
+          <dt><kbd>PgUp</kbd><kbd>PgDn</kbd></dt><dd>旋鈕一次轉 3 格</dd></dl></div>
+        <div class="kgrp"><h4>圖庫</h4><dl>
+          <dt><kbd>/</kbd></dt><dd>跳到搜尋</dd>
+          <dt><kbd>←</kbd><kbd>→</kbd></dt><dd>上一頁、下一頁</dd>
+          <dt><kbd>Ctrl</kbd>＋點圖</dt><dd>多選</dd>
+          <dt><kbd>Shift</kbd>＋點圖</dt><dd>選一整段</dd>
+          <dt><kbd>Ctrl</kbd><kbd>A</kbd></dt><dd>全選</dd>
+          <dt><kbd>Delete</kbd></dt><dd>移到回收區</dd></dl></div>
+        <div class="kgrp"><h4>看大圖</h4><dl>
+          <dt><kbd>←</kbd><kbd>→</kbd></dt><dd>上一張、下一張</dd>
+          <dt><kbd>F</kbd></dt><dd>收藏</dd>
+          <dt><kbd>C</kbd></dt><dd>複製提示詞</dd>
+          <dt><kbd>R</kbd></dt><dd>重用參數</dd>
+          <dt><kbd>Delete</kbd></dt><dd>移到回收區</dd></dl></div>
+        <div class="kgrp"><h4>局部重繪遮罩</h4><dl>
+          <dt>滾輪、<kbd>[</kbd><kbd>]</kbd></dt><dd>筆刷大小</dd>
+          <dt><kbd>Ctrl</kbd><kbd>Z</kbd></dt><dd>復原</dd></dl></div>
+        <div class="kgrp"><h4>版面框（先點一下選取框）</h4><dl>
+          <dt><kbd>Delete</kbd></dt><dd>刪掉選取的框</dd>
+          <dt><kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd></dt><dd>挪一點；按住 <kbd>Shift</kbd> 挪多一點</dd>
+          <dt><kbd>Esc</kbd></dt><dd>取消選取；沒有選取時＝關掉畫框視窗</dd></dl></div>
+        <div class="kgrp"><h4>塗鴉畫布</h4><dl>
+          <dt><kbd>Ctrl</kbd><kbd>Z</kbd></dt><dd>復原</dd></dl></div>
+      </div>
+      <h3>各模型的預設值</h3>
+      <div class="tbl-w"><table>
+        <thead><tr><th>模型</th><th>步數</th><th>CFG</th><th>備註</th></tr></thead>
+        <tbody>
+          <tr><td>Anima Turbo（預設）</td><td class="num">8</td><td class="num">1</td><td>可以改；CFG 1 時負面提示詞沒作用</td></tr>
+          <tr><td>Anima ＋官方 Turbo LoRA</td><td class="num">10</td><td class="num">1</td><td>其他加速 LoRA 是 12 步</td></tr>
+          <tr><td>Anima 不加速（aesthetic、base）</td><td class="num">30</td><td class="num">4</td><td>品質優先</td></tr>
+          <tr><td>官方 Qwen 2.1 Turbo</td><td class="num">8</td><td class="num">1</td><td>步數鎖定；負面提示詞無效</td></tr>
+          <tr><td>Noct Q Turbo</td><td class="num">6</td><td class="num">1</td><td>步數鎖定</td></tr>
+          <tr><td>Qwen 2.1（Noct Q Anime 等）</td><td class="num">25</td><td class="num">3</td><td>負面提示詞有效</td></tr>
+          <tr><td>MOSS-Image</td><td class="num">25</td><td class="num">3</td><td>euler＋sgm_uniform；官方 50 步，25 步看不出差別</td></tr>
+          <tr><td>MOSS-Image＋快速</td><td class="num">10</td><td class="num">3</td><td>加速 LoRA 0.35</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section class="ch" id="faq" style="grid-template-columns:1fr">
+    <div class="txt">
+      <div class="ch-no">18</div>
+      <h2>疑難排解</h2>
+      <div class="tbl-w"><table>
+        <thead><tr><th>狀況</th><th>先試這個</th></tr></thead>
+        <tbody>
+          <tr><td>狀態列 ComfyUI 的燈是紅的</td><td>ComfyUI 沒開或當掉了。點狀態列的「顯存」那一格，如果 ComfyUI 是開到一半當掉，這裡會寫原因（少了某個 Python 套件、顯示卡驅動太舊、連接埠被占用、記憶體不夠…）和怎麼辦。照著處理後，把生圖站整個關掉（選「結束程式」）再打開，它會自己把 ComfyUI 帶起來。</td></tr>
+          <tr><td>下載模型一直失敗、說連不到 huggingface.co</td><td>在中國大陸要開梯子。到「設定 → 網路」按「測試連線」看哪幾個網站連不到、原因是什麼；梯子讀不到就選「手動」填代理位址。Hugging Face 連不上時會自動改從鏡像 hf-mirror.com 下載。</td></tr>
+          <tr><td>A 卡、Intel 顯示卡：ComfyUI 一開就關掉</td><td>這兩種都是實驗性支援。看狀態列「顯存」那格寫的原因：說「AMD 顯示卡用不起來」的話，先到 AMD 官網把 Adrenalin 驅動更新到最新；錯誤訊息有 <code>invalid device function</code> 的話，到「設定 → 安裝與修復…」第二頁看「A 卡架構」選得對不對，選好再按一次安裝。說「Intel 顯示卡用不起來」的話，更新 Intel Arc 驅動。說「這份 ComfyUI 的 PyTorch 是 NVIDIA 版」的話，到「安裝與修復」第二頁把「ComfyUI 版本」選成 AMD 或 Intel，換一個新位置重新下載。ZLUDA 版開不起來，多半是 HIP SDK 跟 ZLUDA 版本對不上，或 <code>nccl.dll</code> 被防毒刪掉。都不行的話可以改用「雲端顯卡」。</td></tr>
+          <tr><td>安裝時說「連不到 AMD 的套件庫」</td><td>A 卡換 PyTorch 那一步要從 <code>stable.repo.amd.com</code> 下載約 1.1GB。檢查網路和梯子（「設定 → 網路」可以測試連線），再按一次「開始安裝」，已經下載完的檔不會重抓。換不成功的話，ComfyUI 照樣能開，只是用不到這張卡。</td></tr>
+          <tr><td>N 卡的 ComfyUI 一開就關掉，說這張卡比較舊（GTX 10 系列以前）</td><td>新版 PyTorch 不支援 GTX 10 系列以前的卡。到「設定 → 安裝與修復…」第二頁把「ComfyUI 版本」選成「NVIDIA 舊卡」，換一個新位置重新安裝，會下載官方給舊卡的版本。</td></tr>
+          <tr><td>H3 影片說「雲端這台沒裝 H3 影片包」</td><td>雲端開機時沒勾 H3。按「關機刪除」，到「雲端設定…」勾「H3 影片」（進階玩法再勾「H3 進階玩法」），再開一次。</td></tr>
+          <tr><td>H3 影片說顯存不夠</td><td>畫質改「標準」或「快」、秒數縮短，或換 RTX PRO 6000 96GB 的卡。</td></tr>
+          <tr><td>匯入的工作流說少了節點</td><td>你的 ComfyUI 沒裝那個工作流要的自訂節點。用 ComfyUI Manager 安裝訊息裡列的節點，裝好重開 ComfyUI。</td></tr>
+          <tr><td>畫到一半說顯存不夠、整個卡住</td><td>點狀態列的「顯存」那一格，按「釋放顯存」。尺寸調小、張數改 1，或關掉其他吃顯卡的程式（遊戲、瀏覽器影片）。</td></tr>
+          <tr><td>模型選單是空的、或少了某個模型</td><td>模型還沒下載。到「設定」→「安裝與修復…」補下載；自己放進 <code>ComfyUI\models</code> 的檔案，重開生圖站就會出現。</td></tr>
+          <tr><td>LoRA 被劃掉、好像沒效果</td><td>LoRA 的家族跟目前的模型不一樣（例如 Anima 的 LoRA 掛在 MOSS 上），換回對應的模型就好。</td></tr>
+          <tr><td>四視圖、差分按了說找不到模型</td><td>這兩個要 Qwen 2.1 官方 Turbo。安裝精靈勾「Qwen 2.1 編輯」（基本版就有），或到 Hugging Face 補 <code>qwen_image_2.1_turbo</code>。</td></tr>
+          <tr><td>修臉說「缺少偵測模型」、去背說「缺少去背模型」</td><td>到「設定」→「安裝與修復…」勾「修臉／修手」「一鍵去背」補下載。檔名和要放的資料夾在第 07 章最後。</td></tr>
+          <tr><td>修臉說「這張圖找不到臉」</td><td>臉太小、太側面或被擋住時找不到。先放大圖再修，或改用「局部重繪」自己塗遮罩。</td></tr>
+          <tr><td>提示詞框下面沒有「版面框」</td><td>版面框只有 MOSS-Image 的文生圖、圖生圖會出現。換成 MOSS 模型、模式切回文生圖或圖生圖就看得到。</td></tr>
+          <tr><td>按「動起來」說找不到模型、影片做不出來</td><td>影片模型要自己下載，三個檔的檔名和要放的資料夾在第 01 章。記憶體 16GB 的電腦，長度選 3 秒、解析度選 480p 比較不會失敗。</td></tr>
+          <tr><td>剪輯台開不起來、說連接埠 8194 被占用</td><td>電腦上有別的程式用了 8194。先把那個程式關掉，再回剪輯台分頁（會自動重開）。下載剪輯工具失敗的話，到「設定」→「安裝與修復…」再按一次開始安裝，已經下載的部分會接著下載。</td></tr>
+          <tr><td>拆幀台說找不到 ffmpeg</td><td>到「導演」→「剪輯台」按「下載剪輯工具」或「下載 ffmpeg」，裝好就能拆。</td></tr>
+          <tr><td>AI 改寫一直轉圈、很慢</td><td>第一次要載入改寫模型，大約 4～15 秒。到「設定」確認執行方式是 GPU；選 CPU 會非常慢。</td></tr>
+          <tr><td>Civitai 下載顯示「要登入」</td><td>還沒填 Civitai API key，或填的那組被刪了。申請步驟在第 01 章「申請 Civitai API key」，貼到「設定」頁最上面的欄位。</td></tr>
+          <tr><td>雲端（自己的主機）測試說 SSH 連不上</td><td>依序檢查：主機、埠、帳號有沒有照網站上的 SSH 指令填（AutoDL、Vast.ai 的埠通常不是 22）；生圖站的公鑰有沒有加到那台機器；機器是不是已經開機。電腦要有 Windows 內建的 OpenSSH 用戶端（設定 → 選用功能）。</td></tr>
+          <tr><td>雲端安裝失敗：驅動太舊、顯存不夠、硬碟不夠</td><td>訊息會直接寫是哪一項。換一台 48GB 等級的卡、選比較新的 CUDA 映像檔、硬碟開 60GB 以上，再按一次「連線並安裝」，已經下載的部分會沿用。</td></tr>
+          <tr><td>雲端網址模式說缺少 MOSS-Image 的檔案</td><td>遠端的 ComfyUI 要更新到最新版，並放好那三個檔（檔名和資料夾在第 12 章「接法三」），再按一次測試。</td></tr>
+          <tr><td>雲端用完忘了關</td><td>RunPod：閒置超過設定的分鐘數會自動刪機。自己的主機：生圖站只能停掉上面的程式，要到那家網站關機或刪除才會停止計費。</td></tr>
+          <tr><td>按關閉之後程式還在</td><td>它縮到右下角的系統列了。點系統列的圖示叫回來；要整個關掉，在關閉視窗選「結束程式」，或在系統列圖示按右鍵選「結束」；「設定」也可以改成按關閉就結束（還是會再確認一次，免得不小心關掉）。</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note"><b>還是不行：</b>按右上角的「?」，最下面有版本號和 ComfyUI 版本，連同狀態列的訊息一起截圖給開發者。</p>
+    </div>
+  </section>
+
+  <footer class="foot"><span>繪匣 PaintDeck AW-2000・操作手冊（對應 1.1 版）</span><span>動畫裡的圖是程式畫的示意圖，不是真的生成結果。</span></footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const STOP = Symbol("stop");
+
+/* ---------- 主題開關 ---------- */
+const rocker = document.getElementById("rocker");
+function setTheme(t) {
+  if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t);
+  rocker.style.setProperty("--pos", { light: 0, auto: 1, dark: 2 }[t]);
+  for (const b of rocker.querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.t === t));
+  try { localStorage.setItem("aw_manual_theme", t); } catch (e) { /* 不能存就算了 */ }
+}
+rocker.addEventListener("click", (e) => { const b = e.target.closest("button[data-t]"); if (b) setTheme(b.dataset.t); });
+try { const t = localStorage.getItem("aw_manual_theme"); if (t) setTheme(t); } catch (e) { /* 沒有儲存空間 */ }
+
+/* ---------- 示意圖：用 canvas 畫幾張小風景 ---------- */
+function art(kind, w = 240, h = 360) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d");
+  const P = {
+    dusk: ["#f4b26a", "#e46a4c", "#3a2a4a", "#ffe7a8", "#2a1f2e"],
+    night: ["#0d1b33", "#24325a", "#0a0f1c", "#f4f0d0", "#05070d"],
+    dawn: ["#bfe0f0", "#f6c9b4", "#7a8fb0", "#fff6dc", "#3d4a63"],
+    sea: ["#7fd0e0", "#2f8fb0", "#0f3a52", "#fff8e0", "#123346"],
+    forest: ["#c9e3b0", "#6fa070", "#20402c", "#fffbe0", "#14281c"],
+    snow: ["#dfe8f2", "#b7c6d8", "#6c7c92", "#ffffff", "#3a4658"],
+    water: ["#f5ead6", "#e6c3a8", "#9ab0c8", "#f9e4b0", "#5b6c84"],
+  }[kind] || ["#ccc", "#999", "#666", "#fff", "#333"];
+  const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, P[0]); g.addColorStop(.55, P[1]); g.addColorStop(1, P[2]); x.fillStyle = g; x.fillRect(0, 0, w, h);
+  let seed = kind.length * 97; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  if (kind === "night") { x.fillStyle = "#fff"; for (let i = 0; i < 60; i++) x.fillRect(rnd() * w, rnd() * h * .5, 1.3, 1.3); }
+  x.fillStyle = P[3]; x.beginPath(); x.arc(w * .62, h * .42, w * .14, 0, 7); x.fill();
+  // 遠方的房子
+  x.fillStyle = P[4]; x.globalAlpha = .55;
+  for (let i = 0, px = 0; px < w; i++) { const bw = 18 + rnd() * 26, bh = 40 + rnd() * 90; x.fillRect(px, h * .66 - bh, bw, bh + h); px += bw + 2; }
+  x.globalAlpha = 1;
+  // 近景屋頂
+  x.fillStyle = P[4]; x.beginPath(); x.moveTo(0, h * .74); x.lineTo(w, h * .7); x.lineTo(w, h); x.lineTo(0, h); x.fill();
+  if (kind === "night" || kind === "dusk") { x.fillStyle = "#ffd27a"; for (let i = 0; i < 26; i++) x.fillRect(rnd() * w, h * .45 + rnd() * h * .2, 2, 3); }
+  // 人物剪影（坐在屋頂邊）
+  x.fillStyle = P[4]; const cx = w * .34, cy = h * .69;
+  x.beginPath(); x.arc(cx, cy - 46, 11, 0, 7); x.fill();
+  x.beginPath(); x.moveTo(cx - 12, cy - 34); x.quadraticCurveTo(cx - 20, cy - 4, cx - 16, cy + 4); x.lineTo(cx + 18, cy + 4); x.quadraticCurveTo(cx + 16, cy - 20, cx + 10, cy - 34); x.fill();
+  x.beginPath(); x.moveTo(cx - 10, cy - 50); x.quadraticCurveTo(cx - 26, cy - 20, cx - 24, cy - 12); x.lineTo(cx - 14, cy - 30); x.fill(); // 長髮被風吹
+  return c.toDataURL("image/jpeg", .85);
+}
+const ART = {}; for (const k of ["dusk", "night", "dawn", "sea", "forest", "snow", "water"]) ART[k] = art(k);
+
+/* ---------- 迷你機台的共用骨架 ---------- */
+const CUR = '<div class="cur"><svg viewBox="0 0 20 22"><path d="M2 1 L2 17 L6.5 13 L9.5 20 L12.5 18.7 L9.6 12 L15.5 12 Z" fill="#ffb547" stroke="#1b1a17" stroke-width="1.4" stroke-linejoin="round"/></svg></div><div class="keycap"></div><div class="cap-bub"></div>';
+const TOP = '<div class="m-top"><div class="stripes"><i></i><i></i><i></i><i></i></div><b>繪匣 PaintDeck</b><span class="mn">AW-2000</span><span style="flex:1"></span><span class="m-prog"><i data-k="prog"></i></span></div>';
+const STATUS = '<div class="m-status" data-k="status"><span class="dot"></span>COMFYUI<span>顯存 <span class="a" data-k="vram">2.1/8G</span></span><span data-k="pest">AI 改寫 待機</span><span style="margin-left:auto">V1.1</span></div>';
+const RAIL = '<div class="m-pan m-rail" data-k="rail"><span class="on" data-k="r-gen">生成</span><span data-k="r-gal">圖庫</span><span data-k="r-lora">LoRA</span><span data-k="r-dl">下載</span><span data-k="r-dir">導演</span><span data-k="r-cm">漫畫</span><span data-k="r-ag">助手</span><span class="sp"></span><span data-k="r-q">任務</span><span data-k="r-set">設定</span></div>';
+const MACHINE = TOP + `<div class="m-body">${RAIL}
+  <div class="m-pan m-ctrl" data-k="ctrl">
+    <div class="m-piano" data-k="piano"><span class="on">文生圖</span><span>圖生圖</span><span>局部</span><span>擴圖</span><span>多圖</span><span>放大</span><span>四視圖</span></div>
+    <div class="m-lbl">提示詞<span style="letter-spacing:0">CTRL+↑↓ 權重</span></div>
+    <div class="m-scr" data-k="prompt"></div>
+    <div class="m-lbl">尺寸</div>
+    <div class="m-chips"><span class="chipm" data-k="c1">直 1024×1536</span><span class="chipm">方 1024×1024</span><span class="chipm">橫 1536×1024</span></div>
+    <div class="m-knobs" data-k="knobs"><div class="knobm"><i class="dialm" style="--r:-60deg"></i>步數<span class="vfdm">8</span></div><div class="knobm"><i class="dialm" style="--r:-110deg"></i>CFG<span class="vfdm">1</span></div><div class="knobm"><i class="dialm" style="--r:-20deg"></i>張數<span class="vfdm">4</span></div></div>
+    <div class="m-big" data-k="go">生成<small>CTRL + ENTER</small></div>
+  </div>
+  <div class="m-view" data-k="view">
+    <div class="m-osd"><span data-k="osdl">● READY</span><span class="a" data-k="osdm"></span><span data-k="osdr" style="margin-left:auto"></span></div>
+    <div class="m-win" data-k="win"><div class="w"><div class="m-empty" data-k="empty">按下生成，圖會出現在這裡</div><img data-k="img" alt="" hidden></div></div>
+    <div class="m-acts" data-k="acts" hidden><span>重用參數</span><span>圖生圖</span><span>局部重繪</span><span>放大</span><span data-k="fav">☆ 收藏</span><span>下載</span></div>
+  </div>
+  <div class="m-pan m-mag" data-k="mag"><div class="m-cas" data-k="cas"><div class="wn"><i class="reel"></i><i class="reel"></i></div></div><span class="vfdm" data-k="pct" style="font-size:12px">--%</span><div class="m-slides" data-k="slides"></div></div>
+</div>` + STATUS;
+
+/* ---------- 場景引擎 ---------- */
+// 每個場景＝一份初始畫面＋一串步驟。步驟是 async 函式，收到 c（工具）：
+//   c.k(name) 找 data-k 元件、c.wait(ms)、c.to(el) 游標移過去、c.press(el)、c.type(el, text)、c.keys("Ctrl","Enter")、c.say(text, el)
+// 跳到第 n 步＝重設畫面後把前面的步驟用「快轉」跑完（c.fast 為 true：不等待、不打字動畫）。
+class Scene {
+  constructor(id, html, steps) {
+    this.wrap = document.getElementById(id); this.steps = steps; this.i = -1; this.token = 0; this.playing = false; this.seen = false;
+    this.wrap.innerHTML = `<div class="stage"><div class="fit"><div class="si"></div></div></div>
+      <div class="ctl"><button type="button" data-a="prev" aria-label="上一步">◀ 上一步</button><button type="button" class="play" data-a="play">▶ 播放</button><button type="button" data-a="next" aria-label="下一步">下一步 ▶</button><span class="pos" aria-live="polite">00/00</span></div>`;
+    this.fit = this.wrap.querySelector(".fit"); this.si = this.wrap.querySelector(".si"); this.html = html;
+    this.list = document.querySelector(`.steps[data-for="${id}"]`);
+    this.list.innerHTML = steps.map((s, n) => `<li><button type="button" data-n="${n}">${s.t}</button></li>`).join("");
+    this.list.addEventListener("click", (e) => { const b = e.target.closest("button[data-n]"); if (b) { this.stop(); this.goto(+b.dataset.n); } });
+    this.wrap.querySelector(".ctl").addEventListener("click", (e) => {
+      const a = e.target.closest("button")?.dataset.a; if (!a) return;
+      if (a === "play") return this.playing ? this.stop() : this.play();
+      this.stop(); this.goto(Math.max(0, Math.min(this.steps.length - 1, this.i + (a === "next" ? 1 : -1))));
+    });
+    new ResizeObserver(() => this.scale()).observe(this.fit); this.scale();
+    this.goto(steps.length - 1);  // 靜止時停在最後一格：完整的畫面
+  }
+  scale() { const k = this.fit.clientWidth / 560; this.si.style.setProperty("--k", k); this.fit.style.height = 360 * k + "px"; }
+  reset() {
+    this.si.innerHTML = this.html + CUR;
+    for (const im of this.si.querySelectorAll("img[data-art]")) im.src = ART[im.dataset.art];
+    for (const el of this.si.querySelectorAll("[data-bg]")) el.style.backgroundImage = `url(${ART[el.dataset.bg]})`;
+  }
+  ctx(fast) {
+    const my = this.token, si = this.si, self = this;
+    const alive = () => my === self.token;
+    const k = (n) => (typeof n === "string" ? si.querySelector(`[data-k="${n}"]`) : n);
+    const wait = (ms) => (fast ? (alive() ? Promise.resolve() : Promise.reject(STOP)) : new Promise((res, rej) => setTimeout(() => (alive() ? res() : rej(STOP)), ms)));
+    const cur = si.querySelector(".cur");
+    const pos = (el) => { const r = el.getBoundingClientRect(), b = si.getBoundingClientRect(), s = self.fit.clientWidth / 560; return [(r.left - b.left + r.width * .55) / s, (r.top - b.top + r.height * .55) / s]; };
+    const c = {
+      fast, k, wait,
+      all: (sel) => [...si.querySelectorAll(sel)],
+      async to(el) { el = k(el); const [x, y] = pos(el); cur.style.left = x + "px"; cur.style.top = y + "px"; await wait(620); },
+      async press(el, hold = 180) { el = k(el); await c.to(el); el.classList.add("pr"); cur.classList.remove("dn"); void cur.offsetWidth; cur.classList.add("dn"); await wait(hold); el.classList.remove("pr"); await wait(120); },
+      async type(el, text, cps = 34) {
+        el = k(el); if (fast) { el.textContent = text; return; }
+        el.classList.add("caret"); el.textContent = "";
+        for (const ch of text) { el.textContent += ch; await wait(1000 / cps); }
+        el.classList.remove("caret");
+      },
+      async keys(...ks) { const box = si.querySelector(".keycap"); box.innerHTML = ks.map((x) => `<kbd>${x}</kbd>`).join(""); await wait(900); box.innerHTML = ""; },
+      say(text, el, dx = 8, dy = 8) {
+        const b = si.querySelector(".cap-bub"); b.textContent = text || ""; if (!text) return;
+        const [x, y] = el ? pos(k(el)) : [200, 140]; b.style.left = Math.min(x + dx, 340) + "px"; b.style.top = Math.min(y + dy, 300) + "px";
+      },
+      hl(el) { si.querySelectorAll(".hl").forEach((e) => e.classList.remove("hl")); if (el) k(el).classList.add("hl"); },
+    };
+    return c;
+  }
+  mark(n) {
+    this.list.querySelectorAll("button").forEach((b, j) => { b.classList.toggle("now", j === n); b.classList.toggle("done", j < n); });
+    this.wrap.querySelector(".pos").textContent = `${String(n + 1).padStart(2, "0")}/${String(this.steps.length).padStart(2, "0")}`;
+  }
+  async goto(n) {
+    const my = ++this.token; this.reset(); this.si.classList.add("fast");
+    const c = this.ctx(true);
+    try { for (let j = 0; j <= n; j++) await this.steps[j].a(c); } catch (e) { if (e !== STOP) console.error(e); }
+    if (my !== this.token) return;
+    this.i = n; this.mark(n);
+    requestAnimationFrame(() => requestAnimationFrame(() => { if (my === this.token) this.si.classList.remove("fast"); }));
+  }
+  async play() {
+    if (this.playing) return;
+    this.playing = true; this.wrap.querySelector(".play").textContent = "❚❚ 暫停";
+    if (this.i >= this.steps.length - 1) { this.token++; this.reset(); this.i = -1; this.mark(-1); }
+    const my = ++this.token, c = this.ctx(false);
+    try {
+      while (this.playing && my === this.token) {
+        if (this.i >= this.steps.length - 1) { await c.wait(2600); this.token++; this.stop(); this.play(); return; }
+        const n = this.i + 1; this.mark(n);
+        await this.steps[n].a(c); this.i = n;
+        await c.wait(this.steps[n].hold ?? 1100);
+      }
+    } catch (e) { if (e !== STOP) console.error(e); }
+  }
+  stop() {
+    if (!this.playing) return;
+    this.playing = false; this.wrap.querySelector(".play").textContent = "▶ 播放";
+    const n = Math.max(this.i, 0); this.token++; this.goto(n);
+  }
+}
+
+/* ---------- 各章場景 ---------- */
+const S = {};
+const RENDER = async (c, n = 8) => {
+  c.k("go").classList.add("busy"); c.k("cas").classList.add("play");
+  const top = c.k("prog").closest(".m-top").parentElement; top.classList.add("busy-stripes");
+  const l = c.k("osdl"); l.textContent = "● RENDER"; l.className = "r";
+  for (let v = 1; v <= n; v++) {
+    const p = Math.round((100 * v) / n); c.k("prog").style.width = p + "%"; c.k("pct").textContent = p + "%"; c.k("osdm").textContent = `STEP ${v}/${n}`;
+    await c.wait(260);
+  }
+  c.k("go").classList.remove("busy"); c.k("cas").classList.remove("play"); top.classList.remove("busy-stripes");
+  c.k("prog").style.width = "0"; c.k("pct").textContent = "--%"; l.textContent = "● READY"; l.className = "";
+};
+const SHOW = (c, kind) => {
+  const img = c.k("img"); img.src = ART[kind]; img.hidden = false; c.k("empty").hidden = true;
+  const w = c.k("win"); w.classList.remove("swap"); void w.offsetWidth; w.classList.add("swap");
+};
+
+S.first = new Scene("s-first", MACHINE, [
+  { t: "在提示詞框寫下想畫的東西。Anima 吃英文 tag，用逗號隔開。", a: async (c) => { await c.to("prompt"); await c.type("prompt", "masterpiece, best quality, score_7, safe, 1girl, white dress, rooftop, sunset, wind"); } },
+  { t: "挑一個尺寸。直的 1024×1536 適合人物。", a: async (c) => { await c.press("c1"); c.k("c1").classList.add("on"); } },
+  { t: "旋鈕先不用動。預設模型 Anima Turbo：8 步、CFG 1、一次 4 張。", a: async (c) => { await c.to("knobs"); c.say("8 步・CFG 1・4 張", "knobs", -60, 34); await c.wait(1300); c.say(""); } },
+  { t: "按下大大的「生成」，或按 Ctrl＋Enter。頂端色條會跑、卡帶會轉。", hold: 300, a: async (c) => { await c.press("go", 260); if (!c.fast) c.keys("Ctrl", "Enter"); await RENDER(c); } },
+  { t: "快門一眨，圖從過曝慢慢顯影出來。右邊幻燈片匣會掉進這一批的 4 張。", hold: 1800, a: async (c) => {
+    SHOW(c, "dusk"); c.k("osdm").textContent = "文生圖 1024×1536・9 秒"; c.k("osdr").textContent = "SEED 4815162342";
+    c.k("slides").innerHTML = ["dusk", "dawn", "night", "water"].map((a) => `<img src="${ART[a]}" alt="">`).join(""); await c.wait(1500); } },
+  { t: "觀景窗下面的按鈕：收藏、下載，或直接拿這張去圖生圖、局部重繪、放大。", a: async (c) => { c.k("acts").hidden = false; await c.press("fav"); c.k("fav").textContent = "★ 已收藏"; } },
+]);
+
+S.tour = new Scene("s-tour", MACHINE.replace('data-k="prompt"></div>', 'data-k="prompt">masterpiece, best quality, score_7, safe, 1girl, sunset</div>').replace('<img data-k="img" alt="" hidden>', '<img data-k="img" alt="" data-art="dusk">').replace('<div class="m-empty" data-k="empty">按下生成，圖會出現在這裡</div>', ''), [
+  { t: "左邊一排是功能鍵：生成、圖庫、LoRA、下載、導演、漫畫、助手，最下面是任務和設定。亮燈的是現在這一頁。", a: async (c) => { c.hl("rail"); c.say("Alt＋按鍵上的編號也能切換", "rail", 30, 0); await c.wait(1600); } },
+  { t: "控制台：選模式、寫提示詞、挑尺寸、調旋鈕，最下面是生成鍵。", a: async (c) => { c.hl("ctrl"); c.say("從上往下填，最後按生成", "ctrl", 60, -60); await c.wait(1600); } },
+  { t: "觀景窗：上面一排綠字顯示狀態和種子，畫好的圖出現在中間。", a: async (c) => { c.hl("view"); c.say("點圖可以放大看", "view", -40, 40); await c.wait(1600); } },
+  { t: "幻燈片匣：這次畫的每一張都排在這裡（剛打開時先放最近畫的 6 張），點一下就換到觀景窗。", a: async (c) => { c.hl("mag"); c.say("最新的在最上面", "mag", -170, 10); await c.wait(1600); } },
+  { t: "狀態列：ComfyUI 連線燈、顯存、AI 改寫的狀態。燈變紅就是斷線了。", a: async (c) => { c.hl("status"); c.say("點顯存那一格可以釋放顯存", "status", -150, -50); await c.wait(1600); } },
+  { t: "看完了。之後每一章都用這台機器示範。", a: async (c) => { c.hl(null); c.say(""); } },
+]);
+
+const PROMPT_HTML = TOP + `<div class="full">
+  <div class="row"><div class="m-lbl" style="flex:1">提示詞</div><span class="badge-s" data-k="model">ANIMA TURBO</span></div>
+  <div class="m-scr" data-k="p" style="min-height:118px;font-size:10.5px"></div>
+  <div class="row" style="justify-content:space-between"><span class="st" data-k="cnt">約 0 token・0 段</span><span class="st" data-k="warn"></span></div>
+  <div class="row" style="flex-wrap:wrap;gap:8px;font-size:9px">
+    <span><mark class="w-up" style="padding:0 4px">權重 ≥1</mark></span><span><mark class="w-rand" style="padding:0 4px">{隨機}</mark></span><span><mark class="w-artist" style="padding:0 4px">@畫師</mark></span><span><mark class="w-img" style="padding:0 4px">&lt;image1&gt;</mark></span><span><mark class="w-bad" style="padding:0 4px">Qwen／MOSS 不吃的權重</mark></span>
+  </div>
+</div>` + STATUS;
+const setP = (c, html, n) => { c.k("p").innerHTML = html; c.k("cnt").textContent = `約 ${n} token・${(html.match(/,/g) || []).length + 1} 段`; };
+S.prompt = new Scene("s-prompt", PROMPT_HTML, [
+  { t: "先寫品質和評級，再寫人數。", a: async (c) => { await c.to("p"); await c.type("p", "masterpiece, best quality, score_7, safe, 1girl, "); c.k("cnt").textContent = "約 14 token・6 段"; } },
+  { t: "加一個畫師：名字前面一定要有 @。", a: async (c) => { const p = c.k("p"); if (!c.fast) { p.classList.add("caret"); for (const ch of "@kyomu, ") { p.textContent += ch; await c.wait(60); } p.classList.remove("caret"); }
+      setP(c, 'masterpiece, best quality, score_7, safe, 1girl, <mark class="w-artist">@kyomu</mark>, ', 18); } },
+  { t: "不知道英文怎麼寫？直接打中文「貓耳」，下面會列出對應的 tag。", a: async (c) => {
+      const p = c.k("p"); p.insertAdjacentHTML("beforeend", '<span data-k="zh">貓耳</span>');
+      p.insertAdjacentHTML("afterend", '<div class="ac" data-k="ac" style="left:150px;top:118px"><div class="sel"><b>cat ears</b><i>貓耳</i><small>412k</small></div><div><b>animal ears</b><i>獸耳</i><small>689k</small></div><div><b>cat ear headphones</b><i>貓耳耳機</i><small>3k</small></div></div>');
+      await c.wait(1600); } },
+  { t: "按 Enter 選第一個，中文就換成英文 tag。", a: async (c) => { if (!c.fast) await c.keys("Enter"); c.k("ac")?.remove();
+      setP(c, 'masterpiece, best quality, score_7, safe, 1girl, <mark class="w-artist">@kyomu</mark>, cat ears, red scarf, ', 24); } },
+  { t: "游標停在 red scarf 上，按兩下 Ctrl＋↑，權重變成 1.10，框裡變橘色。", a: async (c) => {
+      const base = 'masterpiece, best quality, score_7, safe, 1girl, <mark class="w-artist">@kyomu</mark>, cat ears, ';
+      if (!c.fast) { c.keys("Ctrl", "↑"); setP(c, base + '<mark class="w-up">(red scarf:1.05)</mark>, ', 26); await c.wait(700); c.keys("Ctrl", "↑"); await c.wait(300); }
+      setP(c, base + '<mark class="w-up">(red scarf:1.10)</mark>, ', 26); await c.wait(500); } },
+  { t: "{red|blue} dress：每張圖隨機挑一個顏色，一次畫 4 張就有兩種。", a: async (c) => {
+      c.k("p").insertAdjacentHTML("beforeend", '<mark class="w-rand">{red|blue}</mark> dress'); c.k("cnt").textContent = "約 30 token・10 段"; await c.wait(900); } },
+  { t: "換成 Qwen 2.1 或 MOSS-Image：要寫完整的句子。權重括號會變紅，提醒你它們看不懂。", hold: 2200, a: async (c) => {
+      c.k("model").textContent = "QWEN 2.1"; c.k("model").className = "badge-s run";
+      setP(c, 'An anime illustration of a young woman with cat ears sitting on a rooftop at sunset, a <mark class="w-bad">(red scarf:1.10)</mark> fluttering in the wind. Warm orange light falls from the left, and the city below glows with small windows.', 52);
+      c.k("warn").textContent = "Qwen 2.1／MOSS 不吃權重：(tag:1.2) 會被當成文字"; c.k("warn").style.color = "#c8412d"; } },
+]);
+
+const PE_HTML = TOP + `<div class="full">
+  <div class="pe">
+    <div class="row"><b style="font-size:10.5px">AI 改寫提示詞</b><span class="st">一句想法 → 完整提示詞，可以一直微調</span></div>
+    <div class="row" style="font-size:9px">改寫預設 <span class="chipm">自動（現在＝文生圖版）</span></div>
+    <div class="ta" data-k="idea" style="min-height:24px"></div>
+    <div class="row"><span class="mbtn go" data-k="run">改寫</span><span class="tog on"></span><span style="font-size:9px">中文對照</span><span class="tog"></span><span style="font-size:9px">深度思考</span><span class="st" data-k="st" style="margin-left:auto"></span></div>
+    <div class="row" style="justify-content:space-between"><span class="m-lbl">改寫結果（可以直接修改）</span><span class="st" data-k="ver"></span></div>
+    <div class="ta mono" data-k="out" style="min-height:70px"></div>
+    <div class="zh" data-k="zh" hidden></div>
+    <div class="row" style="flex-wrap:wrap"><span class="mbtn">更寫實</span><span class="mbtn" data-k="night">改夜景</span><span class="mbtn">鏡頭拉遠</span><span class="mbtn">加強光影</span><span class="mbtn">換衣服…</span><span style="flex:1"></span><span class="mbtn go" data-k="apply">套用到提示詞</span></div>
+  </div>
+  <div class="m-lbl">提示詞</div><div class="m-scr" data-k="prompt" style="min-height:30px;font-size:9px"></div>
+</div>` + STATUS;
+const OUT1 = "A realistic photograph of a young woman in a white dress standing on a city rooftop at dusk, turning back toward the camera with a soft smile. Her long dark hair is lifted by the wind. Warm orange sunlight comes from the left and leaves long shadows on the concrete.";
+S.pe = new Scene("s-pe", PE_HTML, [
+  { t: "在「想法」框用一句中文說你要什麼。", a: async (c) => { await c.to("idea"); await c.type("idea", "黃昏的屋頂上，一位穿白色洋裝的女性回頭微笑，長髮被風吹起", 22); } },
+  { t: "按「改寫」。第一次要載入改寫模型，狀態列會顯示執行中。", a: async (c) => { await c.press("run"); c.k("st").textContent = "改寫中…"; c.k("st").className = "st run"; c.k("pest").textContent = "AI 改寫 執行中"; c.k("pest").className = "a"; await c.wait(1200); } },
+  { t: "完整的英文提示詞一段一段寫出來，下面附中文對照。", hold: 1500, a: async (c) => {
+      await c.type("out", OUT1, 90); c.k("zh").hidden = false; c.k("zh").textContent = "黃昏的城市屋頂上，穿白洋裝的年輕女性回頭對鏡頭微笑，黑長髮被風吹起，橘色夕陽從左邊照過來。";
+      c.k("st").textContent = "完成：7 秒（含載入模型 4 秒）"; c.k("st").className = "st ok"; c.k("ver").textContent = "第 1／1 版"; c.k("pest").textContent = "AI 改寫 待命 120S"; c.k("pest").className = ""; } },
+  { t: "不滿意就按快速按鈕，例如「改夜景」。新的一版會標出改了哪裡。", hold: 1700, a: async (c) => {
+      await c.press("night"); c.k("st").textContent = "改寫中…"; c.k("st").className = "st run"; await c.wait(900);
+      c.k("out").innerHTML = "A realistic photograph of a young woman in a white dress standing on a city rooftop <ins>at night</ins>, turning back toward the camera with a soft smile. Her long dark hair is lifted by the wind. <ins>Cool moonlight and the warm glow of distant windows</ins> light her face.";
+      c.k("zh").textContent = "夜晚的城市屋頂上，穿白洋裝的女性回頭微笑，月光和遠處窗戶的暖光照在她臉上。";
+      c.k("st").textContent = "完成：3 秒"; c.k("st").className = "st ok"; c.k("ver").textContent = "‹ 第 2／2 版 ›"; } },
+  { t: "滿意了按「套用到提示詞」，再按生成就好。", a: async (c) => {
+      await c.press("apply"); c.k("prompt").textContent = "A realistic photograph of a young woman in a white dress standing on a city rooftop at night, turning back toward the camera…"; } },
+]);
+
+const MODES_HTML = TOP + `<div class="full">
+  <div class="m-piano" data-k="piano" style="grid-template-columns:repeat(7,1fr)"><span class="on" data-k="m0">文生圖</span><span data-k="m1">圖生圖</span><span data-k="m2">局部重繪</span><span data-k="m7">擴圖</span><span data-k="m3">多圖參考</span><span data-k="m4">放大</span><span data-k="m6">四視圖</span></div>
+  <div style="flex:1;position:relative" data-k="area">
+    <div data-k="p1" hidden class="row" style="gap:14px;align-items:flex-start">
+      <div class="refc" style="width:96px;animation:none"><img data-art="dawn" alt="" style="height:130px"><small>輸入圖</small></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:6px;padding-top:10px"><div class="row" style="justify-content:space-between"><b style="font-size:10px">重繪幅度</b><span class="vfdm" data-k="den">0.20</span></div><div class="slider" data-k="sl" style="--v:15%"><i></i></div>
+        <span class="st">數字越大，改得越多；越小越像原圖</span></div>
+      <div class="refc" style="width:96px;animation:none"><img data-k="o1" data-art="dawn" alt="" style="height:130px;transition:filter .8s"><small>結果</small></div>
+    </div>
+    <div data-k="p2" hidden class="row" style="gap:14px;align-items:flex-start">
+      <div style="position:relative;width:150px;height:225px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 4px var(--bezel)"><img data-k="o2" data-art="forest" alt="" style="width:100%;height:100%;object-fit:cover">
+        <svg viewBox="0 0 150 225" style="position:absolute;inset:0"><path class="mask-path" data-k="mask" d="M40 70 C70 50, 110 60, 110 85 S60 110, 50 95 S90 70, 100 100"/></svg></div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding-top:6px"><span class="mbtn" data-k="brush" style="align-self:flex-start">畫遮罩</span><span class="st">紅色的範圍會重畫，其他地方不動</span><span class="st">方式：LLLite 重繪（推薦）</span><span class="st">遮罩擴張 8・邊緣柔化 12</span></div>
+    </div>
+    <div data-k="p3" hidden style="display:flex;flex-direction:column;gap:8px">
+      <div class="row" data-k="tray" style="gap:10px"></div>
+      <div class="m-scr" data-k="mp" style="min-height:40px;font-size:10px"></div>
+      <span class="st">只有 Qwen 2.1 能用，最多 10 張。第 1 張是底圖，輸出尺寸跟它一樣。</span>
+    </div>
+    <div data-k="p4" hidden class="row" style="gap:16px;align-items:flex-start">
+      <div class="refc" style="width:80px;animation:none"><img data-art="sea" alt="" style="height:120px"><small>1024×1536</small></div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding-top:8px"><div class="m-chips"><span class="chipm">1.5×</span><span class="chipm on" data-k="x2">2×</span><span class="chipm">3×</span><span class="chipm">4×</span></div><span class="st">勾「放大後用 AI 精修細節」會更清楚</span><span class="vfdm" style="font-size:16px" data-k="up">1024×1536 → 2048×3072</span></div>
+      <div class="refc" style="width:160px;animation:none" data-k="big"><img data-art="sea" alt="" style="height:240px"><small>放大後</small></div>
+    </div>
+    <div data-k="p6" hidden style="display:flex;flex-direction:column;gap:8px">
+      <div class="row" style="gap:6px" data-k="views"><div class="refc" style="width:70px;animation:none"><img data-art="snow" alt=""><small>正面</small></div><div class="refc" style="width:70px;animation:none"><img data-art="snow" alt=""><small>側面</small></div><div class="refc" style="width:70px;animation:none"><img data-art="snow" alt=""><small>背面</small></div><div class="refc" style="width:70px;animation:none"><img data-art="snow" alt=""><small>四分之三</small></div><div class="refc" style="width:70px;animation:none;margin-left:10px"><img data-art="water" alt=""><small>圖2 服裝</small></div></div>
+      <div class="ta" data-k="req" style="min-height:26px"></div>
+      <span class="st">要點名改哪件衣服；只寫「上衣」常常整張沒改。</span>
+    </div>
+  </div>
+</div>` + STATUS;
+const MODE = (c, n) => { c.all('[data-k^="m"]').forEach((e) => e.dataset.k.length === 2 && e.classList.toggle("on", e.dataset.k === "m" + n)); for (let j = 1; j <= 6; j++) { const p = c.k("p" + j); if (p) p.hidden = j !== n; } };
+S.modes = new Scene("s-modes", MODES_HTML, [
+  { t: "圖生圖：放一張圖，調「重繪幅度」。0.6 左右會保留構圖、換掉細節。", a: async (c) => { await c.press("m1"); MODE(c, 1); await c.wait(400); c.k("sl").style.setProperty("--v", "60%"); c.k("den").textContent = "0.60"; c.k("o1").style.filter = "hue-rotate(-40deg) saturate(1.4) contrast(1.1)"; await c.wait(900); } },
+  { t: "局部重繪：按「畫遮罩」，塗出要改的地方。只有紅色的範圍會重畫。", hold: 1400, a: async (c) => { await c.press("m2"); MODE(c, 2); await c.press("brush"); c.k("mask").classList.add("on"); await c.wait(1400); } },
+  { t: "多圖參考：放兩張以上的圖，在提示詞裡用 &lt;image1&gt;、&lt;image2&gt; 指名。", hold: 1600, a: async (c) => { await c.press("m3"); MODE(c, 3);
+      c.k("tray").innerHTML = `<div class="refc"><span class="num">1</span><img src="${ART.dusk}" alt=""><small>人物（底圖）</small></div><div class="refc" style="animation-delay:.15s"><span class="num">2</span><img src="${ART.snow}" alt=""><small>場景</small></div>`;
+      await c.wait(500); c.k("mp").innerHTML = '把 <mark class="w-img">&lt;image1&gt;</mark> 的人放進 <mark class="w-img">&lt;image2&gt;</mark> 的雪景裡，保留臉、髮型和身材。'; await c.wait(600); } },
+  { t: "放大：選倍率，2 倍就是長寬各乘 2。尺寸和張數都不用設。", a: async (c) => { await c.press("m4"); MODE(c, 4); await c.press("x2"); } },
+  { t: "四視圖：放角色設定稿，寫要改哪件衣服。每個視角同步改；有服裝參考圖就放在圖2。", hold: 1600, a: async (c) => { await c.press("m6"); MODE(c, 6); await c.to("req"); await c.type("req", "把图1中的红色西装外套换成图2的整套衣服，其他内容不变。", 20);
+      c.all('[data-k="views"] img').slice(0, 4).forEach((im) => (im.style.filter = "hue-rotate(160deg) saturate(1.3)")); await c.wait(700); } },
+]);
+
+const LORA_HTML = TOP + `<div class="m-body" style="grid-template-columns:38px 1fr">${RAIL.replace('class="on" data-k="r-gen"', 'data-k="r-gen"')}
+  <div class="m-pan" style="display:flex;flex-direction:column;gap:6px" data-k="pane">
+    <div data-k="dl" style="display:flex;flex-direction:column;gap:6px">
+      <div class="row"><span class="badge-s">Anima（動漫）</span><div class="ta" data-k="q" style="flex:1;min-height:0;padding:3px 7px"></div><span class="mbtn" data-k="search">搜尋</span></div>
+      <div class="row" style="gap:8px;align-items:stretch" data-k="cards" hidden>
+        <div class="card" style="flex:1"><div class="ph" data-bg="water"></div><b>Soft Watercolor</b><span class="st">by inkfox・12.4k 下載</span><span class="trig">watercolor, soft edges</span><div data-k="dlslot"><span class="mbtn go" data-k="dlbtn">下載（144 MB）</span></div></div>
+        <div class="card" style="flex:1"><div class="ph" data-bg="forest"></div><b>Forest Light</b><span class="st">by mossy・8.1k 下載</span><span class="trig">dappled light</span><div><span class="mbtn go">下載（98 MB）</span></div></div>
+        <div class="card" style="flex:1"><div class="ph" data-bg="night"></div><b>Neon Night</b><span class="st">by kaz・5.6k 下載</span><span class="trig">neon, rain</span><div><span class="mbtn go">下載（210 MB）</span></div></div>
+      </div>
+    </div>
+    <div data-k="gen" hidden style="display:flex;flex-direction:column;gap:6px">
+      <div class="m-lbl">提示詞</div><div class="m-scr" data-k="prompt" style="min-height:40px">masterpiece, best quality, score_7, safe, 1girl, sunset, </div>
+      <div class="m-lbl">LoRA 卡匣<span class="mbtn" data-k="ins" style="letter-spacing:0">＋插入</span></div>
+      <div data-k="stack" style="display:flex;flex-direction:column;gap:5px"><span class="st" data-k="none">沒有使用 LoRA</span></div>
+      <div data-k="trigs" hidden class="row"><span class="st">觸發詞：</span><span class="trigchip" data-k="t1">watercolor</span><span class="trigchip">soft edges</span></div>
+    </div>
+  </div>
+</div>` + STATUS;
+S.lora = new Scene("s-lora", LORA_HTML, [
+  { t: "到「下載」頁，先選基底模型，再用英文關鍵字搜尋。", a: async (c) => { await c.press("r-dl"); c.k("r-dl").classList.add("on"); await c.to("q"); await c.type("q", "watercolor"); await c.press("search"); c.k("cards").hidden = false; } },
+  { t: "按「下載」，按鈕變成進度條。", hold: 400, a: async (c) => { await c.press("dlbtn"); c.k("dlslot").innerHTML = '<div class="bar g"><i data-k="dlbar"></i></div><span class="st" data-k="dlp">準備中</span>';
+      for (const v of [18, 46, 73, 100]) { await c.wait(380); c.k("dlbar").style.setProperty("--v", v + "%"); c.k("dlp").textContent = v + "%"; } } },
+  { t: "下載完卡片顯示「已安裝」，LoRA 清單會自動更新，觸發詞也存好了。", hold: 1500, a: async (c) => { c.k("dlslot").innerHTML = '<span class="badge-s ok">已安裝</span>';
+      c.k("pane").insertAdjacentHTML("beforeend", '<div class="toast">「Soft Watercolor」下載完成，可以在 LoRA 清單使用了</div>'); await c.wait(1200); } },
+  { t: "回生成頁，在 LoRA 卡匣按「＋插入」，挑剛剛那一個。", a: async (c) => { c.all(".toast").forEach((t) => t.remove()); c.k("r-dl").classList.remove("on"); await c.press("r-gen"); c.k("r-gen").classList.add("on"); c.k("dl").hidden = true; c.k("gen").hidden = false;
+      await c.press("ins"); c.k("none").remove();
+      c.k("stack").insertAdjacentHTML("beforeend", '<div class="lora-row"><span class="tog on" style="height:14px"></span><b>Soft Watercolor</b><div class="slider" style="--v:40%" data-k="lsl"><i></i></div><span class="vfdm" data-k="lv" style="font-size:12px">0.80</span></div>'); c.k("trigs").hidden = false; } },
+  { t: "拉桿調強度，預設 0.8。點觸發詞，它就會加進提示詞。", a: async (c) => { await c.to("lsl"); c.k("lsl").style.setProperty("--v", "35%"); c.k("lv").textContent = "0.70"; await c.wait(600);
+      await c.press("t1"); c.k("t1").classList.add("on"); c.k("prompt").textContent += "watercolor, "; } },
+]);
+
+const GAL_HTML = TOP + `<div class="m-body" style="grid-template-columns:38px 1fr">${RAIL.replace('class="on" data-k="r-gen"', 'data-k="r-gen"').replace('data-k="r-gal"', 'class="on" data-k="r-gal"')}
+  <div class="m-pan" style="display:flex;flex-direction:column;gap:6px;position:static">
+    <div class="row"><span class="chipm on">全部</span><span class="chipm">收藏</span><span class="chipm">回收區</span><div class="ta" style="flex:1;min-height:0;padding:3px 7px;color:var(--label-dim)">搜尋提示詞、想法或種子…（按 / 跳到這裡）</div><span class="st">共 8 張</span></div>
+    <div data-k="grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:7px"></div>
+  </div>
+</div>` + STATUS;
+const GALLERY = ["dusk", "night", "dawn", "sea", "forest", "snow", "water", "dusk"];
+S.gallery = new Scene("s-gallery", GAL_HTML, [
+  { t: "圖庫打開，照片一張張排上來，新的在前面。", a: async (c) => { c.k("grid").innerHTML = GALLERY.map((a, i) => `<div class="thumb" data-k="g${i}" style="animation:drop .45s cubic-bezier(.3,1.45,.5,1) ${i * .06}s backwards"><img src="${ART[a]}" alt=""></div>`).join(""); await c.wait(900); } },
+  { t: "點一張，打開大圖。右邊列出這張的提示詞、種子、模型。", a: async (c) => { await c.press("g1");
+      c.k("grid").closest(".m-body").insertAdjacentHTML("beforeend", `<div class="lb" data-k="lb"><div class="im"><img src="${ART.night}" alt=""></div><div class="meta"><b style="font-size:10px">文生圖・1024×1536　2／8</b><span class="st">提示詞</span><span class="v">masterpiece, best quality, 1girl, night, city lights…</span><span class="st">種子</span><span class="v">4815162342</span><span class="st">模型</span><span class="v">anima-turbo-v1.1・8 步・CFG 1</span><div class="row" style="flex-wrap:wrap"><span class="mbtn">重用參數</span><span class="mbtn" data-k="lbfav">☆ 收藏</span><span class="mbtn">下載</span></div></div></div>`); await c.wait(700); } },
+  { t: "按 F 收藏。也可以按 C 複製提示詞、R 重用參數。", a: async (c) => { if (!c.fast) await c.keys("F"); c.k("lbfav").textContent = "★ 已收藏"; c.k("g1").insertAdjacentHTML("beforeend", '<span class="star">★</span>'); await c.wait(500); } },
+  { t: "按 Esc 關掉，Ctrl＋點兩張圖，下面跳出選取列。", a: async (c) => { if (!c.fast) await c.keys("Esc"); c.k("lb").remove();
+      await c.press("g0"); c.k("g0").classList.add("sel"); await c.press("g2"); c.k("g2").classList.add("sel");
+      c.k("grid").closest(".m-body").insertAdjacentHTML("beforeend", '<div class="selbar" data-k="sb"><b>已選 2 張</b><span class="mbtn">收藏</span><span class="mbtn" data-k="ab">A／B 比較</span><span class="mbtn">加入多圖參考</span><span class="mbtn">匯出 zip</span><span class="mbtn warn">移到回收區</span></div>'); } },
+  { t: "按「A／B 比較」，拖中間那條線看兩張差在哪。", hold: 1600, a: async (c) => { await c.press("ab"); c.k("sb").remove();
+      c.k("grid").closest(".m-body").insertAdjacentHTML("beforeend", `<div class="cmp" data-k="cmp"><img src="${ART.dusk}" alt=""><div class="b"><img src="${ART.dawn}" alt=""></div><div class="h"></div><span class="tg" style="left:6px">A</span><span class="tg" style="right:6px">B</span></div>`);
+      const m = c.k("cmp"); await c.wait(300); m.style.setProperty("--x", "22%"); await c.wait(1000); m.style.setProperty("--x", "78%"); await c.wait(1000); m.style.setProperty("--x", "50%"); await c.wait(800); } },
+]);
+
+const JOBS_HTML = MACHINE.replace('<img data-k="img" alt="" hidden>', '<img data-k="img" alt="" data-art="sea">').replace('<div class="m-empty" data-k="empty">按下生成，圖會出現在這裡</div>', '');
+S.jobs = new Scene("s-jobs", JOBS_HTML, [
+  { t: "生成鍵可以連按：每按一次，一批就去排隊。", a: async (c) => { for (let i = 0; i < 3; i++) await c.press("go", 140); c.k("r-q").insertAdjacentHTML("beforeend", '<b class="vfdm" style="position:absolute;top:-5px;right:-5px;font-size:11px">3</b>'); } },
+  { t: "按 Q 打開任務面板。", a: async (c) => { if (!c.fast) await c.keys("Q"); c.k("r-q").classList.add("on");
+      c.k("view").closest(".m-body").insertAdjacentHTML("beforeend", `<div class="drawer" data-k="dr"><div class="stripes"><i></i><i></i><i></i><i></i></div><b style="font-size:11px">任務面板</b><span class="st" data-k="sum">執行中 1・排隊 2・全部畫完約 1 分 10 秒</span>
+        <div class="job run"><div class="row"><span class="badge-s run">執行中</span><span>文生圖・Anima Turbo・1024×1536</span></div><div class="bar"><i data-k="jb" style="--v:20%"></i></div><span class="st" data-k="jt">20%・約剩 28 秒</span></div>
+        <div class="job" data-k="j2"><div class="row"><span class="badge-s" data-k="j2b">排隊中・第 1 個</span><span>文生圖・4 張</span></div><div class="row"><span class="mbtn" data-k="cancel">取消</span></div></div>
+        <div class="job"><div class="row"><span class="badge-s">排隊中・第 2 個</span><span>圖生圖・2 張</span></div></div>
+        <div class="row" style="margin-top:auto"><span class="tog on"></span><span style="font-size:9px">提示音</span><span class="tog"></span><span style="font-size:9px">完成時通知我</span></div></div>`); await c.wait(500); } },
+  { t: "正在畫的那張有進度條，還會估還要等多久。", hold: 600, a: async (c) => { for (const v of [45, 70, 95]) { await c.wait(500); c.k("jb").style.setProperty("--v", v + "%"); c.k("jt").textContent = `${v}%・約剩 ${Math.round((100 - v) * .35)} 秒`; } } },
+  { t: "不想要的那批，按「取消」。", a: async (c) => { await c.press("cancel"); c.k("j2b").textContent = "已取消"; c.k("j2b").className = "badge-s"; c.k("j2").style.opacity = ".6"; c.k("cancel").textContent = "重試"; c.k("sum").textContent = "執行中 1・排隊 1・全部畫完約 40 秒"; } },
+]);
+
+const SET_HTML = TOP + `<div class="m-body" style="grid-template-columns:38px 1fr">${RAIL.replace('class="on" data-k="r-gen"', 'data-k="r-gen"').replace('data-k="r-set"', 'class="on" data-k="r-set"')}
+  <div class="m-pan" style="display:flex;flex-direction:column;gap:6px;overflow:hidden">
+    <div class="box"><b>AI 改寫提示詞</b><div class="row" style="font-size:9px">執行方式 <span class="chipm on" data-k="gpu">GPU</span><span class="chipm" data-k="part">部分放顯卡</span><span class="chipm" data-k="cpu">CPU</span><span class="st" style="margin-left:6px">閒置 120 秒後自動關閉</span></div></div>
+    <div class="box"><b>AI 改寫的系統提示詞（自訂）</b><div class="row" style="font-size:9px"><span class="chipm">文生圖</span><span class="badge-s">預設</span><span class="st">要用新規則就在這裡改，清空＝還原</span></div></div>
+    <div class="box" style="box-shadow:0 1px 0 var(--case-hi) inset,0 2px 0 var(--case-lo),inset 4px 0 0 #c8412d"><b>恢復原廠（清空重來）</b>
+      <div class="row" style="font-size:9px;flex-wrap:wrap"><span class="tog on"></span>圖庫<span class="tog on"></span>上傳暫存<span class="tog on"></span>預設組<span class="tog"></span>設定<span class="tog"></span>LoRA 備註</div>
+      <div class="row"><div class="ta" data-k="cf" style="flex:1;min-height:0;padding:3px 7px"></div><span class="mbtn warn" data-k="reset">恢復原廠</span></div>
+      <span class="st">以前的恢復原廠（可以救回）</span><div data-k="hist" style="display:flex;flex-direction:column;gap:4px"><span class="st" data-k="nohist">還沒有做過恢復原廠。</span></div></div>
+  </div>
+</div>` + STATUS;
+S.settings = new Scene("s-settings", SET_HTML, [
+  { t: "按「設定」。AI 改寫可以選 GPU、部分放顯卡或 CPU。", a: async (c) => { await c.press("r-set"); await c.press("cpu"); c.all(".chipm").forEach((e) => ["gpu", "part", "cpu"].includes(e.dataset.k) && e.classList.toggle("on", e.dataset.k === "cpu")); await c.wait(500); await c.press("gpu");
+      c.all(".chipm").forEach((e) => ["gpu", "part", "cpu"].includes(e.dataset.k) && e.classList.toggle("on", e.dataset.k === "gpu")); } },
+  { t: "恢復原廠：先勾要清的部分，再在框裡打「恢復原廠」四個字。", a: async (c) => { await c.to("cf"); await c.type("cf", "恢復原廠", 6); } },
+  { t: "按下去，舊資料搬到「待刪除」，下面多一筆紀錄。", hold: 1300, a: async (c) => { await c.press("reset"); c.k("cf").textContent = ""; c.k("nohist").remove();
+      c.k("hist").insertAdjacentHTML("beforeend", '<div class="row" style="background:var(--case-2);border-radius:3px;padding:4px 6px;font-size:9px"><span style="flex:1"><b>2026/10/10 下午6:12</b><br><span class="st">圖庫、上傳暫存、預設組・搬走 214 項</span></span><span class="mbtn" data-k="undo">救回</span></div>'); } },
+  { t: "後悔了？按「救回」，檔案搬回原位，現在的資料不會被蓋掉。", a: async (c) => { await c.press("undo"); c.k("undo").outerHTML = '<span class="badge-s ok">已救回</span>'; } },
+]);
+
+const LIB_HTML = TOP + `<div class="full" data-k="pane">
+  <div class="row"><b style="font-size:10.5px">提示詞庫</b><span class="st" data-k="cnt">共 3 筆</span><span style="flex:1"></span><span class="mbtn go" data-k="save">存目前設定</span><span class="mbtn">＋ 新片段</span></div>
+  <div class="m-piano" style="grid-template-columns:repeat(5,1fr);max-width:300px"><span class="on">全部</span><span>整套設定</span><span>片段</span><span>最近用過</span><span>收藏</span></div>
+  <div class="row" style="align-items:stretch;gap:8px;flex:1;min-height:0">
+    <div class="box" style="width:96px;font-size:9px;gap:5px"><b>資料夾</b><span>全部</span><span data-k="fd">光影</span><span>角色</span><span>構圖</span><b style="margin-top:6px">標籤</b><span class="trigchip">夜景</span><span class="trigchip">雙人</span></div>
+    <div data-k="cards" style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:7px;align-content:start">
+      <div class="card"><div class="ph" data-bg="night" style="height:70px"></div><b>霓虹雨夜</b><span class="st">整套・Anima</span></div>
+      <div class="card"><div class="ph" data-bg="sea" style="height:70px"></div><b>海邊寫真</b><span class="st">整套・Qwen 2.1</span></div>
+      <div class="card"><div class="ph" style="height:70px;background:var(--screen);color:var(--ph-green);font:8.5px/1.4 var(--f-data);padding:5px">sunset, orange sky, backlighting, lens flare</div><b>黃昏逆光</b><span class="st">片段</span></div>
+    </div>
+  </div>
+</div>` + STATUS;
+S.lib = new Scene("s-lib", LIB_HTML, [
+  { t: "畫出喜歡的圖，按「存成整套」。名字、資料夾、標籤填一填，縮圖自動用目前這張。", a: async (c) => { await c.press("save");
+      c.k("pane").insertAdjacentHTML("beforeend", '<div class="lb" data-k="dlg" style="grid-template-columns:110px 1fr;inset:40px 70px 40px"><div class="im"><img src="' + ART.dusk + '" alt=""></div><div class="meta" style="font-size:9.5px;gap:5px"><b>存進提示詞庫</b><span class="st">名稱</span><div class="ta" data-k="nm" style="min-height:0;padding:3px 6px"></div><span class="st">資料夾</span><div class="ta" style="min-height:0;padding:3px 6px">光影</div><span class="st">內容：Anima Turbo・1024×1536・8 步・LoRA 1 個</span><div class="row"><span class="mbtn go" data-k="ok">儲存</span></div></div></div>');
+      await c.type("nm", "黃昏屋頂", 10); await c.press("ok"); c.k("dlg").remove();
+      c.k("cards").insertAdjacentHTML("afterbegin", '<div class="card" data-k="new" style="animation:drop .45s cubic-bezier(.3,1.45,.5,1)"><div class="ph" style="height:70px;background-image:url(' + ART.dusk + ')"></div><b>黃昏屋頂</b><span class="st">整套・Anima</span></div>'); c.k("cnt").textContent = "共 4 筆"; } },
+  { t: "下次在生成頁的「套用整套設定…」選它，提示詞、模型、LoRA、尺寸、步數一次換好。", hold: 1600, a: async (c) => { await c.press("new");
+      c.k("pane").insertAdjacentHTML("beforeend", '<div class="toast" data-k="t1">已套用「黃昏屋頂」：模型、LoRA、尺寸、步數都換好了</div>'); await c.wait(1200); } },
+  { t: "常用的一小段字存成「片段」，在提示詞框上面的「＋插入片段」加進去。", a: async (c) => { c.k("t1")?.remove(); await c.press("fd"); c.k("fd").classList.add("trigchip", "on"); await c.wait(500); } },
+]);
+
+const AG_HTML = TOP + `<div class="full" style="flex-direction:row;gap:8px">
+  <div style="flex:1.1;display:flex;flex-direction:column;gap:6px;min-width:0">
+    <div class="m-osd"><span>AGENT · <span class="a">9B</span></span><span>ROUND <span class="a" data-k="rd">0/3</span></span><span data-k="ag" style="margin-left:auto">IDLE</span></div>
+    <div class="m-scr" data-k="chat" style="flex:1;min-height:0;font-size:9px;display:flex;flex-direction:column;gap:4px;overflow:hidden"></div>
+    <div class="row"><div class="ta" data-k="say" style="flex:1;min-height:0;padding:4px 6px"></div><span class="mbtn go" data-k="go">交給助手</span></div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0">
+    <div class="m-lbl">每一輪的結果</div>
+    <div data-k="strip" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+</div>` + STATUS;
+const SAY = (c, cls, text) => c.k("chat").insertAdjacentHTML("beforeend", `<div style="${cls === "me" ? "color:#e4dccb;align-self:flex-end;background:#2c2a24;padding:2px 6px;border-radius:3px" : cls === "act" ? "color:var(--ph-amber)" : ""}">${text}</div>`);
+const ROUND = (c, n, arts, marks) => c.k("strip").insertAdjacentHTML("beforeend", `<div class="row" style="gap:5px;animation:drop .45s cubic-bezier(.3,1.45,.5,1)"><span class="vfdm" style="font-size:12px">R${n}</span>${arts.map((a, i) => `<div class="thumb" style="width:58px"><img src="${ART[a]}" alt="">${marks[i] ? `<span class="star">${marks[i]}</span>` : ""}</div>`).join("")}</div>`);
+S.agent = new Scene("s-agent", AG_HTML, [
+  { t: "用中文說你想要什麼，按「交給助手」。也可以附圖。", a: async (c) => { await c.to("say"); await c.type("say", "雨夜的霓虹街道，女生撐透明傘回頭", 16); await c.press("go"); SAY(c, "me", "雨夜的霓虹街道，女生撐透明傘回頭"); c.k("say").textContent = ""; } },
+  { t: "它自己寫提示詞、挑 LoRA，畫第一輪。", hold: 1200, a: async (c) => { c.k("ag").textContent = "THINK"; SAY(c, "act", "▶ 寫提示詞"); await c.wait(700);
+      SAY(c, "", "1girl, solo, transparent umbrella, rain, neon lights, city street, night, looking back…"); SAY(c, "act", "▶ 生成 2 張"); c.k("ag").textContent = "RENDER"; c.k("rd").textContent = "1/3"; await c.wait(900); ROUND(c, 1, ["night", "dusk"], ["", "✗"]); } },
+  { t: "它看圖挑毛病：第 2 張不是雨夜，下一輪改掉。", hold: 1400, a: async (c) => { c.k("ag").textContent = "CHECK"; SAY(c, "act", "▶ 看圖檢查"); await c.wait(600);
+      SAY(c, "", "第 2 張變成黃昏、沒下雨。加強 night, heavy rain 再畫一輪。"); c.k("rd").textContent = "2/3"; c.k("ag").textContent = "RENDER"; await c.wait(900); ROUND(c, 2, ["night", "night"], ["★", "★"]); } },
+  { t: "全部打勾就交卷。圖都進圖庫，搜尋「助手」找得到。", a: async (c) => { SAY(c, "", "兩張都對：透明傘 ✓ 雨 ✓ 霓虹 ✓ 回頭 ✓，交卷。"); c.k("ag").textContent = "DONE"; await c.wait(600); } },
+]);
+
+const CM_HTML = TOP + `<div class="full" style="flex-direction:row;gap:8px">
+  <div style="width:220px;display:flex;flex-direction:column;gap:6px">
+    <div class="m-lbl">版型</div>
+    <div class="row" style="gap:5px" data-k="lays"><span class="chipm">L3</span><span class="chipm" data-k="l4">四格</span><span class="chipm">L5</span><span class="chipm">L6</span></div>
+    <div class="m-lbl">每一格（右上先）</div>
+    <div class="box" style="gap:3px;font-size:9px"><b>第 1 格・近景</b><span class="st">內容：she waves at the door, morning light</span><div class="row">台詞<div class="ta" data-k="d1" style="flex:1;min-height:0;padding:2px 5px"></div></div></div>
+    <div class="box" style="gap:3px;font-size:9px"><b>第 2 格・特寫</b><span class="st">台詞：今天也要加油！</span></div>
+    <span class="mbtn go" data-k="run" style="align-self:flex-start;margin-top:auto">畫這一頁</span>
+  </div>
+  <div style="flex:1;display:grid;place-items:center">
+    <div data-k="page" style="width:150px;height:225px;background:#fff;border-radius:2px;box-shadow:0 0 0 4px var(--bezel);display:grid;grid-template-rows:repeat(4,1fr);gap:3px;padding:4px;position:relative"><span class="st" data-k="empty" style="position:absolute;inset:0;display:grid;place-items:center">還沒畫</span></div>
+  </div>
+</div>` + STATUS;
+const BUB = ["早安！", "今天也要加油！", "咦？", "哈啊——"];
+S.comic = new Scene("s-comic", CM_HTML, [
+  { t: "選版型：右上那格先讀，一格一格往左下排。", a: async (c) => { await c.press("l4"); c.k("l4").classList.add("on"); } },
+  { t: "每一格寫景別、內容和台詞。台詞寫中文，小格子 8 個字以內最穩。", a: async (c) => { await c.to("d1"); await c.type("d1", "早安！", 8); } },
+  { t: "按「畫這一頁」：MOSS-Image 一次把格子畫出來。", hold: 900, a: async (c) => { await c.press("run"); c.k("empty").remove();
+      c.k("page").insertAdjacentHTML("beforeend", ["dawn", "water", "snow", "forest"].map((a, i) => `<div style="position:relative;background:url(${ART[a]}) center/cover;border:1.5px solid #222;animation:drop .4s ${i * .12}s backwards"><span data-k="b${i}" style="position:absolute;right:4px;top:3px;background:#fff;border:1px solid #222;border-radius:50%;padding:1px 6px;font-size:7.5px;color:#111;min-width:22px;min-height:11px"></span></div>`).join("")); await c.wait(800); } },
+  { t: "台詞和狀聲詞同時畫進對話框，不用再填字。", a: async (c) => { for (let i = 0; i < 4; i++) { c.k("b" + i).textContent = BUB[i]; await c.wait(260); } } },
+]);
+
+/* ---------- 捲到哪一章，哪一章才播；離開就暫停 ---------- */
+const scenes = Object.values(S);
+if (!REDUCE && "IntersectionObserver" in window) {
+  const io = new IntersectionObserver((es) => {
+    for (const e of es) {
+      const sc = scenes.find((s) => s.wrap === e.target); if (!sc) continue;
+      if (e.isIntersecting && !sc.seen) { sc.seen = true; sc.token++; sc.reset(); sc.i = -1; sc.mark(-1); sc.play(); }
+      else if (!e.isIntersecting && sc.playing) sc.stop();
+    }
+  }, { threshold: .5 });
+  scenes.forEach((s) => io.observe(s.wrap));
+}
+
+/* 目錄：目前看到哪一章就亮哪顆燈 */
+const tocs = [...document.querySelectorAll(".toc a")];
+const io2 = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) tocs.forEach((a) => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id)); }, { rootMargin: "-40% 0px -55% 0px" });
+document.querySelectorAll("section.ch").forEach((s) => io2.observe(s));
+})();
+</script>
+</body>
+</html>

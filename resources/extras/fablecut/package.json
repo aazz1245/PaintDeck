@@ -1,0 +1,47 @@
+{
+  "name": "fablecut",
+  "version": "1.15.0",
+  "description": "Zero-dependency browser video editor that AI agents can drive — JSON timeline, MCP server, REST API, live-reloading UI.",
+  "main": "server.js",
+  "bin": {
+    "fablecut": "cli.js"
+  },
+  "files": [
+    "*.js",
+    "index.html",
+    "style.css",
+    "favicon.svg",
+    "icons/",
+    "encoding-profiles.json",
+    "CLAUDE.md",
+    "library/README.md",
+    "library/elements/",
+    "library/fonts/",
+    "library/svg/",
+    "library/sfx/README.md"
+  ],
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "video-editor",
+    "nle",
+    "timeline",
+    "canvas",
+    "mcp",
+    "claude",
+    "ai-agent",
+    "ffmpeg"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ronak-create/FableCut.git"
+  },
+  "homepage": "https://fablecut.space",
+  "mcpName": "io.github.ronak-create/fablecut",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

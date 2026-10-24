@@ -1,0 +1,2293 @@
+{
+ "split": [
+  [
+   "",
+   []
+  ],
+  [
+   "   ",
+   []
+  ],
+  [
+   "A woman stands in the rain. She holds an umbrella!",
+   [
+    [
+     "A woman stands in the rain.",
+     "prose"
+    ],
+    [
+     "She holds an umbrella!",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   [
+    [
+     "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth.",
+     "tags"
+    ],
+    [
+     "A single woman walks along the beach at sunset.",
+     "prose"
+    ],
+    [
+     "The sky glows orange and gold.",
+     "prose"
+    ],
+    [
+     "Waves crash softly.",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "masterpiece, best quality, 1girl, smile, A girl smiles warmly. \"Hello\" is written on the sign.",
+   [
+    [
+     "masterpiece, best quality, 1girl, smile",
+     "tags"
+    ],
+    [
+     "A girl smiles warmly.",
+     "prose"
+    ],
+    [
+     "\"Hello\" is written on the sign.",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "1girl, solo",
+   [
+    [
+     "1girl, solo",
+     "tags"
+    ]
+   ]
+  ],
+  [
+   "1girl solo standing",
+   [
+    [
+     "1girl solo standing",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "lowercase start but prose. Then A sentence.",
+   [
+    [
+     "lowercase start but prose.",
+     "prose"
+    ],
+    [
+     "Then A sentence.",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, holding book",
+   [
+    [
+     "masterpiece, best quality, safe, 1girl, holding book",
+     "tags"
+    ]
+   ]
+  ],
+  [
+   "The cat sleeps.The dog barks. 「中文」。Next one? (Parenthetical) start. <image1> shows a cat. “Quoted” text. （全形）括號.",
+   [
+    [
+     "The cat sleeps.The dog barks. 「中文」。Next one?",
+     "prose"
+    ],
+    [
+     "(Parenthetical) start.",
+     "prose"
+    ],
+    [
+     "<image1> shows a cat.",
+     "prose"
+    ],
+    [
+     "“Quoted” text.",
+     "prose"
+    ],
+    [
+     "（全形）括號.",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "Line\none\n\nWith   many    spaces. And tabs\tinside.　Full width space. \u001cSep.",
+   [
+    [
+     "Line one With many spaces.",
+     "prose"
+    ],
+    [
+     "And tabs inside.",
+     "prose"
+    ],
+    [
+     "Full width space.",
+     "prose"
+    ],
+    [
+     "Sep.",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "tags, more tags, end. a lowercase sentence follows. Another One.",
+   [
+    [
+     "tags, more tags, end. a lowercase sentence follows.",
+     "tags"
+    ],
+    [
+     "Another One.",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "1girl, 2boys, multiple views, A scene with three people. They talk.",
+   [
+    [
+     "1girl, 2boys, multiple views",
+     "tags"
+    ],
+    [
+     "A scene with three people.",
+     "prose"
+    ],
+    [
+     "They talk.",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "masterpiece, best quality, newest, safe, 1girl, adult, jgdxstyle, orange hair. Orange eyes look at the viewer.",
+   [
+    [
+     "masterpiece, best quality, newest, safe, 1girl, adult, jgdxstyle, orange hair.",
+     "tags"
+    ],
+    [
+     "Orange eyes look at the viewer.",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "Ends with question? Yes. Wow! Great.",
+   [
+    [
+     "Ends with question?",
+     "prose"
+    ],
+    [
+     "Yes.",
+     "prose"
+    ],
+    [
+     "Wow!",
+     "prose"
+    ],
+    [
+     "Great.",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "數字 3.5 times. A test.",
+   [
+    [
+     "數字 3.5 times.",
+     "prose"
+    ],
+    [
+     "A test.",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "Mr. Smith arrives. He waves.",
+   [
+    [
+     "Mr.",
+     "prose"
+    ],
+    [
+     "Smith arrives.",
+     "prose"
+    ],
+    [
+     "He waves.",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "é accent start, x, y. Z sentence.",
+   [
+    [
+     "é accent start, x, y.",
+     "tags"
+    ],
+    [
+     "Z sentence.",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "Élan starts uppercase non-ascii. Then more.",
+   [
+    [
+     "Élan starts uppercase non-ascii.",
+     "prose"
+    ],
+    [
+     "Then more.",
+     "prose"
+    ]
+   ]
+  ],
+  [
+   "a, b. c, d, e. F g.",
+   [
+    [
+     "a, b. c, d, e.",
+     "tags"
+    ],
+    [
+     "F g.",
+     "prose"
+    ]
+   ]
+  ]
+ ],
+ "join": [
+  [
+   [
+    [
+     "a, b",
+     "tags"
+    ],
+    [
+     "Sentence.",
+     "prose"
+    ]
+   ],
+   "a, b, Sentence."
+  ],
+  [
+   [
+    [
+     "a, b.",
+     "tags"
+    ],
+    [
+     "S.",
+     "prose"
+    ]
+   ],
+   "a, b. S."
+  ],
+  [
+   [
+    [
+     "Prose",
+     "prose"
+    ],
+    [
+     "tags, x",
+     "tags"
+    ]
+   ],
+   "Prose tags, x"
+  ],
+  [
+   [
+    [
+     "one",
+     "tags"
+    ],
+    [
+     "two",
+     "tags"
+    ],
+    [
+     "Three!",
+     "prose"
+    ]
+   ],
+   "one, two, Three!"
+  ],
+  [
+   [
+    [
+     "x?",
+     "tags"
+    ],
+    [
+     "Y",
+     "prose"
+    ]
+   ],
+   "x? Y"
+  ],
+  [
+   [],
+   ""
+  ],
+  [
+   [],
+   ""
+  ],
+  [
+   [],
+   ""
+  ],
+  [
+   [
+    [
+     "A woman stands in the rain.",
+     "prose"
+    ],
+    [
+     "She holds an umbrella!",
+     "prose"
+    ]
+   ],
+   "A woman stands in the rain. She holds an umbrella!"
+  ],
+  [
+   [
+    [
+     "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth.",
+     "tags"
+    ],
+    [
+     "A single woman walks along the beach at sunset.",
+     "prose"
+    ],
+    [
+     "The sky glows orange and gold.",
+     "prose"
+    ],
+    [
+     "Waves crash softly.",
+     "prose"
+    ]
+   ],
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly."
+  ],
+  [
+   [
+    [
+     "masterpiece, best quality, 1girl, smile",
+     "tags"
+    ],
+    [
+     "A girl smiles warmly.",
+     "prose"
+    ],
+    [
+     "\"Hello\" is written on the sign.",
+     "prose"
+    ]
+   ],
+   "masterpiece, best quality, 1girl, smile, A girl smiles warmly. \"Hello\" is written on the sign."
+  ],
+  [
+   [
+    [
+     "1girl, solo",
+     "tags"
+    ]
+   ],
+   "1girl, solo"
+  ],
+  [
+   [
+    [
+     "1girl solo standing",
+     "prose"
+    ]
+   ],
+   "1girl solo standing"
+  ],
+  [
+   [
+    [
+     "lowercase start but prose.",
+     "prose"
+    ],
+    [
+     "Then A sentence.",
+     "prose"
+    ]
+   ],
+   "lowercase start but prose. Then A sentence."
+  ],
+  [
+   [
+    [
+     "masterpiece, best quality, safe, 1girl, holding book",
+     "tags"
+    ]
+   ],
+   "masterpiece, best quality, safe, 1girl, holding book"
+  ],
+  [
+   [
+    [
+     "The cat sleeps.The dog barks. 「中文」。Next one?",
+     "prose"
+    ],
+    [
+     "(Parenthetical) start.",
+     "prose"
+    ],
+    [
+     "<image1> shows a cat.",
+     "prose"
+    ],
+    [
+     "“Quoted” text.",
+     "prose"
+    ],
+    [
+     "（全形）括號.",
+     "prose"
+    ]
+   ],
+   "The cat sleeps.The dog barks. 「中文」。Next one? (Parenthetical) start. <image1> shows a cat. “Quoted” text. （全形）括號."
+  ],
+  [
+   [
+    [
+     "Line one With many spaces.",
+     "prose"
+    ],
+    [
+     "And tabs inside.",
+     "prose"
+    ],
+    [
+     "Full width space.",
+     "prose"
+    ],
+    [
+     "Sep.",
+     "prose"
+    ]
+   ],
+   "Line one With many spaces. And tabs inside. Full width space. Sep."
+  ],
+  [
+   [
+    [
+     "tags, more tags, end. a lowercase sentence follows.",
+     "tags"
+    ],
+    [
+     "Another One.",
+     "prose"
+    ]
+   ],
+   "tags, more tags, end. a lowercase sentence follows. Another One."
+  ],
+  [
+   [
+    [
+     "1girl, 2boys, multiple views",
+     "tags"
+    ],
+    [
+     "A scene with three people.",
+     "prose"
+    ],
+    [
+     "They talk.",
+     "prose"
+    ]
+   ],
+   "1girl, 2boys, multiple views, A scene with three people. They talk."
+  ],
+  [
+   [
+    [
+     "masterpiece, best quality, newest, safe, 1girl, adult, jgdxstyle, orange hair.",
+     "tags"
+    ],
+    [
+     "Orange eyes look at the viewer.",
+     "prose"
+    ]
+   ],
+   "masterpiece, best quality, newest, safe, 1girl, adult, jgdxstyle, orange hair. Orange eyes look at the viewer."
+  ],
+  [
+   [
+    [
+     "Ends with question?",
+     "prose"
+    ],
+    [
+     "Yes.",
+     "prose"
+    ],
+    [
+     "Wow!",
+     "prose"
+    ],
+    [
+     "Great.",
+     "prose"
+    ]
+   ],
+   "Ends with question? Yes. Wow! Great."
+  ],
+  [
+   [
+    [
+     "數字 3.5 times.",
+     "prose"
+    ],
+    [
+     "A test.",
+     "prose"
+    ]
+   ],
+   "數字 3.5 times. A test."
+  ],
+  [
+   [
+    [
+     "Mr.",
+     "prose"
+    ],
+    [
+     "Smith arrives.",
+     "prose"
+    ],
+    [
+     "He waves.",
+     "prose"
+    ]
+   ],
+   "Mr. Smith arrives. He waves."
+  ],
+  [
+   [
+    [
+     "é accent start, x, y.",
+     "tags"
+    ],
+    [
+     "Z sentence.",
+     "prose"
+    ]
+   ],
+   "é accent start, x, y. Z sentence."
+  ],
+  [
+   [
+    [
+     "Élan starts uppercase non-ascii.",
+     "prose"
+    ],
+    [
+     "Then more.",
+     "prose"
+    ]
+   ],
+   "Élan starts uppercase non-ascii. Then more."
+  ],
+  [
+   [
+    [
+     "a, b. c, d, e.",
+     "tags"
+    ],
+    [
+     "F g.",
+     "prose"
+    ]
+   ],
+   "a, b. c, d, e. F g."
+  ]
+ ],
+ "patch": [
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "replace": {
+     "1": "masterpiece, best quality, safe, 1girl, orange hair, night sky, stars, atmospheric depth",
+     "3": "The night sky is full of stars."
+    }
+   },
+   [
+    "masterpiece, best quality, safe, 1girl, orange hair, night sky, stars, atmospheric depth, A single woman walks along the beach at sunset. The night sky is full of stars. Waves crash softly.",
+    2
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "delete": [
+     4
+    ],
+    "insert": [
+     {
+      "after": 0,
+      "text": "Opening shot."
+     },
+     {
+      "after": 4,
+      "text": "she, tags, here"
+     }
+    ]
+   },
+   [
+    "Opening shot. masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. she, tags, here",
+    3
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "delete": [
+     "2",
+     "x",
+     3.0,
+     true
+    ],
+    "replace": {
+     "2": "ignored because deleted"
+    }
+   },
+   [
+    "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. The sky glows orange and gold. Waves crash softly.",
+    1
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "replace": {
+     "2": "  A single woman walks along the beach at sunset.  "
+    }
+   },
+   [
+    "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+    0
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "replace": {
+     "1": "new, tags, list,"
+    }
+   },
+   [
+    "new, tags, list, A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+    1
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "replace": [
+     "x"
+    ]
+   },
+   [
+    null,
+    0
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "replace": []
+   },
+   [
+    "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+    0
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "delete": "3"
+   },
+   [
+    null,
+    0
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "insert": "x"
+   },
+   [
+    null,
+    0
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "insert": [
+     {
+      "after": "2",
+      "text": 5
+     },
+     {
+      "after": 2.0,
+      "text": "nope"
+     },
+     {
+      "after": null,
+      "text": "x"
+     },
+     {
+      "text": "missing after"
+     },
+     "notdict",
+     {
+      "after": 1,
+      "text": "   "
+     }
+    ]
+   },
+   [
+    "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. 5 The sky glows orange and gold. Waves crash softly.",
+    1
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "replace": {
+     "9": "out of range"
+    },
+    "insert": [
+     {
+      "after": 99,
+      "text": "far"
+     }
+    ]
+   },
+   [
+    "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+    0
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {},
+   [
+    "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+    0
+   ]
+  ],
+  [
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "replace": {
+     "2": 123
+    },
+    "delete": null
+   },
+   [
+    "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+    0
+   ]
+  ],
+  [
+   "A cat sleeps. A dog barks.",
+   {
+    "insert": [
+     {
+      "after": 2,
+      "text": "A bird sings."
+     }
+    ],
+    "replace": {
+     "1": "A cat stretches."
+    }
+   },
+   [
+    "A cat stretches. A dog barks. A bird sings.",
+    2
+   ]
+  ],
+  [
+   "A cat sleeps. A dog barks.",
+   {
+    "delete": [
+     1,
+     2
+    ]
+   },
+   [
+    "",
+    2
+   ]
+  ],
+  [
+   "A cat sleeps. A dog barks.",
+   {
+    "insert": [
+     {
+      "after": true,
+      "text": "after True"
+     },
+     {
+      "after": "None",
+      "text": "after None string"
+     }
+    ]
+   },
+   [
+    "A cat sleeps. A dog barks.",
+    0
+   ]
+  ],
+  [
+   "",
+   {
+    "insert": [
+     {
+      "after": 0,
+      "text": "New."
+     }
+    ]
+   },
+   [
+    "New.",
+    1
+   ]
+  ]
+ ],
+ "strip_ratio": [
+  [
+   "A cat. The aspect ratio is 2:3. Ends.",
+   "A cat.Ends."
+  ],
+  [
+   "Image at 1920 x 1080 resolution. Next.",
+   "Next."
+  ],
+  [
+   "Shot in 16:9 format. Also 4:3 aspect. Not 3:2 here.",
+   "Not 3:2 here."
+  ],
+  [
+   "The aspect ratio is 2:3.",
+   "The aspect ratio is 2:3."
+  ],
+  [
+   "No ratio here.",
+   "No ratio here."
+  ],
+  [
+   "Mixed ASPECT RATIO text. Keep.",
+   "Keep."
+  ],
+  [
+   "A 1024×1024 square. Keep this.",
+   "Keep this."
+  ],
+  [
+   "Trailing without period aspect ratio 2:3",
+   "Trailing without period aspect ratio 2:3"
+  ],
+  [
+   "One.  Two   spaces.\nNew line 12 : 5 frame here. End",
+   "One. Two spaces.End"
+  ]
+ ],
+ "parse": [
+  [
+   "{\"rewritten_prompt\": \"A woman in a red dress.  Walks.\", \"wh_ratio\": \"2:3\", \"ratio_follow\": \"yes\"}",
+   "t2i",
+   "",
+   {
+    "prompt": "A woman in a red dress. Walks.",
+    "wh_ratio": "2:3",
+    "ratio_follow": "yes",
+    "repaired": false
+   }
+  ],
+  [
+   "<think>reasoning here {\"a\":1}</think>\n{\"rewritten_prompt\": \"After think.\"}",
+   "t2i",
+   "",
+   {
+    "prompt": "After think.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   }
+  ],
+  [
+   "stuff</think> {\"rewritten_prompt\": \"Split think\"}",
+   "anima",
+   "",
+   {
+    "prompt": "Split think",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   }
+  ],
+  [
+   "```json\n{\"rewritten_prompt\": \"Fenced\", \"wh_ratio\": \"16 : 9\"}\n```",
+   "i2i",
+   "",
+   {
+    "prompt": "Fenced",
+    "wh_ratio": "16:9",
+    "ratio_follow": "",
+    "repaired": false
+   }
+  ],
+  [
+   "{\"rewritten_prompt\": \"Line one\nline two\", \"wh_ratio\": \"1:1\",}",
+   "t2i",
+   "",
+   {
+    "prompt": "Line one line two",
+    "wh_ratio": "1:1",
+    "ratio_follow": "",
+    "repaired": true
+   }
+  ],
+  [
+   "{\"rewritten_prompt\": \"Truncated output that never ends",
+   "t2i",
+   "",
+   {
+    "prompt": "Truncated output that never ends",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": true
+   }
+  ],
+  [
+   "prefix {\"rewritten_prompt\": \"Truncated with brace } inside and more",
+   "t2i",
+   "",
+   null
+  ],
+  [
+   "The output: \"rewritten_prompt\": \"No braces but key\", \"wh_ratio\": \"3:2\"",
+   "t2i",
+   "",
+   {
+    "prompt": "No braces but key",
+    "wh_ratio": "3:2",
+    "ratio_follow": "",
+    "repaired": true
+   }
+  ],
+  [
+   "{\"rewritten_prompt\": \"Escaped \\\"quote\\\" and \\u00e9\", \"wh_ratio\": \"bad\"}",
+   "t2i",
+   "",
+   {
+    "prompt": "Escaped \"quote\" and é",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   }
+  ],
+  [
+   "{\"prompt\": \"Uses prompt key\", \"wh_ratio\": 1.5}",
+   "t2i",
+   "",
+   {
+    "prompt": "Uses prompt key",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   }
+  ],
+  [
+   "{\"rewritten_prompt\": \"\"}",
+   "t2i",
+   "",
+   null
+  ],
+  [
+   "{\"rewritten_prompt\": 5}",
+   "t2i",
+   "",
+   null
+  ],
+  [
+   "A long plain description without any json braces that goes on and on about a girl standing in a field of sunflowers.",
+   "t2i",
+   "",
+   {
+    "prompt": "A long plain description without any json braces that goes on and on about a girl standing in a field of sunflowers.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": true
+   }
+  ],
+  [
+   "Too short.",
+   "t2i",
+   "",
+   null
+  ],
+  [
+   "",
+   "t2i",
+   "",
+   null
+  ],
+  [
+   "{\"rewritten_prompt\": \"A cat. The aspect ratio is 2:3. It sleeps on a 1024x768 bed. Shot in 16:9 format. End.\"}",
+   "t2i",
+   "",
+   {
+    "prompt": "A cat.End.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   }
+  ],
+  [
+   "{\"rewritten_prompt\": \"x\"} trailing {\"other\": 1}",
+   "t2i",
+   "",
+   {
+    "prompt": "x",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": true
+   }
+  ],
+  [
+   "{\"rewritten_prompt\": \"Smart quotes “inside” are fine\", \"ratio_follow\": true}",
+   "t2i",
+   "",
+   {
+    "prompt": "Smart quotes “inside” are fine",
+    "wh_ratio": "",
+    "ratio_follow": "True",
+    "repaired": false
+   }
+  ],
+  [
+   "{\"rewritten_prompt\": \"Ratio with spaces\", \"wh_ratio\": \" 4 : 3 \"}",
+   "t2i",
+   "",
+   {
+    "prompt": "Ratio with spaces",
+    "wh_ratio": "4:3",
+    "ratio_follow": "",
+    "repaired": false
+   }
+  ],
+  [
+   "{\"rewritten_prompt\": \"Bad escape \\q here\" , \"wh_ratio\": \"2:3\"} ",
+   "t2i",
+   "",
+   {
+    "prompt": "Bad escape \\q here",
+    "wh_ratio": "2:3",
+    "ratio_follow": "",
+    "repaired": true
+   }
+  ],
+  [
+   "\"rewritten_prompt\": \"Bad escape \\q here\", \"wh_ratio\": \"2:3\"",
+   "t2i",
+   "",
+   {
+    "prompt": "Bad escape \\q here",
+    "wh_ratio": "2:3",
+    "ratio_follow": "",
+    "repaired": true
+   }
+  ],
+  [
+   "<think>x</think>繁體中文摘要。",
+   "zh",
+   "",
+   {
+    "prompt": "繁體中文摘要。",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   }
+  ],
+  [
+   "   ",
+   "zh",
+   "",
+   null
+  ],
+  [
+   "Caption: \"A girl with long orange hair stands in a library, drawn with thick jagged lines.\"",
+   "caption",
+   "",
+   {
+    "prompt": "A girl with long orange hair stands in a library, drawn with thick jagged lines.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   }
+  ],
+  [
+   "Description:   “A short one.”",
+   "caption",
+   "",
+   null
+  ],
+  [
+   "Let me double-check the constraints. A girl stands.",
+   "caption",
+   "",
+   null
+  ],
+  [
+   "A watercolor painting of a fox in   the snow,\n soft edges and muted blue palette.",
+   "caption",
+   "",
+   {
+    "prompt": "A watercolor painting of a fox in the snow, soft edges and muted blue palette.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   }
+  ],
+  [
+   "Sentence 1: A cat. Sentence 2: wait, no.",
+   "caption",
+   "",
+   null
+  ],
+  [
+   "<think>plan</think>DESCRIPTION: A flat cel-shaded drawing of a dragon over mountains.",
+   "caption",
+   "",
+   {
+    "prompt": "A flat cel-shaded drawing of a dragon over mountains.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   }
+  ],
+  [
+   "{\"replace\": {\"3\": \"The night sky is full of stars.\"}, \"wh_ratio\": \"3:2\"}",
+   "refine",
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "prompt": "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The night sky is full of stars. Waves crash softly.",
+    "wh_ratio": "3:2",
+    "ratio_follow": "",
+    "repaired": false,
+    "changed": 1
+   }
+  ],
+  [
+   "```json\n{\"replace\": {}, \"delete\": [], \"insert\": [], \"wh_ratio\": \"2:3\"}\n```",
+   "refine",
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "prompt": "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+    "wh_ratio": "2:3",
+    "ratio_follow": "",
+    "repaired": false,
+    "changed": 0
+   }
+  ],
+  [
+   "{\"rewritten_prompt\": \"Model ignored patch format and rewrote the whole prompt.\"}",
+   "refine",
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "prompt": "Model ignored patch format and rewrote the whole prompt.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   }
+  ],
+  [
+   "{\"replace\": \"bad\"}",
+   "refine",
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   null
+  ],
+  [
+   "no json at all but long enough text to pass the eighty character limit for fallback here yes.",
+   "refine",
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "prompt": "no json at all but long enough text to pass the eighty character limit for fallback here yes.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": true
+   }
+  ],
+  [
+   "{\"replace\": {\"1\": \"a, b, c\"}, \"wh_ratio\": \"16 : 9\"}",
+   "refine",
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "prompt": "a, b, c, A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+    "wh_ratio": "16:9",
+    "ratio_follow": "",
+    "repaired": false,
+    "changed": 1
+   }
+  ],
+  [
+   "{\"replace\": {\"2\": \"The aspect ratio is 2:3. A woman walks.\"}}",
+   "refine",
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "prompt": "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth.A woman walks. The sky glows orange and gold. Waves crash softly.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false,
+    "changed": 1
+   }
+  ],
+  [
+   "{\"replace\": {\"2\": \"x\",}}",
+   "refine",
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   null
+  ],
+  [
+   "{\"delete\": [2, 3], \"wh_ratio\": 2}",
+   "refine",
+   "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+   {
+    "prompt": "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. Waves crash softly.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false,
+    "changed": 2
+   }
+  ]
+ ],
+ "note": [
+  [
+   {
+    "prompt": "A woman in a red dress. Walks.",
+    "wh_ratio": "2:3",
+    "ratio_follow": "yes",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "After think.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "Split think",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "Fenced",
+    "wh_ratio": "16:9",
+    "ratio_follow": "",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "Line one line two",
+    "wh_ratio": "1:1",
+    "ratio_follow": "",
+    "repaired": true
+   },
+   "輸出的 JSON 有小問題，已自動修補。"
+  ],
+  [
+   {
+    "prompt": "Truncated output that never ends",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": true
+   },
+   "輸出的 JSON 有小問題，已自動修補。"
+  ],
+  [
+   {
+    "prompt": "No braces but key",
+    "wh_ratio": "3:2",
+    "ratio_follow": "",
+    "repaired": true
+   },
+   "輸出的 JSON 有小問題，已自動修補。"
+  ],
+  [
+   {
+    "prompt": "Escaped \"quote\" and é",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "Uses prompt key",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "A long plain description without any json braces that goes on and on about a girl standing in a field of sunflowers.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": true
+   },
+   "輸出的 JSON 有小問題，已自動修補。"
+  ],
+  [
+   {
+    "prompt": "A cat.End.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "x",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": true
+   },
+   "輸出的 JSON 有小問題，已自動修補。"
+  ],
+  [
+   {
+    "prompt": "Smart quotes “inside” are fine",
+    "wh_ratio": "",
+    "ratio_follow": "True",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "Ratio with spaces",
+    "wh_ratio": "4:3",
+    "ratio_follow": "",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "Bad escape \\q here",
+    "wh_ratio": "2:3",
+    "ratio_follow": "",
+    "repaired": true
+   },
+   "輸出的 JSON 有小問題，已自動修補。"
+  ],
+  [
+   {
+    "prompt": "Bad escape \\q here",
+    "wh_ratio": "2:3",
+    "ratio_follow": "",
+    "repaired": true
+   },
+   "輸出的 JSON 有小問題，已自動修補。"
+  ],
+  [
+   {
+    "prompt": "繁體中文摘要。",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "A girl with long orange hair stands in a library, drawn with thick jagged lines.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "A watercolor painting of a fox in the snow, soft edges and muted blue palette.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "A flat cel-shaded drawing of a dragon over mountains.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The night sky is full of stars. Waves crash softly.",
+    "wh_ratio": "3:2",
+    "ratio_follow": "",
+    "repaired": false,
+    "changed": 1
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+    "wh_ratio": "2:3",
+    "ratio_follow": "",
+    "repaired": false,
+    "changed": 0
+   },
+   "模型這次沒有改動任何句子，可以換個說法再調整一次。"
+  ],
+  [
+   {
+    "prompt": "Model ignored patch format and rewrote the whole prompt.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "no json at all but long enough text to pass the eighty character limit for fallback here yes.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": true
+   },
+   "輸出的 JSON 有小問題，已自動修補。"
+  ],
+  [
+   {
+    "prompt": "a, b, c, A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+    "wh_ratio": "16:9",
+    "ratio_follow": "",
+    "repaired": false,
+    "changed": 1
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth.A woman walks. The sky glows orange and gold. Waves crash softly.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false,
+    "changed": 1
+   },
+   ""
+  ],
+  [
+   {
+    "prompt": "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. Waves crash softly.",
+    "wh_ratio": "",
+    "ratio_follow": "",
+    "repaired": false,
+    "changed": 2
+   },
+   ""
+  ]
+ ],
+ "noct": [
+  [
+   "An anime illustration of a girl.",
+   "An anime illustration of a girl."
+  ],
+  [
+   "an Anime Illustration of lowercase start",
+   "an Anime Illustration of lowercase start"
+  ],
+  [
+   "A detailed digital illustration of a cat on a roof.",
+   "An anime illustration of a cat on a roof."
+  ],
+  [
+   "The image is a photograph of a city.",
+   "An anime illustration of a city."
+  ],
+  [
+   "This is an image of a dog.",
+   "An anime illustration of a dog."
+  ],
+  [
+   "A girl stands in the rain.",
+   "An anime illustration of a girl stands in the rain."
+  ],
+  [
+   "Anime style art of a boy.",
+   "An anime illustration of anime style art of a boy."
+  ],
+  [
+   "A very very very very very long illustration of x",
+   "An anime illustration of a very very very very very long illustration of x"
+  ],
+  [
+   "An oil painting portrait of a woman.",
+   "An anime illustration of a woman."
+  ],
+  [
+   "A cat",
+   "An anime illustration of a cat"
+  ],
+  [
+   "The image is an illustration of a fox.",
+   "An anime illustration of a fox."
+  ],
+  [
+   "This is Anime illustration of x",
+   "An anime illustration of x"
+  ],
+  [
+   "A soft-focus close-up portrait of an elf.",
+   "An anime illustration of an elf."
+  ],
+  [
+   "élan vital scene",
+   "An anime illustration of élan vital scene"
+  ]
+ ],
+ "cache_key": [
+  [
+   {
+    "task": "t2i",
+    "idea": "a cat",
+    "images": [],
+    "prev": "",
+    "instruction": "",
+    "ratio": "",
+    "temperature": 1.0,
+    "seed": 0,
+    "think": false,
+    "noct_anime": false,
+    "model": "pe_t2i_heretic-Q4_K_M.gguf"
+   },
+   "14e8d01071707f14dfc4e87a814f8263f4b2525ff43ec4593a13cf0ee2b6abe7"
+  ],
+  [
+   {
+    "task": "i2i",
+    "idea": "make it night",
+    "images": [
+     "img-bytes-1",
+     "圖2"
+    ],
+    "prev": "",
+    "instruction": "",
+    "ratio": "",
+    "temperature": 0.7,
+    "seed": 123456789012,
+    "think": true,
+    "noct_anime": false,
+    "model": "pe_i2i_heretic-Q4_K_M.gguf"
+   },
+   "f4e398d31c518b7845675dc6d2469af457bc0a82f47ce2c54da362c91ba2f303"
+  ],
+  [
+   {
+    "task": "zh",
+    "idea": "A cat sleeps. 中文"
+   },
+   "dc0eaac4ba45fb59bd575bd2399d9b73ce32805a7f595b24f718f2d75616719e"
+  ],
+  [
+   {
+    "task": "unknown",
+    "idea": "x"
+   },
+   "ba8ad78cbed7d1ee84527a2b5b6c0f1621d3c8f31d207d1f3d4a8e28818d94d9"
+  ],
+  [
+   {
+    "task": "refine",
+    "idea": "",
+    "images": [],
+    "prev": "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+    "instruction": "改成夜晚",
+    "ratio": "2:3",
+    "temperature": 0.355,
+    "seed": 7,
+    "think": false,
+    "noct_anime": true,
+    "model": "pe_t2i_heretic-Q4_K_M.gguf"
+   },
+   "6d12376ca0aa13844d7ea580c9578b4220c8159fb8390d1198b7eb1bcd7a254d"
+  ],
+  [
+   {
+    "task": "caption",
+    "idea": "",
+    "images": [
+     "x"
+    ],
+    "prev": "",
+    "instruction": "",
+    "ratio": "",
+    "temperature": 1.0,
+    "seed": 0,
+    "think": false,
+    "noct_anime": false,
+    "model": "pe_i2i_heretic-Q4_K_M.gguf"
+   },
+   "45f0d0a51f07772c23c86aeeb3867a4334367a77608af5e333640b7fdf9367cc"
+  ],
+  [
+   {
+    "task": "anima",
+    "idea": "tab\there\nnewline \u0001 ctrl \"quote\" back\\slash / é 😀",
+    "seed": -5,
+    "temperature": 1.234
+   },
+   "c1e9bfe075f402e29032dea14ac91fd338d03d3124b565914a0e0fd3620c4e68"
+  ]
+ ],
+ "messages": [
+  [
+   [
+    "t2i",
+    "  a cat  ",
+    [],
+    "",
+    "",
+    false,
+    ""
+   ],
+   [
+    {
+     "role": "system",
+     "content": "# Image Prompt Rewriting Expert\n\nYou turn a user's image request into one long English paragraph that describes the\nfinished image as if you were looking at it, plus the aspect ratio it should be\nrendered at. You are not talking to the user and not talking to a renderer: you are\nan observer reporting what is in the frame.\n\nWork through the eight steps below in order. Each step commits one decision; later\nsteps never revise an earlier one.\n\n## Step 1 — Read the brief and split it in two\n\nList what the user has fixed and what they have left open.\n\nFixed, and it must survive into your description unchanged: every string of text\nthey want shown, every named object, every count, every stated colour, every stated\nposition, and the aspect ratio if they gave one. Copy their text strings character\nfor character, in their own script, including punctuation and spacing.\n\nA third thing they may give you is an instruction about the job rather than about the\npicture — \"use double quotes\", \"no hard-edged blocks\", \"4K, no noise\", \"make sure the\ntext is sharp\". That is not content. Obey it silently where it applies and never echo\nit: the description states what is in the frame, never what must be done.\n\nOpen, and you must decide it: everything they did not mention. A three-word request\nand a three-hundred-word request both become a description of the same size, so a\nshort brief means you are inventing most of the frame, not writing less.\n\n## Step 2 — Fix the frame\n\nDecide the orientation from the subject, then pick the ratio.\n\nIf the user states a ratio, use it. Otherwise: `3:2` for anything horizontal and\n`2:3` for anything vertical — these are the two defaults and cover most images.\nUse `1:1` for a square badge, icon, album cover or single centred emblem, `16:9`\nfor a wide cinematic or presentation frame, `1:2` or `9:16` for a phone screen or a\ntall standing banner. `3:4`, `2:1`, `21:9`, `4:3`, `9:21`, `4:5`, `3:1`, `5:4`,\n`1:3` exist but only when the subject or the user really calls for them.\n\nThe ratio lives only in the `wh_ratio` field. Never write a ratio, a resolution, or\na pixel count into the description itself.\n\n## Step 3 — Write the opening sentence\n\nOne sentence, around twenty words. Name the medium, the style, the subject, and the\nbackground or palette; usually name the orientation too:\n\n`The image is a ⟨vertical / wide / square / tall⟩ ⟨style⟩ ⟨photograph · poster · illustration · scene · portrait · infographic · close-up · graphic · page · card · sheet · logo⟩ of ⟨subject⟩, ⟨the background and its palette⟩.`\n\n`This is a …` or a bare `A vertical realistic photograph of …` work equally well. The\nmedium noun is the one part that is never omitted.\n\nThe style word goes here — realistic, photorealistic, minimalist, flat-vector,\ncinematic, watercolour, isometric, editorial, hand-drawn, 3D-rendered, retro. Name\nit once here; you may echo it in the closing sentence.\n\n## Step 4 — Inventory before you write\n\nBefore any more prose, settle two lists.\n\nEvery element that will appear, each with a place in the frame: upper-left,\nacross the top, on the far right, in the lower-third, in the centre, in front of,\nbehind, tucked into the corner. You will need eight to fourteen such positional\nphrases, about ten typically, and they must reach the corners, the edges and the\ncentre — not cluster in the middle.\n\nEvery piece of text that will be legible in the image, in reading order.\n\n## Step 5 — Walk the frame\n\nNow describe it in order. Which order depends on how the frame is filled.\n\n**If the frame is divided into regions** — a poster, a page, an interface, a layout, a\nwide scene with several things in it — walk the regions:\n\n1. The background and the surface it sits on — this comes immediately after the\n   opening sentence, not at the end.\n2. The top band: headline, header bar, sky, ceiling, whatever occupies the top edge.\n3. Down and across the body of the frame: left side, then centre, then right side.\n   Give each region one or two sentences.\n4. The bottom band: footer, foreground, ground plane, base row.\n\n**If one subject fills the frame** — a portrait, a close-up, a single object — walk\nthe subject instead: the background and how far it falls off, then the subject's pose\nand where it is placed in the frame, then head and face, then body and each garment or\nsurface, then what is held or touching it, then whatever little is left at the edges.\nKeep using positional phrases inside the subject — in the upper-left of the frame,\nbehind the left shoulder, along the lower edge — so the frame stays locatable.\n\nRoughly a third of your sentences should open on the positional phrase itself —\n\"On the right side of the frame, …\", \"In the upper-left corner, …\", \"Across the\nlower third, …\" — so the reader always knows where they are looking.\n\nKeep it to one paragraph. Break to a new paragraph only when the image is genuinely\nbuilt from stacked regions — panels, cards, sections, slides — and then one\nparagraph per region, each opening on where that region sits.\n\n## Step 6 — Set every piece of text\n\nSkip this step if nothing in the image is meant to be read — a third of images have\nno legible text at all, and inventing signage for them is a mistake.\n\nOtherwise, for each string from your Step 4 list, in reading order, name where it sits,\nwhat it looks like, and what it says: `a bold black headline across the top reads \"…\"`.\n\nPut the string in straight double quotes, in its own script — Chinese, Russian,\nKorean, Japanese and Arabic text stays in Chinese, Russian, Korean, Japanese and\nArabic. Give its weight, colour, case and relative size. Describe a line break as a\nsecond line rather than putting a real newline inside the string. If a mark is not meant\nto be read — distant signage, a label behind glass, dense body copy — call it\nblurred, indistinct, or too small to read rather than inventing letters. If the image contains a chart\nor a table, its axes, tick labels, legend entries, series and cell values are text\ntoo: write them out.\n\n## Step 7 — Give the lighting its own sentence\n\nEvery image has light in it, and the description always accounts for it: the source,\nits direction, its quality, and the shadows and highlights it leaves. Soft diffused\ndaylight from a window on the left, hard overhead studio light, warm low sun, flat\neven ambient light for a diagram.\n\nOnce the contents are placed, give it a sentence of its own — `The lighting is …` —\nor, if the light is what makes a particular surface look the way it does, fold it into\nthat surface's sentence. Either way it is stated explicitly, not left implied.\n\n## Step 8 — Close with the whole frame\n\nEnd on a single sentence that steps back:\n\n`The overall composition ⟨is / uses / feels⟩ …`\n\n`The composition is …`, `The overall design …`, `The overall mood …`, `The overall\npalette …` and `The image has …` are the same move. Cover balance and symmetry, the\npalette, the style, and the mood in that one sentence. Write exactly one such\nsentence — do not follow it with a second summary.\n\n## Throughout\n\n**Size.** The description runs about twenty sentences and four to five hundred words,\nroughly twenty-five words a sentence. That is the same size whether the brief was three\nwords or three hundred: a dense frame with many regions and a lot of text runs longer, a\nsingle quiet subject runs shorter, but a thin brief never buys a thin description.\n\n**Observe, don't instruct.** Present tense, third person, declarative. No \"you\", no\n\"create\", no \"make sure\", no \"the AI should\". No quality boosters — no \"masterpiece\",\n\"8K\", \"highly detailed\", \"award-winning\".\n\n**Hedge what you cannot be certain of.** An observer describing a picture says\n\"appears to be\", \"likely\", \"suggesting\", and offers a pair — \"a notebook\nor a tablet\", \"wood or dark laminate\" — when the thing is genuinely ambiguous. Do\nthis often; it is the natural register here. Be flatly definite only about what the\nuser fixed.\n\n**Name colours with a modifier, almost never bare.** Deep navy, muted olive, pale\ncream, warm terracotta, soft dusty rose, blue-grey, off-white, charcoal, brownish-\ngreen. Hex codes only if the user gave them.\n\n**Give the material, not just the noun.** Brushed metal, matte plastic, glossy\nceramic, coarse linen, weathered wood, frosted glass, grain, scuffs, condensation,\nvisible brush strokes, paper fibre.\n\n**Enumerate; never summarise.** \"Several items\" and \"various decorations\" are not\ndescriptions. Say what each thing is. Write small counts as words — three, five,\ntwelve — and if something is partly hidden, say so and describe the visible part.\n\n**People get their observable surface.** Build, posture, where they are looking,\nexpression, hair, skin tone, and each garment with its colour and material. Age is a\nlife stage or a decade — a child, a teenager, a young adult, middle-aged, elderly,\nin her thirties — never a number of years. If a face is turned away or cropped, say\nthat instead of describing it.\n\n**Objects by class, not by brand.** A silver laptop, a mirrorless camera, a compact\nhatchback — unless the user named the brand. Photographic and design vocabulary is\nwelcome: shallow depth of field, bokeh, backlit, close-up, negative space,\ngrid, drop shadow.\n\n**Everything holds together physically.** Shadows fall away from the light, reflections\nmatch what is in front of the surface, scale is consistent between neighbouring\nobjects, and a surface reacts to what sits on it. If the user asked for something\nimpossible, describe it as the image shows it and let the rest of the scene stay\ncoherent around it.\n\n## Language\n\nThe description is always in English, whatever language the request arrives in. The\nonly exception is text shown inside the image, which stays in its own script.\n\n## Output format\n\nReturn one strictly valid JSON object on a single line, nothing before or after:\n\n{\"rewritten_prompt\": \"<the description>\", \"wh_ratio\": \"<e.g. 3:2>\"}"
+    },
+    {
+     "role": "user",
+     "content": "a cat"
+    }
+   ]
+  ],
+  [
+   [
+    "t2i",
+    "a cat",
+    [],
+    "",
+    "",
+    true,
+    ""
+   ],
+   [
+    {
+     "role": "system",
+     "content": "# Image Prompt Rewriting Expert\n\nYou turn a user's image request into one long English paragraph that describes the\nfinished image as if you were looking at it, plus the aspect ratio it should be\nrendered at. You are not talking to the user and not talking to a renderer: you are\nan observer reporting what is in the frame.\n\nWork through the eight steps below in order. Each step commits one decision; later\nsteps never revise an earlier one.\n\n## Step 1 — Read the brief and split it in two\n\nList what the user has fixed and what they have left open.\n\nFixed, and it must survive into your description unchanged: every string of text\nthey want shown, every named object, every count, every stated colour, every stated\nposition, and the aspect ratio if they gave one. Copy their text strings character\nfor character, in their own script, including punctuation and spacing.\n\nA third thing they may give you is an instruction about the job rather than about the\npicture — \"use double quotes\", \"no hard-edged blocks\", \"4K, no noise\", \"make sure the\ntext is sharp\". That is not content. Obey it silently where it applies and never echo\nit: the description states what is in the frame, never what must be done.\n\nOpen, and you must decide it: everything they did not mention. A three-word request\nand a three-hundred-word request both become a description of the same size, so a\nshort brief means you are inventing most of the frame, not writing less.\n\n## Step 2 — Fix the frame\n\nDecide the orientation from the subject, then pick the ratio.\n\nIf the user states a ratio, use it. Otherwise: `3:2` for anything horizontal and\n`2:3` for anything vertical — these are the two defaults and cover most images.\nUse `1:1` for a square badge, icon, album cover or single centred emblem, `16:9`\nfor a wide cinematic or presentation frame, `1:2` or `9:16` for a phone screen or a\ntall standing banner. `3:4`, `2:1`, `21:9`, `4:3`, `9:21`, `4:5`, `3:1`, `5:4`,\n`1:3` exist but only when the subject or the user really calls for them.\n\nThe ratio lives only in the `wh_ratio` field. Never write a ratio, a resolution, or\na pixel count into the description itself.\n\n## Step 3 — Write the opening sentence\n\nOne sentence, around twenty words. Name the medium, the style, the subject, and the\nbackground or palette; usually name the orientation too:\n\n`The image is a ⟨vertical / wide / square / tall⟩ ⟨style⟩ ⟨photograph · poster · illustration · scene · portrait · infographic · close-up · graphic · page · card · sheet · logo⟩ of ⟨subject⟩, ⟨the background and its palette⟩.`\n\n`This is a …` or a bare `A vertical realistic photograph of …` work equally well. The\nmedium noun is the one part that is never omitted.\n\nThe style word goes here — realistic, photorealistic, minimalist, flat-vector,\ncinematic, watercolour, isometric, editorial, hand-drawn, 3D-rendered, retro. Name\nit once here; you may echo it in the closing sentence.\n\n## Step 4 — Inventory before you write\n\nBefore any more prose, settle two lists.\n\nEvery element that will appear, each with a place in the frame: upper-left,\nacross the top, on the far right, in the lower-third, in the centre, in front of,\nbehind, tucked into the corner. You will need eight to fourteen such positional\nphrases, about ten typically, and they must reach the corners, the edges and the\ncentre — not cluster in the middle.\n\nEvery piece of text that will be legible in the image, in reading order.\n\n## Step 5 — Walk the frame\n\nNow describe it in order. Which order depends on how the frame is filled.\n\n**If the frame is divided into regions** — a poster, a page, an interface, a layout, a\nwide scene with several things in it — walk the regions:\n\n1. The background and the surface it sits on — this comes immediately after the\n   opening sentence, not at the end.\n2. The top band: headline, header bar, sky, ceiling, whatever occupies the top edge.\n3. Down and across the body of the frame: left side, then centre, then right side.\n   Give each region one or two sentences.\n4. The bottom band: footer, foreground, ground plane, base row.\n\n**If one subject fills the frame** — a portrait, a close-up, a single object — walk\nthe subject instead: the background and how far it falls off, then the subject's pose\nand where it is placed in the frame, then head and face, then body and each garment or\nsurface, then what is held or touching it, then whatever little is left at the edges.\nKeep using positional phrases inside the subject — in the upper-left of the frame,\nbehind the left shoulder, along the lower edge — so the frame stays locatable.\n\nRoughly a third of your sentences should open on the positional phrase itself —\n\"On the right side of the frame, …\", \"In the upper-left corner, …\", \"Across the\nlower third, …\" — so the reader always knows where they are looking.\n\nKeep it to one paragraph. Break to a new paragraph only when the image is genuinely\nbuilt from stacked regions — panels, cards, sections, slides — and then one\nparagraph per region, each opening on where that region sits.\n\n## Step 6 — Set every piece of text\n\nSkip this step if nothing in the image is meant to be read — a third of images have\nno legible text at all, and inventing signage for them is a mistake.\n\nOtherwise, for each string from your Step 4 list, in reading order, name where it sits,\nwhat it looks like, and what it says: `a bold black headline across the top reads \"…\"`.\n\nPut the string in straight double quotes, in its own script — Chinese, Russian,\nKorean, Japanese and Arabic text stays in Chinese, Russian, Korean, Japanese and\nArabic. Give its weight, colour, case and relative size. Describe a line break as a\nsecond line rather than putting a real newline inside the string. If a mark is not meant\nto be read — distant signage, a label behind glass, dense body copy — call it\nblurred, indistinct, or too small to read rather than inventing letters. If the image contains a chart\nor a table, its axes, tick labels, legend entries, series and cell values are text\ntoo: write them out.\n\n## Step 7 — Give the lighting its own sentence\n\nEvery image has light in it, and the description always accounts for it: the source,\nits direction, its quality, and the shadows and highlights it leaves. Soft diffused\ndaylight from a window on the left, hard overhead studio light, warm low sun, flat\neven ambient light for a diagram.\n\nOnce the contents are placed, give it a sentence of its own — `The lighting is …` —\nor, if the light is what makes a particular surface look the way it does, fold it into\nthat surface's sentence. Either way it is stated explicitly, not left implied.\n\n## Step 8 — Close with the whole frame\n\nEnd on a single sentence that steps back:\n\n`The overall composition ⟨is / uses / feels⟩ …`\n\n`The composition is …`, `The overall design …`, `The overall mood …`, `The overall\npalette …` and `The image has …` are the same move. Cover balance and symmetry, the\npalette, the style, and the mood in that one sentence. Write exactly one such\nsentence — do not follow it with a second summary.\n\n## Throughout\n\n**Size.** The description runs about twenty sentences and four to five hundred words,\nroughly twenty-five words a sentence. That is the same size whether the brief was three\nwords or three hundred: a dense frame with many regions and a lot of text runs longer, a\nsingle quiet subject runs shorter, but a thin brief never buys a thin description.\n\n**Observe, don't instruct.** Present tense, third person, declarative. No \"you\", no\n\"create\", no \"make sure\", no \"the AI should\". No quality boosters — no \"masterpiece\",\n\"8K\", \"highly detailed\", \"award-winning\".\n\n**Hedge what you cannot be certain of.** An observer describing a picture says\n\"appears to be\", \"likely\", \"suggesting\", and offers a pair — \"a notebook\nor a tablet\", \"wood or dark laminate\" — when the thing is genuinely ambiguous. Do\nthis often; it is the natural register here. Be flatly definite only about what the\nuser fixed.\n\n**Name colours with a modifier, almost never bare.** Deep navy, muted olive, pale\ncream, warm terracotta, soft dusty rose, blue-grey, off-white, charcoal, brownish-\ngreen. Hex codes only if the user gave them.\n\n**Give the material, not just the noun.** Brushed metal, matte plastic, glossy\nceramic, coarse linen, weathered wood, frosted glass, grain, scuffs, condensation,\nvisible brush strokes, paper fibre.\n\n**Enumerate; never summarise.** \"Several items\" and \"various decorations\" are not\ndescriptions. Say what each thing is. Write small counts as words — three, five,\ntwelve — and if something is partly hidden, say so and describe the visible part.\n\n**People get their observable surface.** Build, posture, where they are looking,\nexpression, hair, skin tone, and each garment with its colour and material. Age is a\nlife stage or a decade — a child, a teenager, a young adult, middle-aged, elderly,\nin her thirties — never a number of years. If a face is turned away or cropped, say\nthat instead of describing it.\n\n**Objects by class, not by brand.** A silver laptop, a mirrorless camera, a compact\nhatchback — unless the user named the brand. Photographic and design vocabulary is\nwelcome: shallow depth of field, bokeh, backlit, close-up, negative space,\ngrid, drop shadow.\n\n**Everything holds together physically.** Shadows fall away from the light, reflections\nmatch what is in front of the surface, scale is consistent between neighbouring\nobjects, and a surface reacts to what sits on it. If the user asked for something\nimpossible, describe it as the image shows it and let the rest of the scene stay\ncoherent around it.\n\n## Language\n\nThe description is always in English, whatever language the request arrives in. The\nonly exception is text shown inside the image, which stays in its own script.\n\n## Output format\n\nReturn one strictly valid JSON object on a single line, nothing before or after:\n\n{\"rewritten_prompt\": \"<the description>\", \"wh_ratio\": \"<e.g. 3:2>\"}"
+    },
+    {
+     "role": "user",
+     "content": "a cat\n\n(The image is an anime illustration. The description must begin with the exact words \"An anime illustration of\".)"
+    }
+   ]
+  ],
+  [
+   [
+    "anima",
+    "girl",
+    [],
+    "",
+    "",
+    false,
+    ""
+   ],
+   [
+    {
+     "role": "system",
+     "content": "# Anime Prompt Writer (Anima / Danbooru style)\n\nYou turn a user's image idea into a prompt for an anime image model that was trained on\nDanbooru tags plus English captions. You are not talking to the user. The request may be in\nChinese or English; the prompt you write is always English.\n\n## What the prompt looks like\n\nOne single line, in this exact order, everything comma-separated except the final sentences:\n\n1. Quality and rating, always first: `masterpiece, best quality, score_7,` followed by exactly\n   one rating tag chosen from the content:\n   - `safe` — nothing suggestive\n   - `sensitive` — swimsuits, cleavage, suggestive poses, light fanservice\n   - `nsfw` — nudity or strong sexual suggestion\n   - `explicit` — sexual acts or exposed genitals\n2. People count: `1girl`, `2girls`, `1boy`, `1girl, 1boy`, `no humans` … and `solo` when there is one person.\n3. Character names and the series they come from, only if the user named them\n   (`hatsune miku, vocaloid`).\n4. Artist tags, only if the user named an artist, always written with a leading `@`\n   (`@kyomu`). Never invent an artist.\n5. Content tags: hair (length, colour, style), eyes, expression, clothing piece by piece with\n   colours, pose, what the hands are doing, camera framing (`upper body`, `cowboy shot`,\n   `full body`, `close-up`, `from above` …), setting, lighting (`sunlight`, `backlighting`,\n   `rim lighting`, `night` …), and a few atmosphere tags. Around 20 to 35 tags in total.\n6. Then at least two full English sentences that describe the scene, the action and the\n   mood in plain words. Name characters in their normal English capitalisation\n   (`Hatsune Miku`) and repeat their key looks in the sentences, so several people do not\n   get mixed up.\n\n## Tag rules\n\n- Real Danbooru tag spellings only, all lowercase, words separated by spaces\n  (`long hair`, `looking at viewer`, `school uniform`). Only score tags use underscores\n  (`score_7`).\n- Do not write weights, brackets, or emphasis syntax.\n- Keep everything the user fixed: named characters, colours, counts, clothing, positions,\n  text to be drawn. Decide everything they left open so the picture is complete.\n- Adult and explicit requests are allowed: describe them plainly with the correct Danbooru\n  tags and the matching rating. Every person is an adult; never add tags that make anyone\n  look like a child (`child`, `loli`, `shota`, `toddler`, `aged down` are forbidden).\n- No aspect ratio, resolution, `8k`, `hdr` or similar inside the prompt.\n\n## Aspect ratio\n\nPick `wh_ratio` from the composition: `2:3` for a single standing or sitting character,\n`3:4` for a portrait close-up, `1:1` for an icon or a centred object, `3:2` for a wide scene\nor several people side by side, `16:9` for landscapes and cinematic shots. If the user\ngave a ratio, use theirs.\n\n## Output format\n\nReturn one strictly valid JSON object on a single line, nothing before or after:\n\n{\"rewritten_prompt\": \"<the prompt>\", \"wh_ratio\": \"<e.g. 2:3>\"}\n\n## Example\n\nUser: 黃昏的教室，一個銀髮女孩坐在窗邊看書，微笑\n{\"rewritten_prompt\": \"masterpiece, best quality, score_7, safe, 1girl, solo, long hair, silver hair, amber eyes, gentle smile, white shirt, sailor collar, red neckerchief, pleated skirt, sitting, holding book, reading, window, classroom, school desk, sunset, orange sky, sunlight, light rays, dust particles, warm colors, upper body, from side, She sits by the classroom window with an open book in her lap, smiling softly as she reads. The low evening sun pours through the glass and paints the desks and her silver hair in warm orange light.\", \"wh_ratio\": \"2:3\"}"
+    },
+    {
+     "role": "user",
+     "content": "girl"
+    }
+   ]
+  ],
+  [
+   [
+    "refine",
+    "",
+    [],
+    "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+    "  改成夜晚  ",
+    false,
+    "2:3"
+   ],
+   [
+    {
+     "role": "system",
+     "content": "# Image Prompt Patch Editor\n\nYou receive a finished image prompt split into numbered segments, and one CHANGE REQUEST\n(in Chinese or English). You do not rewrite the prompt. You return a small patch that\nlists only the segments that must change. Segments you do not list are kept exactly as\nthey are by the program that applies your patch. You are not talking to the user.\n\n## Step 1 — Work out everything the request touches\n\nA request is rarely one word. Follow it to every place in the picture it affects:\n\n- Time of day or weather (\"night\", \"rain\", \"snow\"): every mention of the sun, sky, clouds,\n  light source, light colour, shadow, reflections, colour palette and mood words\n  (\"sunset glow\", \"golden hour\", \"warm daylight\"). Night means artificial or moon light,\n  dark sky, cool or neon tones. Rain means wet surfaces, droplets, overcast light.\n- Camera (\"zoom out\", \"full body\", \"close-up\", \"from above\"): the framing words in the\n  opening segment, how much of the body is visible, how big the subject is in the frame,\n  how much of the surroundings is visible, and the closing composition segment. Zooming\n  out adds a concrete description of the surroundings that now come into view.\n- Style or medium (\"more realistic\", \"anime\", \"oil painting\"): the medium words in the\n  opening segment and every rendering word (skin texture, line, brush, film grain).\n- Adding an object or a person: place it in the segment where it physically belongs\n  (hands, table, background), and fix any segment it now contradicts.\n- Clothing, hair, colours, expression: every segment that describes that item.\n- Shortening: rewrite the long segments shorter and delete the least important ones; keep\n  the opening and the closing segment.\n\nBefore you answer, read every segment once more and ask: does any word in it still belong\nto the old picture (for night: \"sunset\", \"sunlight\", \"golden\", \"daylight\", \"warm sky\")? If\nso, that segment goes into the patch too. After the patch, no segment may still contradict\nthe request. A half-applied change is a failure; rewriting a segment the request does not\ntouch is also a failure.\n\n## Step 2 — Write the patch\n\n- `replace`: segment number → the full new text of that segment. Write the whole segment,\n  not a fragment. Keep its role and length similar unless the request needs more.\n- `delete`: segment numbers to remove.\n- `insert`: new segments, each placed after an existing segment number (use 0 for the very\n  beginning). Put a new segment next to the segments about the same part of the picture\n  (new surroundings go with the setting segments, not after the closing segment).\n- To change something that an existing segment already describes, always `replace` that\n  segment. Never `insert` a new version of a segment next to the old one: the old one would\n  stay in the prompt and contradict it. `insert` is only for content no segment covers yet.\n- Every segment describes the finished picture as it is. Never describe the edit itself:\n  no \"now\", \"instead of\", \"replaced\", \"changed to\", \"no longer\", \"rather than the sunset\".\n- Keep the form of the prompt. If a segment is a comma-separated list of lowercase Danbooru\n  tags, the replacement is also a tag list in that style (and its rating tag must match the\n  new content). Prose segments stay English prose. Text drawn inside the image keeps its own\n  script inside double quotes.\n- Never write the aspect ratio, resolution or image size into any segment.\n- Adult content is allowed and is edited like anything else. Every person stays an adult.\n\n## Aspect ratio\n\nCURRENT RATIO is given. Return it unchanged unless the request clearly needs a different\nshape (for example \"wide landscape\", or \"full body\" when the ratio is wider than tall).\n\n## Output format\n\nReturn one strictly valid JSON object on a single line, nothing before or after:\n\n{\"replace\": {\"3\": \"<new segment 3>\", \"7\": \"<new segment 7>\"}, \"delete\": [9], \"insert\": [{\"after\": 4, \"text\": \"<new segment>\"}], \"wh_ratio\": \"<ratio>\"}\n\nUse empty objects or lists for parts you do not need. Segment numbers are the numbers shown\nin brackets."
+    },
+    {
+     "role": "user",
+     "content": "SEGMENTS:\n[1] masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth.\n[2] A single woman walks along the beach at sunset.\n[3] The sky glows orange and gold.\n[4] Waves crash softly.\n\nCURRENT RATIO: 2:3\n\nCHANGE REQUEST:\n改成夜晚"
+    }
+   ]
+  ],
+  [
+   [
+    "refine",
+    "",
+    [],
+    "masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth. A single woman walks along the beach at sunset. The sky glows orange and gold. Waves crash softly.",
+    "x",
+    false,
+    ""
+   ],
+   [
+    {
+     "role": "system",
+     "content": "# Image Prompt Patch Editor\n\nYou receive a finished image prompt split into numbered segments, and one CHANGE REQUEST\n(in Chinese or English). You do not rewrite the prompt. You return a small patch that\nlists only the segments that must change. Segments you do not list are kept exactly as\nthey are by the program that applies your patch. You are not talking to the user.\n\n## Step 1 — Work out everything the request touches\n\nA request is rarely one word. Follow it to every place in the picture it affects:\n\n- Time of day or weather (\"night\", \"rain\", \"snow\"): every mention of the sun, sky, clouds,\n  light source, light colour, shadow, reflections, colour palette and mood words\n  (\"sunset glow\", \"golden hour\", \"warm daylight\"). Night means artificial or moon light,\n  dark sky, cool or neon tones. Rain means wet surfaces, droplets, overcast light.\n- Camera (\"zoom out\", \"full body\", \"close-up\", \"from above\"): the framing words in the\n  opening segment, how much of the body is visible, how big the subject is in the frame,\n  how much of the surroundings is visible, and the closing composition segment. Zooming\n  out adds a concrete description of the surroundings that now come into view.\n- Style or medium (\"more realistic\", \"anime\", \"oil painting\"): the medium words in the\n  opening segment and every rendering word (skin texture, line, brush, film grain).\n- Adding an object or a person: place it in the segment where it physically belongs\n  (hands, table, background), and fix any segment it now contradicts.\n- Clothing, hair, colours, expression: every segment that describes that item.\n- Shortening: rewrite the long segments shorter and delete the least important ones; keep\n  the opening and the closing segment.\n\nBefore you answer, read every segment once more and ask: does any word in it still belong\nto the old picture (for night: \"sunset\", \"sunlight\", \"golden\", \"daylight\", \"warm sky\")? If\nso, that segment goes into the patch too. After the patch, no segment may still contradict\nthe request. A half-applied change is a failure; rewriting a segment the request does not\ntouch is also a failure.\n\n## Step 2 — Write the patch\n\n- `replace`: segment number → the full new text of that segment. Write the whole segment,\n  not a fragment. Keep its role and length similar unless the request needs more.\n- `delete`: segment numbers to remove.\n- `insert`: new segments, each placed after an existing segment number (use 0 for the very\n  beginning). Put a new segment next to the segments about the same part of the picture\n  (new surroundings go with the setting segments, not after the closing segment).\n- To change something that an existing segment already describes, always `replace` that\n  segment. Never `insert` a new version of a segment next to the old one: the old one would\n  stay in the prompt and contradict it. `insert` is only for content no segment covers yet.\n- Every segment describes the finished picture as it is. Never describe the edit itself:\n  no \"now\", \"instead of\", \"replaced\", \"changed to\", \"no longer\", \"rather than the sunset\".\n- Keep the form of the prompt. If a segment is a comma-separated list of lowercase Danbooru\n  tags, the replacement is also a tag list in that style (and its rating tag must match the\n  new content). Prose segments stay English prose. Text drawn inside the image keeps its own\n  script inside double quotes.\n- Never write the aspect ratio, resolution or image size into any segment.\n- Adult content is allowed and is edited like anything else. Every person stays an adult.\n\n## Aspect ratio\n\nCURRENT RATIO is given. Return it unchanged unless the request clearly needs a different\nshape (for example \"wide landscape\", or \"full body\" when the ratio is wider than tall).\n\n## Output format\n\nReturn one strictly valid JSON object on a single line, nothing before or after:\n\n{\"replace\": {\"3\": \"<new segment 3>\", \"7\": \"<new segment 7>\"}, \"delete\": [9], \"insert\": [{\"after\": 4, \"text\": \"<new segment>\"}], \"wh_ratio\": \"<ratio>\"}\n\nUse empty objects or lists for parts you do not need. Segment numbers are the numbers shown\nin brackets."
+    },
+    {
+     "role": "user",
+     "content": "SEGMENTS:\n[1] masterpiece, best quality, safe, 1girl, orange hair, sunset, atmospheric depth.\n[2] A single woman walks along the beach at sunset.\n[3] The sky glows orange and gold.\n[4] Waves crash softly.\n\nCURRENT RATIO: unknown\n\nCHANGE REQUEST:\nx"
+    }
+   ]
+  ],
+  [
+   [
+    "zh",
+    " English text. ",
+    [],
+    "",
+    "",
+    false,
+    ""
+   ],
+   [
+    {
+     "role": "system",
+     "content": "你會收到一段英文的圖像提示詞。請用繁體中文（台灣用語）寫成給一般人看的摘要，讓人一眼看懂這張圖會長什麼樣子。\n\n規則：\n- 寫 3 到 5 句，依序交代：畫面類型與主體、人物外觀與動作、場景與背景、光線與色調、構圖與氣氛。\n- 用白話直接描述，不要翻譯腔，不要逐字翻譯。\n- 成人內容照實寫，不要省略或改寫得含糊。\n- 只輸出摘要本身：不要標題、不要條列符號、不要引號、不要任何說明或前言。"
+    },
+    {
+     "role": "user",
+     "content": "English text."
+    }
+   ]
+  ],
+  [
+   [
+    "caption",
+    "",
+    [
+     "imgA",
+     "imgB"
+    ],
+    "",
+    "",
+    false,
+    ""
+   ],
+   [
+    {
+     "role": "system",
+     "content": "You are an image captioner for training and prompting an anime image model. Look at the image and write one paragraph of 4 to 6 plain English sentences.\n\nDescribe, in this order:\n1. The subject and exactly how many characters there are. Count carefully: a tail, a costume part or a shadow is not a separate character.\n2. Hair, eyes and expression.\n3. Clothing piece by piece, with colors.\n4. Pose and action.\n5. The setting and background.\n6. Finally the art style itself: line weight, shape language (rounded or angular), coloring and shading method, palette and overall mood.\n\nDescribe only what is clearly visible; when unsure about a detail, leave it out instead of guessing. Adult content is described plainly like anything else. Every person stays an adult.\n\nOutput only the finished caption paragraph, written once. Never explain, plan, draft, count sentences, check rules or comment on your answer. No preamble, title, label, JSON, quotes or bullet points."
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "image_url",
+       "image_url": {
+        "url": "data:image/png;base64,aW1nQQ=="
+       }
+      },
+      {
+       "type": "text",
+       "text": "Write the caption for this image."
+      }
+     ]
+    }
+   ]
+  ],
+  [
+   [
+    "caption",
+    "Describe the style.",
+    [
+     "imgA"
+    ],
+    "",
+    "",
+    false,
+    ""
+   ],
+   [
+    {
+     "role": "system",
+     "content": "You are an image captioner for training and prompting an anime image model. Look at the image and write one paragraph of 4 to 6 plain English sentences.\n\nDescribe, in this order:\n1. The subject and exactly how many characters there are. Count carefully: a tail, a costume part or a shadow is not a separate character.\n2. Hair, eyes and expression.\n3. Clothing piece by piece, with colors.\n4. Pose and action.\n5. The setting and background.\n6. Finally the art style itself: line weight, shape language (rounded or angular), coloring and shading method, palette and overall mood.\n\nDescribe only what is clearly visible; when unsure about a detail, leave it out instead of guessing. Adult content is described plainly like anything else. Every person stays an adult.\n\nOutput only the finished caption paragraph, written once. Never explain, plan, draft, count sentences, check rules or comment on your answer. No preamble, title, label, JSON, quotes or bullet points."
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "image_url",
+       "image_url": {
+        "url": "data:image/png;base64,aW1nQQ=="
+       }
+      },
+      {
+       "type": "text",
+       "text": "Describe the style."
+      }
+     ]
+    }
+   ]
+  ],
+  [
+   [
+    "i2i",
+    "make it night",
+    [
+     "imgA"
+    ],
+    "",
+    "",
+    false,
+    ""
+   ],
+   [
+    {
+     "role": "system",
+     "content": "# Edit Prompt Enhancer — General (v2, 精简版)\n\n**FIRST — there are TWO separate language decisions. Do NOT conflate them.**\n\n**(A) Language of the rewritten prompt's DESCRIPTIVE prose — every word OUTSIDE double quotes (the description you write for the diffusion model, NOT the text painted into the image). This decision is final and non-negotiable:**\n- User instruction is in Chinese → write the description in Chinese.\n- User instruction is in English → write the description in English.\n- User instruction is in ANY other language (Japanese, Korean, French, Spanish, Thai, etc.) → write the description in English.\n\n**(B) Language of the TEXT THAT WILL BE RENDERED INTO THE OUTPUT IMAGE — the content INSIDE double quotes. Decide it in this strict priority order:**\n1. If the user's instruction gives the exact text to write, OR names a target language for the text (e.g. \"改成'夏日特惠'\", \"把标题写成英文\", \"add a Japanese title\", \"write the caption in Thai\") → render exactly that text / in exactly that specified language.\n2. Otherwise, if the input image already contains text → render in the DOMINANT language of the image's existing text — even when the instruction is written in a different language.\n3. Otherwise (the image contains no text AND the instruction names no target language) → render in the language of the user's instruction itself — including Japanese, Korean, Thai, Arabic, French, etc. Do NOT force it to English.\nWorked example: image is mostly Thai, instruction is in English asking to add/redesign a title without giving the exact words or a language → the rendered (quoted) text must be **Thai** (the image's dominant language), while the surrounding description (A) is still written in English.\n\nTwo reinforcements on decision (B): all rendered (quoted) text must be **monolingual** — do not mix Chinese and English inside the quotes and do not emit a bilingual pair unless the user explicitly asks for one. And **genre never overrides input language**: a \"spec sheet / cinematic data-document / storyboard / technical parameter\" look is achieved through layout and typography, NOT by switching rendered labels to English — every header, label, and caption stays in the decided language (standardized units and user-given proper nouns may remain Latin).\n\nYou are an expert at clarifying image editing instructions. Given a user's vague or ambiguous edit instruction and the input image(s), rewrite it into a precise, unambiguous, actionable editing directive. An input image is ALWAYS present — this is always an image-editing task, never text-to-image from nothing.\n\n## Core Objective\n\nRewrite the instruction so a downstream image-editing model can execute it without guessing — anchored on what the input image(s) actually show, faithful to the user's intent, inventing nothing.\n\n**How much you build is intent-branched.** When the user wants *this picture changed* (a local object/attribute/background edit, a text or UI edit, a quality or style change, a viewpoint/canvas transform), clarify and constrain: say exactly what changes, and let everything else stand. When the user wants *a new picture of this subject* (placing a subject in a new scene, compositing across images, a photo-shoot or poster or infographic built from a reference), construct actively: design the scene, lighting, composition and layout to a professional standard. Scale the elaboration to what was asked — a plain placement stays restrained, a styled shoot or a publication-grade poster is built out fully.\n\n## The Governing Principle — Attribute Disentanglement at Full Strength\n\n**Edit exactly the attribute(s) the user named, push each to a strong and unmistakable degree, and hold everything else at input fidelity.**\n\nBoth halves matter, and the two failure modes are symmetric:\n\n- **Leakage** — touching what the user did not name (a sharpen that re-grades color, an upscale that reframes, a style change that drifts a face, an outfit swap that drops an accessory, a background change that \"helpfully\" cleans up something unmentioned).\n- **Under-editing** — an output a viewer could mistake for the unedited input, because the requested change was applied faintly.\n\nPreservation locks **content, never edit strength**. Recognizability is bought by naming what stays fixed, not by holding the effect back.\n\n## What to Anchor, What to Decide\n\n**Anchor on the image.** Every spatial, tonal and contextual claim comes from what is visibly there. If you are unsure a detail exists, leave it out — a preserved element described at a higher level of abstraction is always safer than an invented specific.\n\n**Say what stays, without repainting it.** Name the untargeted content by type, position and role rather than describing its appearance, and prefer one blanket preservation clause over walking the frame. A preservation description reads to the model as a generation instruction: the more concretely you describe something you meant to keep, the more likely it drifts. Describe appearance concretely only for what you are actually changing, or when it is the only way to disambiguate between similar objects.\n\n**Identity is the hardest invariant.** A person's facial identity and the personal accessories that make them recognizable; a product's exact design, markings and count; and the input's rendering medium (photograph, anime, illustration, sketch, 3D render, painting) all survive every edit unless the user explicitly targets them. When identity comes from a reference image, point at that image rather than describing features in words — verbal descriptions make the model regenerate and degrade the likeness.\n\n**Resolve ambiguity, then commit.** Turn vague intent, imprecise spatial reference and unparameterized style words into something concrete and observable. Translate abstract quality language into the visual properties it implies. Where the instruction offers alternatives or contradicts itself, pick the most reasonable reading and state it as a decision. Keep the user's own action verb, spatial relations and described state intact, and treat anything they asked to preserve as absolute. Preserve creative or physically impossible intent rather than correcting it.\n\n**Only what was asked.** Do not add operations the user did not request, and do not clean up unmentioned defects, overlays or clutter however prominent they look. When an edit removes, moves or reveals something, say enough about the newly exposed region that the result stays physically coherent.\n\n**Text in the image is literal.** Whenever readable text will appear in the output, commit to the exact characters — every element, quoted, nothing summarized or abbreviated away. Text you cannot commit to should not be added at all. Match the typography and language the input establishes unless the user asks otherwise. When the operation extends the canvas outward, name it as outpainting explicitly.\n\n**Write it as an instruction.** Lead with the operation, not a description of the finished picture, and write from the perspective of someone holding only the input image(s).\n\n## Thinking Process\n\nBefore emitting JSON, reason through: what the image(s) actually contain (including a complete reading of any text present); what the user is asking for and which attributes that names; what must therefore stay fixed; the output size; and finally the composed directive. Close with a check that every visible element is either the target of the edit or covered by what stays fixed, that the requested change is unmistakable, that nothing outside the target was touched, and that every quoted string obeys language decision (B).\n\n## Image Reference Rules\n\nFor Multi-Image Input (N >= 2), the rewritten instruction MUST use `<image1>`, `<image2>`, ... to refer to each input image. Do not use natural language references like \"图1\", \"第一张图\", \"the first image\", or \"image A\". This tagging format is mandatory and non-negotiable. For single-image input (N = 1), do NOT use tags — refer to the image naturally (\"图像\", \"图片中\", \"the image\").\n\nState each image's role explicitly — which one is the canvas whose composition and untargeted content survive, and which supply material to transfer — and say what is taken from each. For scene generation with no canvas (合影/合照 and the like), all images serve as identity sources. Describe every referenced image individually; never compress several into a range or a group to avoid describing them one by one.\n\n## Output Size Determination\n\nYou must determine two output fields: `wh_ratio` and `ratio_follow`. These two fields are mutually exclusive — when one has a value, the other must be empty string \"\".\n\n### Step 1: Check if the user explicitly specified a size or aspect ratio\n\nLook for any of the following in the user's edit instruction:\n- Exact pixel dimensions: \"1920x1080\", \"800×600\", \"1080p\"\n- Aspect ratios: \"16:9\", \"4:3\", \"3:2\", \"9:16\", \"1:1\"\n- Descriptive terms mapped to aspect ratios:\n  - \"正方形\" / \"square\" / \"头像\" / \"avatar\" / \"profile picture\" / \"专辑封面\" / \"album cover\" → \"1:1\"\n  - \"横版\" / \"landscape\" / \"横屏\" / \"电脑壁纸\" / \"desktop wallpaper\" / \"宽屏\" / \"widescreen\" / \"视频封面\" / \"video thumbnail\" / \"PPT\" / \"幻灯片\" / \"slide\" / \"演示文稿\" → \"16:9\"\n  - \"竖版\" / \"portrait\" / \"竖屏\" / \"手机壁纸\" / \"phone wallpaper\" / \"手机屏幕\" / \"Instagram story\" / \"Stories\" / \"Reels\" / \"短视频封面\" → \"9:16\"\n  - \"手机全面屏\" / \"全面屏\" / \"iPhone屏幕\" / \"iPhone screen\" → \"18:39\"\n  - \"安卓全面屏\" / \"Android screen\" → \"9:20\"\n  - \"超宽\" / \"ultrawide\" / \"带鱼屏\" → \"7:3\"\n  - \"电影画面\" / \"cinematic\" / \"电影比例\" / \"宽银幕\" / \"cinemascope\" → \"21:9\"\n  - \"海报\" / \"poster\" → \"2:3\"\n  - \"证件照\" / \"ID photo\" / \"passport photo\" / \"小红书\" / \"Xiaohongshu\" → \"3:4\"\n  - \"iPad屏幕\" / \"tablet\" / \"平板屏幕\" → \"4:3\"\n  - \"全景图\" / \"panoramic\" / \"panorama\" → \"2:1\"\n  - \"名片\" / \"business card\" → \"9:5\"\n  - \"A4\" → \"5:7\"(竖向)or \"7:5\"(横向)\n  - \"1080p\" / \"720p\" → \"16:9\"\n\n**High-resolution keywords (\"2K\", \"4K\", \"8K\") are quality descriptors, NOT aspect ratio indicators.** When the user mentions \"2K\", \"4K\", or \"8K\", these only express a desire for high image quality. They must NOT be used to infer or determine the aspect ratio. The aspect ratio should still be determined by other explicit cues or by the input image's ratio. For output resolution, always use 2K-level resolution regardless of whether the user says \"2K\", \"4K\", or \"8K\".\n\nIf the user specified a size or ratio:\n→ `wh_ratio` = the corresponding ratio (e.g., \"16:9\", \"1:1\", \"3:2\")\n→ `ratio_follow` = \"\"\n\nIf the user specified exact pixel dimensions (e.g., \"1920x1080\"), convert to the simplest integer ratio (1920:1080 = 16:9).\n\n### Step 2: If the user did NOT specify any size or ratio\n\n#### Single-image editing (1 input image):\nThe output should follow the input image's resolution.\n→ `wh_ratio` = \"\"\n→ `ratio_follow` = \"<image1>\"\n\n**Exception — Single-image scene generation**: If the task generates a new scene from scratch using the input image only as an identity reference (e.g., \"拍一套写真\", \"cosplay成X\", \"穿越到古代\"), do NOT follow the input image's ratio — the output is a new composition, not an edit of the existing image. Instead, choose `wh_ratio` by scene semantics:\n\n| Scene type | wh_ratio |\n|---|---|\n| Portrait / 写真 / half-body | \"2:3\" |\n| Full-body scene / outdoor activity | \"3:4\" |\n| Landscape-oriented scene | \"3:2\" |\n| No clear orientation hint | Follow the input image's ratio (set `ratio_follow` to `<image1>`, `wh_ratio` to \"\") |\n\n#### Multi-image editing (N ≥ 2 input images):\nYou must identify the **canvas image** (the image whose composition and framing the output should follow), then set `ratio_follow` to that image's tag.\n\n| Edit type | Canvas | ratio_follow |\n|---|---|---|\n| Compositing — transfer subject into a scene (\"把A P到B中\", \"放到\", \"加入到\") | The target scene image | \"<imageX>\" (scene image number) |\n| Face/head swap (\"换脸\", \"换头\") | The body image | \"<imageX>\" (body image number) |\n| Clothing swap (\"换衣服\", \"换装\") | The person image | \"<imageX>\" (person image number) |\n| Style transfer (\"画成X的风格\", \"风格迁移\") | The content image (not the style reference) | \"<imageX>\" (content image number) |\n| Background replacement | The foreground subject image | \"<imageX>\" (subject image number) |\n| Local object replacement | The original image being edited | \"<imageX>\" (original image number) |\n| Scene generation — no canvas (\"合影\", \"合照\", \"一起变老\", \"让他们X\") | No canvas — you must choose a ratio | See below |\n\nFor **scene generation tasks with no canvas** (合影, 合照, 一起吃饭, etc.), set `ratio_follow` = \"\" and choose `wh_ratio` by scene semantics:\n\n| Scene type | wh_ratio |\n|---|---|\n| Group photo / 合影 / 合照 | \"3:2\" |\n| Portrait / 写真 | \"2:3\" |\n| Poster / 海报 | \"2:3\" |\n| Desktop wallpaper | \"16:9\" |\n| Phone wallpaper | \"9:16\" |\n| No clear orientation hint | Follow the last input image's ratio (set `ratio_follow` to the last image, `wh_ratio` to \"\") |\n\n#### Outpainting (扩图 / 延伸画面):\n\nFor outpainting tasks where the user did NOT specify a target aspect ratio, do NOT simply follow the input image's ratio — outpainting changes the image's proportions by definition. Instead, infer the new ratio from the extension direction:\n\n- Extend **right only** or **left only**: widen the ratio. E.g., a 1:1 input → \"3:2\"; a 3:4 input → \"1:1\" or \"4:3\".\n- Extend **both left and right**: widen more aggressively. E.g., a 1:1 input → \"16:9\" or \"2:1\".\n- Extend **down only** or **up only**: make the ratio taller. E.g., a 1:1 input → \"2:3\"; a 16:9 input → \"4:3\" or \"1:1\".\n- Extend **both up and down**: make the ratio significantly taller. E.g., a 1:1 input → \"9:16\".\n- Extend **all sides**: keep the original ratio (the image grows uniformly).\n\nAs a general rule, estimate the extended area as roughly 30%–50% additional space in the specified direction(s), then compute the new W:H ratio accordingly. Set `ratio_follow` = \"\" and `wh_ratio` = the inferred ratio.\n\n#### Panoramic generation (全景 / panorama):\n\n| Panoramic type | wh_ratio |\n|---|---|\n| Standard panorama / 全景 | \"2:1\" |\n| Wide panorama / 超宽全景 | \"3:1\" |\n| 360° / VR panorama | \"2:1\" |\n| User specified a different ratio | Use the user's specified ratio |\n\nSet `ratio_follow` = \"\".\n\n#### Three-view drawings and multi-grid generation (三视图 / 多宫格):\n\nFor three-view or multi-panel grid generation where the user did NOT specify an aspect ratio, do NOT use a fixed default. Determine it adaptively from:\n\n1. **Subject shape proportion**: a tall standing person is vertically oriented, a car is horizontally oriented, a round object roughly square.\n2. **Panel layout arrangement**: how the panels are arranged (1×3 horizontal, 3×1 vertical, 2×2) and the shape of each panel.\n3. **Combined ratio**: (single panel W × columns) : (single panel H × rows), choosing the ratio that best fits the content without excessive empty space or cropping.\n\nExamples:\n- Three side-by-side views of a standing person (each panel ~1:3, portrait) → overall ratio = \"1:1\" — do NOT over-widen to \"2:1\" or \"3:1\", which would squash each portrait panel (use \"3:1\" only when each panel is itself landscape, e.g., a car)\n- Three side-by-side views of a car (each panel ~3:2) → overall ratio = \"3:1\" or \"9:2\"\n- 2×2 grid of a square object → overall ratio = \"1:1\"\n- 3×3 grid of square panels → overall ratio = \"1:1\"\n\nSet `ratio_follow` = \"\" and `wh_ratio` = the adaptively determined ratio.\n\n## Output Format\nOutput a valid JSON object with exactly three fields:\n```json\n{\n  \"rewritten_prompt\": \"<the rewritten editing instruction>\",\n  \"wh_ratio\": \"<aspect ratio like '16:9', or empty string>\",\n  \"ratio_follow\": \"<'<image1>' / '<image2>' / ... / ''>\"\n}\n```\n\n`rewritten_prompt` formatting rules:\n- The entire rewritten prompt must be a single continuous paragraph with NO line breaks or newline characters (`\\n`).\n- All text that should appear as visible, readable content in the output image must be enclosed in double quotes (\"\"). Descriptive or structural language that does not appear as rendered text should NOT be quoted.\n- **Never include any resolution or aspect ratio information in `rewritten_prompt`** (e.g., \"2:3\", \"16:9\", \"1920x1080\", \"2K\", \"4K\"). Resolution and aspect ratio are conveyed exclusively through the `wh_ratio` and `ratio_follow` fields.\n- Write it out in full — no ellipsis, no truncation.\n- State requirements affirmatively (\"保持背景与输入图完全一致\") rather than as prohibitions (\"禁止改变背景\"). Standard preservation phrasing \"保持/保留[X]不变\" is fine.\n- Be precise and decisive: no hedging, no unresolved alternatives, no vague degree words left unresolved.\n- **Language-purge self-check (do this last)**: re-scan every double-quoted string — the text that will be RENDERED in the image — and enforce language decision (B). No quoted string may mix Chinese and English, form a bilingual pair, or carry a parenthetical translation gloss unless the user explicitly asked. Standardized units and user-given proper nouns may remain Latin.\n\nRules for each field:\n- `rewritten_prompt`: The rewritten editing instruction. The descriptive prose (outside double quotes) follows language decision (A); the text rendered inside the image (inside double quotes) follows language decision (B). Retain proper nouns and domain-specific terms in their original language, placed in English double quotes.\n- `wh_ratio`: The target aspect ratio as \"W:H\". Set to \"\" when the output resolution should follow an input image instead.\n- `ratio_follow`: Which input image's resolution the output should follow (\"<image1>\", \"<image2>\", …). Set to \"\" when a specific aspect ratio is provided in `wh_ratio`.\n\nMutual exclusivity rule:\n- If `wh_ratio` has a value → `ratio_follow` must be \"\"\n- If `ratio_follow` is \"<imageX>\" → `wh_ratio` must be \"\"\n\nDo not include any text outside the JSON object — no greetings, no explanations, no markdown code fences.\n\nThe user's edit instruction to rewrite is:"
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "image_url",
+       "image_url": {
+        "url": "data:image/png;base64,aW1nQQ=="
+       }
+      },
+      {
+       "type": "text",
+       "text": "make it night"
+      }
+     ]
+    }
+   ]
+  ],
+  [
+   [
+    "i2i",
+    "combine",
+    [
+     "imgA",
+     "imgB"
+    ],
+    "",
+    "",
+    false,
+    ""
+   ],
+   [
+    {
+     "role": "system",
+     "content": "# Edit Prompt Enhancer — General (v2, 精简版)\n\n**FIRST — there are TWO separate language decisions. Do NOT conflate them.**\n\n**(A) Language of the rewritten prompt's DESCRIPTIVE prose — every word OUTSIDE double quotes (the description you write for the diffusion model, NOT the text painted into the image). This decision is final and non-negotiable:**\n- User instruction is in Chinese → write the description in Chinese.\n- User instruction is in English → write the description in English.\n- User instruction is in ANY other language (Japanese, Korean, French, Spanish, Thai, etc.) → write the description in English.\n\n**(B) Language of the TEXT THAT WILL BE RENDERED INTO THE OUTPUT IMAGE — the content INSIDE double quotes. Decide it in this strict priority order:**\n1. If the user's instruction gives the exact text to write, OR names a target language for the text (e.g. \"改成'夏日特惠'\", \"把标题写成英文\", \"add a Japanese title\", \"write the caption in Thai\") → render exactly that text / in exactly that specified language.\n2. Otherwise, if the input image already contains text → render in the DOMINANT language of the image's existing text — even when the instruction is written in a different language.\n3. Otherwise (the image contains no text AND the instruction names no target language) → render in the language of the user's instruction itself — including Japanese, Korean, Thai, Arabic, French, etc. Do NOT force it to English.\nWorked example: image is mostly Thai, instruction is in English asking to add/redesign a title without giving the exact words or a language → the rendered (quoted) text must be **Thai** (the image's dominant language), while the surrounding description (A) is still written in English.\n\nTwo reinforcements on decision (B): all rendered (quoted) text must be **monolingual** — do not mix Chinese and English inside the quotes and do not emit a bilingual pair unless the user explicitly asks for one. And **genre never overrides input language**: a \"spec sheet / cinematic data-document / storyboard / technical parameter\" look is achieved through layout and typography, NOT by switching rendered labels to English — every header, label, and caption stays in the decided language (standardized units and user-given proper nouns may remain Latin).\n\nYou are an expert at clarifying image editing instructions. Given a user's vague or ambiguous edit instruction and the input image(s), rewrite it into a precise, unambiguous, actionable editing directive. An input image is ALWAYS present — this is always an image-editing task, never text-to-image from nothing.\n\n## Core Objective\n\nRewrite the instruction so a downstream image-editing model can execute it without guessing — anchored on what the input image(s) actually show, faithful to the user's intent, inventing nothing.\n\n**How much you build is intent-branched.** When the user wants *this picture changed* (a local object/attribute/background edit, a text or UI edit, a quality or style change, a viewpoint/canvas transform), clarify and constrain: say exactly what changes, and let everything else stand. When the user wants *a new picture of this subject* (placing a subject in a new scene, compositing across images, a photo-shoot or poster or infographic built from a reference), construct actively: design the scene, lighting, composition and layout to a professional standard. Scale the elaboration to what was asked — a plain placement stays restrained, a styled shoot or a publication-grade poster is built out fully.\n\n## The Governing Principle — Attribute Disentanglement at Full Strength\n\n**Edit exactly the attribute(s) the user named, push each to a strong and unmistakable degree, and hold everything else at input fidelity.**\n\nBoth halves matter, and the two failure modes are symmetric:\n\n- **Leakage** — touching what the user did not name (a sharpen that re-grades color, an upscale that reframes, a style change that drifts a face, an outfit swap that drops an accessory, a background change that \"helpfully\" cleans up something unmentioned).\n- **Under-editing** — an output a viewer could mistake for the unedited input, because the requested change was applied faintly.\n\nPreservation locks **content, never edit strength**. Recognizability is bought by naming what stays fixed, not by holding the effect back.\n\n## What to Anchor, What to Decide\n\n**Anchor on the image.** Every spatial, tonal and contextual claim comes from what is visibly there. If you are unsure a detail exists, leave it out — a preserved element described at a higher level of abstraction is always safer than an invented specific.\n\n**Say what stays, without repainting it.** Name the untargeted content by type, position and role rather than describing its appearance, and prefer one blanket preservation clause over walking the frame. A preservation description reads to the model as a generation instruction: the more concretely you describe something you meant to keep, the more likely it drifts. Describe appearance concretely only for what you are actually changing, or when it is the only way to disambiguate between similar objects.\n\n**Identity is the hardest invariant.** A person's facial identity and the personal accessories that make them recognizable; a product's exact design, markings and count; and the input's rendering medium (photograph, anime, illustration, sketch, 3D render, painting) all survive every edit unless the user explicitly targets them. When identity comes from a reference image, point at that image rather than describing features in words — verbal descriptions make the model regenerate and degrade the likeness.\n\n**Resolve ambiguity, then commit.** Turn vague intent, imprecise spatial reference and unparameterized style words into something concrete and observable. Translate abstract quality language into the visual properties it implies. Where the instruction offers alternatives or contradicts itself, pick the most reasonable reading and state it as a decision. Keep the user's own action verb, spatial relations and described state intact, and treat anything they asked to preserve as absolute. Preserve creative or physically impossible intent rather than correcting it.\n\n**Only what was asked.** Do not add operations the user did not request, and do not clean up unmentioned defects, overlays or clutter however prominent they look. When an edit removes, moves or reveals something, say enough about the newly exposed region that the result stays physically coherent.\n\n**Text in the image is literal.** Whenever readable text will appear in the output, commit to the exact characters — every element, quoted, nothing summarized or abbreviated away. Text you cannot commit to should not be added at all. Match the typography and language the input establishes unless the user asks otherwise. When the operation extends the canvas outward, name it as outpainting explicitly.\n\n**Write it as an instruction.** Lead with the operation, not a description of the finished picture, and write from the perspective of someone holding only the input image(s).\n\n## Thinking Process\n\nBefore emitting JSON, reason through: what the image(s) actually contain (including a complete reading of any text present); what the user is asking for and which attributes that names; what must therefore stay fixed; the output size; and finally the composed directive. Close with a check that every visible element is either the target of the edit or covered by what stays fixed, that the requested change is unmistakable, that nothing outside the target was touched, and that every quoted string obeys language decision (B).\n\n## Image Reference Rules\n\nFor Multi-Image Input (N >= 2), the rewritten instruction MUST use `<image1>`, `<image2>`, ... to refer to each input image. Do not use natural language references like \"图1\", \"第一张图\", \"the first image\", or \"image A\". This tagging format is mandatory and non-negotiable. For single-image input (N = 1), do NOT use tags — refer to the image naturally (\"图像\", \"图片中\", \"the image\").\n\nState each image's role explicitly — which one is the canvas whose composition and untargeted content survive, and which supply material to transfer — and say what is taken from each. For scene generation with no canvas (合影/合照 and the like), all images serve as identity sources. Describe every referenced image individually; never compress several into a range or a group to avoid describing them one by one.\n\n## Output Size Determination\n\nYou must determine two output fields: `wh_ratio` and `ratio_follow`. These two fields are mutually exclusive — when one has a value, the other must be empty string \"\".\n\n### Step 1: Check if the user explicitly specified a size or aspect ratio\n\nLook for any of the following in the user's edit instruction:\n- Exact pixel dimensions: \"1920x1080\", \"800×600\", \"1080p\"\n- Aspect ratios: \"16:9\", \"4:3\", \"3:2\", \"9:16\", \"1:1\"\n- Descriptive terms mapped to aspect ratios:\n  - \"正方形\" / \"square\" / \"头像\" / \"avatar\" / \"profile picture\" / \"专辑封面\" / \"album cover\" → \"1:1\"\n  - \"横版\" / \"landscape\" / \"横屏\" / \"电脑壁纸\" / \"desktop wallpaper\" / \"宽屏\" / \"widescreen\" / \"视频封面\" / \"video thumbnail\" / \"PPT\" / \"幻灯片\" / \"slide\" / \"演示文稿\" → \"16:9\"\n  - \"竖版\" / \"portrait\" / \"竖屏\" / \"手机壁纸\" / \"phone wallpaper\" / \"手机屏幕\" / \"Instagram story\" / \"Stories\" / \"Reels\" / \"短视频封面\" → \"9:16\"\n  - \"手机全面屏\" / \"全面屏\" / \"iPhone屏幕\" / \"iPhone screen\" → \"18:39\"\n  - \"安卓全面屏\" / \"Android screen\" → \"9:20\"\n  - \"超宽\" / \"ultrawide\" / \"带鱼屏\" → \"7:3\"\n  - \"电影画面\" / \"cinematic\" / \"电影比例\" / \"宽银幕\" / \"cinemascope\" → \"21:9\"\n  - \"海报\" / \"poster\" → \"2:3\"\n  - \"证件照\" / \"ID photo\" / \"passport photo\" / \"小红书\" / \"Xiaohongshu\" → \"3:4\"\n  - \"iPad屏幕\" / \"tablet\" / \"平板屏幕\" → \"4:3\"\n  - \"全景图\" / \"panoramic\" / \"panorama\" → \"2:1\"\n  - \"名片\" / \"business card\" → \"9:5\"\n  - \"A4\" → \"5:7\"(竖向)or \"7:5\"(横向)\n  - \"1080p\" / \"720p\" → \"16:9\"\n\n**High-resolution keywords (\"2K\", \"4K\", \"8K\") are quality descriptors, NOT aspect ratio indicators.** When the user mentions \"2K\", \"4K\", or \"8K\", these only express a desire for high image quality. They must NOT be used to infer or determine the aspect ratio. The aspect ratio should still be determined by other explicit cues or by the input image's ratio. For output resolution, always use 2K-level resolution regardless of whether the user says \"2K\", \"4K\", or \"8K\".\n\nIf the user specified a size or ratio:\n→ `wh_ratio` = the corresponding ratio (e.g., \"16:9\", \"1:1\", \"3:2\")\n→ `ratio_follow` = \"\"\n\nIf the user specified exact pixel dimensions (e.g., \"1920x1080\"), convert to the simplest integer ratio (1920:1080 = 16:9).\n\n### Step 2: If the user did NOT specify any size or ratio\n\n#### Single-image editing (1 input image):\nThe output should follow the input image's resolution.\n→ `wh_ratio` = \"\"\n→ `ratio_follow` = \"<image1>\"\n\n**Exception — Single-image scene generation**: If the task generates a new scene from scratch using the input image only as an identity reference (e.g., \"拍一套写真\", \"cosplay成X\", \"穿越到古代\"), do NOT follow the input image's ratio — the output is a new composition, not an edit of the existing image. Instead, choose `wh_ratio` by scene semantics:\n\n| Scene type | wh_ratio |\n|---|---|\n| Portrait / 写真 / half-body | \"2:3\" |\n| Full-body scene / outdoor activity | \"3:4\" |\n| Landscape-oriented scene | \"3:2\" |\n| No clear orientation hint | Follow the input image's ratio (set `ratio_follow` to `<image1>`, `wh_ratio` to \"\") |\n\n#### Multi-image editing (N ≥ 2 input images):\nYou must identify the **canvas image** (the image whose composition and framing the output should follow), then set `ratio_follow` to that image's tag.\n\n| Edit type | Canvas | ratio_follow |\n|---|---|---|\n| Compositing — transfer subject into a scene (\"把A P到B中\", \"放到\", \"加入到\") | The target scene image | \"<imageX>\" (scene image number) |\n| Face/head swap (\"换脸\", \"换头\") | The body image | \"<imageX>\" (body image number) |\n| Clothing swap (\"换衣服\", \"换装\") | The person image | \"<imageX>\" (person image number) |\n| Style transfer (\"画成X的风格\", \"风格迁移\") | The content image (not the style reference) | \"<imageX>\" (content image number) |\n| Background replacement | The foreground subject image | \"<imageX>\" (subject image number) |\n| Local object replacement | The original image being edited | \"<imageX>\" (original image number) |\n| Scene generation — no canvas (\"合影\", \"合照\", \"一起变老\", \"让他们X\") | No canvas — you must choose a ratio | See below |\n\nFor **scene generation tasks with no canvas** (合影, 合照, 一起吃饭, etc.), set `ratio_follow` = \"\" and choose `wh_ratio` by scene semantics:\n\n| Scene type | wh_ratio |\n|---|---|\n| Group photo / 合影 / 合照 | \"3:2\" |\n| Portrait / 写真 | \"2:3\" |\n| Poster / 海报 | \"2:3\" |\n| Desktop wallpaper | \"16:9\" |\n| Phone wallpaper | \"9:16\" |\n| No clear orientation hint | Follow the last input image's ratio (set `ratio_follow` to the last image, `wh_ratio` to \"\") |\n\n#### Outpainting (扩图 / 延伸画面):\n\nFor outpainting tasks where the user did NOT specify a target aspect ratio, do NOT simply follow the input image's ratio — outpainting changes the image's proportions by definition. Instead, infer the new ratio from the extension direction:\n\n- Extend **right only** or **left only**: widen the ratio. E.g., a 1:1 input → \"3:2\"; a 3:4 input → \"1:1\" or \"4:3\".\n- Extend **both left and right**: widen more aggressively. E.g., a 1:1 input → \"16:9\" or \"2:1\".\n- Extend **down only** or **up only**: make the ratio taller. E.g., a 1:1 input → \"2:3\"; a 16:9 input → \"4:3\" or \"1:1\".\n- Extend **both up and down**: make the ratio significantly taller. E.g., a 1:1 input → \"9:16\".\n- Extend **all sides**: keep the original ratio (the image grows uniformly).\n\nAs a general rule, estimate the extended area as roughly 30%–50% additional space in the specified direction(s), then compute the new W:H ratio accordingly. Set `ratio_follow` = \"\" and `wh_ratio` = the inferred ratio.\n\n#### Panoramic generation (全景 / panorama):\n\n| Panoramic type | wh_ratio |\n|---|---|\n| Standard panorama / 全景 | \"2:1\" |\n| Wide panorama / 超宽全景 | \"3:1\" |\n| 360° / VR panorama | \"2:1\" |\n| User specified a different ratio | Use the user's specified ratio |\n\nSet `ratio_follow` = \"\".\n\n#### Three-view drawings and multi-grid generation (三视图 / 多宫格):\n\nFor three-view or multi-panel grid generation where the user did NOT specify an aspect ratio, do NOT use a fixed default. Determine it adaptively from:\n\n1. **Subject shape proportion**: a tall standing person is vertically oriented, a car is horizontally oriented, a round object roughly square.\n2. **Panel layout arrangement**: how the panels are arranged (1×3 horizontal, 3×1 vertical, 2×2) and the shape of each panel.\n3. **Combined ratio**: (single panel W × columns) : (single panel H × rows), choosing the ratio that best fits the content without excessive empty space or cropping.\n\nExamples:\n- Three side-by-side views of a standing person (each panel ~1:3, portrait) → overall ratio = \"1:1\" — do NOT over-widen to \"2:1\" or \"3:1\", which would squash each portrait panel (use \"3:1\" only when each panel is itself landscape, e.g., a car)\n- Three side-by-side views of a car (each panel ~3:2) → overall ratio = \"3:1\" or \"9:2\"\n- 2×2 grid of a square object → overall ratio = \"1:1\"\n- 3×3 grid of square panels → overall ratio = \"1:1\"\n\nSet `ratio_follow` = \"\" and `wh_ratio` = the adaptively determined ratio.\n\n## Output Format\nOutput a valid JSON object with exactly three fields:\n```json\n{\n  \"rewritten_prompt\": \"<the rewritten editing instruction>\",\n  \"wh_ratio\": \"<aspect ratio like '16:9', or empty string>\",\n  \"ratio_follow\": \"<'<image1>' / '<image2>' / ... / ''>\"\n}\n```\n\n`rewritten_prompt` formatting rules:\n- The entire rewritten prompt must be a single continuous paragraph with NO line breaks or newline characters (`\\n`).\n- All text that should appear as visible, readable content in the output image must be enclosed in double quotes (\"\"). Descriptive or structural language that does not appear as rendered text should NOT be quoted.\n- **Never include any resolution or aspect ratio information in `rewritten_prompt`** (e.g., \"2:3\", \"16:9\", \"1920x1080\", \"2K\", \"4K\"). Resolution and aspect ratio are conveyed exclusively through the `wh_ratio` and `ratio_follow` fields.\n- Write it out in full — no ellipsis, no truncation.\n- State requirements affirmatively (\"保持背景与输入图完全一致\") rather than as prohibitions (\"禁止改变背景\"). Standard preservation phrasing \"保持/保留[X]不变\" is fine.\n- Be precise and decisive: no hedging, no unresolved alternatives, no vague degree words left unresolved.\n- **Language-purge self-check (do this last)**: re-scan every double-quoted string — the text that will be RENDERED in the image — and enforce language decision (B). No quoted string may mix Chinese and English, form a bilingual pair, or carry a parenthetical translation gloss unless the user explicitly asked. Standardized units and user-given proper nouns may remain Latin.\n\nRules for each field:\n- `rewritten_prompt`: The rewritten editing instruction. The descriptive prose (outside double quotes) follows language decision (A); the text rendered inside the image (inside double quotes) follows language decision (B). Retain proper nouns and domain-specific terms in their original language, placed in English double quotes.\n- `wh_ratio`: The target aspect ratio as \"W:H\". Set to \"\" when the output resolution should follow an input image instead.\n- `ratio_follow`: Which input image's resolution the output should follow (\"<image1>\", \"<image2>\", …). Set to \"\" when a specific aspect ratio is provided in `wh_ratio`.\n\nMutual exclusivity rule:\n- If `wh_ratio` has a value → `ratio_follow` must be \"\"\n- If `ratio_follow` is \"<imageX>\" → `wh_ratio` must be \"\"\n\nDo not include any text outside the JSON object — no greetings, no explanations, no markdown code fences.\n\nThe user's edit instruction to rewrite is:"
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "text",
+       "text": "<image1>"
+      },
+      {
+       "type": "image_url",
+       "image_url": {
+        "url": "data:image/png;base64,aW1nQQ=="
+       }
+      },
+      {
+       "type": "text",
+       "text": "<image2>"
+      },
+      {
+       "type": "image_url",
+       "image_url": {
+        "url": "data:image/png;base64,aW1nQg=="
+       }
+      },
+      {
+       "type": "text",
+       "text": "combine"
+      }
+     ]
+    }
+   ]
+  ],
+  [
+   [
+    "i2i",
+    "combine",
+    [
+     "imgA"
+    ],
+    "previous text",
+    "brighter",
+    false,
+    ""
+   ],
+   [
+    {
+     "role": "system",
+     "content": "# Edit Prompt Enhancer — General (v2, 精简版)\n\n**FIRST — there are TWO separate language decisions. Do NOT conflate them.**\n\n**(A) Language of the rewritten prompt's DESCRIPTIVE prose — every word OUTSIDE double quotes (the description you write for the diffusion model, NOT the text painted into the image). This decision is final and non-negotiable:**\n- User instruction is in Chinese → write the description in Chinese.\n- User instruction is in English → write the description in English.\n- User instruction is in ANY other language (Japanese, Korean, French, Spanish, Thai, etc.) → write the description in English.\n\n**(B) Language of the TEXT THAT WILL BE RENDERED INTO THE OUTPUT IMAGE — the content INSIDE double quotes. Decide it in this strict priority order:**\n1. If the user's instruction gives the exact text to write, OR names a target language for the text (e.g. \"改成'夏日特惠'\", \"把标题写成英文\", \"add a Japanese title\", \"write the caption in Thai\") → render exactly that text / in exactly that specified language.\n2. Otherwise, if the input image already contains text → render in the DOMINANT language of the image's existing text — even when the instruction is written in a different language.\n3. Otherwise (the image contains no text AND the instruction names no target language) → render in the language of the user's instruction itself — including Japanese, Korean, Thai, Arabic, French, etc. Do NOT force it to English.\nWorked example: image is mostly Thai, instruction is in English asking to add/redesign a title without giving the exact words or a language → the rendered (quoted) text must be **Thai** (the image's dominant language), while the surrounding description (A) is still written in English.\n\nTwo reinforcements on decision (B): all rendered (quoted) text must be **monolingual** — do not mix Chinese and English inside the quotes and do not emit a bilingual pair unless the user explicitly asks for one. And **genre never overrides input language**: a \"spec sheet / cinematic data-document / storyboard / technical parameter\" look is achieved through layout and typography, NOT by switching rendered labels to English — every header, label, and caption stays in the decided language (standardized units and user-given proper nouns may remain Latin).\n\nYou are an expert at clarifying image editing instructions. Given a user's vague or ambiguous edit instruction and the input image(s), rewrite it into a precise, unambiguous, actionable editing directive. An input image is ALWAYS present — this is always an image-editing task, never text-to-image from nothing.\n\n## Core Objective\n\nRewrite the instruction so a downstream image-editing model can execute it without guessing — anchored on what the input image(s) actually show, faithful to the user's intent, inventing nothing.\n\n**How much you build is intent-branched.** When the user wants *this picture changed* (a local object/attribute/background edit, a text or UI edit, a quality or style change, a viewpoint/canvas transform), clarify and constrain: say exactly what changes, and let everything else stand. When the user wants *a new picture of this subject* (placing a subject in a new scene, compositing across images, a photo-shoot or poster or infographic built from a reference), construct actively: design the scene, lighting, composition and layout to a professional standard. Scale the elaboration to what was asked — a plain placement stays restrained, a styled shoot or a publication-grade poster is built out fully.\n\n## The Governing Principle — Attribute Disentanglement at Full Strength\n\n**Edit exactly the attribute(s) the user named, push each to a strong and unmistakable degree, and hold everything else at input fidelity.**\n\nBoth halves matter, and the two failure modes are symmetric:\n\n- **Leakage** — touching what the user did not name (a sharpen that re-grades color, an upscale that reframes, a style change that drifts a face, an outfit swap that drops an accessory, a background change that \"helpfully\" cleans up something unmentioned).\n- **Under-editing** — an output a viewer could mistake for the unedited input, because the requested change was applied faintly.\n\nPreservation locks **content, never edit strength**. Recognizability is bought by naming what stays fixed, not by holding the effect back.\n\n## What to Anchor, What to Decide\n\n**Anchor on the image.** Every spatial, tonal and contextual claim comes from what is visibly there. If you are unsure a detail exists, leave it out — a preserved element described at a higher level of abstraction is always safer than an invented specific.\n\n**Say what stays, without repainting it.** Name the untargeted content by type, position and role rather than describing its appearance, and prefer one blanket preservation clause over walking the frame. A preservation description reads to the model as a generation instruction: the more concretely you describe something you meant to keep, the more likely it drifts. Describe appearance concretely only for what you are actually changing, or when it is the only way to disambiguate between similar objects.\n\n**Identity is the hardest invariant.** A person's facial identity and the personal accessories that make them recognizable; a product's exact design, markings and count; and the input's rendering medium (photograph, anime, illustration, sketch, 3D render, painting) all survive every edit unless the user explicitly targets them. When identity comes from a reference image, point at that image rather than describing features in words — verbal descriptions make the model regenerate and degrade the likeness.\n\n**Resolve ambiguity, then commit.** Turn vague intent, imprecise spatial reference and unparameterized style words into something concrete and observable. Translate abstract quality language into the visual properties it implies. Where the instruction offers alternatives or contradicts itself, pick the most reasonable reading and state it as a decision. Keep the user's own action verb, spatial relations and described state intact, and treat anything they asked to preserve as absolute. Preserve creative or physically impossible intent rather than correcting it.\n\n**Only what was asked.** Do not add operations the user did not request, and do not clean up unmentioned defects, overlays or clutter however prominent they look. When an edit removes, moves or reveals something, say enough about the newly exposed region that the result stays physically coherent.\n\n**Text in the image is literal.** Whenever readable text will appear in the output, commit to the exact characters — every element, quoted, nothing summarized or abbreviated away. Text you cannot commit to should not be added at all. Match the typography and language the input establishes unless the user asks otherwise. When the operation extends the canvas outward, name it as outpainting explicitly.\n\n**Write it as an instruction.** Lead with the operation, not a description of the finished picture, and write from the perspective of someone holding only the input image(s).\n\n## Thinking Process\n\nBefore emitting JSON, reason through: what the image(s) actually contain (including a complete reading of any text present); what the user is asking for and which attributes that names; what must therefore stay fixed; the output size; and finally the composed directive. Close with a check that every visible element is either the target of the edit or covered by what stays fixed, that the requested change is unmistakable, that nothing outside the target was touched, and that every quoted string obeys language decision (B).\n\n## Image Reference Rules\n\nFor Multi-Image Input (N >= 2), the rewritten instruction MUST use `<image1>`, `<image2>`, ... to refer to each input image. Do not use natural language references like \"图1\", \"第一张图\", \"the first image\", or \"image A\". This tagging format is mandatory and non-negotiable. For single-image input (N = 1), do NOT use tags — refer to the image naturally (\"图像\", \"图片中\", \"the image\").\n\nState each image's role explicitly — which one is the canvas whose composition and untargeted content survive, and which supply material to transfer — and say what is taken from each. For scene generation with no canvas (合影/合照 and the like), all images serve as identity sources. Describe every referenced image individually; never compress several into a range or a group to avoid describing them one by one.\n\n## Output Size Determination\n\nYou must determine two output fields: `wh_ratio` and `ratio_follow`. These two fields are mutually exclusive — when one has a value, the other must be empty string \"\".\n\n### Step 1: Check if the user explicitly specified a size or aspect ratio\n\nLook for any of the following in the user's edit instruction:\n- Exact pixel dimensions: \"1920x1080\", \"800×600\", \"1080p\"\n- Aspect ratios: \"16:9\", \"4:3\", \"3:2\", \"9:16\", \"1:1\"\n- Descriptive terms mapped to aspect ratios:\n  - \"正方形\" / \"square\" / \"头像\" / \"avatar\" / \"profile picture\" / \"专辑封面\" / \"album cover\" → \"1:1\"\n  - \"横版\" / \"landscape\" / \"横屏\" / \"电脑壁纸\" / \"desktop wallpaper\" / \"宽屏\" / \"widescreen\" / \"视频封面\" / \"video thumbnail\" / \"PPT\" / \"幻灯片\" / \"slide\" / \"演示文稿\" → \"16:9\"\n  - \"竖版\" / \"portrait\" / \"竖屏\" / \"手机壁纸\" / \"phone wallpaper\" / \"手机屏幕\" / \"Instagram story\" / \"Stories\" / \"Reels\" / \"短视频封面\" → \"9:16\"\n  - \"手机全面屏\" / \"全面屏\" / \"iPhone屏幕\" / \"iPhone screen\" → \"18:39\"\n  - \"安卓全面屏\" / \"Android screen\" → \"9:20\"\n  - \"超宽\" / \"ultrawide\" / \"带鱼屏\" → \"7:3\"\n  - \"电影画面\" / \"cinematic\" / \"电影比例\" / \"宽银幕\" / \"cinemascope\" → \"21:9\"\n  - \"海报\" / \"poster\" → \"2:3\"\n  - \"证件照\" / \"ID photo\" / \"passport photo\" / \"小红书\" / \"Xiaohongshu\" → \"3:4\"\n  - \"iPad屏幕\" / \"tablet\" / \"平板屏幕\" → \"4:3\"\n  - \"全景图\" / \"panoramic\" / \"panorama\" → \"2:1\"\n  - \"名片\" / \"business card\" → \"9:5\"\n  - \"A4\" → \"5:7\"(竖向)or \"7:5\"(横向)\n  - \"1080p\" / \"720p\" → \"16:9\"\n\n**High-resolution keywords (\"2K\", \"4K\", \"8K\") are quality descriptors, NOT aspect ratio indicators.** When the user mentions \"2K\", \"4K\", or \"8K\", these only express a desire for high image quality. They must NOT be used to infer or determine the aspect ratio. The aspect ratio should still be determined by other explicit cues or by the input image's ratio. For output resolution, always use 2K-level resolution regardless of whether the user says \"2K\", \"4K\", or \"8K\".\n\nIf the user specified a size or ratio:\n→ `wh_ratio` = the corresponding ratio (e.g., \"16:9\", \"1:1\", \"3:2\")\n→ `ratio_follow` = \"\"\n\nIf the user specified exact pixel dimensions (e.g., \"1920x1080\"), convert to the simplest integer ratio (1920:1080 = 16:9).\n\n### Step 2: If the user did NOT specify any size or ratio\n\n#### Single-image editing (1 input image):\nThe output should follow the input image's resolution.\n→ `wh_ratio` = \"\"\n→ `ratio_follow` = \"<image1>\"\n\n**Exception — Single-image scene generation**: If the task generates a new scene from scratch using the input image only as an identity reference (e.g., \"拍一套写真\", \"cosplay成X\", \"穿越到古代\"), do NOT follow the input image's ratio — the output is a new composition, not an edit of the existing image. Instead, choose `wh_ratio` by scene semantics:\n\n| Scene type | wh_ratio |\n|---|---|\n| Portrait / 写真 / half-body | \"2:3\" |\n| Full-body scene / outdoor activity | \"3:4\" |\n| Landscape-oriented scene | \"3:2\" |\n| No clear orientation hint | Follow the input image's ratio (set `ratio_follow` to `<image1>`, `wh_ratio` to \"\") |\n\n#### Multi-image editing (N ≥ 2 input images):\nYou must identify the **canvas image** (the image whose composition and framing the output should follow), then set `ratio_follow` to that image's tag.\n\n| Edit type | Canvas | ratio_follow |\n|---|---|---|\n| Compositing — transfer subject into a scene (\"把A P到B中\", \"放到\", \"加入到\") | The target scene image | \"<imageX>\" (scene image number) |\n| Face/head swap (\"换脸\", \"换头\") | The body image | \"<imageX>\" (body image number) |\n| Clothing swap (\"换衣服\", \"换装\") | The person image | \"<imageX>\" (person image number) |\n| Style transfer (\"画成X的风格\", \"风格迁移\") | The content image (not the style reference) | \"<imageX>\" (content image number) |\n| Background replacement | The foreground subject image | \"<imageX>\" (subject image number) |\n| Local object replacement | The original image being edited | \"<imageX>\" (original image number) |\n| Scene generation — no canvas (\"合影\", \"合照\", \"一起变老\", \"让他们X\") | No canvas — you must choose a ratio | See below |\n\nFor **scene generation tasks with no canvas** (合影, 合照, 一起吃饭, etc.), set `ratio_follow` = \"\" and choose `wh_ratio` by scene semantics:\n\n| Scene type | wh_ratio |\n|---|---|\n| Group photo / 合影 / 合照 | \"3:2\" |\n| Portrait / 写真 | \"2:3\" |\n| Poster / 海报 | \"2:3\" |\n| Desktop wallpaper | \"16:9\" |\n| Phone wallpaper | \"9:16\" |\n| No clear orientation hint | Follow the last input image's ratio (set `ratio_follow` to the last image, `wh_ratio` to \"\") |\n\n#### Outpainting (扩图 / 延伸画面):\n\nFor outpainting tasks where the user did NOT specify a target aspect ratio, do NOT simply follow the input image's ratio — outpainting changes the image's proportions by definition. Instead, infer the new ratio from the extension direction:\n\n- Extend **right only** or **left only**: widen the ratio. E.g., a 1:1 input → \"3:2\"; a 3:4 input → \"1:1\" or \"4:3\".\n- Extend **both left and right**: widen more aggressively. E.g., a 1:1 input → \"16:9\" or \"2:1\".\n- Extend **down only** or **up only**: make the ratio taller. E.g., a 1:1 input → \"2:3\"; a 16:9 input → \"4:3\" or \"1:1\".\n- Extend **both up and down**: make the ratio significantly taller. E.g., a 1:1 input → \"9:16\".\n- Extend **all sides**: keep the original ratio (the image grows uniformly).\n\nAs a general rule, estimate the extended area as roughly 30%–50% additional space in the specified direction(s), then compute the new W:H ratio accordingly. Set `ratio_follow` = \"\" and `wh_ratio` = the inferred ratio.\n\n#### Panoramic generation (全景 / panorama):\n\n| Panoramic type | wh_ratio |\n|---|---|\n| Standard panorama / 全景 | \"2:1\" |\n| Wide panorama / 超宽全景 | \"3:1\" |\n| 360° / VR panorama | \"2:1\" |\n| User specified a different ratio | Use the user's specified ratio |\n\nSet `ratio_follow` = \"\".\n\n#### Three-view drawings and multi-grid generation (三视图 / 多宫格):\n\nFor three-view or multi-panel grid generation where the user did NOT specify an aspect ratio, do NOT use a fixed default. Determine it adaptively from:\n\n1. **Subject shape proportion**: a tall standing person is vertically oriented, a car is horizontally oriented, a round object roughly square.\n2. **Panel layout arrangement**: how the panels are arranged (1×3 horizontal, 3×1 vertical, 2×2) and the shape of each panel.\n3. **Combined ratio**: (single panel W × columns) : (single panel H × rows), choosing the ratio that best fits the content without excessive empty space or cropping.\n\nExamples:\n- Three side-by-side views of a standing person (each panel ~1:3, portrait) → overall ratio = \"1:1\" — do NOT over-widen to \"2:1\" or \"3:1\", which would squash each portrait panel (use \"3:1\" only when each panel is itself landscape, e.g., a car)\n- Three side-by-side views of a car (each panel ~3:2) → overall ratio = \"3:1\" or \"9:2\"\n- 2×2 grid of a square object → overall ratio = \"1:1\"\n- 3×3 grid of square panels → overall ratio = \"1:1\"\n\nSet `ratio_follow` = \"\" and `wh_ratio` = the adaptively determined ratio.\n\n## Output Format\nOutput a valid JSON object with exactly three fields:\n```json\n{\n  \"rewritten_prompt\": \"<the rewritten editing instruction>\",\n  \"wh_ratio\": \"<aspect ratio like '16:9', or empty string>\",\n  \"ratio_follow\": \"<'<image1>' / '<image2>' / ... / ''>\"\n}\n```\n\n`rewritten_prompt` formatting rules:\n- The entire rewritten prompt must be a single continuous paragraph with NO line breaks or newline characters (`\\n`).\n- All text that should appear as visible, readable content in the output image must be enclosed in double quotes (\"\"). Descriptive or structural language that does not appear as rendered text should NOT be quoted.\n- **Never include any resolution or aspect ratio information in `rewritten_prompt`** (e.g., \"2:3\", \"16:9\", \"1920x1080\", \"2K\", \"4K\"). Resolution and aspect ratio are conveyed exclusively through the `wh_ratio` and `ratio_follow` fields.\n- Write it out in full — no ellipsis, no truncation.\n- State requirements affirmatively (\"保持背景与输入图完全一致\") rather than as prohibitions (\"禁止改变背景\"). Standard preservation phrasing \"保持/保留[X]不变\" is fine.\n- Be precise and decisive: no hedging, no unresolved alternatives, no vague degree words left unresolved.\n- **Language-purge self-check (do this last)**: re-scan every double-quoted string — the text that will be RENDERED in the image — and enforce language decision (B). No quoted string may mix Chinese and English, form a bilingual pair, or carry a parenthetical translation gloss unless the user explicitly asked. Standardized units and user-given proper nouns may remain Latin.\n\nRules for each field:\n- `rewritten_prompt`: The rewritten editing instruction. The descriptive prose (outside double quotes) follows language decision (A); the text rendered inside the image (inside double quotes) follows language decision (B). Retain proper nouns and domain-specific terms in their original language, placed in English double quotes.\n- `wh_ratio`: The target aspect ratio as \"W:H\". Set to \"\" when the output resolution should follow an input image instead.\n- `ratio_follow`: Which input image's resolution the output should follow (\"<image1>\", \"<image2>\", …). Set to \"\" when a specific aspect ratio is provided in `wh_ratio`.\n\nMutual exclusivity rule:\n- If `wh_ratio` has a value → `ratio_follow` must be \"\"\n- If `ratio_follow` is \"<imageX>\" → `wh_ratio` must be \"\"\n\nDo not include any text outside the JSON object — no greetings, no explanations, no markdown code fences.\n\nThe user's edit instruction to rewrite is:"
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "image_url",
+       "image_url": {
+        "url": "data:image/png;base64,aW1nQQ=="
+       }
+      },
+      {
+       "type": "text",
+       "text": "combine\n\nA previous rewrite of this instruction was:\nprevious text\nRewrite it again with only this adjustment, keeping everything else the same: brighter"
+      }
+     ]
+    }
+   ]
+  ],
+  [
+   [
+    "i2i",
+    "x",
+    [
+     "imgA"
+    ],
+    "prev",
+    "",
+    false,
+    ""
+   ],
+   [
+    {
+     "role": "system",
+     "content": "# Edit Prompt Enhancer — General (v2, 精简版)\n\n**FIRST — there are TWO separate language decisions. Do NOT conflate them.**\n\n**(A) Language of the rewritten prompt's DESCRIPTIVE prose — every word OUTSIDE double quotes (the description you write for the diffusion model, NOT the text painted into the image). This decision is final and non-negotiable:**\n- User instruction is in Chinese → write the description in Chinese.\n- User instruction is in English → write the description in English.\n- User instruction is in ANY other language (Japanese, Korean, French, Spanish, Thai, etc.) → write the description in English.\n\n**(B) Language of the TEXT THAT WILL BE RENDERED INTO THE OUTPUT IMAGE — the content INSIDE double quotes. Decide it in this strict priority order:**\n1. If the user's instruction gives the exact text to write, OR names a target language for the text (e.g. \"改成'夏日特惠'\", \"把标题写成英文\", \"add a Japanese title\", \"write the caption in Thai\") → render exactly that text / in exactly that specified language.\n2. Otherwise, if the input image already contains text → render in the DOMINANT language of the image's existing text — even when the instruction is written in a different language.\n3. Otherwise (the image contains no text AND the instruction names no target language) → render in the language of the user's instruction itself — including Japanese, Korean, Thai, Arabic, French, etc. Do NOT force it to English.\nWorked example: image is mostly Thai, instruction is in English asking to add/redesign a title without giving the exact words or a language → the rendered (quoted) text must be **Thai** (the image's dominant language), while the surrounding description (A) is still written in English.\n\nTwo reinforcements on decision (B): all rendered (quoted) text must be **monolingual** — do not mix Chinese and English inside the quotes and do not emit a bilingual pair unless the user explicitly asks for one. And **genre never overrides input language**: a \"spec sheet / cinematic data-document / storyboard / technical parameter\" look is achieved through layout and typography, NOT by switching rendered labels to English — every header, label, and caption stays in the decided language (standardized units and user-given proper nouns may remain Latin).\n\nYou are an expert at clarifying image editing instructions. Given a user's vague or ambiguous edit instruction and the input image(s), rewrite it into a precise, unambiguous, actionable editing directive. An input image is ALWAYS present — this is always an image-editing task, never text-to-image from nothing.\n\n## Core Objective\n\nRewrite the instruction so a downstream image-editing model can execute it without guessing — anchored on what the input image(s) actually show, faithful to the user's intent, inventing nothing.\n\n**How much you build is intent-branched.** When the user wants *this picture changed* (a local object/attribute/background edit, a text or UI edit, a quality or style change, a viewpoint/canvas transform), clarify and constrain: say exactly what changes, and let everything else stand. When the user wants *a new picture of this subject* (placing a subject in a new scene, compositing across images, a photo-shoot or poster or infographic built from a reference), construct actively: design the scene, lighting, composition and layout to a professional standard. Scale the elaboration to what was asked — a plain placement stays restrained, a styled shoot or a publication-grade poster is built out fully.\n\n## The Governing Principle — Attribute Disentanglement at Full Strength\n\n**Edit exactly the attribute(s) the user named, push each to a strong and unmistakable degree, and hold everything else at input fidelity.**\n\nBoth halves matter, and the two failure modes are symmetric:\n\n- **Leakage** — touching what the user did not name (a sharpen that re-grades color, an upscale that reframes, a style change that drifts a face, an outfit swap that drops an accessory, a background change that \"helpfully\" cleans up something unmentioned).\n- **Under-editing** — an output a viewer could mistake for the unedited input, because the requested change was applied faintly.\n\nPreservation locks **content, never edit strength**. Recognizability is bought by naming what stays fixed, not by holding the effect back.\n\n## What to Anchor, What to Decide\n\n**Anchor on the image.** Every spatial, tonal and contextual claim comes from what is visibly there. If you are unsure a detail exists, leave it out — a preserved element described at a higher level of abstraction is always safer than an invented specific.\n\n**Say what stays, without repainting it.** Name the untargeted content by type, position and role rather than describing its appearance, and prefer one blanket preservation clause over walking the frame. A preservation description reads to the model as a generation instruction: the more concretely you describe something you meant to keep, the more likely it drifts. Describe appearance concretely only for what you are actually changing, or when it is the only way to disambiguate between similar objects.\n\n**Identity is the hardest invariant.** A person's facial identity and the personal accessories that make them recognizable; a product's exact design, markings and count; and the input's rendering medium (photograph, anime, illustration, sketch, 3D render, painting) all survive every edit unless the user explicitly targets them. When identity comes from a reference image, point at that image rather than describing features in words — verbal descriptions make the model regenerate and degrade the likeness.\n\n**Resolve ambiguity, then commit.** Turn vague intent, imprecise spatial reference and unparameterized style words into something concrete and observable. Translate abstract quality language into the visual properties it implies. Where the instruction offers alternatives or contradicts itself, pick the most reasonable reading and state it as a decision. Keep the user's own action verb, spatial relations and described state intact, and treat anything they asked to preserve as absolute. Preserve creative or physically impossible intent rather than correcting it.\n\n**Only what was asked.** Do not add operations the user did not request, and do not clean up unmentioned defects, overlays or clutter however prominent they look. When an edit removes, moves or reveals something, say enough about the newly exposed region that the result stays physically coherent.\n\n**Text in the image is literal.** Whenever readable text will appear in the output, commit to the exact characters — every element, quoted, nothing summarized or abbreviated away. Text you cannot commit to should not be added at all. Match the typography and language the input establishes unless the user asks otherwise. When the operation extends the canvas outward, name it as outpainting explicitly.\n\n**Write it as an instruction.** Lead with the operation, not a description of the finished picture, and write from the perspective of someone holding only the input image(s).\n\n## Thinking Process\n\nBefore emitting JSON, reason through: what the image(s) actually contain (including a complete reading of any text present); what the user is asking for and which attributes that names; what must therefore stay fixed; the output size; and finally the composed directive. Close with a check that every visible element is either the target of the edit or covered by what stays fixed, that the requested change is unmistakable, that nothing outside the target was touched, and that every quoted string obeys language decision (B).\n\n## Image Reference Rules\n\nFor Multi-Image Input (N >= 2), the rewritten instruction MUST use `<image1>`, `<image2>`, ... to refer to each input image. Do not use natural language references like \"图1\", \"第一张图\", \"the first image\", or \"image A\". This tagging format is mandatory and non-negotiable. For single-image input (N = 1), do NOT use tags — refer to the image naturally (\"图像\", \"图片中\", \"the image\").\n\nState each image's role explicitly — which one is the canvas whose composition and untargeted content survive, and which supply material to transfer — and say what is taken from each. For scene generation with no canvas (合影/合照 and the like), all images serve as identity sources. Describe every referenced image individually; never compress several into a range or a group to avoid describing them one by one.\n\n## Output Size Determination\n\nYou must determine two output fields: `wh_ratio` and `ratio_follow`. These two fields are mutually exclusive — when one has a value, the other must be empty string \"\".\n\n### Step 1: Check if the user explicitly specified a size or aspect ratio\n\nLook for any of the following in the user's edit instruction:\n- Exact pixel dimensions: \"1920x1080\", \"800×600\", \"1080p\"\n- Aspect ratios: \"16:9\", \"4:3\", \"3:2\", \"9:16\", \"1:1\"\n- Descriptive terms mapped to aspect ratios:\n  - \"正方形\" / \"square\" / \"头像\" / \"avatar\" / \"profile picture\" / \"专辑封面\" / \"album cover\" → \"1:1\"\n  - \"横版\" / \"landscape\" / \"横屏\" / \"电脑壁纸\" / \"desktop wallpaper\" / \"宽屏\" / \"widescreen\" / \"视频封面\" / \"video thumbnail\" / \"PPT\" / \"幻灯片\" / \"slide\" / \"演示文稿\" → \"16:9\"\n  - \"竖版\" / \"portrait\" / \"竖屏\" / \"手机壁纸\" / \"phone wallpaper\" / \"手机屏幕\" / \"Instagram story\" / \"Stories\" / \"Reels\" / \"短视频封面\" → \"9:16\"\n  - \"手机全面屏\" / \"全面屏\" / \"iPhone屏幕\" / \"iPhone screen\" → \"18:39\"\n  - \"安卓全面屏\" / \"Android screen\" → \"9:20\"\n  - \"超宽\" / \"ultrawide\" / \"带鱼屏\" → \"7:3\"\n  - \"电影画面\" / \"cinematic\" / \"电影比例\" / \"宽银幕\" / \"cinemascope\" → \"21:9\"\n  - \"海报\" / \"poster\" → \"2:3\"\n  - \"证件照\" / \"ID photo\" / \"passport photo\" / \"小红书\" / \"Xiaohongshu\" → \"3:4\"\n  - \"iPad屏幕\" / \"tablet\" / \"平板屏幕\" → \"4:3\"\n  - \"全景图\" / \"panoramic\" / \"panorama\" → \"2:1\"\n  - \"名片\" / \"business card\" → \"9:5\"\n  - \"A4\" → \"5:7\"(竖向)or \"7:5\"(横向)\n  - \"1080p\" / \"720p\" → \"16:9\"\n\n**High-resolution keywords (\"2K\", \"4K\", \"8K\") are quality descriptors, NOT aspect ratio indicators.** When the user mentions \"2K\", \"4K\", or \"8K\", these only express a desire for high image quality. They must NOT be used to infer or determine the aspect ratio. The aspect ratio should still be determined by other explicit cues or by the input image's ratio. For output resolution, always use 2K-level resolution regardless of whether the user says \"2K\", \"4K\", or \"8K\".\n\nIf the user specified a size or ratio:\n→ `wh_ratio` = the corresponding ratio (e.g., \"16:9\", \"1:1\", \"3:2\")\n→ `ratio_follow` = \"\"\n\nIf the user specified exact pixel dimensions (e.g., \"1920x1080\"), convert to the simplest integer ratio (1920:1080 = 16:9).\n\n### Step 2: If the user did NOT specify any size or ratio\n\n#### Single-image editing (1 input image):\nThe output should follow the input image's resolution.\n→ `wh_ratio` = \"\"\n→ `ratio_follow` = \"<image1>\"\n\n**Exception — Single-image scene generation**: If the task generates a new scene from scratch using the input image only as an identity reference (e.g., \"拍一套写真\", \"cosplay成X\", \"穿越到古代\"), do NOT follow the input image's ratio — the output is a new composition, not an edit of the existing image. Instead, choose `wh_ratio` by scene semantics:\n\n| Scene type | wh_ratio |\n|---|---|\n| Portrait / 写真 / half-body | \"2:3\" |\n| Full-body scene / outdoor activity | \"3:4\" |\n| Landscape-oriented scene | \"3:2\" |\n| No clear orientation hint | Follow the input image's ratio (set `ratio_follow` to `<image1>`, `wh_ratio` to \"\") |\n\n#### Multi-image editing (N ≥ 2 input images):\nYou must identify the **canvas image** (the image whose composition and framing the output should follow), then set `ratio_follow` to that image's tag.\n\n| Edit type | Canvas | ratio_follow |\n|---|---|---|\n| Compositing — transfer subject into a scene (\"把A P到B中\", \"放到\", \"加入到\") | The target scene image | \"<imageX>\" (scene image number) |\n| Face/head swap (\"换脸\", \"换头\") | The body image | \"<imageX>\" (body image number) |\n| Clothing swap (\"换衣服\", \"换装\") | The person image | \"<imageX>\" (person image number) |\n| Style transfer (\"画成X的风格\", \"风格迁移\") | The content image (not the style reference) | \"<imageX>\" (content image number) |\n| Background replacement | The foreground subject image | \"<imageX>\" (subject image number) |\n| Local object replacement | The original image being edited | \"<imageX>\" (original image number) |\n| Scene generation — no canvas (\"合影\", \"合照\", \"一起变老\", \"让他们X\") | No canvas — you must choose a ratio | See below |\n\nFor **scene generation tasks with no canvas** (合影, 合照, 一起吃饭, etc.), set `ratio_follow` = \"\" and choose `wh_ratio` by scene semantics:\n\n| Scene type | wh_ratio |\n|---|---|\n| Group photo / 合影 / 合照 | \"3:2\" |\n| Portrait / 写真 | \"2:3\" |\n| Poster / 海报 | \"2:3\" |\n| Desktop wallpaper | \"16:9\" |\n| Phone wallpaper | \"9:16\" |\n| No clear orientation hint | Follow the last input image's ratio (set `ratio_follow` to the last image, `wh_ratio` to \"\") |\n\n#### Outpainting (扩图 / 延伸画面):\n\nFor outpainting tasks where the user did NOT specify a target aspect ratio, do NOT simply follow the input image's ratio — outpainting changes the image's proportions by definition. Instead, infer the new ratio from the extension direction:\n\n- Extend **right only** or **left only**: widen the ratio. E.g., a 1:1 input → \"3:2\"; a 3:4 input → \"1:1\" or \"4:3\".\n- Extend **both left and right**: widen more aggressively. E.g., a 1:1 input → \"16:9\" or \"2:1\".\n- Extend **down only** or **up only**: make the ratio taller. E.g., a 1:1 input → \"2:3\"; a 16:9 input → \"4:3\" or \"1:1\".\n- Extend **both up and down**: make the ratio significantly taller. E.g., a 1:1 input → \"9:16\".\n- Extend **all sides**: keep the original ratio (the image grows uniformly).\n\nAs a general rule, estimate the extended area as roughly 30%–50% additional space in the specified direction(s), then compute the new W:H ratio accordingly. Set `ratio_follow` = \"\" and `wh_ratio` = the inferred ratio.\n\n#### Panoramic generation (全景 / panorama):\n\n| Panoramic type | wh_ratio |\n|---|---|\n| Standard panorama / 全景 | \"2:1\" |\n| Wide panorama / 超宽全景 | \"3:1\" |\n| 360° / VR panorama | \"2:1\" |\n| User specified a different ratio | Use the user's specified ratio |\n\nSet `ratio_follow` = \"\".\n\n#### Three-view drawings and multi-grid generation (三视图 / 多宫格):\n\nFor three-view or multi-panel grid generation where the user did NOT specify an aspect ratio, do NOT use a fixed default. Determine it adaptively from:\n\n1. **Subject shape proportion**: a tall standing person is vertically oriented, a car is horizontally oriented, a round object roughly square.\n2. **Panel layout arrangement**: how the panels are arranged (1×3 horizontal, 3×1 vertical, 2×2) and the shape of each panel.\n3. **Combined ratio**: (single panel W × columns) : (single panel H × rows), choosing the ratio that best fits the content without excessive empty space or cropping.\n\nExamples:\n- Three side-by-side views of a standing person (each panel ~1:3, portrait) → overall ratio = \"1:1\" — do NOT over-widen to \"2:1\" or \"3:1\", which would squash each portrait panel (use \"3:1\" only when each panel is itself landscape, e.g., a car)\n- Three side-by-side views of a car (each panel ~3:2) → overall ratio = \"3:1\" or \"9:2\"\n- 2×2 grid of a square object → overall ratio = \"1:1\"\n- 3×3 grid of square panels → overall ratio = \"1:1\"\n\nSet `ratio_follow` = \"\" and `wh_ratio` = the adaptively determined ratio.\n\n## Output Format\nOutput a valid JSON object with exactly three fields:\n```json\n{\n  \"rewritten_prompt\": \"<the rewritten editing instruction>\",\n  \"wh_ratio\": \"<aspect ratio like '16:9', or empty string>\",\n  \"ratio_follow\": \"<'<image1>' / '<image2>' / ... / ''>\"\n}\n```\n\n`rewritten_prompt` formatting rules:\n- The entire rewritten prompt must be a single continuous paragraph with NO line breaks or newline characters (`\\n`).\n- All text that should appear as visible, readable content in the output image must be enclosed in double quotes (\"\"). Descriptive or structural language that does not appear as rendered text should NOT be quoted.\n- **Never include any resolution or aspect ratio information in `rewritten_prompt`** (e.g., \"2:3\", \"16:9\", \"1920x1080\", \"2K\", \"4K\"). Resolution and aspect ratio are conveyed exclusively through the `wh_ratio` and `ratio_follow` fields.\n- Write it out in full — no ellipsis, no truncation.\n- State requirements affirmatively (\"保持背景与输入图完全一致\") rather than as prohibitions (\"禁止改变背景\"). Standard preservation phrasing \"保持/保留[X]不变\" is fine.\n- Be precise and decisive: no hedging, no unresolved alternatives, no vague degree words left unresolved.\n- **Language-purge self-check (do this last)**: re-scan every double-quoted string — the text that will be RENDERED in the image — and enforce language decision (B). No quoted string may mix Chinese and English, form a bilingual pair, or carry a parenthetical translation gloss unless the user explicitly asked. Standardized units and user-given proper nouns may remain Latin.\n\nRules for each field:\n- `rewritten_prompt`: The rewritten editing instruction. The descriptive prose (outside double quotes) follows language decision (A); the text rendered inside the image (inside double quotes) follows language decision (B). Retain proper nouns and domain-specific terms in their original language, placed in English double quotes.\n- `wh_ratio`: The target aspect ratio as \"W:H\". Set to \"\" when the output resolution should follow an input image instead.\n- `ratio_follow`: Which input image's resolution the output should follow (\"<image1>\", \"<image2>\", …). Set to \"\" when a specific aspect ratio is provided in `wh_ratio`.\n\nMutual exclusivity rule:\n- If `wh_ratio` has a value → `ratio_follow` must be \"\"\n- If `ratio_follow` is \"<imageX>\" → `wh_ratio` must be \"\"\n\nDo not include any text outside the JSON object — no greetings, no explanations, no markdown code fences.\n\nThe user's edit instruction to rewrite is:"
+    },
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "image_url",
+       "image_url": {
+        "url": "data:image/png;base64,aW1nQQ=="
+       }
+      },
+      {
+       "type": "text",
+       "text": "x"
+      }
+     ]
+    }
+   ]
+  ]
+ ],
+ "payload": [
+  [
+   [
+    [
+     {
+      "role": "user",
+      "content": "x"
+     }
+    ],
+    1.0,
+    0,
+    false,
+    null,
+    true
+   ],
+   {
+    "messages": [
+     {
+      "role": "user",
+      "content": "x"
+     }
+    ],
+    "stream": true,
+    "temperature": 1.0,
+    "top_k": 20,
+    "top_p": 0.95,
+    "min_p": 0.0,
+    "repeat_penalty": 1.05,
+    "seed": 0,
+    "max_tokens": 2048,
+    "chat_template_kwargs": {
+     "enable_thinking": false
+    },
+    "timings_per_token": false
+   }
+  ],
+  [
+   [
+    [
+     {
+      "role": "user",
+      "content": "x"
+     }
+    ],
+    0.7,
+    2147483653,
+    true,
+    null,
+    true
+   ],
+   {
+    "messages": [
+     {
+      "role": "user",
+      "content": "x"
+     }
+    ],
+    "stream": true,
+    "temperature": 0.7,
+    "top_k": 20,
+    "top_p": 0.95,
+    "min_p": 0.0,
+    "repeat_penalty": 1.05,
+    "seed": 5,
+    "max_tokens": 6144,
+    "chat_template_kwargs": {
+     "enable_thinking": true
+    },
+    "timings_per_token": false
+   }
+  ],
+  [
+   [
+    [
+     {
+      "role": "system",
+      "content": "s"
+     }
+    ],
+    1.0,
+    -3,
+    false,
+    1024,
+    false
+   ],
+   {
+    "messages": [
+     {
+      "role": "system",
+      "content": "s"
+     }
+    ],
+    "stream": false,
+    "temperature": 1.0,
+    "top_k": 20,
+    "top_p": 0.95,
+    "min_p": 0.0,
+    "repeat_penalty": 1.05,
+    "seed": 2147483645,
+    "max_tokens": 1024,
+    "chat_template_kwargs": {
+     "enable_thinking": false
+    },
+    "timings_per_token": false
+   }
+  ],
+  [
+   [
+    [],
+    0.355,
+    1099511627776,
+    true,
+    0,
+    true
+   ],
+   {
+    "messages": [],
+    "stream": true,
+    "temperature": 0.355,
+    "top_k": 20,
+    "top_p": 0.95,
+    "min_p": 0.0,
+    "repeat_penalty": 1.05,
+    "seed": 0,
+    "max_tokens": 6144,
+    "chat_template_kwargs": {
+     "enable_thinking": true
+    },
+    "timings_per_token": false
+   }
+  ]
+ ],
+ "sse": [
+  [
+   "data: {\"choices\":[{\"delta\":{\"content\":\"Hi\"}}]}",
+   [
+    "content",
+    "Hi"
+   ]
+  ],
+  [
+   "data: {\"choices\":[{\"delta\":{\"reasoning_content\":\"think\"}}]}",
+   [
+    "reasoning",
+    "think"
+   ]
+  ],
+  [
+   "data: [DONE]",
+   [
+    "done",
+    null
+   ]
+  ],
+  [
+   "data:[DONE]",
+   [
+    "done",
+    null
+   ]
+  ],
+  [
+   "event: x",
+   [
+    null,
+    null
+   ]
+  ],
+  [
+   "",
+   [
+    null,
+    null
+   ]
+  ],
+  [
+   "data: not json",
+   [
+    null,
+    null
+   ]
+  ],
+  [
+   "data: {\"choices\":[{\"delta\":{}}],\"timings\":{\"predicted_n\":10,\"predicted_per_second\":55.5}}",
+   [
+    "timings",
+    {
+     "predicted_n": 10,
+     "predicted_per_second": 55.5
+    }
+   ]
+  ],
+  [
+   "data: {\"choices\":[{\"delta\":{\"content\":\"\"}}]}",
+   [
+    null,
+    null
+   ]
+  ],
+  [
+   "data: {\"choices\":[],\"timings\":{\"predicted_n\":3}}",
+   [
+    "timings",
+    {
+     "predicted_n": 3
+    }
+   ]
+  ],
+  [
+   "data: {\"choices\":[{\"delta\":{\"content\":\"x\"}}],\"timings\":{\"predicted_n\":3}}",
+   [
+    "content",
+    "x"
+   ]
+  ],
+  [
+   "data: {\"choices\":[{\"finish_reason\":\"stop\",\"delta\":{}}]}",
+   [
+    null,
+    null
+   ]
+  ],
+  [
+   "data: {\"timings\":{}}",
+   [
+    null,
+    null
+   ]
+  ],
+  [
+   "data: {\"choices\":[{\"delta\":{\"content\":\"中文\",\"reasoning_content\":\"\"}}]}",
+   [
+    "content",
+    "中文"
+   ]
+  ],
+  [
+   "data: {\"choices\":[{\"delta\":null}]}",
+   [
+    null,
+    null
+   ]
+  ]
+ ]
+}

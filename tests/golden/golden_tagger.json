@@ -1,0 +1,1093 @@
+{
+ "preprocess": [
+  {
+   "file": "noise_wide.png",
+   "shape": [
+    448,
+    448,
+    3
+   ],
+   "sha256": "667dc4afc39c19102992d63ad74e33af506449235a9a33546b65e16342c2d283",
+   "jpeg": false
+  },
+  {
+   "file": "noise_tall.png",
+   "shape": [
+    448,
+    448,
+    3
+   ],
+   "sha256": "385916414a5a9365b0ec8a0bd36174a831f5b4cc994225a4a6116973d9c62907",
+   "jpeg": false
+  },
+  {
+   "file": "alpha.png",
+   "shape": [
+    448,
+    448,
+    3
+   ],
+   "sha256": "4c45068ccc8f209672b39b30cca04c0cdef901e33d8ec94b6502e3f5735bd3b1",
+   "jpeg": false
+  },
+  {
+   "file": "small.png",
+   "shape": [
+    448,
+    448,
+    3
+   ],
+   "sha256": "da2ffa0ae8caa4a1ac47121a455473df0b542e2cba9fddb1bcc50594173d3891",
+   "jpeg": false
+  },
+  {
+   "file": "exact448.png",
+   "shape": [
+    448,
+    448,
+    3
+   ],
+   "sha256": "133d96c7a477b48346498d25974edb2437af7c62f69c8ec849647042cd84462c",
+   "jpeg": false
+  },
+  {
+   "file": "odd_square.png",
+   "shape": [
+    448,
+    448,
+    3
+   ],
+   "sha256": "46e8d91fa4d065d6cd38fa767ee4cf62a2bd9a49cc39f0771052c3f4e852a087",
+   "jpeg": false
+  },
+  {
+   "file": "gray.png",
+   "shape": [
+    448,
+    448,
+    3
+   ],
+   "sha256": "68bd7b10025aa607f8d6e7c8eef175528821b539b53241c09cf82ef191c43946",
+   "jpeg": false
+  },
+  {
+   "file": "gray_alpha.png",
+   "shape": [
+    448,
+    448,
+    3
+   ],
+   "sha256": "d276906644f512dd86c5123b4db149e12b86da75f6c9b41655c54c33dce7f09d",
+   "jpeg": false
+  },
+  {
+   "file": "palette_trns.png",
+   "shape": [
+    448,
+    448,
+    3
+   ],
+   "sha256": "38d6f1a99c17c7ae2a440ad8f406a3f116bbf3c59508bf87cb9c22478f9dcc67",
+   "jpeg": false
+  },
+  {
+   "file": "photo.jpg",
+   "shape": [
+    448,
+    448,
+    3
+   ],
+   "sha256": "aaf9cf5289829237c08bb404a7a0583891bc9e47299f1c242cd63a8c5a7f9e37",
+   "jpeg": true
+  }
+ ],
+ "fmt": [
+  [
+   "long_hair",
+   "long hair"
+  ],
+  [
+   "^_^",
+   "^_^"
+  ],
+  [
+   "o_o",
+   "o_o"
+  ],
+  [
+   "hatsune_miku_(cosplay)",
+   "hatsune miku \\(cosplay\\)"
+  ],
+  [
+   "a_(b)_c",
+   "a \\(b\\) c"
+  ],
+  [
+   "3_3",
+   "3_3"
+  ],
+  [
+   ":d",
+   ":d"
+  ],
+  [
+   "x_x",
+   "x_x"
+  ],
+  [
+   "plain",
+   "plain"
+  ]
+ ],
+ "skip": [
+  "aged_down",
+  "baby",
+  "child",
+  "female_child",
+  "loli",
+  "male_child",
+  "oppai_loli",
+  "shota",
+  "toddler"
+ ],
+ "tag": [
+  {
+   "path": "E:\\AI\\ComfyUI_windows_portable\\ComfyUI\\output\\AnimaWeb\\txt2img_00001_.png",
+   "general": 0.35,
+   "character": 0.85,
+   "result": {
+    "rating": "general",
+    "character": [],
+    "general": [
+     [
+      "1girl",
+      0.994
+     ],
+     [
+      "maid headdress",
+      0.98
+     ],
+     [
+      "cafe",
+      0.964
+     ],
+     [
+      "solo",
+      0.963
+     ],
+     [
+      "indoors",
+      0.96
+     ],
+     [
+      "cup",
+      0.959
+     ],
+     [
+      "maid",
+      0.955
+     ],
+     [
+      "long sleeves",
+      0.949
+     ],
+     [
+      "looking at viewer",
+      0.948
+     ],
+     [
+      "pov across table",
+      0.934
+     ],
+     [
+      "saucer",
+      0.924
+     ],
+     [
+      "long hair",
+      0.92
+     ],
+     [
+      "blush",
+      0.918
+     ],
+     [
+      "closed mouth",
+      0.898
+     ],
+     [
+      "table",
+      0.881
+     ],
+     [
+      "teacup",
+      0.874
+     ],
+     [
+      "smile",
+      0.858
+     ],
+     [
+      "grey hair",
+      0.815
+     ],
+     [
+      "ceiling light",
+      0.806
+     ],
+     [
+      "sitting",
+      0.804
+     ],
+     [
+      "menu board",
+      0.794
+     ],
+     [
+      "juliet sleeves",
+      0.79
+     ],
+     [
+      "frills",
+      0.747
+     ],
+     [
+      "upper body",
+      0.735
+     ],
+     [
+      "window",
+      0.735
+     ],
+     [
+      "dress",
+      0.725
+     ],
+     [
+      "coffee",
+      0.724
+     ],
+     [
+      "menu",
+      0.721
+     ],
+     [
+      "black dress",
+      0.715
+     ],
+     [
+      "elbows on table",
+      0.693
+     ],
+     [
+      "puffy sleeves",
+      0.688
+     ],
+     [
+      "head rest",
+      0.687
+     ],
+     [
+      "restaurant",
+      0.649
+     ],
+     [
+      "bottle",
+      0.632
+     ],
+     [
+      "buttons",
+      0.613
+     ],
+     [
+      "light bulb",
+      0.598
+     ],
+     [
+      "hands on own face",
+      0.597
+     ],
+     [
+      "hanging light",
+      0.584
+     ],
+     [
+      "wooden table",
+      0.578
+     ],
+     [
+      "grey eyes",
+      0.532
+     ],
+     [
+      "lamp",
+      0.506
+     ],
+     [
+      "maid apron",
+      0.494
+     ],
+     [
+      "swept bangs",
+      0.451
+     ],
+     [
+      "elbow rest",
+      0.447
+     ],
+     [
+      "purple eyes",
+      0.446
+     ],
+     [
+      "apron",
+      0.445
+     ],
+     [
+      "breasts",
+      0.44
+     ],
+     [
+      "hands up",
+      0.429
+     ],
+     [
+      ":3",
+      0.413
+     ],
+     [
+      "chair",
+      0.408
+     ],
+     [
+      "chalkboard",
+      0.406
+     ],
+     [
+      "white apron",
+      0.401
+     ],
+     [
+      "collared dress",
+      0.394
+     ],
+     [
+      "hands on own cheeks",
+      0.374
+     ],
+     [
+      "white hair",
+      0.371
+     ],
+     [
+      "plate",
+      0.358
+     ],
+     [
+      "tea",
+      0.353
+     ]
+    ]
+   },
+   "probs": "probs_0.bin"
+  },
+  {
+   "path": "E:\\AI\\ComfyUI_windows_portable\\ComfyUI\\output\\AnimaWeb\\txt2img_00002_.png",
+   "general": 0.35,
+   "character": 0.85,
+   "result": {
+    "rating": "general",
+    "character": [],
+    "general": [
+     [
+      "sunflower",
+      0.995
+     ],
+     [
+      "jewelry",
+      0.994
+     ],
+     [
+      "1girl",
+      0.993
+     ],
+     [
+      "flower",
+      0.986
+     ],
+     [
+      "hat",
+      0.981
+     ],
+     [
+      "earrings",
+      0.972
+     ],
+     [
+      "solo",
+      0.961
+     ],
+     [
+      "dress",
+      0.95
+     ],
+     [
+      "white dress",
+      0.926
+     ],
+     [
+      "necklace",
+      0.922
+     ],
+     [
+      "straw hat",
+      0.918
+     ],
+     [
+      "blue sky",
+      0.859
+     ],
+     [
+      "outdoors",
+      0.843
+     ],
+     [
+      "looking at viewer",
+      0.839
+     ],
+     [
+      "sun hat",
+      0.836
+     ],
+     [
+      "sunflower field",
+      0.829
+     ],
+     [
+      "long hair",
+      0.824
+     ],
+     [
+      "hat flower",
+      0.792
+     ],
+     [
+      "day",
+      0.791
+     ],
+     [
+      "lips",
+      0.777
+     ],
+     [
+      "sky",
+      0.768
+     ],
+     [
+      "yellow flower",
+      0.717
+     ],
+     [
+      "artist name",
+      0.713
+     ],
+     [
+      "bare shoulders",
+      0.692
+     ],
+     [
+      "off-shoulder dress",
+      0.683
+     ],
+     [
+      "orange hair",
+      0.677
+     ],
+     [
+      "off shoulder",
+      0.629
+     ],
+     [
+      "upper body",
+      0.62
+     ],
+     [
+      "summer",
+      0.615
+     ],
+     [
+      "pink lips",
+      0.571
+     ],
+     [
+      "sundress",
+      0.57
+     ],
+     [
+      "smile",
+      0.565
+     ],
+     [
+      "flower field",
+      0.546
+     ],
+     [
+      "patreon username",
+      0.505
+     ],
+     [
+      "closed mouth",
+      0.499
+     ],
+     [
+      "sunlight",
+      0.483
+     ],
+     [
+      "gold earrings",
+      0.479
+     ],
+     [
+      "green eyes",
+      0.47
+     ],
+     [
+      "collarbone",
+      0.46
+     ],
+     [
+      "web address",
+      0.451
+     ],
+     [
+      "field",
+      0.441
+     ],
+     [
+      "hoop earrings",
+      0.433
+     ],
+     [
+      "hat ribbon",
+      0.418
+     ],
+     [
+      "shade",
+      0.395
+     ],
+     [
+      "pendant",
+      0.389
+     ],
+     [
+      "brown hair",
+      0.375
+     ],
+     [
+      "light smile",
+      0.371
+     ],
+     [
+      "nose",
+      0.368
+     ],
+     [
+      "dappled sunlight",
+      0.356
+     ]
+    ]
+   },
+   "probs": "probs_1.bin"
+  },
+  {
+   "path": "E:\\AI\\ComfyUI_windows_portable\\ComfyUI\\output\\AnimaWeb\\txt2img_00003_.png",
+   "general": 0.35,
+   "character": 0.85,
+   "result": {
+    "rating": "sensitive",
+    "character": [],
+    "general": [
+     [
+      "1girl",
+      0.984
+     ],
+     [
+      "jewelry",
+      0.935
+     ],
+     [
+      "squatting",
+      0.93
+     ],
+     [
+      "necklace",
+      0.918
+     ],
+     [
+      "boots",
+      0.902
+     ],
+     [
+      "orange hair",
+      0.892
+     ],
+     [
+      "night",
+      0.882
+     ],
+     [
+      "sky",
+      0.853
+     ],
+     [
+      "shorts",
+      0.835
+     ],
+     [
+      "looking at viewer",
+      0.827
+     ],
+     [
+      "smile",
+      0.813
+     ],
+     [
+      "cross-laced footwear",
+      0.772
+     ],
+     [
+      "breasts",
+      0.716
+     ],
+     [
+      "sign",
+      0.714
+     ],
+     [
+      "night sky",
+      0.71
+     ],
+     [
+      "city",
+      0.693
+     ],
+     [
+      "black shorts",
+      0.69
+     ],
+     [
+      "solo",
+      0.687
+     ],
+     [
+      "black footwear",
+      0.68
+     ],
+     [
+      "long hair",
+      0.651
+     ],
+     [
+      "star \\(sky\\)",
+      0.644
+     ],
+     [
+      "lace-up boots",
+      0.593
+     ],
+     [
+      "building",
+      0.583
+     ],
+     [
+      "starry sky",
+      0.569
+     ],
+     [
+      "cleavage",
+      0.554
+     ],
+     [
+      "outdoors",
+      0.55
+     ],
+     [
+      "lips",
+      0.549
+     ],
+     [
+      "patreon username",
+      0.537
+     ],
+     [
+      "full body",
+      0.522
+     ],
+     [
+      "billboard",
+      0.516
+     ],
+     [
+      "web address",
+      0.473
+     ],
+     [
+      "brown eyes",
+      0.455
+     ],
+     [
+      "reflection",
+      0.45
+     ],
+     [
+      "artist name",
+      0.439
+     ],
+     [
+      "parted lips",
+      0.399
+     ],
+     [
+      "artist logo",
+      0.39
+     ],
+     [
+      "cityscape",
+      0.378
+     ]
+    ]
+   },
+   "probs": "probs_2.bin"
+  },
+  {
+   "path": "D:\\AI\\lora_train\\jgdxstyle_對照_aesthetic.jpg",
+   "general": 0.35,
+   "character": 0.85,
+   "result": {
+    "rating": "general",
+    "character": [],
+    "general": [
+     [
+      "maid",
+      0.978
+     ],
+     [
+      "weapon",
+      0.956
+     ],
+     [
+      "blue hair",
+      0.953
+     ],
+     [
+      "sword",
+      0.946
+     ],
+     [
+      "hair over one eye",
+      0.939
+     ],
+     [
+      "1girl",
+      0.936
+     ],
+     [
+      "maid headdress",
+      0.914
+     ],
+     [
+      "katana",
+      0.876
+     ],
+     [
+      "ponytail",
+      0.874
+     ],
+     [
+      "multiple views",
+      0.838
+     ],
+     [
+      "holding weapon",
+      0.822
+     ],
+     [
+      "blue eyes",
+      0.819
+     ],
+     [
+      "cherry blossoms",
+      0.796
+     ],
+     [
+      "japanese clothes",
+      0.777
+     ],
+     [
+      "holding sword",
+      0.769
+     ],
+     [
+      "holding",
+      0.764
+     ],
+     [
+      "petals",
+      0.723
+     ],
+     [
+      "black hair",
+      0.676
+     ],
+     [
+      "maid apron",
+      0.676
+     ],
+     [
+      "long hair",
+      0.662
+     ],
+     [
+      "apron",
+      0.657
+     ],
+     [
+      "dress",
+      0.612
+     ],
+     [
+      "fighting stance",
+      0.574
+     ],
+     [
+      "smile",
+      0.561
+     ],
+     [
+      "sandals",
+      0.53
+     ],
+     [
+      "sheath",
+      0.495
+     ],
+     [
+      "1boy",
+      0.488
+     ],
+     [
+      "ready to draw",
+      0.481
+     ],
+     [
+      "pantyhose",
+      0.472
+     ],
+     [
+      "long sleeves",
+      0.467
+     ],
+     [
+      "full body",
+      0.466
+     ],
+     [
+      "short hair",
+      0.463
+     ],
+     [
+      "white background",
+      0.417
+     ],
+     [
+      "looking at viewer",
+      0.416
+     ],
+     [
+      "kimono",
+      0.392
+     ],
+     [
+      "alternate costume",
+      0.363
+     ],
+     [
+      "high ponytail",
+      0.357
+     ],
+     [
+      "frills",
+      0.355
+     ]
+    ]
+   },
+   "probs": "probs_3.bin"
+  },
+  {
+   "path": "D:\\AI\\anima_app\\tests\\golden\\tagger\\alpha.png",
+   "general": 0.2,
+   "character": 0.5,
+   "result": {
+    "rating": "general",
+    "character": [],
+    "general": [
+     [
+      "no humans",
+      0.793
+     ],
+     [
+      "gradient background",
+      0.601
+     ],
+     [
+      "grey background",
+      0.572
+     ],
+     [
+      "monochrome",
+      0.569
+     ],
+     [
+      "text focus",
+      0.471
+     ],
+     [
+      "comic",
+      0.41
+     ],
+     [
+      "abstract background",
+      0.377
+     ],
+     [
+      "white background",
+      0.343
+     ],
+     [
+      "solo",
+      0.304
+     ],
+     [
+      "abstract",
+      0.288
+     ],
+     [
+      "1girl",
+      0.287
+     ],
+     [
+      "simple background",
+      0.259
+     ],
+     [
+      "silhouette",
+      0.23
+     ],
+     [
+      "greyscale",
+      0.204
+     ]
+    ]
+   },
+   "probs": "probs_4.bin"
+  },
+  {
+   "path": "D:\\AI\\anima_app\\tests\\golden\\tagger\\small.png",
+   "general": 0.2,
+   "character": 0.5,
+   "result": {
+    "rating": "general",
+    "character": [
+     [
+      "ditto",
+      0.729
+     ],
+     [
+      "mew \\(pokemon\\)",
+      0.516
+     ]
+    ],
+    "general": [
+     [
+      "pokemon \\(creature\\)",
+      0.834
+     ],
+     [
+      "too many",
+      0.81
+     ],
+     [
+      "6+girls",
+      0.678
+     ],
+     [
+      "chromatic aberration",
+      0.621
+     ],
+     [
+      "odd one out",
+      0.508
+     ],
+     [
+      "everyone",
+      0.437
+     ],
+     [
+      "multiple girls",
+      0.43
+     ],
+     [
+      "pokemon move",
+      0.399
+     ],
+     [
+      "shiny pokemon",
+      0.383
+     ],
+     [
+      "poke ball",
+      0.358
+     ],
+     [
+      "shiny and normal",
+      0.345
+     ],
+     [
+      "blue hair",
+      0.28
+     ],
+     [
+      "smile",
+      0.277
+     ],
+     [
+      "multiple persona",
+      0.276
+     ],
+     [
+      "hat",
+      0.273
+     ],
+     [
+      "clone",
+      0.272
+     ],
+     [
+      "1girl",
+      0.261
+     ],
+     [
+      "6+boys",
+      0.257
+     ],
+     [
+      "no humans",
+      0.234
+     ]
+    ]
+   },
+   "probs": "probs_5.bin"
+  }
+ ],
+ "threads": 10
+}

@@ -1,0 +1,1038 @@
+[
+ {
+  "en": "Position keys (X and Y keyed at the same time) make a path you can bend on the monitor",
+  "ctx": "app.js:13151: return `<div class=\"insp-section\" data-motion-section><h3>Motion</h3>"
+ },
+ {
+  "en": "Motion",
+  "ctx": "app.js:13151: return `<div class=\"insp-section\" data-motion-section><h3>Motion</h3>"
+ },
+ {
+  "en": "Path",
+  "ctx": "app.js:13151: return `<div class=\"insp-section\" data-motion-section><h3>Motion</h3>"
+ },
+ {
+  "en": "Smooth",
+  "ctx": "app.js:13153: ${btn(\"data-path-act=\\\"smooth\\\"\", \"Smooth\", \"Curve the path smoothly through every position key\", keys < 2)}"
+ },
+ {
+  "en": "Curve the path smoothly through every position key",
+  "ctx": "app.js:13153: ${btn(\"data-path-act=\\\"smooth\\\"\", \"Smooth\", \"Curve the path smoothly through every position key\", keys < 2)}"
+ },
+ {
+  "en": "Straight",
+  "ctx": "app.js:13154: ${btn(\"data-path-act=\\\"straight\\\"\", \"Straight\", \"Straight lines between the position keys\", !curved)}"
+ },
+ {
+  "en": "Straight lines between the position keys",
+  "ctx": "app.js:13154: ${btn(\"data-path-act=\\\"straight\\\"\", \"Straight\", \"Straight lines between the position keys\", !curved)}"
+ },
+ {
+  "en": "{0} position keys{1}",
+  "ctx": "app.js:13155: <span class=\"cl-note\">${keys >= 2 ? `${keys} position keys${curved ? \", curved\" : \"\"}` : \"key X and Y at two times\"}</span></span></div>"
+ },
+ {
+  "en": ", curved",
+  "ctx": "app.js:13155: <span class=\"cl-note\">${keys >= 2 ? `${keys} position keys${curved ? \", curved\" : \"\"}` : \"key X and Y at two times\"}</span></span></div>"
+ },
+ {
+  "en": "key X and Y at two times",
+  "ctx": "app.js:13155: <span class=\"cl-note\">${keys >= 2 ? `${keys} position keys${curved ? \", curved\" : \"\"}` : \"key X and Y at two times\"}</span></span></div>"
+ },
+ {
+  "en": "Turn the clip with its direction of travel (its Rotation adds on top)",
+  "ctx": "app.js:13156: ${row(\"Auto-orient\", `<input type=\"checkbox\" data-k=\"autoOrient\" ${p.autoOrient ? \"checked\" : \"\"} title=\"Turn the clip with its direction of"
+ },
+ {
+  "en": "Motion blur",
+  "ctx": "app.js:13157: ${c.kind !== \"null\" ? row(\"Motion blur\", `<input type=\"range\" data-k=\"motionBlur\" min=\"0\" max=\"720\" step=\"15\" value=\"${+p.motionBlur || 0}\" "
+ },
+ {
+  "en": "Shutter angle — 180° is the film look, 0 is off",
+  "ctx": "app.js:13157: ${c.kind !== \"null\" ? row(\"Motion blur\", `<input type=\"range\" data-k=\"motionBlur\" min=\"0\" max=\"720\" step=\"15\" value=\"${+p.motionBlur || 0}\" "
+ },
+ {
+  "en": "Blur samples",
+  "ctx": "app.js:13159: + row(\"Blur samples\", `<input type=\"range\" data-k=\"motionBlurSamples\" min=\"2\" max=\"32\" step=\"1\" value=\"${+p.motionBlurSamples || 8}\" title=\""
+ },
+ {
+  "en": "Sub-frame samples per frame — more is smoother and slower (playback uses as many as fit in the frame time; a paused frame and export use them all)",
+  "ctx": "app.js:13159: + row(\"Blur samples\", `<input type=\"range\" data-k=\"motionBlurSamples\" min=\"2\" max=\"32\" step=\"1\" value=\"${+p.motionBlurSamples || 8}\" title=\""
+ },
+ {
+  "en": "{0}{1} {2}px \"{3}\", sans-serif",
+  "ctx": "app.js:13294: ctx.font = `${p.italic ? \"italic \" : \"\"}${weight} ${size}px \"${p.font || \"Segoe UI\"}\", sans-serif`;"
+ },
+ {
+  "en": "{0}px",
+  "ctx": "app.js:13295: try { ctx.letterSpacing = `${+p.letterSpacing || 0}px`; } catch { }"
+ },
+ {
+  "en": "ital,wght@",
+  "ctx": "app.js:13710: const GOOGLE_FONT_STYLES = \"ital,wght@\" + [0, 1].flatMap((i) =>"
+ },
+ {
+  "en": "mmmmmmmmmmlli1WQ@#",
+  "ctx": "app.js:13718: const s = \"mmmmmmmmmmlli1WQ@#\";"
+ },
+ {
+  "en": "72px {0}",
+  "ctx": "app.js:13720: fontProbe.font = `72px ${generic}`;"
+ },
+ {
+  "en": "72px \"{0}\", {1}",
+  "ctx": "app.js:13722: fontProbe.font = `72px \"${name}\", ${generic}`;"
+ },
+ {
+  "en": "&display=swap",
+  "ctx": "app.js:13746: encodeURIComponent(name).replace(/%20/g, \"+\") + \":\" + GOOGLE_FONT_STYLES + \"&display=swap\";"
+ },
+ {
+  "en": "{0} 64px \"{1}\"",
+  "ctx": "app.js:13754: await Promise.all([\"400\", \"700\"].map((w) => document.fonts.load(`${w} 64px \"${name}\"`).catch(() => { })));"
+ },
+ {
+  "en": "{0}{1} 64px \"{2}\"",
+  "ctx": "app.js:13771: for (const fam of fams) faces.set(`${p.italic ? \"italic \" : \"\"}${textFontWeight(p)} 64px \"${fam}\"`, fam);"
+ },
+ {
+  "en": "Exporting… {0}%",
+  "ctx": "app.js:13916: els.exportTitle.textContent = `Exporting… ${pct.toFixed(0)}%`;"
+ },
+ {
+  "en": "Draft · H.264 fast",
+  "ctx": "app.js:13938: label: \"Draft · H.264 fast\","
+ },
+ {
+  "en": "Quick preview — smaller file, faster encode.",
+  "ctx": "app.js:13939: description: \"Quick preview — smaller file, faster encode.\","
+ },
+ {
+  "en": "-c:v libx264 -preset veryfast -crf 23 -c:a aac -b:a 128k",
+  "ctx": "app.js:13940: summary: \"-c:v libx264 -preset veryfast -crf 23 -c:a aac -b:a 128k\","
+ },
+ {
+  "en": "Delivery · H.264 balanced",
+  "ctx": "app.js:13944: label: \"Delivery · H.264 balanced\","
+ },
+ {
+  "en": "Default export — good quality and compatibility.",
+  "ctx": "app.js:13945: description: \"Default export — good quality and compatibility.\","
+ },
+ {
+  "en": "-c:v libx264 -preset fast -crf 18 -c:a aac -b:a 192k",
+  "ctx": "app.js:13946: summary: \"-c:v libx264 -preset fast -crf 18 -c:a aac -b:a 192k\","
+ },
+ {
+  "en": "High quality · H.264 slow",
+  "ctx": "app.js:13950: label: \"High quality · H.264 slow\","
+ },
+ {
+  "en": "Best H.264 quality — slower encode, larger file.",
+  "ctx": "app.js:13951: description: \"Best H.264 quality — slower encode, larger file.\","
+ },
+ {
+  "en": "-c:v libx264 -preset slow -crf 16 -c:a aac -b:a 256k",
+  "ctx": "app.js:13952: summary: \"-c:v libx264 -preset slow -crf 16 -c:a aac -b:a 256k\","
+ },
+ {
+  "en": "\"{0}\" is not defined in encoding-profiles.json — the export will fail until it is added or another profile is picked.",
+  "ctx": "app.js:13979: : `\"${id}\" is not defined in encoding-profiles.json — the export will fail until it is added or another profile is picked.`;"
+ },
+ {
+  "en": "Project default (encodeProfile in project.json). Pick another profile here for a one-off export.",
+  "ctx": "app.js:13984: \"Project default (encodeProfile in project.json). Pick another profile here for a one-off export.\";"
+ },
+ {
+  "en": "Browser default — saved when you change this dropdown.",
+  "ctx": "app.js:13986: els.exportProfileHint.textContent = \"Browser default — saved when you change this dropdown.\";"
+ },
+ {
+  "en": "Raw ffmpeg arguments from encoding-profiles.json.",
+  "ctx": "app.js:13988: els.exportProfileHint.textContent = \"Raw ffmpeg arguments from encoding-profiles.json.\";"
+ },
+ {
+  "en": "{0} (not defined on the server)",
+  "ctx": "app.js:14047: return opt(\"p:\" + id, p ? (p.label || id) : `${id} (not defined on the server)`);"
+ },
+ {
+  "en": "Picture size ({0} × {1})",
+  "ctx": "app.js:14104: const res = [[\"\", `Picture size (${fr.outW} × ${fr.outH})`]];"
+ },
+ {
+  "en": "Custom…",
+  "ctx": "app.js:14106: res.push([\"custom\", \"Custom…\"]);"
+ },
+ {
+  "en": "Project ({0} fps)",
+  "ctx": "app.js:14115: setOptions($(\"dlvFps\"), [[\"\", `Project (${projectFps()} fps)`], ...Delivery.FPS_CHOICES.map((f) => [f, `${f} fps`])], sp.fps ?? \"\");"
+ },
+ {
+  "en": "— not in this ffmpeg",
+  "ctx": "app.js:14118: return [k, c.label + (none ? \" — not in this ffmpeg\" : \"\"), none && k !== v.codec];"
+ },
+ {
+  "en": "4:2:0 8-bit",
+  "ctx": "app.js:14142: const PIX = { yuv420p: \"4:2:0 8-bit\", yuv422p: \"4:2:2 8-bit\", yuv444p: \"4:4:4 8-bit\", yuv420p10le: \"4:2:0 10-bit\", yuv422p10le: \"4:2:2 10-bi"
+ },
+ {
+  "en": "4:2:2 8-bit",
+  "ctx": "app.js:14142: const PIX = { yuv420p: \"4:2:0 8-bit\", yuv422p: \"4:2:2 8-bit\", yuv444p: \"4:4:4 8-bit\", yuv420p10le: \"4:2:0 10-bit\", yuv422p10le: \"4:2:2 10-bi"
+ },
+ {
+  "en": "4:4:4 8-bit",
+  "ctx": "app.js:14142: const PIX = { yuv420p: \"4:2:0 8-bit\", yuv422p: \"4:2:2 8-bit\", yuv444p: \"4:4:4 8-bit\", yuv420p10le: \"4:2:0 10-bit\", yuv422p10le: \"4:2:2 10-bi"
+ },
+ {
+  "en": "4:2:0 10-bit",
+  "ctx": "app.js:14142: const PIX = { yuv420p: \"4:2:0 8-bit\", yuv422p: \"4:2:2 8-bit\", yuv444p: \"4:4:4 8-bit\", yuv420p10le: \"4:2:0 10-bit\", yuv422p10le: \"4:2:2 10-bi"
+ },
+ {
+  "en": "4:2:2 10-bit",
+  "ctx": "app.js:14142: const PIX = { yuv420p: \"4:2:0 8-bit\", yuv422p: \"4:2:2 8-bit\", yuv444p: \"4:4:4 8-bit\", yuv420p10le: \"4:2:0 10-bit\", yuv422p10le: \"4:2:2 10-bi"
+ },
+ {
+  "en": "4:4:4 10-bit",
+  "ctx": "app.js:14142: const PIX = { yuv420p: \"4:2:0 8-bit\", yuv422p: \"4:2:2 8-bit\", yuv444p: \"4:4:4 8-bit\", yuv420p10le: \"4:2:0 10-bit\", yuv422p10le: \"4:2:2 10-bi"
+ },
+ {
+  "en": "Off — as mixed",
+  "ctx": "app.js:14162: const opts = [[\"off\", \"Off — as mixed\"], ...Delivery.LOUDNESS_TARGETS];"
+ },
+ {
+  "en": "Tokens:",
+  "ctx": "app.js:14174: $(\"dlvTokens\").textContent = \"Tokens: \" + Delivery.FILENAME_TOKENS.map((t) => `{${t}}`).join(\" \");"
+ },
+ {
+  "en": "Project default (delivery in project.json) — agents export with it too.",
+  "ctx": "app.js:14244: ? \"Project default (delivery in project.json) — agents export with it too.\""
+ },
+ {
+  "en": "{0} · modified — Save preset… keeps these settings for every project.",
+  "ctx": "app.js:14245: : modified ? `${preset?.label || \"Preset\"} · modified — Save preset… keeps these settings for every project.`"
+ },
+ {
+  "en": "Your last settings in this browser.",
+  "ctx": "app.js:14246: : dlvSource === \"browser\" ? \"Your last settings in this browser.\" : \"\";"
+ },
+ {
+  "en": "· about {0}",
+  "ctx": "app.js:14251: (size ? ` · about ${Delivery.fmtBytes(size)}` : \"\");"
+ },
+ {
+  "en": "→ exports/",
+  "ctx": "app.js:14252: $(\"dlvFilePreview\").textContent = \"→ exports/\" + deliveryFileName(sp, fps) + Delivery.CONTAINERS[sp.container].ext;"
+ },
+ {
+  "en": "Could not save the preset:",
+  "ctx": "app.js:14264: if (!r.ok) { alert(\"Could not save the preset: \" + (r.error || \"unknown error\")); return; }"
+ },
+ {
+  "en": "unknown error",
+  "ctx": "app.js:14264: if (!r.ok) { alert(\"Could not save the preset: \" + (r.error || \"unknown error\")); return; }"
+ },
+ {
+  "en": "Could not delete the preset:",
+  "ctx": "app.js:14275: if (!r.ok) { alert(\"Could not delete the preset: \" + (r.error || \"unknown error\")); return; }"
+ },
+ {
+  "en": "Timeline is empty — add some clips first.",
+  "ctx": "app.js:14333: if (!project.clips.length) { alert(\"Timeline is empty — add some clips first.\"); return; }"
+ },
+ {
+  "en": "Exports the",
+  "ctx": "app.js:14355: ? (ef ? \"Exports the \" + ef.w + \"×\" + ef.h + \" delivery frame (cropped). Keeps rendering if you switch tabs.\""
+ },
+ {
+  "en": "delivery frame (cropped). Keeps rendering if you switch tabs.",
+  "ctx": "app.js:14355: ? (ef ? \"Exports the \" + ef.w + \"×\" + ef.h + \" delivery frame (cropped). Keeps rendering if you switch tabs.\""
+ },
+ {
+  "en": "Frame-accurate. Server encodes from JPEG frames. Keeps going if you switch tabs.",
+  "ctx": "app.js:14356: : \"Frame-accurate. Server encodes from JPEG frames. Keeps going if you switch tabs.\")"
+ },
+ {
+  "en": "Needs the server + ffmpeg on PATH to export a cropped delivery frame.",
+  "ctx": "app.js:14358: ? \"Needs the server + ffmpeg on PATH to export a cropped delivery frame.\""
+ },
+ {
+  "en": "Needs the server + ffmpeg on PATH.",
+  "ctx": "app.js:14359: : \"Needs the server + ffmpeg on PATH.\");"
+ },
+ {
+  "en": "Frame-accurate. Browser HW-encodes H.264; server muxes with audio. Faster upload than Fast.",
+  "ctx": "app.js:14362: if (wcOk) wcNote.textContent = \"Frame-accurate. Browser HW-encodes H.264; server muxes with audio. Faster upload than Fast.\";"
+ },
+ {
+  "en": "Unavailable while an export frame is set — use Fast export.",
+  "ctx": "app.js:14364: ? \"Unavailable while an export frame is set — use Fast export.\""
+ },
+ {
+  "en": "Unavailable while an export frame is set. Install ffmpeg, or clear the export frame to use Realtime.",
+  "ctx": "app.js:14365: : \"Unavailable while an export frame is set. Install ffmpeg, or clear the export frame to use Realtime.\";"
+ },
+ {
+  "en": "Needs the server + ffmpeg. Falling back to in-browser MediaRecorder when selected.",
+  "ctx": "app.js:14366: else if (!state.connected || !state.ffmpeg) wcNote.textContent = \"Needs the server + ffmpeg. Falling back to in-browser MediaRecorder when s"
+ },
+ {
+  "en": "This browser does not support VideoEncoder Annex-B H.264. Falling back to MediaRecorder when selected.",
+  "ctx": "app.js:14367: else wcNote.textContent = \"This browser does not support VideoEncoder Annex-B H.264. Falling back to MediaRecorder when selected.\";"
+ },
+ {
+  "en": "Realtime (in-browser)",
+  "ctx": "app.js:14371: if (label) label.textContent = wcOk ? \"WebCodecs (HW encode)\" : \"Realtime (in-browser)\";"
+ },
+ {
+  "en": "Track {0} is disabled and will be omitted from the export.",
+  "ctx": "app.js:14381: ? `Track ${list} is disabled and will be omitted from the export.`"
+ },
+ {
+  "en": "Tracks {0} are disabled and will be omitted from the export.",
+  "ctx": "app.js:14382: : `Tracks ${list} are disabled and will be omitted from the export.`;"
+ },
+ {
+  "en": "{0} offline and will export as “Media offline” — relink first (right-click in the bin → Relink…).",
+  "ctx": "app.js:14392: `${offUsed.length === 1 ? `“${offUsed[0].name}” is` : offUsed.length + \" files are\"} offline and will export as “Media offline” — relink fir"
+ },
+ {
+  "en": "Export frame cropping needs Fast export (server + ffmpeg). Clear the export frame, or install ffmpeg and try again.",
+  "ctx": "app.js:14419: alert(\"Export frame cropping needs Fast export (server + ffmpeg). Clear the export frame, or install ffmpeg and try again.\");"
+ },
+ {
+  "en": "No export engine is available.",
+  "ctx": "app.js:14422: alert(\"No export engine is available.\");"
+ },
+ {
+  "en": "Export range is empty — IN/OUT is at or past the end of the timeline. Choose Entire timeline, or move the markers.",
+  "ctx": "app.js:14426: alert(\"Export range is empty — IN/OUT is at or past the end of the timeline. Choose Entire timeline, or move the markers.\");"
+ },
+ {
+  "en": "Full timeline · {0} → {1}",
+  "ctx": "app.js:14462: if (mode === \"entire\") return `Full timeline · ${fmt(start)} → ${fmt(end)}`;"
+ },
+ {
+  "en": "IN–OUT is empty — markers are at or past the end of the timeline.",
+  "ctx": "app.js:14463: if (frames < 1) return \"IN–OUT is empty — markers are at or past the end of the timeline.\";"
+ },
+ {
+  "en": "IN–OUT · {0} → {1}",
+  "ctx": "app.js:14465: if (inn && out) return `IN–OUT · ${fmt(start)} → ${fmt(end)}`;"
+ },
+ {
+  "en": "IN to end · {0} → {1}",
+  "ctx": "app.js:14466: if (inn) return `IN to end · ${fmt(start)} → ${fmt(end)}`;"
+ },
+ {
+  "en": "Start to OUT · {0} → {1}",
+  "ctx": "app.js:14467: return `Start to OUT · ${fmt(start)} → ${fmt(end)}`;"
+ },
+ {
+  "en": "Tainted canvas — a clip is from another origin (not /media or /library) without CORS, or an SVG could not be rasterized cleanly. Import the file into the project, or serve it with Access-Control-Allow-Origin.",
+  "ctx": "app.js:14494: ? new Error(\"Tainted canvas — a clip is from another origin (not /media or /library) without CORS, or an SVG could not be rasterized cleanly"
+ },
+ {
+  "en": "frame encode failed",
+  "ctx": "app.js:14495: : (e || new Error(\"frame encode failed\"));"
+ },
+ {
+  "en": "No CORS on",
+  "ctx": "app.js:14680: toast(\"No CORS on \" + missing.join(\", \") + \" — blank in the export. Import into the project or add Access-Control-Allow-Origin.\");"
+ },
+ {
+  "en": "— blank in the export. Import into the project or add Access-Control-Allow-Origin.",
+  "ctx": "app.js:14680: toast(\"No CORS on \" + missing.join(\", \") + \" — blank in the export. Import into the project or add Access-Control-Allow-Origin.\");"
+ },
+ {
+  "en": "frame upload failed",
+  "ctx": "app.js:14712: if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || \"frame upload failed\");"
+ },
+ {
+  "en": "presented frame timeout",
+  "ctx": "app.js:14839: rej(new Error(\"presented frame timeout\"));"
+ },
+ {
+  "en": "RIFF",
+  "ctx": "app.js:15076: wstr(0, \"RIFF\"); v.setUint32(4, bytes - 8, true); wstr(8, \"WAVE\");"
+ },
+ {
+  "en": "WAVE",
+  "ctx": "app.js:15076: wstr(0, \"RIFF\"); v.setUint32(4, bytes - 8, true); wstr(8, \"WAVE\");"
+ },
+ {
+  "en": "an export is already running",
+  "ctx": "app.js:15194: if (state.exporting) return { error: \"an export is already running\" };"
+ },
+ {
+  "en": "Rendering frames → ffmpeg. You can switch tabs; export continues.",
+  "ctx": "app.js:15202: els.exportNote.textContent = \"Rendering frames → ffmpeg. You can switch tabs; export continues.\";"
+ },
+ {
+  "en": "Mixing audio…",
+  "ctx": "app.js:15213: els.exportTitle.textContent = \"Mixing audio…\";"
+ },
+ {
+  "en": "export begin failed",
+  "ctx": "app.js:15232: if (!begin.id) throw new Error(begin.error || \"export begin failed\");"
+ },
+ {
+  "en": "audio upload failed",
+  "ctx": "app.js:15239: if (!r.ok) throw new Error(\"audio upload failed\");"
+ },
+ {
+  "en": "Rendering… {0}%",
+  "ctx": "app.js:15306: els.exportTitle.textContent = `Rendering… ${pct.toFixed(0)}%`;"
+ },
+ {
+  "en": "Encoding…",
+  "ctx": "app.js:15312: els.exportTitle.textContent = \"Encoding…\";"
+ },
+ {
+  "en": "encode failed",
+  "ctx": "app.js:15319: if (!end.src) throw new Error(end.error || \"encode failed\");"
+ },
+ {
+  "en": "Exported {0} — check: {1} (Export → Queue)",
+  "ctx": "app.js:15331: toast(o.report && !o.report.ok ? `Exported ${o.file} — check: ${o.report.checks.filter((c) => !c.ok).map((c) => c.text).join(\"; \")} (Export "
+ },
+ {
+  "en": "Exported {0}{1}",
+  "ctx": "app.js:15331: toast(o.report && !o.report.ok ? `Exported ${o.file} — check: ${o.report.checks.filter((c) => !c.ok).map((c) => c.text).join(\"; \")} (Export "
+ },
+ {
+  "en": "— checks passed",
+  "ctx": "app.js:15331: toast(o.report && !o.report.ok ? `Exported ${o.file} — check: ${o.report.checks.filter((c) => !c.ok).map((c) => c.text).join(\"; \")} (Export "
+ },
+ {
+  "en": "&discard=1",
+  "ctx": "app.js:15344: if (sessId) fetch(\"/api/export/end?id=\" + sessId + \"&discard=1\", { method: \"POST\" }).catch(() => { });"
+ },
+ {
+  "en": "Export failed:",
+  "ctx": "app.js:15348: else if (msg !== \"cancelled\" && !opts.silent) alert(\"Export failed: \" + msg);"
+ },
+ {
+  "en": "Exporting — outputs with the same frame rate and range share one render.",
+  "ctx": "app.js:15397: ? \"Exporting — outputs with the same frame rate and range share one render.\""
+ },
+ {
+  "en": "{0} waiting · {1} done",
+  "ctx": "app.js:15398: : exportQueue.length ? `${pending} waiting · ${done} done` : \"Nothing queued — pick settings in Export and press Add to queue.\";"
+ },
+ {
+  "en": "Nothing queued — pick settings in Export and press Add to queue.",
+  "ctx": "app.js:15398: : exportQueue.length ? `${pending} waiting · ${done} done` : \"Nothing queued — pick settings in Export and press Add to queue.\";"
+ },
+ {
+  "en": "Queue · {0}",
+  "ctx": "app.js:15400: if (btnOpen) btnOpen.textContent = exportQueue.length ? `Queue · ${pending || exportQueue.length}` : \"Queue\";"
+ },
+ {
+  "en": "Stop",
+  "ctx": "app.js:15402: start.textContent = queueRunning ? \"Stop\" : \"Start\";"
+ },
+ {
+  "en": "The queue is empty",
+  "ctx": "app.js:15406: if (!exportQueue.length) { list.innerHTML = `<li class=\"xq-empty\">The queue is empty</li>`; return; }"
+ },
+ {
+  "en": "Done → exports/{0}",
+  "ctx": "app.js:15411: : q.status === \"done\" ? `Done → exports/${q.file || q.name + ext}`"
+ },
+ {
+  "en": "Failed: {0}",
+  "ctx": "app.js:15412: : q.status === \"failed\" ? `Failed: ${q.error || \"unknown error\"}`"
+ },
+ {
+  "en": "Stopped",
+  "ctx": "app.js:15413: : q.status === \"cancelled\" ? \"Stopped\" : \"Waiting\";"
+ },
+ {
+  "en": "Waiting",
+  "ctx": "app.js:15413: : q.status === \"cancelled\" ? \"Stopped\" : \"Waiting\";"
+ },
+ {
+  "en": "Retry",
+  "ctx": "app.js:15416: q.status === \"failed\" || q.status === \"cancelled\" ? `<button type=\"button\" class=\"btn tiny\" data-q-retry=\"${q.id}\">Retry</button>` : \"\","
+ },
+ {
+  "en": "Remove from the queue",
+  "ctx": "app.js:15417: q.status !== \"running\" ? `<button type=\"button\" class=\"btn tiny\" data-q-remove=\"${q.id}\" title=\"Remove from the queue\">✕</button>` : \"\","
+ },
+ {
+  "en": "entire timeline",
+  "ctx": "app.js:15420: `<span class=\"xq-sub\">${escapeHtml(Delivery.describe(q.spec, { width: fr.outW, height: fr.outH, fps }))} · ${q.range === \"in-out\" ? \"IN–OUT\""
+ },
+ {
+  "en": "The export queue needs the server and ffmpeg (Fast export).",
+  "ctx": "app.js:15439: if (!(state.connected && state.ffmpeg)) { alert(\"The export queue needs the server and ffmpeg (Fast export).\"); return; }"
+ },
+ {
+  "en": "export failed",
+  "ctx": "app.js:15462: else Object.assign(q, { status: \"failed\", error: (o && o.error) || (res && res.error) || \"export failed\" });"
+ },
+ {
+  "en": "Export queue: {0} done{1}{2}",
+  "ctx": "app.js:15472: if (done || failed) toast(`Export queue: ${done} done${failed ? `, ${failed} failed` : \"\"}${warned ? ` — ${warned} with warnings` : \"\"}`);"
+ },
+ {
+  "en": ", {0} failed",
+  "ctx": "app.js:15472: if (done || failed) toast(`Export queue: ${done} done${failed ? `, ${failed} failed` : \"\"}${warned ? ` — ${warned} with warnings` : \"\"}`);"
+ },
+ {
+  "en": "— {0} with warnings",
+  "ctx": "app.js:15472: if (done || failed) toast(`Export queue: ${done} done${failed ? `, ${failed} failed` : \"\"}${warned ? ` — ${warned} with warnings` : \"\"}`);"
+ },
+ {
+  "en": "At most 16 batch outputs",
+  "ctx": "app.js:15491: if (list.length >= 16) { toast(\"At most 16 batch outputs\"); return; }"
+ },
+ {
+  "en": "{project}_square_{res}",
+  "ctx": "app.js:15499: { preset: \"custom\", width: 1080, height: 1080, filename: \"{project}_square_{res}\" },"
+ },
+ {
+  "en": "{project}_preview_{res}",
+  "ctx": "app.js:15500: { preset: \"web\", filename: \"{project}_preview_{res}\" },"
+ },
+ {
+  "en": "· {0} of {1} checked",
+  "ctx": "app.js:15507: $(\"dlvBatchCount\").textContent = list.length ? `· ${on} of ${list.length} checked` : \"\";"
+ },
+ {
+  "en": "Export checked ({0})",
+  "ctx": "app.js:15509: if (be) { be.disabled = !on; be.textContent = on ? `Export checked (${on})` : \"Export checked\"; }"
+ },
+ {
+  "en": "No batch outputs yet — add the settings above, or a typical set",
+  "ctx": "app.js:15510: if (!list.length) { ul.innerHTML = `<li class=\"bo-empty\">No batch outputs yet — add the settings above, or a typical set</li>`; return; }"
+ },
+ {
+  "en": "Include {2}",
+  "ctx": "app.js:15514: `<input type=\"checkbox\" data-o-on=\"${escapeHtml(o.id)}\"${o.on === false ? \"\" : \" checked\"} aria-label=\"Include ${escapeHtml(queueLabel(sp))}"
+ },
+ {
+  "en": "Show these settings above",
+  "ctx": "app.js:15517: `<button type=\"button\" class=\"btn tiny\" data-o-load=\"${escapeHtml(o.id)}\" title=\"Show these settings above\">Load</button>` +"
+ },
+ {
+  "en": "d:custom",
+  "ctx": "app.js:15534: if (els.exportProfileSel.value !== \"d:\" + n.spec.preset) els.exportProfileSel.value = \"d:custom\";"
+ },
+ {
+  "en": "ffmpeg not found on PATH — export needs it",
+  "ctx": "app.js:15574: if (!state.ffmpeg) return fail(\"ffmpeg not found on PATH — export needs it\");"
+ },
+ {
+  "en": "the timeline is empty",
+  "ctx": "app.js:15575: if (!project.clips.length) return fail(\"the timeline is empty\");"
+ },
+ {
+  "en": "range in-out needs the project's inPoint and/or outPoint — set them, or export the entire timeline",
+  "ctx": "app.js:15579: return fail(\"range in-out needs the project's inPoint and/or outPoint — set them, or export the entire timeline\");"
+ },
+ {
+  "en": "the export range is empty — IN/OUT is at or past the end of the timeline",
+  "ctx": "app.js:15582: if (exportRange().frames < 1) return fail(\"the export range is empty — IN/OUT is at or past the end of the timeline\");"
+ },
+ {
+  "en": "no clip {0}",
+  "ctx": "app.js:15617: if (!c) return fail(`no clip ${spec.clip}`);"
+ },
+ {
+  "en": "{0} is a {1} clip — tracking follows a video clip's picture",
+  "ctx": "app.js:15618: if (c.kind !== \"video\") return fail(`${c.id} is a ${c.kind} clip — tracking follows a video clip's picture`);"
+ },
+ {
+  "en": "{0} is locked — pass force:true only if the user asked to change it",
+  "ctx": "app.js:15619: if (isGroupLocked(c) && spec.force !== true) return fail(`${c.id} is locked — pass force:true only if the user asked to change it`);"
+ },
+ {
+  "en": "the clip's video did not load",
+  "ctx": "app.js:15622: if (!pictureRect(c, evalProps(c, c.start))) return fail(\"the clip's video did not load\");"
+ },
+ {
+  "en": "{0} has no mask {1}{2}",
+  "ctx": "app.js:15627: if (!list[maskIdx]) return fail(`${c.id} has no mask ${JSON.stringify(ap.mask)}${list.length ? ` (it has ${Mask.describe(list)})` : \" — add "
+ },
+ {
+  "en": "(it has {0})",
+  "ctx": "app.js:15627: if (!list[maskIdx]) return fail(`${c.id} has no mask ${JSON.stringify(ap.mask)}${list.length ? ` (it has ${Mask.describe(list)})` : \" — add "
+ },
+ {
+  "en": "— add one with setMask first",
+  "ctx": "app.js:15627: if (!list[maskIdx]) return fail(`${c.id} has no mask ${JSON.stringify(ap.mask)}${list.length ? ` (it has ${Mask.describe(list)})` : \" — add "
+ },
+ {
+  "en": "apply.clip must be another visual clip ({0} is not)",
+  "ctx": "app.js:15630: if (!other || !isVisualClip(other) || other.id === c.id) return fail(`apply.clip must be another visual clip (${ap.clip} is not)`);"
+ },
+ {
+  "en": "say what to follow: region {x, y, w, h} or point {x, y} (fractions of the clip's picture), or a mask to apply it to",
+  "ctx": "app.js:15643: if (!box && !existing) return fail(\"say what to follow: region {x, y, w, h} or point {x, y} (fractions of the clip's picture), or a mask to "
+ },
+ {
+  "en": "region / point must lie inside the clip's picture (x, y in 0…1)",
+  "ctx": "app.js:15644: if (box && !(box.x >= 0 && box.x <= 1 && box.y >= 0 && box.y <= 1 && box.w > 0 && box.h > 0)) return fail(\"region / point must lie inside th"
+ },
+ {
+  "en": "lost the region on the very next frame — pick a spot with more detail, or a bigger region",
+  "ctx": "app.js:15668: if (samples.length < 2) return fail(lostAt.length ? \"lost the region on the very next frame — pick a spot with more detail, or a bigger regi"
+ },
+ {
+  "en": "nothing to track in that range",
+  "ctx": "app.js:15668: if (samples.length < 2) return fail(lostAt.length ? \"lost the region on the very next frame — pick a spot with more detail, or a bigger regi"
+ },
+ {
+  "en": "the clip changed while tracking (an edit or a reload) — nothing was applied; run it again",
+  "ctx": "app.js:15673: return fail(\"the clip changed while tracking (an edit or a reload) — nothing was applied; run it again\");"
+ },
+ {
+  "en": "mask {0}: {1} keys",
+  "ctx": "app.js:15679: if (maskIdx >= 0) applied = `mask ${JSON.stringify(list[maskIdx].name || maskIdx)}: ${bakeTrackIntoMask(c, maskIdx, used, opts, from)} keys`"
+ },
+ {
+  "en": "clip {0}: {1} keys on {2}",
+  "ctx": "app.js:15683: applied = n ? `clip ${other.id}: ${n} keys on ${[\"x\", \"y\", ...(o.scale ? [\"scale\"] : []), ...(o.rotation ? [\"rotation\"] : [])].join(\", \")}` "
+ },
+ {
+  "en": "clip {0}: it does not overlap the track in time — nothing keyed",
+  "ctx": "app.js:15683: applied = n ? `clip ${other.id}: ${n} keys on ${[\"x\", \"y\", ...(o.scale ? [\"scale\"] : []), ...(o.rotation ? [\"rotation\"] : [])].join(\", \")}` "
+ },
+ {
+  "en": "the project changed while tracking — nothing was saved; run it again",
+  "ctx": "app.js:15701: return fail(res.status === 409 ? \"the project changed while tracking — nothing was saved; run it again\" : `could not save the project (${res"
+ },
+ {
+  "en": "could not save the project ({0}) — nothing was kept",
+  "ctx": "app.js:15701: return fail(res.status === 409 ? \"the project changed while tracking — nothing was saved; run it again\" : `could not save the project (${res"
+ },
+ {
+  "en": "tracking failed:",
+  "ctx": "app.js:15714: fail(\"tracking failed: \" + (err && err.message || err));"
+ },
+ {
+  "en": "no such clip",
+  "ctx": "app.js:15779: if (!mc) matte.error = \"no such clip\";"
+ },
+ {
+  "en": "the clip has {0} grade layer(s)",
+  "ctx": "app.js:15780: else if (!gradeLayers(mc)[layer]) matte.error = `the clip has ${gradeLayers(mc).length} grade layer(s)`;"
+ },
+ {
+  "en": "the clip is not on screen at that time",
+  "ctx": "app.js:15781: else if (!cap || !cap.args) matte.error = \"the clip is not on screen at that time\";"
+ },
+ {
+  "en": "the clip's pixels can't be read (a cross-origin source)",
+  "ctx": "app.js:15793: if (!mm || !gg) matte.error = \"the clip's pixels can't be read (a cross-origin source)\";"
+ },
+ {
+  "en": "the clip has no masks",
+  "ctx": "app.js:15811: else if (!clipMasks(kClip)) mask.error = \"the clip has no masks\";"
+ },
+ {
+  "en": "the clip is not on screen at that time (or its masks are all off)",
+  "ctx": "app.js:15812: else if (!kcap || kcap.coverage == null) mask.error = \"the clip is not on screen at that time (or its masks are all off)\";"
+ },
+ {
+  "en": "{0} from {1}",
+  "ctx": "app.js:15830: ...(tm ? { matte: `${tm.mode} from ${tm.track}` } : {}),"
+ },
+ {
+  "en": "could not measure the frame:",
+  "ctx": "app.js:15837: fail(\"could not measure the frame: \" + (err && err.message || err));"
+ },
+ {
+  "en": "Encoding with WebCodecs → ffmpeg mux. You can switch tabs; export continues.",
+  "ctx": "app.js:15895: els.exportNote.textContent = \"Encoding with WebCodecs → ffmpeg mux. You can switch tabs; export continues.\";"
+ },
+ {
+  "en": "Tainted canvas — a clip is from another origin (not /media or /library) without CORS. Import the file into the project, or serve it with Access-Control-Allow-Origin.",
+  "ctx": "app.js:15983: throw new Error(\"Tainted canvas — a clip is from another origin (not /media or /library) without CORS. Import the file into the project, or "
+ },
+ {
+  "en": "Encoding… {0}%",
+  "ctx": "app.js:15993: els.exportTitle.textContent = `Encoding… ${pct.toFixed(0)}%`;"
+ },
+ {
+  "en": "Finishing…",
+  "ctx": "app.js:15995: els.exportTitle.textContent = \"Finishing…\";"
+ },
+ {
+  "en": "mux failed",
+  "ctx": "app.js:16002: if (!end.src) throw new Error(end.error || \"mux failed\");"
+ },
+ {
+  "en": "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+  "ctx": "app.js:16028: \"video/mp4;codecs=avc1.42E01E,mp4a.40.2\", \"video/mp4\","
+ },
+ {
+  "en": "video/webm;codecs=vp9,opus",
+  "ctx": "app.js:16029: \"video/webm;codecs=vp9,opus\", \"video/webm;codecs=vp8,opus\", \"video/webm\","
+ },
+ {
+  "en": "video/webm;codecs=vp8,opus",
+  "ctx": "app.js:16029: \"video/webm;codecs=vp9,opus\", \"video/webm;codecs=vp8,opus\", \"video/webm\","
+ },
+ {
+  "en": "MediaRecorder is not supported in this browser.",
+  "ctx": "app.js:16037: if (!mime) { alert(\"MediaRecorder is not supported in this browser.\"); return; }"
+ },
+ {
+  "en": "The queue takes delivery presets — pick one above (encoding profiles export one at a time).",
+  "ctx": "app.js:16161: if (selectedExportChoice().kind !== \"delivery\" || !dlvSpec) { alert(\"The queue takes delivery presets — pick one above (encoding profiles ex"
+ },
+ {
+  "en": "New composition",
+  "ctx": "app.js:16377: compItem.textContent = \"New composition\";"
+ },
+ {
+  "en": "Create proxies for {0} video{1}",
+  "ctx": "app.js:16389: px.textContent = `Create proxies for ${vids.length} video${vids.length === 1 ? \"\" : \"s\"}`;"
+ },
+ {
+  "en": "{2} fps",
+  "ctx": "app.js:16421: FPS_PRESETS.map((v, j) => `<option value=\"${j}\" ${j === i ? \"selected\" : \"\"}>${v} fps</option>`).join(\"\") +"
+ },
+ {
+  "en": "Custom · {0} fps",
+  "ctx": "app.js:16423: ? `<option value=\"custom\" selected>Custom · ${fps} fps</option>`"
+ },
+ {
+  "en": "{0}px {1}px",
+  "ctx": "app.js:16538: if (inner) inner.style.padding = `${monitorViewPad.y}px ${monitorViewPad.x}px`;"
+ },
+ {
+  "en": "inset({0}px {1}px {2}px {3}px)",
+  "ctx": "app.js:16693: inner.style.clipPath = `inset(${Math.max(0, top)}px ${Math.max(0, right)}px ${Math.max(0, bottom)}px ${Math.max(0, left)}px)`;"
+ },
+ {
+  "en": "Lights on — show canvas outside the export frame",
+  "ctx": "app.js:16708: ? \"Lights on — show canvas outside the export frame\""
+ },
+ {
+  "en": "Waveform",
+  "ctx": "app.js:17102: const SCOPE_KINDS = { waveform: \"Waveform\", parade: \"RGB Parade\", vectorscope: \"Vectorscope\", histogram: \"Histogram\" };"
+ },
+ {
+  "en": "RGB Parade",
+  "ctx": "app.js:17102: const SCOPE_KINDS = { waveform: \"Waveform\", parade: \"RGB Parade\", vectorscope: \"Vectorscope\", histogram: \"Histogram\" };"
+ },
+ {
+  "en": "Vectorscope",
+  "ctx": "app.js:17102: const SCOPE_KINDS = { waveform: \"Waveform\", parade: \"RGB Parade\", vectorscope: \"Vectorscope\", histogram: \"Histogram\" };"
+ },
+ {
+  "en": "Histogram",
+  "ctx": "app.js:17102: const SCOPE_KINDS = { waveform: \"Waveform\", parade: \"RGB Parade\", vectorscope: \"Vectorscope\", histogram: \"Histogram\" };"
+ },
+ {
+  "en": "Select a video, image or adjustment clip",
+  "ctx": "app.js:17163: root.innerHTML = `<div class=\"inspector-empty\">Select a video, image or adjustment clip<br>to grade it.</div>`;"
+ },
+ {
+  "en": "to grade it.",
+  "ctx": "app.js:17163: root.innerHTML = `<div class=\"inspector-empty\">Select a video, image or adjustment clip<br>to grade it.</div>`;"
+ },
+ {
+  "en": "Double-click: reset",
+  "ctx": "app.js:17169: return `<div class=\"insp-row cp-row\"><label class=\"cp-label\" data-greset=\"${k}\" title=\"Double-click: reset\">${d.label}</label>"
+ },
+ {
+  "en": "Whole grade on / off, layers included (compare with the ungraded clip)",
+  "ctx": "app.js:17174: root.innerHTML = `"
+ },
+ {
+  "en": "White balance: click something white or grey in the monitor (Esc cancels)",
+  "ctx": "app.js:17174: root.innerHTML = `"
+ },
+ {
+  "en": "Copy this clip's grade",
+  "ctx": "app.js:17174: root.innerHTML = `"
+ },
+ {
+  "en": "Paste the copied grade onto the selected clips",
+  "ctx": "app.js:17174: root.innerHTML = `"
+ },
+ {
+  "en": "Reset the whole grade, layers included",
+  "ctx": "app.js:17174: root.innerHTML = `"
+ },
+ {
+  "en": "WB pick",
+  "ctx": "app.js:17174: root.innerHTML = `"
+ },
+ {
+  "en": "Paste{6}",
+  "ctx": "app.js:17174: root.innerHTML = `"
+ },
+ {
+  "en": "Reset all",
+  "ctx": "app.js:17174: root.innerHTML = `"
+ },
+ {
+  "en": "Exposure &amp; balance",
+  "ctx": "app.js:17174: root.innerHTML = `"
+ },
+ {
+  "en": "Tone",
+  "ctx": "app.js:17174: root.innerHTML = `"
+ },
+ {
+  "en": "Contrast &amp; rolloff",
+  "ctx": "app.js:17174: root.innerHTML = `"
+ },
+ {
+  "en": "Drag to tint (Shift: fine) · double-click: reset colour",
+  "ctx": "app.js:17187: <div class=\"cp-wheels\">${Color.WHEELS.map((w) => `"
+ },
+ {
+  "en": "Master · double-click: reset",
+  "ctx": "app.js:17187: <div class=\"cp-wheels\">${Color.WHEELS.map((w) => `"
+ },
+ {
+  "en": "[data-wdisc=\"{0}\"]",
+  "ctx": "app.js:17223: const root = els.colorPage, cv = root.querySelector(`[data-wdisc=\"${w}\"]`);"
+ },
+ {
+  "en": "[data-wvals=\"{0}\"]",
+  "ctx": "app.js:17239: const out = root.querySelector(`[data-wvals=\"${w}\"]`);"
+ },
+ {
+  "en": "[data-g=\"{0}\"]",
+  "ctx": "app.js:17251: const r = root.querySelector(`[data-g=\"${k}\"]`), n = root.querySelector(`[data-gnum=\"${k}\"]`);"
+ },
+ {
+  "en": "[data-gnum=\"{0}\"]",
+  "ctx": "app.js:17251: const r = root.querySelector(`[data-g=\"${k}\"]`), n = root.querySelector(`[data-gnum=\"${k}\"]`);"
+ },
+ {
+  "en": "Grade copied",
+  "ctx": "app.js:17328: toast(\"Grade copied\"); renderColorPage(true); return;"
+ },
+ {
+  "en": "Grade pasted onto {0} clip{1}",
+  "ctx": "app.js:17340: toast(`Grade pasted onto ${ok.length} clip${ok.length > 1 ? \"s\" : \"\"}` + (ok.length < targets.length ? \" (locked clips skipped)\" : \"\"));"
+ },
+ {
+  "en": "(locked clips skipped)",
+  "ctx": "app.js:17340: toast(`Grade pasted onto ${ok.length} clip${ok.length > 1 ? \"s\" : \"\"}` + (ok.length < targets.length ? \" (locked clips skipped)\" : \"\"));"
+ },
+ {
+  "en": "Click something that should be white or grey in the monitor",
+  "ctx": "app.js:17362: if (colorState.pick) toast(\"Click something that should be white or grey in the monitor\");"
+ },
+ {
+  "en": "Select a layer of the clip first",
+  "ctx": "app.js:17391: if (!isGradable(c) || !curLayer(c)) { toast(\"Select a layer of the clip first\"); return; }"
+ },
+ {
+  "en": "Select the clip to grade first",
+  "ctx": "app.js:17398: if (!isGradable(c)) { toast(\"Select the clip to grade first\"); return; }"
+ },
+ {
+  "en": "Select the clip to balance first",
+  "ctx": "app.js:17403: if (!isGradable(c)) { toast(\"Select the clip to balance first\"); return; }"
+ },
+ {
+  "en": "That spot is too dark to balance on — pick a brighter white or grey",
+  "ctx": "app.js:17408: if (Math.max(...rgb) < 0.03) { toast(\"That spot is too dark to balance on — pick a brighter white or grey\"); return; }"
+ },
+ {
+  "en": "White balance: temp {0}, tint {1}",
+  "ctx": "app.js:17413: toast(`White balance: temp ${wb.temp}, tint ${wb.tint}`);"
+ },
+ {
+  "en": "Hue·Hue",
+  "ctx": "app.js:17423: const CURVE_TABS = { curves: \"Curves\", hueHue: \"Hue·Hue\", hueSat: \"Hue·Sat\", hueLuma: \"Hue·Luma\", satLuma: \"Sat·Luma\" };"
+ },
+ {
+  "en": "Hue·Sat",
+  "ctx": "app.js:17423: const CURVE_TABS = { curves: \"Curves\", hueHue: \"Hue·Hue\", hueSat: \"Hue·Sat\", hueLuma: \"Hue·Luma\", satLuma: \"Sat·Luma\" };"
+ },
+ {
+  "en": "Hue·Luma",
+  "ctx": "app.js:17423: const CURVE_TABS = { curves: \"Curves\", hueHue: \"Hue·Hue\", hueSat: \"Hue·Sat\", hueLuma: \"Hue·Luma\", satLuma: \"Sat·Luma\" };"
+ },
+ {
+  "en": "Sat·Luma",
+  "ctx": "app.js:17423: const CURVE_TABS = { curves: \"Curves\", hueHue: \"Hue·Hue\", hueSat: \"Hue·Sat\", hueLuma: \"Hue·Luma\", satLuma: \"Sat·Luma\" };"
+ },
+ {
+  "en": "Click the monitor to mark that colour's {3} on the curve",
+  "ctx": "app.js:17445: return `<div class=\"insp-section cp-curves\"><h3>Curves</h3>"
+ },
+ {
+  "en": "Reset this curve",
+  "ctx": "app.js:17445: return `<div class=\"insp-section cp-curves\"><h3>Curves</h3>"
+ },
+ {
+  "en": "Click: add a point · drag: move · double-click: remove",
+  "ctx": "app.js:17445: return `<div class=\"insp-section cp-curves\"><h3>Curves</h3>"
+ },
+ {
+  "en": "Pick",
+  "ctx": "app.js:17445: return `<div class=\"insp-section cp-curves\"><h3>Curves</h3>"
+ },
+ {
+  "en": "Reset",
+  "ctx": "app.js:17445: return `<div class=\"insp-section cp-curves\"><h3>Curves</h3>"
+ },
+ {
+  "en": "Luma — brightness only, colour kept",
+  "ctx": "app.js:17450: `<button type=\"button\" class=\"btn tiny cv-ch${k === ch ? \" toggle on\" : \"\"}\" data-cvch=\"${k}\" style=\"--cv:${CURVE_COLORS[k]}\" title=\"${k ==="
+ },
+ {
+  "en": "Click the colour to adjust in the monitor",
+  "ctx": "app.js:17588: if (on) toast(\"Click the colour to adjust in the monitor\");"
+ },
+ {
+  "en": "That spot is nearly grey — its hue is not reliable",
+  "ctx": "app.js:17598: if (s < 0.05 && colorState.curveTab !== \"curves\" && colorState.curveTab !== \"satLuma\") toast(\"That spot is nearly grey — its hue is not reli"
+ },
+ {
+  "en": "Soft",
+  "ctx": "app.js:17608: hue: [[\"Centre\", 0, 360, 1], [\"Width\", 0, 360, 1], [\"Soft\", 0, 180, 1]],"
+ },
+ {
+  "en": "Luma",
+  "ctx": "app.js:17612: const QUAL_LABEL = { hue: \"Hue\", sat: \"Saturation\", luma: \"Luma\" };"
+ },
+ {
+  "en": "Layer {0}",
+  "ctx": "app.js:17638: if (!ls[k].name) ls[k].name = `Layer ${k + 1}`;   // a layer always keeps a name, so it is never dropped"
+ },
+ {
+  "en": "The primary grade — the whole picture",
+  "ctx": "app.js:17681: title=\"${i < 0 ? \"The primary grade — the whole picture\" : \"Layer: graded where its qualifier and mask select\"}\">${escapeHtml(label)}</butto"
+ },
+ {
+  "en": "Layer: graded where its qualifier and mask select",
+  "ctx": "app.js:17681: title=\"${i < 0 ? \"The primary grade — the whole picture\" : \"Layer: graded where its qualifier and mask select\"}\">${escapeHtml(label)}</butto"
+ },
+ {
+  "en": "Add a layer: a correction limited by a qualifier and / or a mask",
+  "ctx": "app.js:17682: return `<div class=\"cp-layers\">${chip(-1, \"Primary\")}${ls.map((l, i) => chip(i, l.name || `Layer ${i + 1}`, l.on === false)).join(\"\")}"
+ },
+ {
+  "en": "+ Layer",
+  "ctx": "app.js:17682: return `<div class=\"cp-layers\">${chip(-1, \"Primary\")}${ls.map((l, i) => chip(i, l.name || `Layer ${i + 1}`, l.on === false)).join(\"\")}"
+ },
+ {
+  "en": "Primary",
+  "ctx": "app.js:17682: return `<div class=\"cp-layers\">${chip(-1, \"Primary\")}${ls.map((l, i) => chip(i, l.name || `Layer ${i + 1}`, l.on === false)).join(\"\")}"
+ },
+ {
+  "en": "Layer name",
+  "ctx": "app.js:17703: return `<div class=\"insp-section cp-layer\">"
+ },
+ {
+  "en": "Layer on / off",
+  "ctx": "app.js:17703: return `<div class=\"insp-section cp-layer\">"
+ },
+ {
+  "en": "Show what this layer selects (white = graded) in the monitor",
+  "ctx": "app.js:17703: return `<div class=\"insp-section cp-layer\">"
+ },
+ {
+  "en": "Move earlier",
+  "ctx": "app.js:17703: return `<div class=\"insp-section cp-layer\">"
+ },
+ {
+  "en": "Move later",
+  "ctx": "app.js:17703: return `<div class=\"insp-section cp-layer\">"
+ },
+ {
+  "en": "Delete this layer",
+  "ctx": "app.js:17703: return `<div class=\"insp-section cp-layer\">"
+ },
+ {
+  "en": "Click a colour in the monitor to select it (its hue, saturation and luma)",
+  "ctx": "app.js:17703: return `<div class=\"insp-section cp-layer\">"
+ },
+ {
+  "en": "Select everything except this",
+  "ctx": "app.js:17703: return `<div class=\"insp-section cp-layer\">"
+ },
+ {
+  "en": "No qualifier: the mask alone decides",
+  "ctx": "app.js:17703: return `<div class=\"insp-section cp-layer\">"
+ },
+ {
+  "en": "Qualifier",
+  "ctx": "app.js:17703: return `<div class=\"insp-section cp-layer\">"
+ },
+ {
+  "en": "Mask",
+  "ctx": "app.js:17703: return `<div class=\"insp-section cp-layer\">"
+ },
+ {
+  "en": "Rect",
+  "ctx": "app.js:17718: <div class=\"cl-row\">${[\"none\", \"ellipse\", \"rect\", \"poly\"].map((s) => `<button type=\"button\" class=\"btn tiny${(m ? m.shape : \"none\") === s ? "
+ },
+ {
+  "en": "Grade outside the shape",
+  "ctx": "app.js:17720: ${m ? `<button type=\"button\" class=\"btn tiny${m.invert ? \" toggle on\" : \"\"}\" data-mact=\"invert\" title=\"Grade outside the shape\">Invert</butt"
+ },
+ {
+  "en": "Drag it on the monitor: inside moves, handles resize, the knob rotates{9}.",
+  "ctx": "app.js:17721: ${m ? `<div class=\"cl-row\"><button type=\"button\" class=\"btn tiny${onKey ? \" toggle on\" : \"\"}\" data-mact=\"key\" title=\"${onKey ? \"Remove the k"
+ },
+ {
+  "en": "Key the shape at the playhead — with keys, every change keys",
+  "ctx": "app.js:17721: ${m ? `<div class=\"cl-row\"><button type=\"button\" class=\"btn tiny${onKey ? \" toggle on\" : \"\"}\" data-mact=\"key\" title=\"${onKey ? \"Remove the k"
+ },
+ {
+  "en": "not animated",
+  "ctx": "app.js:17722: <span class=\"cl-note\">${keyed ? `${keyed} key${keyed > 1 ? \"s\" : \"\"}` : \"not animated\"}</span>"
+ },
+ {
+  "en": "Remove every key (keeps the shape at the playhead)",
+  "ctx": "app.js:17723: ${keyed ? `<button type=\"button\" class=\"btn tiny\" data-mact=\"clearkeys\" title=\"Remove every key (keeps the shape at the playhead)\">Clear key"
+ },
+ {
+  "en": "; Ctrl-click adds a point, double-click one removes it",
+  "ctx": "app.js:17725: <p class=\"cl-note\">Drag it on the monitor: inside moves, handles resize, the knob rotates${m.points ? \"; Ctrl-click adds a point, double-cli"
+ },
+ {
+  "en": "Drag around what this layer should grade. Esc cancels.",
+  "ctx": "app.js:17725: <p class=\"cl-note\">Drag it on the monitor: inside moves, handles resize, the knob rotates${m.points ? \"; Ctrl-click adds a point, double-cli"
+ },
+ {
+  "en": "[data-qnum=\"{0}.{1}\"]",
+  "ctx": "app.js:17772: const n = root.querySelector(`[data-qnum=\"${key}.${j}\"]`); if (n) n.value = r.value;"
+ },
+ {
+  "en": "Drag around what this layer should grade",
+  "ctx": "app.js:17798: if (colorState.maskDraw) { if (state.playing) pause(); toast(\"Drag around what this layer should grade\"); }"
+ },
+ {
+  "en": "[data-mnum=\"{0}\"]",
+  "ctx": "app.js:17841: const n = root.querySelector(`[data-mnum=\"${p}\"]`); if (n) n.value = fmtG(+r.value, MASK_ROWS[p][3]);"
+ },
+ {
+  "en": "[data-m=\"{0}\"]",
+  "ctx": "app.js:17869: const r = els.colorPage.querySelector(`[data-m=\"${p}\"]`), n = els.colorPage.querySelector(`[data-mnum=\"${p}\"]`);"
+ },
+ {
+  "en": "Click the colour this layer should select",
+  "ctx": "app.js:17884: if (on) toast(\"Click the colour this layer should select\");"
+ },
+ {
+  "en": "Selected hue {0}° — turn on Matte to check",
+  "ctx": "app.js:17895: toast(s >= 0.08 ? `Selected hue ${Math.round(h * 360)}° — turn on Matte to check` : \"Selected a neutral tone (greys carry no hue)\");"
+ },
+ {
+  "en": "Selected a neutral tone (greys carry no hue)",
+  "ctx": "app.js:17895: toast(s >= 0.08 ? `Selected hue ${Math.round(h * 360)}° — turn on Matte to check` : \"Selected a neutral tone (greys carry no hue)\");"
+ },
+ {
+  "en": "Scope",
+  "ctx": "app.js:18101: el.innerHTML = `<div class=\"scope-head\"><select data-scope-kind aria-label=\"Scope\">${Object.entries(SCOPE_KINDS).map(([k, l]) =>"
+ },
+ {
+  "en": "{0}px ui-monospace, Consolas, monospace",
+  "ctx": "app.js:18147: ctx.font = `${Math.round(9 * dpr)}px ui-monospace, Consolas, monospace`;"
+ }
+]

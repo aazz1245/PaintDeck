@@ -1,0 +1,232 @@
+[
+  {
+    "path": "diffusion_models/anima-aesthetic-v1.1.safetensors",
+    "size": 4182230656,
+    "sha256": "3c1868387a3a1ff504bbb87c33678321965ead381fcf87afbd0264daa600c082",
+    "url": "https://huggingface.co/circlestone-labs/Anima/resolve/f973fc41ec7545364ac9776c2440285f43ff2a30/split_files/diffusion_models/anima-aesthetic-v1.1.safetensors",
+    "note": null
+  },
+  {
+    "path": "diffusion_models/anima-turbo-v1.1.safetensors",
+    "size": 4182230656,
+    "sha256": "fba11953276b57edf59d1dc4f1857ac05aa079c56f982b4d7c20298d57d3f7eb",
+    "url": "https://huggingface.co/circlestone-labs/Anima/resolve/f973fc41ec7545364ac9776c2440285f43ff2a30/split_files/diffusion_models/anima-turbo-v1.1.safetensors",
+    "note": null
+  },
+  {
+    "path": "diffusion_models/qwen_image_2.1_turbo_int8_convrot.safetensors",
+    "size": 7256787829,
+    "sha256": "8144a0182964aa8403ad6dbc011db837304167d235161b9aabaa8532e967314c",
+    "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/a8342359c61979b06a8dafb1a47991fe1f30e994/diffusion_models/qwen_image_2.1_turbo_int8_convrot.safetensors",
+    "note": null
+  },
+  {
+    "path": "geometry_estimation/depth_anything_3_mono_large.safetensors",
+    "size": 1336748056,
+    "sha256": "9b44eda5bedba5b4e125686fdb79d1db309c1b9785277576eb930f885b008f96",
+    "url": "https://huggingface.co/Comfy-Org/Depth-Anything-3/resolve/1aaeea516f22fb2f4c7fae761c8ed470c6cf9f93/geometry_estimation/depth_anything_3_mono_large.safetensors",
+    "note": null
+  },
+  {
+    "path": "LLM/Huihui-Qwen3.5-9B-abliterated.Q4_K_M.gguf",
+    "size": 5627045248,
+    "sha256": "ea1858ef4dc4b648b8dbb44612962a0333e945060dd0545ac0f28d7c4416e4b3",
+    "url": "https://huggingface.co/mradermacher/Huihui-Qwen3.5-9B-abliterated-GGUF/resolve/9f646d7eda193ddf2348134f3bff3d49eed7a2c6/Huihui-Qwen3.5-9B-abliterated.Q4_K_M.gguf",
+    "note": null
+  },
+  {
+    "path": "LLM/Huihui-Qwen3.5-9B-abliterated.mmproj-f16.gguf",
+    "size": 918166016,
+    "sha256": "56f07ff42fc9ab24fc06a93dce5a48fb2dbe08bff1a1c6e519d50af450820148",
+    "url": "https://huggingface.co/mradermacher/Huihui-Qwen3.5-9B-abliterated-GGUF/resolve/9f646d7eda193ddf2348134f3bff3d49eed7a2c6/Huihui-Qwen3.5-9B-abliterated.mmproj-f16.gguf",
+    "note": null
+  },
+  {
+    "path": "LLM/pe_i2i_heretic-Q4_K_M.gguf",
+    "size": 5891334720,
+    "sha256": "4fa7d846acc6b6366f2b959293fb073f304d18c2d0a73d7a193cb09cc87bf074",
+    "url": "https://huggingface.co/pottokao/Qwen-Image-2.1-PE-I2I-Heretic-GGUF/resolve/564f783ebea6c244c7dae8460ece65eb174479a6/pe_i2i_heretic-Q4_K_M.gguf",
+    "note": null
+  },
+  {
+    "path": "LLM/pe_i2i_heretic.mmproj-bf16.gguf",
+    "size": 921704608,
+    "sha256": "171a59a76e498252fb0ee5c145633c6f3a2eaaad03a171e3d5828de230369807",
+    "url": "https://huggingface.co/pottokao/Qwen-Image-2.1-PE-I2I-Heretic-GGUF/resolve/564f783ebea6c244c7dae8460ece65eb174479a6/pe_i2i_heretic.mmproj-bf16.gguf",
+    "note": null
+  },
+  {
+    "path": "LLM/pe_t2i_heretic-Q4_K_M.gguf",
+    "size": 5891334688,
+    "sha256": "9b54cb855d6565e6f330bd6fd35879b6d79e250121c7ea263be88256edd6d262",
+    "url": "https://huggingface.co/pottokao/Qwen-Image-2.1-PE-T2I-Heretic-GGUF/resolve/143825976126abcfa68722d3e48819c5647f9cd8/pe_t2i_heretic-Q4_K_M.gguf",
+    "note": null
+  },
+  {
+    "path": "loras/anima-turbo-lora-v0.2.safetensors",
+    "size": 148902616,
+    "sha256": "1b55e40bdb1d0e5a78cb498f245fccfdaae97823265db957d2aabdcf4cd3caf1",
+    "url": "https://huggingface.co/circlestone-labs/Anima-Official-LoRAs/resolve/218b5466a07e8a79328dd8b73ff810706d73cb86/anima-turbo-lora-v0.2.safetensors",
+    "note": null
+  },
+  {
+    "path": "loras/qwen21/p_qwen_image_2.1_5step_v0.1.safetensors",
+    "size": 335606144,
+    "sha256": "021a6228a0fcd217275190b89072416a2f28548e8e18fe049531dc9b77ef89bd",
+    "url": "https://civitai.com/api/download/models/3362704?fileId=3250534",
+    "note": "Pruna 加速 5 步（Qwen 2.1）"
+  },
+  {
+    "path": "loras/qwen21/p_qwen_image_2.1_8step_v0.1.safetensors",
+    "size": 335606104,
+    "sha256": "f0865d68b02511a3a0ed232d9d1aa99cac3a94166f574b38bcbab1a7a297bb15",
+    "url": "https://civitai.com/api/download/models/3362701?fileId=3250532",
+    "note": "Pruna 加速 8 步（Qwen 2.1）"
+  },
+  {
+    "path": "loras/qwen21/Qwen-Image-2.1-viggle-turbo-4step-lora-r64.safetensors",
+    "size": 339832808,
+    "sha256": "5c494dce662a95898d0988831af733b203ceced9116a82aa099c997f96ea1a3a",
+    "url": "https://civitai.com/api/download/models/3351025?fileId=3238196",
+    "note": "[ Accelerator LoRAs ] Applicable to QW21 | Minimax H3 | HYVideo TURBO/LIGHTNING/DMD/FAST"
+  },
+  {
+    "path": "loras/qwen21/qwen_image_2.1_turbo_lora_avg_rank_178_bf16.safetensors",
+    "size": 913314512,
+    "sha256": "208dd43250e1e01467ba190572ae2e7107a7870ec1ff026bc65f791fa1e80e95",
+    "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/a8342359c61979b06a8dafb1a47991fe1f30e994/loras/qwen_image_2.1_turbo_lora_avg_rank_178_bf16.safetensors",
+    "note": null
+  },
+  {
+    "path": "loras/Turbo-ANIMA-v2.9.safetensors",
+    "size": 238700096,
+    "sha256": "a5135d1cb868d4b3914cca6b32b1354e748c90488de1ab44a7dd7ea6ad003475",
+    "url": "https://civitai.com/api/download/models/3139645?fileId=3019774",
+    "note": "TURBO for ANIMA (less steps)"
+  },
+  {
+    "path": "loras/Turbo-ANIMA-v4.safetensors",
+    "size": 280194468,
+    "sha256": "aa198376f2f31159ba3f60dce19924b27411cdd93e7252543e5c45249ca89048",
+    "url": "https://civitai.com/api/download/models/3334160?fileId=3220708",
+    "note": "TURBO for ANIMA (less steps)"
+  },
+  {
+    "path": "model_patches/anima-lllite-any-test-like-v2.safetensors",
+    "size": 16403008,
+    "sha256": "8863424f04a2445815a827b22cbda557a085d2752e05fab54a2b303821a9e3b2",
+    "url": "https://huggingface.co/Comfy-Org/Anima-LLLite/resolve/57973aa5c824df58d9f8217b031f96a148f9b349/model_patches/anima-lllite-any-test-like-v2.safetensors",
+    "note": null
+  },
+  {
+    "path": "model_patches/anima-lllite-depth-1.safetensors",
+    "size": 7864128,
+    "sha256": "81357e51cd59874b4fbdda1eb3117aa73eafe36cc7efb9cf80a152d6bc8d0602",
+    "url": "https://huggingface.co/Comfy-Org/Anima-LLLite/resolve/57973aa5c824df58d9f8217b031f96a148f9b349/model_patches/anima-lllite-depth-1.safetensors",
+    "note": null
+  },
+  {
+    "path": "model_patches/anima-lllite-inpainting-v2.safetensors",
+    "size": 65772872,
+    "sha256": "5242e677d2be34ee70ca7c97c3b14ff5ee49838c03fc1e60ac4852a180db6ef5",
+    "url": "https://huggingface.co/Comfy-Org/Anima-LLLite/resolve/57973aa5c824df58d9f8217b031f96a148f9b349/model_patches/anima-lllite-inpainting-v2.safetensors",
+    "note": null
+  },
+  {
+    "path": "model_patches/anima-lllite-lineart-1.safetensors",
+    "size": 7787888,
+    "sha256": "1abfde93493445390632788339627c37c69c7792aef1e8104cf15ea5f2d379e9",
+    "url": "https://huggingface.co/Comfy-Org/Anima-LLLite/resolve/57973aa5c824df58d9f8217b031f96a148f9b349/model_patches/anima-lllite-lineart-1.safetensors",
+    "note": null
+  },
+  {
+    "path": "model_patches/anima-lllite-scribble-1.safetensors",
+    "size": 7864128,
+    "sha256": "cbc391a66cbb7e58b9007fae6f74aad91c479024589411c24bb7b70b945751c3",
+    "url": "https://huggingface.co/Comfy-Org/Anima-LLLite/resolve/57973aa5c824df58d9f8217b031f96a148f9b349/model_patches/anima-lllite-scribble-1.safetensors",
+    "note": null
+  },
+  {
+    "path": "model_patches/qwen_image_2.1_fun_controlnet_union_int8_convrot.safetensors",
+    "size": 3779298944,
+    "sha256": "07aa961570ac0e03d4ca936aecd76854d077a33cde69b5092399afba01b3715d",
+    "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/a8342359c61979b06a8dafb1a47991fe1f30e994/model_patches/qwen_image_2.1_fun_controlnet_union_int8_convrot.safetensors",
+    "note": null
+  },
+  {
+    "path": "text_encoders/qwen3vl_8b_w4a8.safetensors",
+    "size": 6312105364,
+    "sha256": "7754425e55e7bea2bfde4dde59a4cc236cb44e5ee9c215ea66ef8d47012824eb",
+    "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/a8342359c61979b06a8dafb1a47991fe1f30e994/text_encoders/qwen3vl_8b_w4a8.safetensors",
+    "note": null
+  },
+  {
+    "path": "text_encoders/qwen_3_06b_base.safetensors",
+    "size": 1192135096,
+    "sha256": "cd2a512003e2f9f3cd3c32a9c3573f820bb28c940f73c57b1ddaa983d9223eba",
+    "url": "https://huggingface.co/circlestone-labs/Anima/resolve/f973fc41ec7545364ac9776c2440285f43ff2a30/split_files/text_encoders/qwen_3_06b_base.safetensors",
+    "note": null
+  },
+  {
+    "path": "upscale_models/4x-AnimeSharp.safetensors",
+    "size": 33467822,
+    "sha256": "7fc60054d291579acac4fb537efd91c80611cbd281ef8b90f434048cc1313b39",
+    "url": "https://huggingface.co/Kim2091/AnimeSharp/resolve/7696d95ced82b0c1f2a41f6ac73336133f0a90e1/4x-AnimeSharp.safetensors",
+    "note": null
+  },
+  {
+    "path": "upscale_models/RealESRGAN_x4plus_anime_6B.pth",
+    "size": 17938799,
+    "url": "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth",
+    "note": null
+  },
+  {
+    "path": "vae/qwen_image_2.1_vae_bf16.safetensors",
+    "size": 675509688,
+    "sha256": "bb21f7473051e1ac368515dd3f2e15cd44d7a11748ee8823e1ddca3e4876b7c9",
+    "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/a8342359c61979b06a8dafb1a47991fe1f30e994/vae/qwen_image_2.1_vae_bf16.safetensors",
+    "note": null
+  },
+  {
+    "path": "vae/qwen_image_vae.safetensors",
+    "size": 253806246,
+    "sha256": "a70580f0213e67967ee9c95f05bb400e8fb08307e017a924bf3441223e023d1f",
+    "url": "https://huggingface.co/circlestone-labs/Anima/resolve/f973fc41ec7545364ac9776c2440285f43ff2a30/split_files/vae/qwen_image_vae.safetensors",
+    "note": null
+  },
+  {
+    "path": "diffusion_models/moss_image_sft_int8_convrot.safetensors",
+    "size": 5413698958,
+    "sha256": "b4d1475bc7eeffd7b809e82ea13a1fba1fb85c4e18365af3813722faa5c0fe4f",
+    "url": "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/ee64003102c8470ee32501cf883419235db81884/diffusion_models/moss_image_sft_int8_convrot.safetensors",
+    "note": null
+  },
+  {
+    "path": "text_encoders/qwen3.5_9b_w4a8_gptq.safetensors",
+    "size": 7343591088,
+    "sha256": "4cc6a1543ad2061806da46f35f90cadb4801dcba246c44782cf42ec0feb6407c",
+    "url": "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/ee64003102c8470ee32501cf883419235db81884/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors",
+    "note": null
+  },
+  {
+    "path": "vae/flux2-vae.safetensors",
+    "size": 336211292,
+    "sha256": "868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3",
+    "url": "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/ee64003102c8470ee32501cf883419235db81884/vae/flux2-vae.safetensors",
+    "note": null
+  },
+  {
+    "path": "checkpoints/sam3.1_multiplex_fp16.safetensors",
+    "size": 1745546848,
+    "sha256": "9ba99c92703c2e8b4f47de2d34a539bb8e18923049e238b780d70dbe6368eb03",
+    "url": "https://huggingface.co/Comfy-Org/sam3.1/resolve/7bb8374780a725b4353ed31f3a9395c9742b5621/checkpoints/sam3.1_multiplex_fp16.safetensors",
+    "note": "修臉／修手的偵測模型（SAM3.1）"
+  },
+  {
+    "path": "background_removal/birefnet.safetensors",
+    "size": 444473596,
+    "sha256": "9ab37426bf4de0567af6b5d21b16151357149139362e6e8992021b8ce356a154",
+    "url": "https://huggingface.co/Comfy-Org/BiRefNet/resolve/25511f8787e51912e1480706b4e47b8f467fbf72/background_removal/birefnet.safetensors",
+    "note": "一鍵去背（BiRefNet）"
+  }
+]

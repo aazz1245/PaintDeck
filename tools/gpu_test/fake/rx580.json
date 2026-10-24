@@ -1,0 +1,1 @@
+{"vc":[{"name":"Radeon RX 580 Series","pnp":"PCI\\VEN_1002&DEV_67DF&SUBSYS_E3531DA2&REV_E7\\4&1C3A5B7D&0&0008","vendor":"Advanced Micro Devices, Inc.","driver":"31.0.21921.1000","ram":4293918720}],"reg":[{"id":"pci\\ven_1002&dev_67df&rev_e7","desc":"Radeon RX 580 Series","qw":8589934592,"mem":null,"radeon":"24.9.1"}]}

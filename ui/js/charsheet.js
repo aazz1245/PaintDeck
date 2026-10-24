@@ -1,0 +1,330 @@
+// 角色設定圖工坊（design\角色設定圖工坊_設計.md）：
+// ① 定稿（一張全身正面站好的角色圖：放圖，或寫文字用生成頁的模型畫 4 張挑一張）
+// ② Qwen 2.1 照定稿展開「全身轉身圖」「臉部特寫表」（各 2 張挑一張）
+// ③ 選填：轉身圖走四視圖編輯變裸體版 ④ 外觀描述＋反推 tag，存成資產庫的角色（新的或加到現有的）
+// 生成頁四視圖、資產庫角色卡、導演台角色設定卡、圖片動作「做設定圖」都開這一個視窗。
+import { api, el, toast, openModal, pickFile, uploadFile } from "./util.js";
+import { pickFromGallery } from "./gallery.js";
+import { app } from "./state.js";
+import * as gen from "./gen.js";
+import { SHEET_PRESETS } from "./gen.js";
+
+const F = (id) => document.getElementById(id);
+const KEY = "aw_charsheet";
+const STEPS = ["base", "turnaround", "face", "nude"];
+// 男性裸體版（沒實測過，畫面上有註明）：照女性那句的寫法，拿掉胸部、陰部描述
+const NUDE_M = "把图1中角色身上的衣服全部脱掉，变成全裸，连鞋子也脱掉、光着脚。他是成年男性，身材依原本衣服的轮廓延续；"
+  + "原本被衣服盖住的地方画成皮肤，肤色和光影跟露出的皮肤一致；胸膛和下体依各视角自然露出，背面视角只露出背部和臀部。";
+
+// ---------------------------------------------------------------- 純函式（tests/charsheet_ui.test.cjs）
+/** 用哪顆 Qwen 2.1：生成頁選的就是 Qwen 就用它，不然挑官方 Turbo（名字有 turbo 的），都沒有回 null */
+export function qwenModel(models, base) {
+  if (base?.family === "qwen21" && base.model) return base.model;
+  const ms = Object.entries(models?.unet_family || {}).filter(([, f]) => f === "qwen21").map(([n]) => n);
+  return ms.find((n) => /qwen[_-]image[_-]2\.1[_-]turbo/i.test(n)) || ms.find((n) => /turbo/i.test(n)) || ms[0] || null;
+}
+
+/** Qwen 多圖參考的參數：同一顆模型照生成頁（步數、CFG、LoRA）；不然官方 Turbo 8 步、CFG 1、不掛 LoRA */
+export function qwenParams(base, model, prompt, refInput, w, h) {
+  const same = base.family === "qwen21" && base.model === model;
+  return {
+    mode: "multiref", model, prompt, negative: "", seed: null, turbo_lora: false,
+    loras: same ? base.loras || [] : [],
+    steps: same ? base.steps : 8, cfg: same ? base.cfg : 1,
+    sampler: same ? base.sampler : "euler", scheduler: same ? base.scheduler : "simple",
+    refs: [{ image: refInput }], size_mode: "fixed", width: w, height: h, pixels: 1024 * 1024, ref_pixels: 1024 * 1024,
+  };
+}
+
+/** 裸體版的修改要求（四視圖編輯的指令，簡體跟原工作流一致） */
+export function nudeReq(sex) {
+  return sex === "m" ? NUDE_M : SHEET_PRESETS.nude;
+}
+
+/** 存進資產的圖：[{role, gallery_id | input}]；定稿本來就在這個資產裡（from_asset）就不再存一次 */
+export function rolesToSave(st) {
+  const out = [];
+  const s = st.start;
+  if (s && !s.from_asset) out.push(s.gallery_id ? { role: "src", gallery_id: s.gallery_id } : { role: "src", input: s.input });
+  for (const [k, role] of [["turnaround", "sheet"], ["face", "face"], ["nude", "sheet_nude"]]) {
+    const p = st.pick?.[k];
+    if (p?.gallery_id) out.push({ role, gallery_id: p.gallery_id });
+  }
+  return out;
+}
+
+// 每個步驟目前這一輪送出的 job；換新一輪後，上一輪晚到的圖不收
+const rounds = {};
+export function startRound(step, jobs) { rounds[step] = { jobs: new Set(jobs), recs: [] }; }
+/** 這張圖屬於哪個步驟目前這一輪（不屬於回 null） */
+export function takeImage(job, rec) {
+  for (const step of STEPS) {
+    const r = rounds[step];
+    if (r?.jobs.has(job)) { r.recs.push(rec); return step; }
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------- 狀態
+let st = blank();
+let onSaved = null;
+function blank() {
+  return { name: "", sex: "f", text: "", start: null, pick: { turnaround: null, face: null, nude: null }, desc: "", desc_zh: "", tags: "", asset_id: null };
+}
+function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify(st)); } catch { /* 私密視窗之類：不記也能用 */ }
+}
+function restore() {
+  try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s === "object") st = { ...blank(), ...s, pick: { ...blank().pick, ...s.pick } }; } catch { /* 壞掉就從頭 */ }
+}
+
+const base = () => gen.baseParams();
+const qwen = () => qwenModel(app.state?.models, base());
+
+/**
+ * 打開工坊。opts：
+ *   {gallery: rec}             圖庫／生成結果那張當定稿
+ *   {asset: row}               資產庫的角色（名字、描述、tag、第一張原圖帶進來；存的時候加回這個角色）
+ *   {onSaved: fn}              存進資產庫之後叫一下（導演台、資產庫重新讀）
+ */
+export async function open(opts = {}) {
+  restore();
+  onSaved = opts.onSaved || null;
+  if (opts.asset || opts.gallery) {
+    st = blank();
+    rounds.base = rounds.turnaround = rounds.face = rounds.nude = undefined;
+  }
+  openModal("#csModal");
+  if (opts.asset) {
+    const a = opts.asset, d = a.data || {};
+    Object.assign(st, { name: a.name || "", asset_id: a.id, desc: d.look_en || "", desc_zh: d.look_zh || "", tags: (d.tags_anima || []).join(", ") });
+    const src = (d.images || []).find((im) => im.role === "src");
+    if (src) {
+      try {
+        const r = await api(`/api/assets/${a.id}/to_input`, { json: { file: src.file } });
+        st.start = { input: r.name, url: `/api/assets/file/${encodeURIComponent(src.file)}`, from_asset: true };
+      } catch (e) { toast(e.message, "err"); }
+    }
+  } else if (opts.gallery) {
+    await setStartFromGallery(opts.gallery);
+  }
+  persist();
+  await loadTargets();
+  paint();
+}
+
+async function setStartFromGallery(rec) {
+  try {
+    const r = await api("/api/to_input", { json: { id: rec.id } });
+    st.start = { input: r.name, gallery_id: rec.id, url: `/thumb/${rec.id}` };
+    persist(); paint();
+  } catch (e) { toast(e.message, "err"); }
+}
+
+// ---------------------------------------------------------------- 畫面
+function pic(id, url, empty) {
+  F(id).replaceChildren(url ? el("img", { src: url, alt: "" }) : el("span", { class: "muted sm" }, empty));
+}
+
+function paint() {
+  F("csName").value = st.name;
+  F("csSex").value = st.sex;
+  F("csText").value = st.text;
+  F("csDesc").value = st.desc;
+  F("csDescZh").value = st.desc_zh;
+  F("csTags").value = st.tags;
+  F("csTarget").value = st.asset_id ? String(st.asset_id) : "";
+  pic("csStart", st.start?.url, "還沒有定稿");
+  pic("csTurn", st.pick.turnaround?.url, "還沒選");
+  pic("csFace", st.pick.face?.url, "還沒選");
+  pic("csNude", st.pick.nude?.url, "還沒選");
+  const q = qwen();
+  F("csNoQwen").hidden = !!q;
+  F("csTurnGo").disabled = F("csFaceGo").disabled = !q || !st.start;
+  F("csNudeGo").disabled = !q || !st.pick.turnaround;
+  F("csDescGo").disabled = F("csTagsGo").disabled = !st.start;
+  F("csSave").disabled = !st.start && !rolesToSave(st).length;
+}
+
+function readForm() {
+  st.name = F("csName").value.trim();
+  st.sex = F("csSex").value;
+  st.text = F("csText").value;
+  st.desc = F("csDesc").value;
+  st.desc_zh = F("csDescZh").value;
+  st.tags = F("csTags").value;
+  persist();
+}
+
+/** 候選格：等待中的字、畫好的縮圖（點一張就選定） */
+function paintCands(step) {
+  const box = F({ base: "csBaseCands", turnaround: "csTurnCands", face: "csFaceCands", nude: "csNudeCands" }[step]);
+  const r = rounds[step];
+  box.hidden = !r;
+  if (!r) return;
+  const left = r.jobs.size - r.recs.length;
+  box.replaceChildren(
+    ...r.recs.map((rec) => el("button", { type: "button", class: "dir-cand", title: "選這張", onclick: () => choose(step, rec) },
+      el("img", { src: `/thumb/${rec.id}`, alt: "候選" }))),
+    ...(left > 0 ? [el("span", { class: "muted sm" }, `畫圖中…還有 ${left} 張（每張約 1 分鐘，第一張要載入模型）`)] : []));
+}
+
+async function choose(step, rec) {
+  if (step === "base") {
+    await setStartFromGallery(rec);
+  } else {
+    st.pick[step] = { gallery_id: rec.id, url: `/thumb/${rec.id}` };
+    // 轉身圖換了，舊的裸體版就不是這張的了
+    if (step === "turnaround") st.pick.nude = null;
+  }
+  rounds[step] = undefined;
+  persist(); paint(); paintCands(step);
+}
+
+/** websocket 的 image 事件 */
+export function onImage(job, rec) {
+  if (!rec) return;
+  const step = takeImage(job, rec);
+  if (step) paintCands(step);
+}
+
+async function send(step, params, count) {
+  try {
+    const r = await api("/api/generate", { json: { params, count } });
+    startRound(step, r.jobs.map((j) => j.job));
+    paintCands(step);
+  } catch (e) { toast(e.message, "err"); }
+}
+
+// ---------------------------------------------------------------- 四步
+async function drawBase() {
+  readForm();
+  const text = st.text.trim();
+  if (!text) return toast("先寫角色的外觀（或直接放一張圖）", "err");
+  const b = base();
+  const { prompt } = await api("/api/charsheet/prompt", { json: { kind: "pose", family: b.family } });
+  const { family, ...p } = b;
+  await send("base", { ...p, mode: "txt2img", prompt: text.replace(/[\s,.，。]+$/, "") + prompt, seed: null, width: 832, height: 1216 }, 4);
+}
+
+async function drawSheet(kind) {
+  readForm();
+  const model = qwen();
+  if (!model || !st.start) return;
+  const b = base();
+  try {
+    const { prompt, width, height } = await api("/api/charsheet/prompt", { json: { kind, desc: st.desc, family: b.family } });
+    await send(kind, qwenParams(b, model, prompt, st.start.input, width, height), 2);
+  } catch (e) { toast(e.message, "err"); }
+}
+
+async function drawNude() {
+  readForm();
+  const model = qwen(), t = st.pick.turnaround;
+  if (!model || !t) return;
+  try {
+    const r = await api("/api/to_input", { json: { id: t.gallery_id } });
+    const { mode, refs, size_mode, prompt, ...qp } = qwenParams(base(), model, "", r.name, r.width, r.height);
+    await send("nude", { ...qp, mode: "sheet", prompt: "", init_image: r.name, sheet: { req: nudeReq(st.sex) } }, 2);
+  } catch (e) { toast(e.message, "err"); }
+}
+
+function status(msg, cls = "") {
+  F("csStatus").textContent = msg;
+  F("csStatus").className = "pe-status " + cls;
+}
+
+async function describe() {
+  if (!st.start) return;
+  status("AI 看圖中…（第一次要載入模型）", "run");
+  try {
+    const r = await api("/api/director/describe", { json: { image: st.start.input } });
+    st.desc = r.desc || ""; st.desc_zh = r.desc_zh || "";
+    persist(); paint(); status("寫好了，可以直接改", "ok");
+  } catch (e) { status(e.message, "err"); }
+}
+
+async function tags() {
+  if (!st.start) return;
+  status("反推中…", "run");
+  try {
+    const r = await api("/api/charsheet/tags", { json: { name: st.start.input } });
+    st.tags = r.tags.join(", ");
+    persist(); paint(); status(r.tags.length ? "反推好了（姿勢、背景那些已經拿掉），可以直接改" : "反推沒找到外觀類的 tag", "ok");
+  } catch (e) { status(e.message, "err"); }
+}
+
+/** 「存到」下拉：新角色＋現有的角色資產 */
+let chars = [];
+async function loadTargets() {
+  try { chars = (await api("/api/lib")).filter((it) => it.kind === "char"); } catch { chars = []; }
+  F("csTarget").replaceChildren(el("option", { value: "" }, "存成新角色"),
+    ...chars.map((c) => el("option", { value: String(c.id) }, `加到「${c.name}」`)));
+}
+
+async function save() {
+  readForm();
+  if (!st.name && !st.asset_id) return toast("角色要有名字", "err");
+  const list = rolesToSave(st);
+  if (!list.length) return toast("還沒有可以存的圖（先放定稿或選設定圖）", "err");
+  const tagList = st.tags.split(/[,，、\n]/).map((t) => t.trim()).filter(Boolean);
+  F("csSave").disabled = true;
+  status("存檔中…", "run");
+  try {
+    let id = st.asset_id;
+    const old = id ? chars.find((c) => c.id === id) : null;
+    // 加到現有角色：data 整包送，所以先帶上舊的（聲音、語言、物件位置）再蓋描述和 tag；圖片後端會保留
+    const data = { ...(old?.data || {}), look_en: st.desc.trim(), look_zh: st.desc_zh.trim(), tags_anima: tagList };
+    // 加到現有角色不改它的名字
+    const r = await api("/api/lib", { json: id ? { id, data } : { kind: "char", name: st.name, data } });
+    id = r.id;
+    for (const f of list) await api(`/api/assets/${id}/file`, { json: { ...f, replace: true } });
+    toast(`「${st.name || old?.name}」存進資產庫了（${list.length} 張圖）`, "ok");
+    if (r.unverified?.length) toast(`這些 tag 在 Danbooru 對不到，存了但要注意：${r.unverified.join(", ")}`, "err");
+    st = blank();
+    try { localStorage.removeItem(KEY); } catch { /* 同上 */ }
+    for (const s of STEPS) rounds[s] = undefined;
+    status("", "");
+    await loadTargets();
+    paint();
+    STEPS.forEach(paintCands);
+    onSaved?.(id);
+  } catch (e) {
+    status(e.message, "err");
+  } finally {
+    paint();
+  }
+}
+
+export function init() {
+  for (const id of ["csName", "csSex", "csText", "csDesc", "csDescZh", "csTags"]) F(id).onchange = readForm;
+  F("csUp").onclick = async () => {
+    const f = await pickFile();
+    if (!f) return;
+    try { const r = await uploadFile(f); st.start = { input: r.name, url: `/input/${encodeURIComponent(r.name)}` }; persist(); paint(); } catch (e) { toast(e.message, "err"); }
+  };
+  F("csGal").onclick = () => pickFromGallery((rec) => setStartFromGallery(rec));
+  F("csBaseGo").onclick = () => drawBase().catch((e) => toast(e.message, "err"));
+  F("csTurnGo").onclick = () => drawSheet("turnaround");
+  F("csFaceGo").onclick = () => drawSheet("face");
+  F("csNudeGo").onclick = drawNude;
+  F("csDescGo").onclick = describe;
+  F("csTagsGo").onclick = tags;
+  F("csSave").onclick = save;
+  F("csTarget").onchange = async () => {
+    const id = Number(F("csTarget").value) || null;
+    st.asset_id = id;
+    const c = chars.find((x) => x.id === id);
+    // 選了現有角色、還沒有定稿：拿那個角色的原圖當定稿
+    if (c && !st.start) return open({ asset: c, onSaved });
+    if (c && !st.name) st.name = c.name;
+    persist(); paint();
+  };
+  F("csReset").onclick = () => {
+    if (!confirm("清空這次的進度？（畫好的圖都還在圖庫，不會刪）")) return;
+    st = blank();
+    for (const s of STEPS) rounds[s] = undefined;
+    try { localStorage.removeItem(KEY); } catch { /* 同上 */ }
+    paint(); STEPS.forEach(paintCands); status("", "");
+  };
+}

@@ -1,0 +1,1402 @@
+[
+ {
+  "en": "Post — Quote (1:1)",
+  "ctx": "templates.js:352: { id: \"social-quote\", name: \"Post — Quote (1:1)\", group: \"Social\", width: 1080, height: 1080, duration: 6, hold: 5.4, background: \"#0f172a\","
+ },
+ {
+  "en": "Quote mark",
+  "ctx": "templates.js:355: { name: \"Quote mark\", clip: { keyframes: { scale: [{ t: 0, v: 0 }, { t: 0.3, v: 1.1, ease: \"ease-out\" }, { t: 0.45, v: 1 }] }, transitionOut"
+ },
+ {
+  "en": "The best way to predict the future is to make it.",
+  "ctx": "templates.js:356: text(\"quote\", \"V2\", 0.35, 5.65, { text: \"The best way to predict the future is to make it.\", font: \"Playfair Display\", fontSize: 64, bold: f"
+ },
+ {
+  "en": "Quote",
+  "ctx": "templates.js:357: { name: \"Quote\", clip: { transitionOut: fade(0.6) } }),"
+ },
+ {
+  "en": "— A. Writer",
+  "ctx": "templates.js:358: text(\"author\", \"V3\", 1.8, 4.2, { text: \"— A. Writer\", font: \"DM Sans\", fontSize: 38, bold: false, color: \"#94a3b8\", y: 300, letterSpacing: 2"
+ },
+ {
+  "en": "Author",
+  "ctx": "templates.js:359: { name: \"Author\", clip: { transitionOut: fade(0.6) } }),"
+ },
+ {
+  "en": "quote:props.text",
+  "ctx": "templates.js:362: { key: \"quote\", label: \"Quote\", type: \"text\", targets: [\"quote:props.text\"] },"
+ },
+ {
+  "en": "author:props.text",
+  "ctx": "templates.js:363: { key: \"author\", label: \"Author\", type: \"text\", targets: [\"author:props.text\"] },"
+ },
+ {
+  "en": "mark:props.color",
+  "ctx": "templates.js:364: { key: \"accent\", label: \"Accent\", type: \"color\", targets: [\"mark:props.color\"] },"
+ },
+ {
+  "en": "End card — Follow (16:9)",
+  "ctx": "templates.js:367: { id: \"social-end-card\", name: \"End card — Follow (16:9)\", group: \"Social\", width: 1920, height: 1080, duration: 6, hold: 5.4, background: \""
+ },
+ {
+  "en": "Thanks for watching",
+  "ctx": "templates.js:369: text(\"heading\", \"V1\", 0, 6, { text: \"Thanks for watching\", font: \"Montserrat\", fontSize: 96, weight: 800, color: \"#ffffff\", y: -110, textSha"
+ },
+ {
+  "en": "Heading",
+  "ctx": "templates.js:370: { name: \"Heading\", clip: { transitionOut: fade(0.6) } }),"
+ },
+ {
+  "en": "Pill",
+  "ctx": "templates.js:371: shape(\"pill\", \"V2\", 0.6, 5.4, { y: 90, shapes: [{ type: \"rect\", name: \"Pill\", w: 520, h: 110, radius: 55, fill: \"#ff4d6d\" }] },"
+ },
+ {
+  "en": "Follow for more",
+  "ctx": "templates.js:373: text(\"button\", \"V3\", 0.75, 5.25, { text: \"Follow for more\", font: \"Poppins\", fontSize: 44, weight: 700, color: \"#ffffff\", y: 90, textShadow:"
+ },
+ {
+  "en": "heading:props.text",
+  "ctx": "templates.js:377: { key: \"heading\", label: \"Heading\", type: \"text\", targets: [\"heading:props.text\"] },"
+ },
+ {
+  "en": "Button colour",
+  "ctx": "templates.js:379: { key: \"accent\", label: \"Button colour\", type: \"color\", targets: [\"pill:props.shapes.0.fill\"] },"
+ },
+ {
+  "en": "pill:props.shapes.0.fill",
+  "ctx": "templates.js:379: { key: \"accent\", label: \"Button colour\", type: \"color\", targets: [\"pill:props.shapes.0.fill\"] },"
+ },
+ {
+  "en": "a template is an object like {name, width, height, duration, clips, fields}",
+  "ctx": "templates.js:400: if (!isObj(t)) return bad(\"a template is an object like {name, width, height, duration, clips, fields}\");"
+ },
+ {
+  "en": "a template needs a name",
+  "ctx": "templates.js:403: if (!id) return bad(\"a template needs a name\");"
+ },
+ {
+  "en": "template {0}: {1} must be a whole number of px (16…8192)",
+  "ctx": "templates.js:404: for (const key of [\"width\", \"height\"]) if (!Number.isInteger(t[key]) || t[key] < 16 || t[key] > 8192) return bad(`template ${id}: ${key} mus"
+ },
+ {
+  "en": "template {0}: duration must be seconds > 0",
+  "ctx": "templates.js:405: if (!isNum(t.duration) || t.duration <= 0) return bad(`template ${id}: duration must be seconds > 0`);"
+ },
+ {
+  "en": "template {0}: clips must be a list",
+  "ctx": "templates.js:407: if (!Array.isArray(t.clips) || !t.clips.length) return bad(`template ${id}: clips must be a list`);"
+ },
+ {
+  "en": "template {0}: every clip needs id, track, numeric start and duration",
+  "ctx": "templates.js:410: if (!isObj(c) || typeof c.id !== \"string\" || !c.track || !isNum(c.start) || !isNum(c.duration)) return bad(`template ${id}: every clip needs"
+ },
+ {
+  "en": "template {0}: two clips have the id {1}",
+  "ctx": "templates.js:411: if (ids.has(c.id)) return bad(`template ${id}: two clips have the id ${c.id}`);"
+ },
+ {
+  "en": "template {0}: media entries are {id, name, kind, src:\"/library/…\" | \"/media/…\"}",
+  "ctx": "templates.js:417: return bad(`template ${id}: media entries are {id, name, kind, src:\"/library/…\" | \"/media/…\"}`);"
+ },
+ {
+  "en": "template {0}: a field needs a key",
+  "ctx": "templates.js:423: if (!isObj(f) || !slug(f.key)) return bad(`template ${id}: a field needs a key`);"
+ },
+ {
+  "en": "template {0}: two fields are called {1}",
+  "ctx": "templates.js:425: if (keys.has(key)) return bad(`template ${id}: two fields are called ${key}`);"
+ },
+ {
+  "en": "template {0}: field {1} type is {2}",
+  "ctx": "templates.js:426: if (!FIELD_TYPES.includes(f.type)) return bad(`template ${id}: field ${key} type is ${FIELD_TYPES.join(\" | \")}`);"
+ },
+ {
+  "en": "template {0}: field {1} targets are \"",
+  "ctx": "templates.js:428: return bad(`template ${id}: field ${key} targets are \"<clip id>:<path>\" (e.g. \"name:props.text\") or \"comp:background\", and must exist`);"
+ },
+ {
+  "en": "\" (e.g. \"name:props.text\") or \"comp:background\", and must exist",
+  "ctx": "templates.js:428: return bad(`template ${id}: field ${key} targets are \"<clip id>:<path>\" (e.g. \"name:props.text\") or \"comp:background\", and must exist`);"
+ },
+ {
+  "en": "comp {0} has no field {1}{2}",
+  "ctx": "templates.js:450: if (!f) throw new Error(`comp ${comp.id} has no field ${key}${tpl ? ` (fields: ${(tpl.fields || []).map((x) => x.key).join(\", \")})` : \" — it"
+ },
+ {
+  "en": "(fields: {0})",
+  "ctx": "templates.js:450: if (!f) throw new Error(`comp ${comp.id} has no field ${key}${tpl ? ` (fields: ${(tpl.fields || []).map((x) => x.key).join(\", \")})` : \" — it"
+ },
+ {
+  "en": "— it isn't a template",
+  "ctx": "templates.js:450: if (!f) throw new Error(`comp ${comp.id} has no field ${key}${tpl ? ` (fields: ${(tpl.fields || []).map((x) => x.key).join(\", \")})` : \" — it"
+ },
+ {
+  "en": "field {0} is text",
+  "ctx": "templates.js:452: if (typeof value !== \"string\") throw new Error(`field ${key} is text`);"
+ },
+ {
+  "en": "field {0} is a colour like \"#ffd166\"",
+  "ctx": "templates.js:455: if (typeof value !== \"string\" || !COLOR.test(value)) throw new Error(`field ${key} is a colour like \"#ffd166\"`);"
+ },
+ {
+  "en": "field {0} takes a media id from the project",
+  "ctx": "templates.js:458: if (!m) throw new Error(`field ${key} takes a media id from the project`);"
+ },
+ {
+  "en": "field {0} needs a picture (image, svg or video), not {1}",
+  "ctx": "templates.js:459: if (![\"image\", \"svg\", \"video\"].includes(m.kind)) throw new Error(`field ${key} needs a picture (image, svg or video), not ${m.kind}`);"
+ },
+ {
+  "en": "comp {0} can't be shorter than {1}s (its animation needs that long)",
+  "ctx": "templates.js:495: if (!isNum(duration) || duration < min) throw new Error(`comp ${comp.id} can't be shorter than ${min}s (its animation needs that long)`);"
+ },
+ {
+  "en": "a comp {0} already exists",
+  "ctx": "templates.js:522: if (doc.comps.some((c) => c.id === id)) throw new Error(`a comp ${id} already exists`);"
+ },
+ {
+  "en": "{0}:props.text",
+  "ctx": "templates.js:545: if (c.kind === \"text\") { seen.add(key); auto.push({ key, label, type: \"text\", targets: [`${c.id}:props.text`] }); }"
+ },
+ {
+  "en": "{0}:mediaId",
+  "ctx": "templates.js:546: else if ((c.kind === \"image\" || c.kind === \"svg\") && c.mediaId) { seen.add(key); auto.push({ key, label, type: \"media\", targets: [`${c.id}:m"
+ },
+ {
+  "en": "{0} (saved)",
+  "ctx": "templates.js:563: const name = `${item.name} (saved)`.slice(0, kind === \"presets\" ? 60 : 80);"
+ },
+ {
+  "en": "KB",
+  "ctx": "media-lib.js:77: const u = [\"B\", \"KB\", \"MB\", \"GB\", \"TB\"];"
+ },
+ {
+  "en": "MB",
+  "ctx": "media-lib.js:77: const u = [\"B\", \"KB\", \"MB\", \"GB\", \"TB\"];"
+ },
+ {
+  "en": "GB",
+  "ctx": "media-lib.js:77: const u = [\"B\", \"KB\", \"MB\", \"GB\", \"TB\"];"
+ },
+ {
+  "en": "TB",
+  "ctx": "media-lib.js:77: const u = [\"B\", \"KB\", \"MB\", \"GB\", \"TB\"];"
+ },
+ {
+  "en": "no audio",
+  "ctx": "media-lib.js:89: if (m.audioChannels === 0) return \"no audio\";"
+ },
+ {
+  "en": "{0} kHz",
+  "ctx": "media-lib.js:91: return ch + (m.sampleRate ? ` ${round(m.sampleRate / 1000, 1)} kHz` : \"\");"
+ },
+ {
+  "en": "Collection",
+  "ctx": "media-lib.js:132: out.push({ id: String(c.id), name: String(c.name || \"Collection\").trim().slice(0, 80) || \"Collection\", media: mem });"
+ },
+ {
+  "en": "same name",
+  "ctx": "media-lib.js:271: if (names.includes(fn)) { score = 100; why = \"same name\"; }"
+ },
+ {
+  "en": "same name, other type",
+  "ctx": "media-lib.js:272: else if (names.some((n) => stem(n) === fs && fs)) { score = 60; why = \"same name, other type\"; }"
+ },
+ {
+  "en": "similar name",
+  "ctx": "media-lib.js:273: else if (names.some((n) => { const a = stem(n); return a.length >= 3 && fs.length >= 3 && (fs.includes(a) || a.includes(fs)); })) { score = "
+ },
+ {
+  "en": "and size",
+  "ctx": "media-lib.js:275: if (sameSize) { score += score ? 50 : 40; why = why ? why + \" and size\" : \"same size\"; }"
+ },
+ {
+  "en": "same size",
+  "ctx": "media-lib.js:275: if (sameSize) { score += score ? 50 : 40; why = why ? why + \" and size\" : \"same size\"; }"
+ },
+ {
+  "en": "MP4",
+  "ctx": "delivery.js:45: mp4: { label: \"MP4\", ext: \".mp4\", mov: true },"
+ },
+ {
+  "en": "QuickTime MOV",
+  "ctx": "delivery.js:46: mov: { label: \"QuickTime MOV\", ext: \".mov\", mov: true },"
+ },
+ {
+  "en": "Matroska MKV",
+  "ctx": "delivery.js:47: mkv: { label: \"Matroska MKV\", ext: \".mkv\" },"
+ },
+ {
+  "en": "MXF (OP1a)",
+  "ctx": "delivery.js:49: mxf: { label: \"MXF (OP1a)\", ext: \".mxf\" },"
+ },
+ {
+  "en": "H.265 / HEVC",
+  "ctx": "delivery.js:61: label: \"H.265 / HEVC\", encoders: [\"libx265\", \"hevc_nvenc\", \"hevc_qsv\", \"hevc_amf\"],"
+ },
+ {
+  "en": "AV1",
+  "ctx": "delivery.js:66: label: \"AV1\", encoders: [\"libsvtav1\", \"libaom-av1\", \"av1_nvenc\", \"av1_qsv\", \"av1_amf\"],"
+ },
+ {
+  "en": "VP9",
+  "ctx": "delivery.js:71: label: \"VP9\", encoders: [\"libvpx-vp9\"],"
+ },
+ {
+  "en": "Apple ProRes",
+  "ctx": "delivery.js:76: label: \"Apple ProRes\", encoders: [\"prores_ks\"], containers: [\"mov\"], rate: [\"fixed\"],"
+ },
+ {
+  "en": "LT",
+  "ctx": "delivery.js:77: profiles: { proxy: \"Proxy\", lt: \"LT\", standard: \"422\", hq: \"422 HQ\", 4444: \"4444\", \"4444xq\": \"4444 XQ\" },"
+ },
+ {
+  "en": "422 HQ",
+  "ctx": "delivery.js:77: profiles: { proxy: \"Proxy\", lt: \"LT\", standard: \"422\", hq: \"422 HQ\", 4444: \"4444\", \"4444xq\": \"4444 XQ\" },"
+ },
+ {
+  "en": "4444xq",
+  "ctx": "delivery.js:77: profiles: { proxy: \"Proxy\", lt: \"LT\", standard: \"422\", hq: \"422 HQ\", 4444: \"4444\", \"4444xq\": \"4444 XQ\" },"
+ },
+ {
+  "en": "4444 XQ",
+  "ctx": "delivery.js:77: profiles: { proxy: \"Proxy\", lt: \"LT\", standard: \"422\", hq: \"422 HQ\", 4444: \"4444\", \"4444xq\": \"4444 XQ\" },"
+ },
+ {
+  "en": "Avid DNxHR",
+  "ctx": "delivery.js:81: label: \"Avid DNxHR\", encoders: [\"dnxhd\"], containers: [\"mov\", \"mxf\"], rate: [\"fixed\"],"
+ },
+ {
+  "en": "LB",
+  "ctx": "delivery.js:82: profiles: { lb: \"LB\", sq: \"SQ\", hq: \"HQ\", hqx: \"HQX 10-bit\", 444: \"444 10-bit\" },"
+ },
+ {
+  "en": "SQ",
+  "ctx": "delivery.js:82: profiles: { lb: \"LB\", sq: \"SQ\", hq: \"HQ\", hqx: \"HQX 10-bit\", 444: \"444 10-bit\" },"
+ },
+ {
+  "en": "HQ",
+  "ctx": "delivery.js:82: profiles: { lb: \"LB\", sq: \"SQ\", hq: \"HQ\", hqx: \"HQX 10-bit\", 444: \"444 10-bit\" },"
+ },
+ {
+  "en": "HQX 10-bit",
+  "ctx": "delivery.js:82: profiles: { lb: \"LB\", sq: \"SQ\", hq: \"HQ\", hqx: \"HQX 10-bit\", 444: \"444 10-bit\" },"
+ },
+ {
+  "en": "XDCAM HD422 (MPEG-2 50 Mb/s)",
+  "ctx": "delivery.js:86: label: \"XDCAM HD422 (MPEG-2 50 Mb/s)\", encoders: [\"mpeg2video\"], containers: [\"mxf\", \"mov\"],"
+ },
+ {
+  "en": "FFV1 (lossless)",
+  "ctx": "delivery.js:90: label: \"FFV1 (lossless)\", encoders: [\"ffv1\"], containers: [\"mkv\"], rate: [\"fixed\"],"
+ },
+ {
+  "en": "x264 (software)",
+  "ctx": "delivery.js:99: libx264: { label: \"x264 (software)\" },"
+ },
+ {
+  "en": "NVIDIA NVENC",
+  "ctx": "delivery.js:100: h264_nvenc: { label: \"NVIDIA NVENC\", hw: \"nvenc\", pix: [\"yuv420p\", \"yuv444p\", \"yuv420p10le\"] },"
+ },
+ {
+  "en": "Intel Quick Sync",
+  "ctx": "delivery.js:101: h264_qsv: { label: \"Intel Quick Sync\", hw: \"qsv\", pix: [\"yuv420p\"] },"
+ },
+ {
+  "en": "AMD AMF",
+  "ctx": "delivery.js:102: h264_amf: { label: \"AMD AMF\", hw: \"amf\", pix: [\"yuv420p\"] },"
+ },
+ {
+  "en": "x265 (software)",
+  "ctx": "delivery.js:103: libx265: { label: \"x265 (software)\" },"
+ },
+ {
+  "en": "SVT-AV1 (software)",
+  "ctx": "delivery.js:107: libsvtav1: { label: \"SVT-AV1 (software)\" },"
+ },
+ {
+  "en": "libaom (software, slow)",
+  "ctx": "delivery.js:108: \"libaom-av1\": { label: \"libaom (software, slow)\" },"
+ },
+ {
+  "en": "libvpx (software)",
+  "ctx": "delivery.js:112: \"libvpx-vp9\": { label: \"libvpx (software)\" },"
+ },
+ {
+  "en": "AAC",
+  "ctx": "delivery.js:120: aac: { label: \"AAC\", encoder: \"aac\", bitrate: [64, 512, 320], containers: [\"mp4\", \"mov\", \"mkv\"] },"
+ },
+ {
+  "en": "Opus",
+  "ctx": "delivery.js:121: opus: { label: \"Opus\", encoder: \"libopus\", bitrate: [32, 512, 192], containers: [\"webm\", \"mkv\", \"mp4\"] },"
+ },
+ {
+  "en": "MP3",
+  "ctx": "delivery.js:122: mp3: { label: \"MP3\", encoder: \"libmp3lame\", bitrate: [64, 320, 320], containers: [\"mp4\", \"mov\", \"mkv\"] },"
+ },
+ {
+  "en": "PCM 16-bit",
+  "ctx": "delivery.js:123: pcm16: { label: \"PCM 16-bit\", encoder: \"pcm_s16le\", containers: [\"mov\", \"mkv\", \"mxf\"] },"
+ },
+ {
+  "en": "PCM 24-bit",
+  "ctx": "delivery.js:124: pcm24: { label: \"PCM 24-bit\", encoder: \"pcm_s24le\", containers: [\"mov\", \"mkv\", \"mxf\"] },"
+ },
+ {
+  "en": "FLAC (lossless)",
+  "ctx": "delivery.js:125: flac: { label: \"FLAC (lossless)\", encoder: \"flac\", containers: [\"mkv\"] },"
+ },
+ {
+  "en": "No audio",
+  "ctx": "delivery.js:126: none: { label: \"No audio\", containers: [\"mp4\", \"mov\", \"mkv\", \"webm\", \"mxf\"] },"
+ },
+ {
+  "en": "Rec. 709 (limited)",
+  "ctx": "delivery.js:136: bt709: { label: \"Rec. 709 (limited)\", matrix: \"bt709\", primaries: \"bt709\", trc: \"bt709\", range: \"tv\", scale: \"bt709\" },"
+ },
+ {
+  "en": "Rec. 709 (full range)",
+  "ctx": "delivery.js:137: \"bt709-full\": { label: \"Rec. 709 (full range)\", matrix: \"bt709\", primaries: \"bt709\", trc: \"bt709\", range: \"pc\", scale: \"bt709\" },"
+ },
+ {
+  "en": "Rec. 601 PAL (limited)",
+  "ctx": "delivery.js:138: \"bt601-625\": { label: \"Rec. 601 PAL (limited)\", matrix: \"bt470bg\", primaries: \"bt470bg\", trc: \"smpte170m\", range: \"tv\", scale: \"bt470\" },"
+ },
+ {
+  "en": "Rec. 601 NTSC (limited)",
+  "ctx": "delivery.js:139: \"bt601-525\": { label: \"Rec. 601 NTSC (limited)\", matrix: \"smpte170m\", primaries: \"smpte170m\", trc: \"smpte170m\", range: \"tv\", scale: \"smpte17"
+ },
+ {
+  "en": "4K UHD",
+  "ctx": "delivery.js:151: [3840, 2160, \"4K UHD\"], [2560, 1440, \"1440p\"], [1920, 1080, \"1080p\"], [1280, 720, \"720p\"], [854, 480, \"480p\"],"
+ },
+ {
+  "en": "DCI 4K",
+  "ctx": "delivery.js:152: [4096, 2160, \"DCI 4K\"], [2160, 3840, \"4K vertical\"], [1080, 1920, \"9:16 vertical\"], [720, 1280, \"9:16 720\"],"
+ },
+ {
+  "en": "4K vertical",
+  "ctx": "delivery.js:152: [4096, 2160, \"DCI 4K\"], [2160, 3840, \"4K vertical\"], [1080, 1920, \"9:16 vertical\"], [720, 1280, \"9:16 720\"],"
+ },
+ {
+  "en": "9:16 vertical",
+  "ctx": "delivery.js:152: [4096, 2160, \"DCI 4K\"], [2160, 3840, \"4K vertical\"], [1080, 1920, \"9:16 vertical\"], [720, 1280, \"9:16 720\"],"
+ },
+ {
+  "en": "4:5 portrait",
+  "ctx": "delivery.js:153: [1080, 1350, \"4:5 portrait\"], [1080, 1080, \"1:1 square\"],"
+ },
+ {
+  "en": "1:1 square",
+  "ctx": "delivery.js:153: [1080, 1350, \"4:5 portrait\"], [1080, 1080, \"1:1 square\"],"
+ },
+ {
+  "en": "Platforms",
+  "ctx": "delivery.js:165: label: \"YouTube\", group: \"Platforms\", width: 1920, height: 1080, container: \"mp4\","
+ },
+ {
+  "en": "{project}_youtube_{res}",
+  "ctx": "delivery.js:168: filename: \"{project}_youtube_{res}\", note: \"16:9 · H.264 High · CRF 18 · AAC 384k\","
+ },
+ {
+  "en": "16:9 · H.264 High · CRF 18 · AAC 384k",
+  "ctx": "delivery.js:168: filename: \"{project}_youtube_{res}\", note: \"16:9 · H.264 High · CRF 18 · AAC 384k\","
+ },
+ {
+  "en": "YouTube Shorts",
+  "ctx": "delivery.js:171: label: \"YouTube Shorts\", group: \"Platforms\", width: 1080, height: 1920, container: \"mp4\","
+ },
+ {
+  "en": "{project}_shorts_{res}",
+  "ctx": "delivery.js:173: filename: \"{project}_shorts_{res}\", limits: { duration: 180, vertical: true },"
+ },
+ {
+  "en": "9:16 · up to 3 min",
+  "ctx": "delivery.js:174: note: \"9:16 · up to 3 min\","
+ },
+ {
+  "en": "Instagram Reels",
+  "ctx": "delivery.js:177: label: \"Instagram Reels\", group: \"Platforms\", width: 1080, height: 1920, container: \"mp4\","
+ },
+ {
+  "en": "{project}_reel_{res}",
+  "ctx": "delivery.js:179: filename: \"{project}_reel_{res}\", limits: { duration: 180, vertical: true, fps: 60 },"
+ },
+ {
+  "en": "9:16 · ≤ 60 fps · capped at 25 Mb/s",
+  "ctx": "delivery.js:180: note: \"9:16 · ≤ 60 fps · capped at 25 Mb/s\","
+ },
+ {
+  "en": "{project}_tiktok_{res}",
+  "ctx": "delivery.js:185: filename: \"{project}_tiktok_{res}\", limits: { duration: 600, vertical: true, fps: 60 },"
+ },
+ {
+  "en": "9:16 · ≤ 60 fps",
+  "ctx": "delivery.js:186: note: \"9:16 · ≤ 60 fps\","
+ },
+ {
+  "en": "X (Twitter)",
+  "ctx": "delivery.js:189: label: \"X (Twitter)\", group: \"Platforms\", width: 1920, height: 1080, container: \"mp4\","
+ },
+ {
+  "en": "{project}_x_{res}",
+  "ctx": "delivery.js:191: filename: \"{project}_x_{res}\", limits: { duration: 140, size: 512 * 1024 * 1024, fps: 60 },"
+ },
+ {
+  "en": "≤ 2 min 20 s and 512 MB on a free account",
+  "ctx": "delivery.js:192: note: \"≤ 2 min 20 s and 512 MB on a free account\","
+ },
+ {
+  "en": "{project}_linkedin_{res}",
+  "ctx": "delivery.js:197: filename: \"{project}_linkedin_{res}\", limits: { duration: 900, size: 5 * 1024 ** 3, fps: 60 },"
+ },
+ {
+  "en": "≤ 15 min and 5 GB",
+  "ctx": "delivery.js:198: note: \"≤ 15 min and 5 GB\","
+ },
+ {
+  "en": "Master",
+  "ctx": "delivery.js:201: label: \"Master\", group: \"Delivery\", width: null, height: null, container: \"mp4\","
+ },
+ {
+  "en": "Delivery",
+  "ctx": "delivery.js:201: label: \"Master\", group: \"Delivery\", width: null, height: null, container: \"mp4\","
+ },
+ {
+  "en": "{project}_master_{res}",
+  "ctx": "delivery.js:203: filename: \"{project}_master_{res}\", note: \"Project size · H.264 CRF 16 · AAC 320k\","
+ },
+ {
+  "en": "Project size · H.264 CRF 16 · AAC 320k",
+  "ctx": "delivery.js:203: filename: \"{project}_master_{res}\", note: \"Project size · H.264 CRF 16 · AAC 320k\","
+ },
+ {
+  "en": "Broadcast",
+  "ctx": "delivery.js:206: label: \"Broadcast\", group: \"Delivery\", width: 1920, height: 1080, container: \"mov\","
+ },
+ {
+  "en": "{project}_broadcast_{res}_{fps}",
+  "ctx": "delivery.js:209: filename: \"{project}_broadcast_{res}_{fps}\", limits: { fpsList: [25, 29.97, 50, 59.94] },"
+ },
+ {
+  "en": "ProRes 422 HQ · PCM 24-bit 48 kHz · Rec. 709 · −23 LUFS (EBU R128)",
+  "ctx": "delivery.js:210: note: \"ProRes 422 HQ · PCM 24-bit 48 kHz · Rec. 709 · −23 LUFS (EBU R128)\","
+ },
+ {
+  "en": "Web",
+  "ctx": "delivery.js:213: label: \"Web\", group: \"Delivery\", width: 1280, height: 720, container: \"mp4\","
+ },
+ {
+  "en": "{project}_web_{res}",
+  "ctx": "delivery.js:215: filename: \"{project}_web_{res}\", note: \"Small, plays everywhere · fast start\","
+ },
+ {
+  "en": "Small, plays everywhere · fast start",
+  "ctx": "delivery.js:215: filename: \"{project}_web_{res}\", note: \"Small, plays everywhere · fast start\","
+ },
+ {
+  "en": "Archive",
+  "ctx": "delivery.js:218: label: \"Archive\", group: \"Delivery\", width: null, height: null, container: \"mkv\","
+ },
+ {
+  "en": "{project}_archive_{date}",
+  "ctx": "delivery.js:220: filename: \"{project}_archive_{date}\", note: \"Lossless FFV1 · PCM 24-bit · source resolution\","
+ },
+ {
+  "en": "Lossless FFV1 · PCM 24-bit · source resolution",
+  "ctx": "delivery.js:220: filename: \"{project}_archive_{date}\", note: \"Lossless FFV1 · PCM 24-bit · source resolution\","
+ },
+ {
+  "en": "Custom",
+  "ctx": "delivery.js:223: label: \"Custom\", group: \"Custom\", width: null, height: null, container: \"mp4\","
+ },
+ {
+  "en": "{project}_{res}",
+  "ctx": "delivery.js:225: filename: \"{project}_{res}\", note: \"Your own settings\","
+ },
+ {
+  "en": "Your own settings",
+  "ctx": "delivery.js:225: filename: \"{project}_{res}\", note: \"Your own settings\","
+ },
+ {
+  "en": "−14 LUFS · streaming and social",
+  "ctx": "delivery.js:232: const LOUDNESS_TARGETS = [[-14, \"−14 LUFS · streaming and social\"], [-16, \"−16 LUFS · podcast, dialogue\"], [-23, \"−23 LUFS · broadcast (EBU "
+ },
+ {
+  "en": "−16 LUFS · podcast, dialogue",
+  "ctx": "delivery.js:232: const LOUDNESS_TARGETS = [[-14, \"−14 LUFS · streaming and social\"], [-16, \"−16 LUFS · podcast, dialogue\"], [-23, \"−23 LUFS · broadcast (EBU "
+ },
+ {
+  "en": "−23 LUFS · broadcast (EBU R128)",
+  "ctx": "delivery.js:232: const LOUDNESS_TARGETS = [[-14, \"−14 LUFS · streaming and social\"], [-16, \"−16 LUFS · podcast, dialogue\"], [-23, \"−23 LUFS · broadcast (EBU "
+ },
+ {
+  "en": "−24 LUFS · broadcast (ATSC A/85)",
+  "ctx": "delivery.js:232: const LOUDNESS_TARGETS = [[-14, \"−14 LUFS · streaming and social\"], [-16, \"−16 LUFS · podcast, dialogue\"], [-23, \"−23 LUFS · broadcast (EBU "
+ },
+ {
+  "en": "unknown preset \"{0}\" — using Custom",
+  "ctx": "delivery.js:261: if (pid && !base) notes.push(`unknown preset \"${pid}\" — using Custom`);"
+ },
+ {
+  "en": "width and height go together — using the picture's own size",
+  "ctx": "delivery.js:275: if ((w == null) !== (h == null)) { notes.push(\"width and height go together — using the picture's own size\"); w = h = null; }"
+ },
+ {
+  "en": "resolution {0}×{1} → {2}×{3} (even, 16…8192)",
+  "ctx": "delivery.js:278: if (cw !== w || ch !== h) notes.push(`resolution ${w}×${h} → ${cw}×${ch} (even, 16…8192)`);"
+ },
+ {
+  "en": "unknown codec \"{0}\" — using H.264",
+  "ctx": "delivery.js:293: if (v.codec && !CODECS[v.codec]) notes.push(`unknown codec \"${v.codec}\" — using H.264`);"
+ },
+ {
+  "en": "encoder \"{0}\" does not make {1}",
+  "ctx": "delivery.js:297: if (v.encoder && !encoder) notes.push(`encoder \"${v.encoder}\" does not make ${C.label}`);"
+ },
+ {
+  "en": "this ffmpeg has no {0}",
+  "ctx": "delivery.js:298: if (encoder && opts.available && !opts.available.has(encoder)) { notes.push(`this ffmpeg has no ${encoder}`); encoder = null; }"
+ },
+ {
+  "en": "this ffmpeg has no {0} encoder — the export will fail",
+  "ctx": "delivery.js:300: if (opts.available && !avail.length) notes.push(`this ffmpeg has no ${C.label} encoder — the export will fail`);"
+ },
+ {
+  "en": "{0} does not go in {1} — using {2}",
+  "ctx": "delivery.js:305: if (container) notes.push(`${C.label} does not go in ${String(container).toUpperCase()} — using ${C.containers[0].toUpperCase()}`);"
+ },
+ {
+  "en": "rate \"{0}\" is not offered for {1}",
+  "ctx": "delivery.js:312: if (v.rate && v.rate !== video.rate && C.rate[0] !== \"fixed\") notes.push(`rate \"${v.rate}\" is not offered for ${C.label}`);"
+ },
+ {
+  "en": "SVT-AV1 has no CBR here — using VBR",
+  "ctx": "delivery.js:321: if (encoder === \"libsvtav1\" && video.rate === \"cbr\") { video.rate = \"vbr\"; notes.push(\"SVT-AV1 has no CBR here — using VBR\"); }"
+ },
+ {
+  "en": "{0} cannot encode {1} — using {2}",
+  "ctx": "delivery.js:329: notes.push(`${E.label} cannot encode ${pf} — using ${E.pix[0]}`);"
+ },
+ {
+  "en": "pixel format {0} → {1} for {2}{3}",
+  "ctx": "delivery.js:332: if (rv.pixFmt && rv.pixFmt !== pf && !notes.some((n) => n.includes(pf))) notes.push(`pixel format ${rv.pixFmt} → ${pf} for ${C.label}${video"
+ },
+ {
+  "en": "{0} audio does not go in {1} — using {2}",
+  "ctx": "delivery.js:340: notes.push(`${AUDIO[ac].label} audio does not go in ${container.toUpperCase()} — using ${AUDIO[alt].label}`);"
+ },
+ {
+  "en": "-profile:v",
+  "ctx": "delivery.js:419: if (v.codec === \"prores\") return out.concat([\"-profile:v\", PRORES_PROFILE[v.profile] || \"3\", \"-vendor\", \"apl0\", \"-pix_fmt\", v.pixFmt]);"
+ },
+ {
+  "en": "dnxhr_{0}",
+  "ctx": "delivery.js:420: if (v.codec === \"dnxhr\") return out.concat([\"-profile:v\", `dnxhr_${v.profile}`, \"-pix_fmt\", v.pixFmt]);"
+ },
+ {
+  "en": "1*QP2LAMBDA",
+  "ctx": "delivery.js:426: \"-dc\", \"10\", \"-qmin\", \"1\", \"-qmax\", \"12\", \"-lmin\", \"1*QP2LAMBDA\", \"-rc_max_vbv_use\", \"1\", \"-rc_min_vbv_use\", \"1\"]);"
+ },
+ {
+  "en": "mbr={0}",
+  "ctx": "delivery.js:437: if (enc === \"libsvtav1\") out.push(\"-svtav1-params\", `mbr=${max}`);"
+ },
+ {
+  "en": "nal-hrd=cbr",
+  "ctx": "delivery.js:449: if (enc === \"libx264\") out.push(\"-x264-params\", \"nal-hrd=cbr\");"
+ },
+ {
+  "en": "log-level=error",
+  "ctx": "delivery.js:457: if (enc === \"libx265\") out.push(\"-x265-params\", \"log-level=error\");"
+ },
+ {
+  "en": "-tag:v",
+  "ctx": "delivery.js:458: if (v.codec === \"hevc\" && (spec.container === \"mp4\" || spec.container === \"mov\")) out.push(\"-tag:v\", \"hvc1\");"
+ },
+ {
+  "en": "crop={0}:{1}:{2}:{3}",
+  "ctx": "delivery.js:476: if (frame.crop) parts.push(`crop=${frame.crop.w}:${frame.crop.h}:${frame.crop.x}:${frame.crop.y}`);"
+ },
+ {
+  "en": "scale={0}:{1}:flags=lanczos:in_range=full:in_color_matrix={2}",
+  "ctx": "delivery.js:477: parts.push(`scale=${frame.scaleW}:${frame.scaleH}:flags=lanczos:in_range=full:in_color_matrix=${inMatrix}` +"
+ },
+ {
+  "en": ":out_range={0}:out_color_matrix={1}",
+  "ctx": "delivery.js:478: `:out_range=${c.range}:out_color_matrix=${c.scale}`);"
+ },
+ {
+  "en": "setparams=color_primaries={0}:color_trc={1}:colorspace={2}:range={3}",
+  "ctx": "delivery.js:479: parts.push(`setparams=color_primaries=${c.primaries}:color_trc=${c.trc}:colorspace=${c.matrix}:range=${c.range === \"pc\" ? \"pc\" : \"tv\"}`);"
+ },
+ {
+  "en": "pad={0}:{1}:{2}:{3}:color=black",
+  "ctx": "delivery.js:481: parts.push(`pad=${frame.outW}:${frame.outH}:${frame.padX}:${frame.padY}:color=black`);"
+ },
+ {
+  "en": "color=c=black:s={0}x{1}:r={2}:d=0.1,format={3}",
+  "ctx": "delivery.js:494: if (o.dry) args.push(\"-f\", \"lavfi\", \"-i\", `color=c=black:s=${o.canvasW}x${o.canvasH}:r=${rate}:d=0.1,format=${rgba ? \"rgba\" : \"yuvj420p\"}`);"
+ },
+ {
+  "en": "anullsrc=r=48000:cl=stereo",
+  "ctx": "delivery.js:499: if (o.dry) args.push(\"-f\", \"lavfi\", \"-i\", \"anullsrc=r=48000:cl=stereo\");"
+ },
+ {
+  "en": "apad=whole_dur={0},atrim=0:{1}",
+  "ctx": "delivery.js:512: if (audio && !o.dry) args.push(\"-af\", [o.loudnorm ? loudnormFilter(spec, o.loudnorm) : \"\", dur ? `apad=whole_dur=${dur},atrim=0:${dur}` : \"a"
+ },
+ {
+  "en": "description={0}",
+  "ctx": "delivery.js:515: if (k === \"description\") args.push(\"-metadata\", `description=${v}`, \"-metadata\", `comment=${v}`);"
+ },
+ {
+  "en": "comment={0}",
+  "ctx": "delivery.js:515: if (k === \"description\") args.push(\"-metadata\", `description=${v}`, \"-metadata\", `comment=${v}`);"
+ },
+ {
+  "en": "+faststart",
+  "ctx": "delivery.js:518: if (CONTAINERS[spec.container].mov) args.push(\"-movflags\", \"+faststart\" + (spec.metadata && spec.metadata.keywords ? \"+use_metadata_tags\" : "
+ },
+ {
+  "en": "+use_metadata_tags",
+  "ctx": "delivery.js:518: if (CONTAINERS[spec.container].mov) args.push(\"-movflags\", \"+faststart\" + (spec.metadata && spec.metadata.keywords ? \"+use_metadata_tags\" : "
+ },
+ {
+  "en": "loudnorm=I={0}:TP={1}:LRA=11:print_format=json",
+  "ctx": "delivery.js:532: \"-af\", `loudnorm=I=${spec.audio.loudness}:TP=${spec.audio.truePeak ?? -1}:LRA=11:print_format=json`, \"-f\", \"null\", \"-\"];"
+ },
+ {
+  "en": "loudnorm=I={0}:TP={1}:LRA={2}:measured_I={3}:measured_TP={4}",
+  "ctx": "delivery.js:550: return `loudnorm=I=${a.loudness}:TP=${a.truePeak ?? -1}:LRA=${lra}:measured_I=${m.input_i}:measured_TP=${m.input_tp}` +"
+ },
+ {
+  "en": ":measured_LRA={0}:measured_thresh={1}:offset={2}:linear=true",
+  "ctx": "delivery.js:551: `:measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:offset=${m.target_offset}:linear=true`;"
+ },
+ {
+  "en": "ebur128=peak=true:framelog=quiet",
+  "ctx": "delivery.js:565: const LOUDNESS_ARGS = (file) => [\"-hide_banner\", \"-nostats\", \"-i\", file, \"-map\", \"0:a:0\", \"-af\", \"ebur128=peak=true:framelog=quiet\", \"-f\", \""
+ },
+ {
+  "en": "no video stream in the file",
+  "ctx": "delivery.js:580: if (!v) add(false, \"no video stream in the file\");"
+ },
+ {
+  "en": "(asked {0}×{1})",
+  "ctx": "delivery.js:582: if (fr.outW) add(v.width === fr.outW && v.height === fr.outH, `${v.width}×${v.height}${v.width === fr.outW && v.height === fr.outH ? \"\" : ` "
+ },
+ {
+  "en": "{0} fps{1}",
+  "ctx": "delivery.js:584: if (ctx.fps) add(near(got, ctx.fps, 0.01), `${Math.round(got * 1000) / 1000} fps${near(got, ctx.fps, 0.01) ? \"\" : ` (asked ${ctx.fps})`}`);"
+ },
+ {
+  "en": "(asked {0})",
+  "ctx": "delivery.js:584: if (ctx.fps) add(near(got, ctx.fps, 0.01), `${Math.round(got * 1000) / 1000} fps${near(got, ctx.fps, 0.01) ? \"\" : ` (asked ${ctx.fps})`}`);"
+ },
+ {
+  "en": "{0} frames{1}",
+  "ctx": "delivery.js:586: if (ctx.frames && Number.isFinite(n) && n > 0) add(n === ctx.frames, `${n} frames${n === ctx.frames ? \"\" : ` (rendered ${ctx.frames})`}`);"
+ },
+ {
+  "en": "(rendered {0})",
+  "ctx": "delivery.js:586: if (ctx.frames && Number.isFinite(n) && n > 0) add(n === ctx.frames, `${n} frames${n === ctx.frames ? \"\" : ` (rendered ${ctx.frames})`}`);"
+ },
+ {
+  "en": "color {0}{1}",
+  "ctx": "delivery.js:589: if (c && v.color_space && v.color_space !== \"unknown\") add(v.color_space === c.matrix, `color ${v.color_space}${v.color_space === c.matrix ?"
+ },
+ {
+  "en": "has an audio stream (asked none)",
+  "ctx": "delivery.js:591: if (spec.audio.codec === \"none\") add(!a, a ? \"has an audio stream (asked none)\" : \"no audio\");"
+ },
+ {
+  "en": "no audio stream",
+  "ctx": "delivery.js:592: else if (!a) add(!ctx.hasAudio, ctx.hasAudio ? \"no audio stream\" : \"no audio (the timeline is silent)\");"
+ },
+ {
+  "en": "no audio (the timeline is silent)",
+  "ctx": "delivery.js:592: else if (!a) add(!ctx.hasAudio, ctx.hasAudio ? \"no audio stream\" : \"no audio (the timeline is silent)\");"
+ },
+ {
+  "en": "{0} {1} kHz {2}",
+  "ctx": "delivery.js:596: `${a.codec_name} ${Math.round(+a.sample_rate / 100) / 10} kHz ${+a.channels === 1 ? \"mono\" : +a.channels === 2 ? \"stereo\" : a.channels + \" c"
+ },
+ {
+  "en": "sample rate {0} (asked {1})",
+  "ctx": "delivery.js:597: if (+a.sample_rate !== spec.audio.sampleRate) add(false, `sample rate ${a.sample_rate} (asked ${spec.audio.sampleRate})`);"
+ },
+ {
+  "en": "{0} channel{1} (asked {2})",
+  "ctx": "delivery.js:598: if (+a.channels !== spec.audio.channels) add(false, `${a.channels} channel${+a.channels === 1 ? \"\" : \"s\"} (asked ${spec.audio.channels})`);"
+ },
+ {
+  "en": "(timeline {0})",
+  "ctx": "delivery.js:601: if (ctx.duration && Number.isFinite(dur)) add(near(dur, ctx.duration, Math.max(0.05, 1.5 / (ctx.fps || 30))), `${fmtClock(dur)}${near(dur, c"
+ },
+ {
+  "en": "loudness could not be measured",
+  "ctx": "delivery.js:603: if (ctx.loudWanted && a && !(L && L.lufs != null) && !(L && L.silent)) add(false, \"loudness could not be measured\");"
+ },
+ {
+  "en": "silent{0}",
+  "ctx": "delivery.js:605: if (L && L.silent && a) add(spec.audio.loudness == null, `silent${spec.audio.loudness != null ? ` (target ${spec.audio.loudness} LUFS)` : \"\""
+ },
+ {
+  "en": "(target {0} LUFS)",
+  "ctx": "delivery.js:605: if (L && L.silent && a) add(spec.audio.loudness == null, `silent${spec.audio.loudness != null ? ` (target ${spec.audio.loudness} LUFS)` : \"\""
+ },
+ {
+  "en": "{0} LUFS{1}",
+  "ctx": "delivery.js:610: add(near(L.lufs, target, 1), `${L.lufs.toFixed(1)} LUFS${near(L.lufs, target, 1) ? \"\" : ` (target ${target})`}`);"
+ },
+ {
+  "en": "(target {0})",
+  "ctx": "delivery.js:610: add(near(L.lufs, target, 1), `${L.lufs.toFixed(1)} LUFS${near(L.lufs, target, 1) ? \"\" : ` (target ${target})`}`);"
+ },
+ {
+  "en": "{0} dBTP{1}",
+  "ctx": "delivery.js:611: if (tp != null) add(tp <= (spec.audio.truePeak ?? -1) + 0.5, `${tp.toFixed(1)} dBTP${tp <= (spec.audio.truePeak ?? -1) + 0.5 ? \"\" : ` (ceili"
+ },
+ {
+  "en": "(ceiling {0})",
+  "ctx": "delivery.js:611: if (tp != null) add(tp <= (spec.audio.truePeak ?? -1) + 0.5, `${tp.toFixed(1)} dBTP${tp <= (spec.audio.truePeak ?? -1) + 0.5 ? \"\" : ` (ceili"
+ },
+ {
+  "en": "— {0} plays it {1} dB quieter (set Loudness to {2} LUFS to match)",
+  "ctx": "delivery.js:614: const loudNote = ref != null && L.lufs > ref + 1 ? ` — ${PRESETS[spec.preset].label} plays it ${(L.lufs - ref).toFixed(1)} dB quieter (set L"
+ },
+ {
+  "en": "{0} LUFS{1}{2}",
+  "ctx": "delivery.js:615: add(true, `${L.lufs.toFixed(1)} LUFS${tp != null ? ` · ${tp.toFixed(1)} dBTP` : \"\"}${loudNote}`);"
+ },
+ {
+  "en": "· {0} dBTP",
+  "ctx": "delivery.js:615: add(true, `${L.lufs.toFixed(1)} LUFS${tp != null ? ` · ${tp.toFixed(1)} dBTP` : \"\"}${loudNote}`);"
+ },
+ {
+  "en": "true peak {0} dBTP — over 0, it will clip after encoding",
+  "ctx": "delivery.js:616: if (tp != null && tp > 0) add(false, `true peak ${tp.toFixed(1)} dBTP — over 0, it will clip after encoding`);"
+ },
+ {
+  "en": "(over {0}'s {1})",
+  "ctx": "delivery.js:620: if (ctx.size) add(!(lim.size && ctx.size > lim.size), `${fmtBytes(ctx.size)}${lim.size && ctx.size > lim.size ? ` (over ${PRESETS[spec.prese"
+ },
+ {
+  "en": "{0}sq",
+  "ctx": "delivery.js:649: const res = w && h ? (w > h ? `${h}p` : w === h ? `${w}sq` : `${w}x${h}`) : \"source\";"
+ },
+ {
+  "en": "{project}",
+  "ctx": "delivery.js:661: let s = String(template || \"{project}\").replace(/\\{(\\w+)\\}/g, (m, k) => (k in vals ? String(vals[k]) : m));"
+ },
+ {
+  "en": "{0} Mb/s",
+  "ctx": "delivery.js:672: function fmtRate(kbps) { return kbps >= 1000 ? `${Math.round(kbps / 100) / 10} Mb/s` : `${kbps} kb/s`; }"
+ },
+ {
+  "en": "{0} kb/s",
+  "ctx": "delivery.js:672: function fmtRate(kbps) { return kbps >= 1000 ? `${Math.round(kbps / 100) / 10} Mb/s` : `${kbps} kb/s`; }"
+ },
+ {
+  "en": "source size",
+  "ctx": "delivery.js:676: const parts = [w && h ? `${w}×${h}` : \"source size\", `${spec.fps || ctx.fps || \"project\"} fps`];"
+ },
+ {
+  "en": "{0} fps",
+  "ctx": "delivery.js:676: const parts = [w && h ? `${w}×${h}` : \"source size\", `${spec.fps || ctx.fps || \"project\"} fps`];"
+ },
+ {
+  "en": "CRF {0}",
+  "ctx": "delivery.js:679: if (v.rate === \"crf\") vid += ` CRF ${v.crf}` + (v.maxrate ? ` ≤ ${fmtRate(v.maxrate)}` : \"\");"
+ },
+ {
+  "en": "VBR {0}",
+  "ctx": "delivery.js:680: else if (v.rate === \"vbr\") vid += ` VBR ${fmtRate(v.bitrate)}`;"
+ },
+ {
+  "en": "CBR {0}",
+  "ctx": "delivery.js:681: else if (v.rate === \"cbr\") vid += ` CBR ${fmtRate(v.bitrate)}`;"
+ },
+ {
+  "en": "· {0} LUFS",
+  "ctx": "delivery.js:683: parts.push(a.codec === \"none\" ? \"no audio\" : `${AUDIO[a.codec].label}${a.bitrate ? \" \" + a.bitrate + \"k\" : \"\"}${a.loudness != null ? ` · ${a"
+ },
+ {
+  "en": "Upscaled: the part of the picture used is {0}×{1} and the output {2}×{3} — a larger{4} project size keeps it sharp",
+  "ctx": "delivery.js:712: if (fr.upscale) out.push(`Upscaled: the part of the picture used is ${fr.from.w}×${fr.from.h} and the output ${fr.outW}×${fr.outH} — a large"
+ },
+ {
+  "en": "or vertical",
+  "ctx": "delivery.js:712: if (fr.upscale) out.push(`Upscaled: the part of the picture used is ${fr.from.w}×${fr.from.h} and the output ${fr.outW}×${fr.outH} — a large"
+ },
+ {
+  "en": "Cropped to {0}×{1} from the middle of the picture — set an export frame (⬒ Frame) to choose the part, or use Fit to keep everything",
+  "ctx": "delivery.js:714: out.push(`Cropped to ${fr.crop.w}×${fr.crop.h} from the middle of the picture — set an export frame (⬒ Frame) to choose the part, or use Fit"
+ },
+ {
+  "en": "{0} expects a vertical picture; this output is landscape",
+  "ctx": "delivery.js:715: if (lim.vertical && spec.width && spec.width > spec.height) out.push(`${preset.label} expects a vertical picture; this output is landscape`)"
+ },
+ {
+  "en": "{0}: {1} is longer than {2} — check the platform's current limit",
+  "ctx": "delivery.js:716: if (lim.duration && ctx.duration > lim.duration + 0.05) out.push(`${preset.label}: ${fmtDur(ctx.duration)} is longer than ${fmtDur(lim.durat"
+ },
+ {
+  "en": "{0} takes up to {1} fps; this output is {2}",
+  "ctx": "delivery.js:717: if (lim.fps && fps > lim.fps + 0.01) out.push(`${preset.label} takes up to ${lim.fps} fps; this output is ${fps}`);"
+ },
+ {
+  "en": "Broadcast usually wants {0} fps; this output is {1}",
+  "ctx": "delivery.js:718: if (lim.fpsList && !lim.fpsList.some((f) => Math.abs(f - fps) < 0.02)) out.push(`Broadcast usually wants ${lim.fpsList.join(\" / \")} fps; thi"
+ },
+ {
+  "en": "{0} takes files up to {1}; this one will be about {2}",
+  "ctx": "delivery.js:720: if (lim.size && size && size > lim.size) out.push(`${preset.label} takes files up to ${fmtBytes(lim.size)}; this one will be about ${fmtByte"
+ },
+ {
+  "en": "XDCAM HD422 is 1920×1080 — other sizes may be refused by playout servers",
+  "ctx": "delivery.js:721: if (spec.video.codec === \"mpeg2\" && (fr.outW !== 1920 || fr.outH !== 1080)) out.push(\"XDCAM HD422 is 1920×1080 — other sizes may be refused "
+ },
+ {
+  "en": "{0} min{1}",
+  "ctx": "delivery.js:724: function fmtDur(s) { s = Math.round(s); const m = Math.floor(s / 60); return m ? `${m} min${s % 60 ? ` ${s % 60} s` : \"\"}` : `${s} s`; }"
+ },
+ {
+  "en": "{0} GB",
+  "ctx": "delivery.js:725: function fmtBytes(b) { return b >= 1024 ** 3 ? `${(b / 1024 ** 3).toFixed(1)} GB` : b >= 1024 ** 2 ? `${(b / 1024 ** 2).toFixed(b >= 100 * 1"
+ },
+ {
+  "en": "{0} MB",
+  "ctx": "delivery.js:725: function fmtBytes(b) { return b >= 1024 ** 3 ? `${(b / 1024 ** 3).toFixed(1)} GB` : b >= 1024 ** 2 ? `${(b / 1024 ** 2).toFixed(b >= 100 * 1"
+ },
+ {
+  "en": "{0} KB",
+  "ctx": "delivery.js:725: function fmtBytes(b) { return b >= 1024 ** 3 ? `${(b / 1024 ** 3).toFixed(1)} GB` : b >= 1024 ** 2 ? `${(b / 1024 ** 2).toFixed(b >= 100 * 1"
+ },
+ {
+  "en": "Segoe UI",
+  "ctx": "app.js:72: text: \"Title\", fontSize: 72, color: \"#ffffff\", color2: \"\", font: \"Segoe UI\","
+ },
+ {
+  "en": "Arial",
+  "ctx": "app.js:111: const SYSTEM_FONTS = [\"Segoe UI\", \"Arial\", \"Georgia\", \"Impact\", \"Courier New\","
+ },
+ {
+  "en": "Georgia",
+  "ctx": "app.js:111: const SYSTEM_FONTS = [\"Segoe UI\", \"Arial\", \"Georgia\", \"Impact\", \"Courier New\","
+ },
+ {
+  "en": "Impact",
+  "ctx": "app.js:111: const SYSTEM_FONTS = [\"Segoe UI\", \"Arial\", \"Georgia\", \"Impact\", \"Courier New\","
+ },
+ {
+  "en": "Courier New",
+  "ctx": "app.js:111: const SYSTEM_FONTS = [\"Segoe UI\", \"Arial\", \"Georgia\", \"Impact\", \"Courier New\","
+ },
+ {
+  "en": "Trebuchet MS",
+  "ctx": "app.js:112: \"Trebuchet MS\", \"Verdana\", \"Times New Roman\", \"Comic Sans MS\", \"Consolas\"];"
+ },
+ {
+  "en": "Verdana",
+  "ctx": "app.js:112: \"Trebuchet MS\", \"Verdana\", \"Times New Roman\", \"Comic Sans MS\", \"Consolas\"];"
+ },
+ {
+  "en": "Times New Roman",
+  "ctx": "app.js:112: \"Trebuchet MS\", \"Verdana\", \"Times New Roman\", \"Comic Sans MS\", \"Consolas\"];"
+ },
+ {
+  "en": "Comic Sans MS",
+  "ctx": "app.js:112: \"Trebuchet MS\", \"Verdana\", \"Times New Roman\", \"Comic Sans MS\", \"Consolas\"];"
+ },
+ {
+  "en": "Consolas",
+  "ctx": "app.js:112: \"Trebuchet MS\", \"Verdana\", \"Times New Roman\", \"Comic Sans MS\", \"Consolas\"];"
+ },
+ {
+  "en": "Abril Fatface",
+  "ctx": "app.js:113: const GOOGLE_FONTS = [\"Anton\", \"Archivo Black\", \"Abril Fatface\", \"Barlow\", \"Bebas Neue\","
+ },
+ {
+  "en": "Barlow",
+  "ctx": "app.js:113: const GOOGLE_FONTS = [\"Anton\", \"Archivo Black\", \"Abril Fatface\", \"Barlow\", \"Bebas Neue\","
+ },
+ {
+  "en": "Caveat",
+  "ctx": "app.js:114: \"Caveat\", \"Inter\", \"Lobster\", \"Montserrat\", \"Oswald\", \"Pacifico\", \"Permanent Marker\","
+ },
+ {
+  "en": "Lobster",
+  "ctx": "app.js:114: \"Caveat\", \"Inter\", \"Lobster\", \"Montserrat\", \"Oswald\", \"Pacifico\", \"Permanent Marker\","
+ },
+ {
+  "en": "Oswald",
+  "ctx": "app.js:114: \"Caveat\", \"Inter\", \"Lobster\", \"Montserrat\", \"Oswald\", \"Pacifico\", \"Permanent Marker\","
+ },
+ {
+  "en": "Pacifico",
+  "ctx": "app.js:114: \"Caveat\", \"Inter\", \"Lobster\", \"Montserrat\", \"Oswald\", \"Pacifico\", \"Permanent Marker\","
+ },
+ {
+  "en": "Permanent Marker",
+  "ctx": "app.js:114: \"Caveat\", \"Inter\", \"Lobster\", \"Montserrat\", \"Oswald\", \"Pacifico\", \"Permanent Marker\","
+ },
+ {
+  "en": "Roboto",
+  "ctx": "app.js:115: \"Playfair Display\", \"Poppins\", \"Roboto\", \"Roboto Condensed\", \"Teko\"];"
+ },
+ {
+  "en": "Roboto Condensed",
+  "ctx": "app.js:115: \"Playfair Display\", \"Poppins\", \"Roboto\", \"Roboto Condensed\", \"Teko\"];"
+ },
+ {
+  "en": "Teko",
+  "ctx": "app.js:115: \"Playfair Display\", \"Poppins\", \"Roboto\", \"Roboto Condensed\", \"Teko\"];"
+ },
+ {
+  "en": "Plain",
+  "ctx": "app.js:127: plain: { label: \"Plain\", place: \"center\", props: { font: \"Segoe UI\", fontSize: 72, bold: true, color: \"#ffffff\", textAnim: \"none\" } },"
+ },
+ {
+  "en": "Elegant",
+  "ctx": "app.js:129: elegant: { label: \"Elegant\", place: \"center\", props: { font: \"Playfair Display\", fontSize: 88, bold: false, color: \"#ffffff\", color2: \"#ffd1"
+ },
+ {
+  "en": "Kinetic cut",
+  "ctx": "app.js:130: kinetic: { label: \"Kinetic cut\", place: \"center\", props: { font: \"Bebas Neue\", fontSize: 120, bold: false, uppercase: true, color: \"#ffd166\""
+ },
+ {
+  "en": "Neon",
+  "ctx": "app.js:131: neon: { label: \"Neon\", place: \"center\", props: { font: \"Bebas Neue\", fontSize: 104, bold: false, uppercase: true, color: \"#ffffff\", glow: 60"
+ },
+ {
+  "en": "Handwritten",
+  "ctx": "app.js:132: handwritten: { label: \"Handwritten\", place: \"lower-left\", props: { font: \"Caveat\", fontSize: 92, bold: false, color: \"#ffffff\", rotation: -4"
+ },
+ {
+  "en": "Serif drop",
+  "ctx": "app.js:133: serifDrop: { label: \"Serif drop\", place: \"center\", props: { font: \"Abril Fatface\", fontSize: 96, bold: false, color: \"#ffffff\", textShadow: "
+ },
+ {
+  "en": "Subtitle",
+  "ctx": "app.js:134: subtitle: { label: \"Subtitle\", place: \"lower\", props: { font: \"Roboto\", fontSize: 52, bold: false, color: \"#ffffff\", bgColor: \"#000000\", bgO"
+ },
+ {
+  "en": "Bold rise",
+  "ctx": "app.js:135: boldRise: { label: \"Bold rise\", place: \"lower\", props: { font: \"Archivo Black\", fontSize: 92, bold: false, uppercase: true, color: \"#ffffff\""
+ },
+ {
+  "en": "Luxury",
+  "ctx": "app.js:136: luxury: { label: \"Luxury\", place: \"center\", props: { font: \"Cinzel\", fontSize: 88, bold: false, uppercase: true, color: \"#faf0dc\", color2: \""
+ },
+ {
+  "en": "Cinzel",
+  "ctx": "app.js:136: luxury: { label: \"Luxury\", place: \"center\", props: { font: \"Cinzel\", fontSize: 88, bold: false, uppercase: true, color: \"#faf0dc\", color2: \""
+ },
+ {
+  "en": "9:16 · Reel 1080×1920",
+  "ctx": "app.js:145: { label: \"9:16 · Reel 1080×1920\", w: 1080, h: 1920 },"
+ },
+ {
+  "en": "4:5 · IG 1080×1350",
+  "ctx": "app.js:146: { label: \"4:5 · IG 1080×1350\", w: 1080, h: 1350 },"
+ },
+ {
+  "en": "Full canvas",
+  "ctx": "app.js:152: { label: \"Full canvas\", w: 0, h: 0 },"
+ },
+ {
+  "en": "9:16 Reel",
+  "ctx": "app.js:153: { label: \"9:16 Reel\", w: 9, h: 16 },"
+ },
+ {
+  "en": "4:5 IG",
+  "ctx": "app.js:155: { label: \"4:5 IG\", w: 4, h: 5 },"
+ },
+ {
+  "en": "1:1 Square",
+  "ctx": "app.js:156: { label: \"1:1 Square\", w: 1, h: 1 },"
+ },
+ {
+  "en": "Maximum {0} {1} tracks",
+  "ctx": "app.js:307: toast(`Maximum ${MAX_TRACKS_PER_KIND} ${kind} tracks`);"
+ },
+ {
+  "en": "Unknown track",
+  "ctx": "app.js:338: if (!t) return { ok: false, reason: \"Unknown track\" };"
+ },
+ {
+  "en": "Track has clips",
+  "ctx": "app.js:339: if (trackHasClips(trackId)) return { ok: false, reason: \"Track has clips\" };"
+ },
+ {
+  "en": "Keep at least one {0} track",
+  "ctx": "app.js:341: return { ok: false, reason: `Keep at least one ${t.kind} track` };"
+ },
+ {
+  "en": "Remove track",
+  "ctx": "app.js:387: btn.textContent = \"Remove track\";"
+ },
+ {
+  "en": "Disable clip",
+  "ctx": "app.js:430: item(anyEnabled ? \"Disable clip\" : \"Enable clip\", \"Shift+E\", toggleClipsDisabled,"
+ },
+ {
+  "en": "Enable clip",
+  "ctx": "app.js:430: item(anyEnabled ? \"Disable clip\" : \"Enable clip\", \"Shift+E\", toggleClipsDisabled,"
+ },
+ {
+  "en": "Shift+E",
+  "ctx": "app.js:430: item(anyEnabled ? \"Disable clip\" : \"Enable clip\", \"Shift+E\", toggleClipsDisabled,"
+ },
+ {
+  "en": "Locked — unlock to change",
+  "ctx": "app.js:431: locked ? \"Locked — unlock to change\" : null);"
+ },
+ {
+  "en": "Lock clip",
+  "ctx": "app.js:432: item(anyUnlocked ? \"Lock clip\" : \"Unlock clip\", \"\", toggleClipsLocked);"
+ },
+ {
+  "en": "Unlock clip",
+  "ctx": "app.js:432: item(anyUnlocked ? \"Lock clip\" : \"Unlock clip\", \"\", toggleClipsLocked);"
+ },
+ {
+  "en": "Crossfade with neighbours",
+  "ctx": "app.js:434: item(\"Crossfade with neighbours\", \"Shift+D\", () => crossfadeSelected(), locked ? \"Locked — unlock to change\" : null);"
+ },
+ {
+  "en": "Shift+D",
+  "ctx": "app.js:434: item(\"Crossfade with neighbours\", \"Shift+D\", () => crossfadeSelected(), locked ? \"Locked — unlock to change\" : null);"
+ },
+ {
+  "en": "Auto-duck under other tracks",
+  "ctx": "app.js:435: item(\"Auto-duck under other tracks\", \"\", () => autoDuckClips(selectedClips()), locked ? \"Locked — unlock to change\" : null);"
+ },
+ {
+  "en": "Parent to a new null",
+  "ctx": "app.js:438: item(\"Parent to a new null\", \"\", parentSelectionToNull, locked ? \"Locked — unlock to change\" : null);"
+ },
+ {
+  "en": "Unlink audio / video",
+  "ctx": "app.js:443: if (linked) item(\"Unlink audio / video\", \"Ctrl+L\", toggleLinkSelected, locked ? \"Locked — unlock to change\" : null);"
+ },
+ {
+  "en": "Ctrl+L",
+  "ctx": "app.js:443: if (linked) item(\"Unlink audio / video\", \"Ctrl+L\", toggleLinkSelected, locked ? \"Locked — unlock to change\" : null);"
+ },
+ {
+  "en": "Link audio / video",
+  "ctx": "app.js:446: item(\"Link audio / video\", \"Ctrl+L\", toggleLinkSelected, why);"
+ },
+ {
+  "en": "Locked clips were left untouched — unlock them to edit",
+  "ctx": "app.js:633: toast(partial ? \"Locked clips were left untouched — unlock them to edit\""
+ },
+ {
+  "en": "Disable track",
+  "ctx": "app.js:647: btn.title = on ? \"Disable track\" : \"Enable track\";"
+ },
+ {
+  "en": "Enable track",
+  "ctx": "app.js:647: btn.title = on ? \"Disable track\" : \"Enable track\";"
+ },
+ {
+  "en": "Unsolo track",
+  "ctx": "app.js:653: sBtn.title = solo ? \"Unsolo track\" : \"Solo track (mute all others)\";"
+ },
+ {
+  "en": "Solo track (mute all others)",
+  "ctx": "app.js:653: sBtn.title = solo ? \"Unsolo track\" : \"Solo track (mute all others)\";"
+ },
+ {
+  "en": "Targeted — edits (split, insert, ripple, close gap) touch this track. Click to untarget",
+  "ctx": "app.js:664: ? \"Targeted — edits (split, insert, ripple, close gap) touch this track. Click to untarget\""
+ },
+ {
+  "en": "Not targeted — edits skip this track. Click to target",
+  "ctx": "app.js:665: : \"Not targeted — edits skip this track. Click to target\";"
+ },
+ {
+  "en": "Unlock track",
+  "ctx": "app.js:671: lBtn.title = locked ? \"Unlock track\" : \"Lock track — nothing on it can be edited or moved\";"
+ },
+ {
+  "en": "Lock track — nothing on it can be edited or moved",
+  "ctx": "app.js:671: lBtn.title = locked ? \"Unlock track\" : \"Lock track — nothing on it can be edited or moved\";"
+ },
+ {
+  "en": "&amp;",
+  "ctx": "app.js:816: .replace(/&/g, \"&amp;\")"
+ },
+ {
+  "en": "&lt;",
+  "ctx": "app.js:817: .replace(/</g, \"&lt;\")"
+ },
+ {
+  "en": "&gt;",
+  "ctx": "app.js:818: .replace(/>/g, \"&gt;\")"
+ },
+ {
+  "en": "&quot;",
+  "ctx": "app.js:819: .replace(/\"/g, \"&quot;\")"
+ },
+ {
+  "en": "Move the playhead over the clip to edit its keyframes",
+  "ctx": "app.js:1070: if (refused) toast(\"Move the playhead over the clip to edit its keyframes\");"
+ },
+ {
+  "en": "· 🟢 connected",
+  "ctx": "app.js:1197: els.projectName.textContent = project.name + \"  ·  🟢 connected\";"
+ },
+ {
+  "en": "· ⚪ local session",
+  "ctx": "app.js:1205: els.projectName.textContent = project.name + \"  ·  ⚪ local session\";"
+ },
+ {
+  "en": "Folder",
+  "ctx": "app.js:1278: name: String(f.name || \"Folder\").trim() || \"Folder\","
+ },
+ {
+  "en": "New folder",
+  "ctx": "app.js:1317: name: \"New folder\","
+ },
+ {
+  "en": "{0}×{1} canvas → {2}×{3} export · {4}fps",
+  "ctx": "app.js:1433: ? `${project.width}×${project.height} canvas → ${ef.w}×${ef.h} export · ${project.fps}fps`"
+ },
+ {
+  "en": "{0} × {1} · {2}fps",
+  "ctx": "app.js:1434: : `${project.width} × ${project.height} · ${project.fps}fps`;"
+ },
+ {
+  "en": "Custom · {0}×{1}",
+  "ctx": "app.js:1445: html += `<option value=\"custom\" selected>Custom · ${ef.w}×${ef.h}</option>`;"
+ },
+ {
+  "en": "The open composition was removed",
+  "ctx": "app.js:1456: if (path.length !== x.path.length) { state.compCtx = null; applyProject(data, { ctx: true }); syncCompCrumb(); toast(\"The open composition w"
+ },
+ {
+  "en": "Project was updated externally — your last change may need redoing.",
+  "ctx": "app.js:1568: toast(\"Project was updated externally — your last change may need redoing.\");"
+ },
+ {
+  "en": "Couldn't import — unsupported or unreadable file type",
+  "ctx": "app.js:1876: toast(\"Couldn't import — unsupported or unreadable file type\");"
+ },
+ {
+  "en": "Imported {0}, skipped {1}",
+  "ctx": "app.js:1878: toast(`Imported ${added}, skipped ${skipped}`);"
+ },
+ {
+  "en": "Import from URL needs the editor server",
+  "ctx": "app.js:1902: toast(\"Import from URL needs the editor server\");"
+ },
+ {
+  "en": "Paste an HTTPS URL first",
+  "ctx": "app.js:1914: if (!trimmed) { toast(\"Paste an HTTPS URL first\"); return; }"
+ },
+ {
+  "en": "import failed (",
+  "ctx": "app.js:1927: if (!res.ok) throw new Error(body.error || \"import failed (\" + res.status + \")\");"
+ },
+ {
+  "en": "unsupported file type:",
+  "ctx": "app.js:1929: if (!kind) throw new Error(\"unsupported file type: \" + (body.name || \"\"));"
+ },
+ {
+  "en": "Imported",
+  "ctx": "app.js:1942: toast(\"Imported \" + m.name);"
+ },
+ {
+  "en": "Couldn't import URL",
+  "ctx": "app.js:1946: toast(e && e.message ? e.message : \"Couldn't import URL\");"
+ },
+ {
+  "en": "⚠ {0} file{1} offline",
+  "ctx": "app.js:1965: warn.innerHTML = `<span>⚠ ${mediaOffline.size} file${mediaOffline.size === 1 ? \" is\" : \"s are\"} offline</span>"
+ },
+ {
+  "en": "s are",
+  "ctx": "app.js:1965: warn.innerHTML = `<span>⚠ ${mediaOffline.size} file${mediaOffline.size === 1 ? \" is\" : \"s are\"} offline</span>"
+ },
+ {
+  "en": "Used {0}× — click to find every instance",
+  "ctx": "app.js:2037: const usesHtml = `<button type=\"button\" class=\"bin-uses${uses ? \"\" : \" none\"}\" title=\"${uses ? `Used ${uses}× — click to find every instance"
+ },
+ {
+  "en": "Not used on the timeline",
+  "ctx": "app.js:2037: const usesHtml = `<button type=\"button\" class=\"bin-uses${uses ? \"\" : \" none\"}\" title=\"${uses ? `Used ${uses}× — click to find every instance"
+ },
+ {
+  "en": "Favorite — click to unstar",
+  "ctx": "app.js:2038: const favHtml = `<button type=\"button\" class=\"bin-fav${m.favorite ? \" on\" : \"\"}\" title=\"${m.favorite ? \"Favorite — click to unstar\" : \"Mark "
+ },
+ {
+  "en": "Mark as favorite",
+  "ctx": "app.js:2038: const favHtml = `<button type=\"button\" class=\"bin-fav${m.favorite ? \" on\" : \"\"}\" title=\"${m.favorite ? \"Favorite — click to unstar\" : \"Mark "
+ },
+ {
+  "en": "Remove (and its clips)",
+  "ctx": "app.js:2041: item.innerHTML = `"
+ },
+ {
+  "en": "The file is missing — right-click → Relink…",
+  "ctx": "app.js:2042: <span class=\"bin-cell bin-cell-name\">${favHtml}<span class=\"bin-thumb sm\"></span>${offline ? `<span class=\"bin-offline\" title=\"The file is m"
+ },
+ {
+  "en": "OFFLINE",
+  "ctx": "app.js:2042: <span class=\"bin-cell bin-cell-name\">${favHtml}<span class=\"bin-thumb sm\"></span>${offline ? `<span class=\"bin-offline\" title=\"The file is m"
+ },
+ {
+  "en": "url({0})",
+  "ctx": "app.js:2062: if (thumbSrc) thumbEl.style.backgroundImage = `url(${JSON.stringify(thumbSrc)})`;"
+ },
+ {
+  "en": "⚠ Offline:",
+  "ctx": "app.js:2066: item.title = [m.name, offline ? \"⚠ Offline: \" + decodeURIComponent(String(m.src).split(\"?\")[0]) + \" is missing — right-click → Relink…\" : \"\""
+ },
+ {
+  "en": "is missing — right-click → Relink…",
+  "ctx": "app.js:2066: item.title = [m.name, offline ? \"⚠ Offline: \" + decodeURIComponent(String(m.src).split(\"?\")[0]) + \" is missing — right-click → Relink…\" : \"\""
+ },
+ {
+  "en": "New subfolder",
+  "ctx": "app.js:2119: row.innerHTML = `"
+ },
+ {
+  "en": "Delete folder (keeps media)",
+  "ctx": "app.js:2119: row.innerHTML = `"
+ },
+ {
+  "en": "Collapse",
+  "ctx": "app.js:2120: <button type=\"button\" class=\"bin-folder-twist\" title=\"${f.open ? \"Collapse\" : \"Expand\"}\" aria-expanded=\"${f.open}\">${f.open ? \"▼\" : \"▶\"}</bu"
+ },
+ {
+  "en": "Expand",
+  "ctx": "app.js:2120: <button type=\"button\" class=\"bin-folder-twist\" title=\"${f.open ? \"Collapse\" : \"Expand\"}\" aria-expanded=\"${f.open}\">${f.open ? \"▼\" : \"▶\"}</bu"
+ },
+ {
+  "en": "No media matches.",
+  "ctx": "app.js:2178: none.textContent = \"No media matches.\";"
+ },
+ {
+  "en": "Drop here to move to root",
+  "ctx": "app.js:2188: root.textContent = \"Drop here to move to root\";"
+ },
+ {
+  "en": "All media",
+  "ctx": "app.js:2228: const html = opt(\"\", \"All media\") + opt(\"fav\", \"★ Favorites\") + opt(\"used\", \"Used in the edit\") + opt(\"unused\", \"Unused\") +"
+ },
+ {
+  "en": "★ Favorites",
+  "ctx": "app.js:2228: const html = opt(\"\", \"All media\") + opt(\"fav\", \"★ Favorites\") + opt(\"used\", \"Used in the edit\") + opt(\"unused\", \"Unused\") +"
+ },
+ {
+  "en": "Used in the edit",
+  "ctx": "app.js:2228: const html = opt(\"\", \"All media\") + opt(\"fav\", \"★ Favorites\") + opt(\"used\", \"Used in the edit\") + opt(\"unused\", \"Unused\") +"
+ },
+ {
+  "en": "Unused",
+  "ctx": "app.js:2228: const html = opt(\"\", \"All media\") + opt(\"fav\", \"★ Favorites\") + opt(\"used\", \"Used in the edit\") + opt(\"unused\", \"Unused\") +"
+ },
+ {
+  "en": "⚠ Offline ({0})",
+  "ctx": "app.js:2229: (mediaOffline.size || binView.filter === \"offline\" ? opt(\"offline\", `⚠ Offline (${mediaOffline.size})`) : \"\") +"
+ },
+ {
+  "en": "Has a proxy",
+  "ctx": "app.js:2230: (project.media.some((m) => m.kind === \"video\") ? opt(\"proxy\", \"Has a proxy\") + opt(\"noproxy\", \"Video without a proxy\") : \"\") +"
+ },
+ {
+  "en": "Video without a proxy",
+  "ctx": "app.js:2230: (project.media.some((m) => m.kind === \"video\") ? opt(\"proxy\", \"Has a proxy\") + opt(\"noproxy\", \"Video without a proxy\") : \"\") +"
+ },
+ {
+  "en": "kind:",
+  "ctx": "app.js:2231: `<optgroup label=\"Kind\">${MediaLib.KINDS.map((k) => opt(\"kind:\" + k, k[0].toUpperCase() + k.slice(1))).join(\"\")}</optgroup>` +"
+ },
+ {
+  "en": "col:",
+  "ctx": "app.js:2232: (cols.length ? `<optgroup label=\"Collections\">${cols.map((c) => opt(\"col:\" + c.id, c.name + ` (${c.media.length})`)).join(\"\")}</optgroup>` :"
+ },
+ {
+  "en": "tag:",
+  "ctx": "app.js:2233: (tags.length ? `<optgroup label=\"Tags\">${tags.map((t) => opt(\"tag:\" + t, \"#\" + t)).join(\"\")}</optgroup>` : \"\");"
+ },
+ {
+  "en": "Descending — click for ascending",
+  "ctx": "app.js:2239: els.binSortDir.title = binView.dir === \"desc\" ? \"Descending — click for ascending\" : \"Ascending — click for descending\";"
+ },
+ {
+  "en": "Thumbnail view",
+  "ctx": "app.js:2241: els.binViewBtn.title = binView.list ? \"Thumbnail view\" : \"List view: metadata columns\";"
+ },
+ {
+  "en": "{0} of {1}",
+  "ctx": "app.js:2253: bar.innerHTML = `<span class=\"bin-filter-count\">${n} of ${project.media.length}</span>` +"
+ },
+ {
+  "en": "Delete the collection (keeps the media)",
+  "ctx": "app.js:2254: (col ? `<span class=\"bin-filter-name\" title=\"Collection\">▣ ${escapeHtml(col.name)}</span>"
+ },
+ {
+  "en": "Rename",
+  "ctx": "app.js:2254: (col ? `<span class=\"bin-filter-name\" title=\"Collection\">▣ ${escapeHtml(col.name)}</span>"
+ },
+ {
+  "en": "Show everything (Esc in the search box)",
+  "ctx": "app.js:2258: `<button type=\"button\" class=\"btn tiny\" data-clear title=\"Show everything (Esc in the search box)\">Clear</button>`;"
+ },
+ {
+  "en": "Clear",
+  "ctx": "app.js:2258: `<button type=\"button\" class=\"btn tiny\" data-clear title=\"Show everything (Esc in the search box)\">Clear</button>`;"
+ },
+ {
+  "en": "Collection name",
+  "ctx": "app.js:2264: promptBinText(r.left, r.bottom + 4, \"Collection name\", col.name, (name) => { col.name = name.slice(0, 80); scheduleSave(); renderBin(); });"
+ },
+ {
+  "en": "Deleted the collection “{0}” — its media stay in the bin",
+  "ctx": "app.js:2270: toast(`Deleted the collection “${col.name}” — its media stay in the bin`);"
+ },
+ {
+  "en": "FPS",
+  "ctx": "app.js:2276: const BIN_COLUMNS = [[\"name\", \"Name\"], [\"duration\", \"Duration\"], [\"resolution\", \"Resolution\"], [\"fps\", \"FPS\"],"
+ },
+ {
+  "en": "Size",
+  "ctx": "app.js:2277: [\"codec\", \"Codec\"], [\"audio\", \"Audio\"], [\"size\", \"Size\"], [\"proxy\", \"Proxy\"], [\"usage\", \"Uses\"]];"
+ },
+ {
+  "en": "Uses",
+  "ctx": "app.js:2277: [\"codec\", \"Codec\"], [\"audio\", \"Audio\"], [\"size\", \"Size\"], [\"proxy\", \"Proxy\"], [\"usage\", \"Uses\"]];"
+ },
+ {
+  "en": "It's used on the main timeline — go back to Main to delete it",
+  "ctx": "app.js:2357: if (state.compCtx && (state.compCtx.root.clips || []).some((c) => c.mediaId === m.id)) { toast(\"It's used on the main timeline — go back to "
+ },
+ {
+  "en": "OK",
+  "ctx": "app.js:2376: <div class=\"bin-pop-btns\"><button type=\"button\" class=\"btn tiny\" data-cancel>Cancel</button><button type=\"button\" class=\"btn tiny accent\" da"
+ },
+ {
+  "en": "Add or remove this tag",
+  "ctx": "app.js:2384: b.title = \"Add or remove this tag\";"
+ },
+ {
+  "en": "Open in Source",
+  "ctx": "app.js:2427: item(\"Open in Source\", () => loadSourceFromMedia(m));"
+ },
+ {
+  "en": "Find timeline instances ({0})",
+  "ctx": "app.js:2428: item(`Find timeline instances (${uses})`, () => showMediaInstances(m, x, y), uses ? null : \"Not used on the timeline\");"
+ },
+ {
+  "en": "Media info…",
+  "ctx": "app.js:2429: item(\"Media info…\", () => showMediaInfo(m, x, y));"
+ }
+]

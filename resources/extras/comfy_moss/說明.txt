@@ -1,0 +1,4 @@
+ComfyUI 0.38.0 的 MOSS-Image 支援（官方 commit e087d8f「feat: Add MOSS-image support (#17095)」，2026-10-16 合併進 master）。
+安裝精靈在 ComfyUI 是 0.38.0、而且還沒有 comfy_extras\nodes_moss_image.py 時，把這裡的 9 個檔蓋進 ComfyUI 資料夾。
+lora.py 是 cherry-pick 後再手動拿掉 0.38 沒有的 comfy.model_base.Flux3 那段。ComfyUI 是 GPL-3.0。
+ComfyUI 出了含 MOSS 的正式版之後，這個資料夾就可以拿掉。

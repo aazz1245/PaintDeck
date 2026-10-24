@@ -1,0 +1,43 @@
+# 每次推上 main、開 PR 都跑：Rust 測試＋clippy（警告當錯誤）＋前端語法檢查。不需要模型或 ComfyUI。
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      # tauri.conf.json 的 bundle.resources 指到 vendor\ 的兩個執行檔，編譯時就要在
+      - name: Fetch vendor binaries
+        shell: pwsh
+        run: ./tools/fetch_vendor.ps1
+
+      - name: Clippy
+        working-directory: src-tauri
+        run: cargo clippy --all-targets --locked -- -D warnings
+
+      - name: Test
+        working-directory: src-tauri
+        run: cargo test --locked
+
+      - name: Check UI scripts
+        shell: pwsh
+        run: |
+          $bad = 0
+          Get-ChildItem ui/js/*.js | ForEach-Object { node --check $_.FullName; if ($LASTEXITCODE) { $bad++ } }
+          if ($bad) { exit 1 }

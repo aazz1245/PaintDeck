@@ -1,0 +1,128 @@
+{
+ "friendly": [
+  [
+   "",
+   ""
+  ],
+  [
+   "CUDA error: out of memory",
+   "顯示卡記憶體（VRAM）不夠。解法：張數改少、尺寸改小、關掉吃顯卡的遊戲；或到右上角狀態列按「釋放顯存」再試一次。\n（原始訊息：CUDA error: out of memory）"
+  ],
+  [
+   "Allocation on device 0 would exceed allowed memory",
+   "顯示卡記憶體（VRAM）不夠。解法：張數改少、尺寸改小、關掉吃顯卡的遊戲；或到右上角狀態列按「釋放顯存」再試一次。\n（原始訊息：Allocation on device 0 would exceed allowed memory）"
+  ],
+  [
+   "Value not in list: unet_name: 'a.safetensors' not in []",
+   "找不到選的模型或 LoRA 檔（可能被移走或改名）。解法：LoRA 分頁按「重新整理清單」，重新選一次模型／LoRA。\n（原始訊息：Value not in list: unet_name: 'a.safetensors' not in []）"
+  ],
+  [
+   "mat1 and mat2 shapes cannot be multiplied (77x2048 and 1024x320)",
+   "模型和 LoRA 不相容（多半是家族不同，例如 Anima 的 LoRA 套在 MOSS-Image 上）。解法：把劃掉的 LoRA 移除，或換回對應的模型。\n（原始訊息：mat1 and mat2 shapes cannot be multiplied (77x2048 and 1024x320)）"
+  ],
+  [
+   "lora key not loaded: x",
+   "模型和 LoRA 不相容（多半是家族不同，例如 Anima 的 LoRA 套在 MOSS-Image 上）。解法：把劃掉的 LoRA 移除，或換回對應的模型。\n（原始訊息：lora key not loaded: x）"
+  ],
+  [
+   "[Errno 2] No such file or directory: 'aw.png'",
+   "找不到輸入圖片，或圖片壞掉了。解法：重新放一次圖片。\n（原始訊息：[Errno 2] No such file or directory: 'aw.png'）"
+  ],
+  [
+   "Cannot identify image file",
+   "找不到輸入圖片，或圖片壞掉了。解法：重新放一次圖片。\n（原始訊息：Cannot identify image file）"
+  ],
+  [
+   "Connection refused",
+   "連不到 ComfyUI。解法：重新執行桌面的「Anima 生圖.bat」。\n（原始訊息：Connection refused）"
+  ],
+  [
+   "Expected all tensors to be on the same device",
+   "ComfyUI 模型載入狀態異常。解法：狀態列按「釋放顯存」，或重開 ComfyUI。\n（原始訊息：Expected all tensors to be on the same device）"
+  ],
+  [
+   "KSampler: 一般錯誤",
+   "KSampler: 一般錯誤"
+  ],
+  [
+   "RuntimeError: CUDA error: out of memory 顯存不足 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "顯示卡記憶體（VRAM）不夠。解法：張數改少、尺寸改小、關掉吃顯卡的遊戲；或到右上角狀態列按「釋放顯存」再試一次。\n（原始訊息：RuntimeError: CUDA error: out of memory 顯存不足 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx）"
+  ]
+ ],
+ "explain": [
+  [
+   {
+    "error": {
+     "message": "Prompt outputs failed validation",
+     "type": "prompt_outputs_failed_validation"
+    },
+    "node_errors": {
+     "5": {
+      "class_type": "KSampler",
+      "errors": [
+       {
+        "message": "Value not in list",
+        "details": "sampler_name: 'x' not in [...]"
+       }
+      ]
+     },
+     "7": {
+      "class_type": "UNETLoader",
+      "errors": [
+       {
+        "message": "Required input is missing"
+       },
+       {
+        "message": "Bad",
+        "details": ""
+       }
+      ]
+     }
+    }
+   },
+   "找不到選的模型或 LoRA 檔（可能被移走或改名）。解法：LoRA 分頁按「重新整理清單」，重新選一次模型／LoRA。\n（原始訊息：Prompt outputs failed validation；KSampler：Value not in list sampler_name: 'x' not in [...]；UNETLoader：Required input is missing；UNETLoader：Bad）"
+  ],
+  [
+   {
+    "error": "純文字錯誤"
+   },
+   "{\"error\": \"純文字錯誤\"}"
+  ],
+  [
+   {
+    "raw": "<html>500</html>"
+   },
+   "{\"raw\": \"<html>500</html>\"}"
+  ],
+  [
+   {
+    "node_errors": {
+     "3": {
+      "errors": [
+       {
+        "message": null,
+        "details": "d"
+       }
+      ]
+     }
+    }
+   },
+   "None：None d"
+  ],
+  [
+   {
+    "node_errors": {}
+   },
+   "{\"node_errors\": {}}"
+  ],
+  [
+   {
+    "error": {
+     "message": ""
+    },
+    "node_errors": {}
+   },
+   "{\"error\": {\"message\": \"\"}, \"node_errors\": {}}"
+  ]
+ ]
+}

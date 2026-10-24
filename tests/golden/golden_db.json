@@ -1,0 +1,2506 @@
+{
+ "ops": [
+  {
+   "op": "add_job",
+   "args": [
+    "job-a",
+    {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "1girl, orange hair",
+     "steps": 8,
+     "width": 896,
+     "height": 1152,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 0.8
+      }
+     ],
+     "idea": "橘髮女孩"
+    },
+    {
+     "seed": 101,
+     "prompt": "1girl, orange hair, resolved",
+     "width": 896,
+     "height": 1152
+    }
+   ]
+  },
+  {
+   "op": "add_job",
+   "args": [
+    "job-b",
+    {
+     "mode": "img2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "steps": 12,
+     "width": 1024,
+     "height": 1024,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 1.0
+      },
+      {
+       "name": "ghost_fx.safetensors",
+       "strength": 0.6
+      }
+     ]
+    },
+    {
+     "seed": 202,
+     "prompt": "",
+     "width": 0,
+     "height": 1024
+    }
+   ]
+  },
+  {
+   "op": "add_job",
+   "args": [
+    "job-c",
+    {
+     "mode": "txt2img",
+     "model": "qwen21_turbo.safetensors",
+     "family": "qwen21",
+     "prompt": "a cat on a sofa",
+     "steps": 4,
+     "width": 0,
+     "height": 768
+    },
+    {
+     "seed": 303,
+     "prompt": "a cat on a sofa",
+     "width": 0
+    }
+   ]
+  },
+  {
+   "op": "add_job",
+   "args": [
+    "job-d",
+    {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "1girl, orange hair",
+     "steps": 8,
+     "width": 896,
+     "height": 1152,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 0.8
+      }
+     ],
+     "idea": "橘髮女孩"
+    },
+    {
+     "seed": 404
+    }
+   ]
+  },
+  {
+   "op": "add_job",
+   "args": [
+    "job-e",
+    {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "1girl, orange hair",
+     "steps": 8,
+     "width": 896,
+     "height": 1152,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 0.8
+      }
+     ],
+     "idea": "橘髮女孩"
+    },
+    {
+     "seed": 505
+    }
+   ]
+  },
+  {
+   "op": "add_job",
+   "args": [
+    "job-f",
+    {
+     "mode": "txt2img",
+     "model": "qwen21_turbo.safetensors",
+     "family": "qwen21",
+     "prompt": "a cat on a sofa",
+     "steps": 4,
+     "width": 0,
+     "height": 768
+    },
+    {
+     "seed": 606
+    }
+   ]
+  },
+  {
+   "op": "set_job",
+   "args": [
+    "job-a",
+    "running",
+    null
+   ]
+  },
+  {
+   "op": "set_job",
+   "args": [
+    "job-a",
+    "done",
+    null
+   ]
+  },
+  {
+   "op": "set_job",
+   "args": [
+    "job-b",
+    "running",
+    null
+   ]
+  },
+  {
+   "op": "set_job",
+   "args": [
+    "job-b",
+    "done",
+    null
+   ]
+  },
+  {
+   "op": "set_job",
+   "args": [
+    "job-c",
+    "running",
+    null
+   ]
+  },
+  {
+   "op": "set_job",
+   "args": [
+    "job-c",
+    "done",
+    null
+   ]
+  },
+  {
+   "op": "set_job",
+   "args": [
+    "job-d",
+    "error",
+    "ComfyUI 爆顯存"
+   ]
+  },
+  {
+   "op": "set_job",
+   "args": [
+    "job-e",
+    "running",
+    null
+   ]
+  },
+  {
+   "op": "add_image",
+   "args": [
+    "a_00001_.png",
+    "AnimaWeb",
+    "output",
+    {
+     "mode": "txt2img",
+     "prompt": "1girl, orange hair",
+     "negative": "worst quality",
+     "seed": 101,
+     "width": 896,
+     "height": 1152,
+     "idea": "橘髮女孩"
+    },
+    {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "1girl, orange hair",
+     "steps": 8,
+     "width": 896,
+     "height": 1152,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 0.8
+      }
+     ],
+     "idea": "橘髮女孩"
+    },
+    "job-a"
+   ]
+  },
+  {
+   "op": "add_image",
+   "args": [
+    "a_00002_.png",
+    "AnimaWeb",
+    "output",
+    {
+     "mode": "txt2img",
+     "prompt": "1girl, ghost",
+     "negative": "",
+     "seed": 102,
+     "width": 896,
+     "height": 1152,
+     "idea": ""
+    },
+    {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "1girl, orange hair",
+     "steps": 8,
+     "width": 896,
+     "height": 1152,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 0.8
+      }
+     ],
+     "idea": "橘髮女孩"
+    },
+    "job-a"
+   ]
+  },
+  {
+   "op": "add_image",
+   "args": [
+    "b_00001_.png",
+    "AnimaWeb",
+    "output",
+    {
+     "mode": "img2img",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "negative": "bad hands",
+     "seed": 202,
+     "width": 1024,
+     "height": 1024
+    },
+    {
+     "mode": "img2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "steps": 12,
+     "width": 1024,
+     "height": 1024,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 1.0
+      },
+      {
+       "name": "ghost_fx.safetensors",
+       "strength": 0.6
+      }
+     ]
+    },
+    "job-b"
+   ]
+  },
+  {
+   "op": "add_image",
+   "args": [
+    "c_00001_.png",
+    "AnimaWeb",
+    "output",
+    {
+     "mode": "txt2img",
+     "prompt": "a cat on a sofa",
+     "negative": null,
+     "seed": 303,
+     "width": 1024,
+     "height": 768
+    },
+    {
+     "mode": "txt2img",
+     "model": "qwen21_turbo.safetensors",
+     "family": "qwen21",
+     "prompt": "a cat on a sofa",
+     "steps": 4,
+     "width": 0,
+     "height": 768
+    },
+    "job-c"
+   ]
+  },
+  {
+   "op": "add_image",
+   "args": [
+    "old.png",
+    "",
+    "output",
+    {
+     "mode": "upscale",
+     "prompt": "legacy import",
+     "negative": "",
+     "seed": 5,
+     "width": 512,
+     "height": 512
+    },
+    {
+     "mode": "upscale",
+     "prompt": "legacy import",
+     "seed": 5
+    },
+    null
+   ]
+  },
+  {
+   "op": "add_image",
+   "args": [
+    "old2.png",
+    "sub/dir",
+    "output",
+    {
+     "mode": "imported",
+     "prompt": "",
+     "negative": "",
+     "seed": null,
+     "width": 640,
+     "height": 480
+    },
+    {},
+    null
+   ]
+  },
+  {
+   "op": "add_image",
+   "args": [
+    "a_00001_.png",
+    "AnimaWeb",
+    "output",
+    {
+     "mode": "txt2img",
+     "prompt": "dup"
+    },
+    {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "1girl, orange hair",
+     "steps": 8,
+     "width": 896,
+     "height": 1152,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 0.8
+      }
+     ],
+     "idea": "橘髮女孩"
+    },
+    "job-a"
+   ]
+  },
+  {
+   "op": "save_preset",
+   "args": [
+    "快速 8 步",
+    {
+     "steps": 8,
+     "cfg": 1.0,
+     "sampler": "er_sde"
+    }
+   ]
+  },
+  {
+   "op": "save_preset",
+   "args": [
+    "Anima 寫實",
+    {
+     "steps": 30,
+     "cfg": 4.5
+    }
+   ]
+  },
+  {
+   "op": "save_preset",
+   "args": [
+    "快速 8 步",
+    {
+     "steps": 8,
+     "cfg": 1.5,
+     "sampler": "euler"
+    }
+   ]
+  },
+  {
+   "op": "set_lora_meta",
+   "args": [
+    "jgdxstyle_e5.safetensors",
+    {
+     "triggers": [
+      "jgdxstyle"
+     ],
+     "strength": 0.8,
+     "title": "鋸齒卡通"
+    }
+   ]
+  },
+  {
+   "op": "set_lora_meta",
+   "args": [
+    "ghost_fx.safetensors",
+    {
+     "fav": true,
+     "note": ""
+    }
+   ]
+  },
+  {
+   "op": "set_lora_meta",
+   "args": [
+    "jgdxstyle_e5.safetensors",
+    {
+     "triggers": [
+      "jgdxstyle"
+     ],
+     "strength": 0.9
+    }
+   ]
+  },
+  {
+   "op": "sql",
+   "args": [
+    "UPDATE jobs SET created = 1760000000 + rowid * 100",
+    []
+   ]
+  },
+  {
+   "op": "sql",
+   "args": [
+    "UPDATE jobs SET started = created + 5 WHERE started IS NOT NULL",
+    []
+   ]
+  },
+  {
+   "op": "sql",
+   "args": [
+    "UPDATE jobs SET finished = created + 5 + rowid * 3.25 WHERE finished IS NOT NULL",
+    []
+   ]
+  },
+  {
+   "op": "sql",
+   "args": [
+    "UPDATE images SET created = 1760000000 + id * 60",
+    []
+   ]
+  },
+  {
+   "op": "sql",
+   "args": [
+    "UPDATE presets SET created = 1700000000 + id",
+    []
+   ]
+  },
+  {
+   "op": "sql",
+   "args": [
+    "UPDATE images SET fav=1 WHERE id IN (1, 3)",
+    []
+   ]
+  },
+  {
+   "op": "sql",
+   "args": [
+    "UPDATE images SET deleted=1, trashed=1760009999.5 WHERE id=2",
+    []
+   ]
+  },
+  {
+   "op": "sql",
+   "args": [
+    "UPDATE images SET deleted=2 WHERE id=6",
+    []
+   ]
+  }
+ ],
+ "op_results": [
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  1,
+  1,
+  2,
+  1,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null
+ ],
+ "queries": [
+  {
+   "q": "job",
+   "args": [
+    "job-a"
+   ]
+  },
+  {
+   "q": "job",
+   "args": [
+    "job-b"
+   ]
+  },
+  {
+   "q": "job",
+   "args": [
+    "nope"
+   ]
+  },
+  {
+   "q": "open_jobs",
+   "args": []
+  },
+  {
+   "q": "jobs",
+   "args": [
+    60
+   ]
+  },
+  {
+   "q": "jobs",
+   "args": [
+    2
+   ]
+  },
+  {
+   "q": "avg_seconds",
+   "args": [
+    "anima-turbo-v1.1.safetensors",
+    "txt2img"
+   ]
+  },
+  {
+   "q": "avg_seconds",
+   "args": [
+    "anima-turbo-v1.1.safetensors",
+    null
+   ]
+  },
+  {
+   "q": "avg_seconds",
+   "args": [
+    null,
+    null
+   ]
+  },
+  {
+   "q": "avg_seconds",
+   "args": [
+    "qwen21_turbo.safetensors",
+    "txt2img"
+   ]
+  },
+  {
+   "q": "avg_seconds",
+   "args": [
+    "missing",
+    null
+   ]
+  },
+  {
+   "q": "avg_seconds",
+   "args": [
+    null,
+    "img2img"
+   ]
+  },
+  {
+   "q": "image",
+   "args": [
+    1
+   ]
+  },
+  {
+   "q": "image",
+   "args": [
+    3
+   ]
+  },
+  {
+   "q": "image",
+   "args": [
+    5
+   ]
+  },
+  {
+   "q": "image",
+   "args": [
+    99
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": null,
+     "trash": false,
+     "model": null,
+     "family": null,
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": true,
+     "mode": null,
+     "q": null,
+     "trash": false,
+     "model": null,
+     "family": null,
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": "txt2img",
+     "q": null,
+     "trash": false,
+     "model": null,
+     "family": null,
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": "orange",
+     "trash": false,
+     "model": null,
+     "family": null,
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": "202",
+     "trash": false,
+     "model": null,
+     "family": null,
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": "ghost",
+     "trash": false,
+     "model": null,
+     "family": null,
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": null,
+     "trash": true,
+     "model": null,
+     "family": null,
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": null,
+     "trash": false,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": null,
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": null,
+     "trash": false,
+     "model": null,
+     "family": "anima",
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": null,
+     "trash": false,
+     "model": null,
+     "family": "qwen21",
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": null,
+     "trash": false,
+     "model": null,
+     "family": null,
+     "lora": "ghost_fx.safetensors",
+     "date_from": null,
+     "date_to": null,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": null,
+     "trash": false,
+     "model": null,
+     "family": null,
+     "lora": null,
+     "date_from": 1760000150.0,
+     "date_to": null,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": null,
+     "trash": false,
+     "model": null,
+     "family": null,
+     "lora": null,
+     "date_from": null,
+     "date_to": 1760000200.0,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": null,
+     "trash": false,
+     "model": null,
+     "family": null,
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "old"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": null,
+     "trash": false,
+     "model": null,
+     "family": null,
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "fav"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 1,
+     "limit": 2,
+     "fav": false,
+     "mode": null,
+     "q": null,
+     "trash": false,
+     "model": null,
+     "family": null,
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "new"
+    }
+   ]
+  },
+  {
+   "q": "gallery",
+   "args": [
+    {
+     "offset": 0,
+     "limit": 60,
+     "fav": false,
+     "mode": null,
+     "q": "很長",
+     "trash": false,
+     "model": null,
+     "family": null,
+     "lora": null,
+     "date_from": null,
+     "date_to": null,
+     "sort": "old"
+    }
+   ]
+  },
+  {
+   "q": "facets",
+   "args": []
+  },
+  {
+   "q": "images_by_ids",
+   "args": [
+    [
+     3,
+     1,
+     99
+    ]
+   ]
+  },
+  {
+   "q": "images_by_ids",
+   "args": [
+    []
+   ]
+  },
+  {
+   "q": "known_files",
+   "args": []
+  },
+  {
+   "q": "presets",
+   "args": []
+  },
+  {
+   "q": "lora_meta",
+   "args": []
+  }
+ ],
+ "expected": [
+  {
+   "id": "job-a",
+   "params": {
+    "mode": "txt2img",
+    "model": "anima-turbo-v1.1.safetensors",
+    "family": "anima",
+    "prompt": "1girl, orange hair",
+    "steps": 8,
+    "width": 896,
+    "height": 1152,
+    "loras": [
+     {
+      "name": "jgdxstyle_e5.safetensors",
+      "strength": 0.8
+     }
+    ],
+    "idea": "橘髮女孩"
+   },
+   "info": {
+    "seed": 101,
+    "prompt": "1girl, orange hair, resolved",
+    "width": 896,
+    "height": 1152
+   },
+   "status": "done",
+   "created": 1760000100.0,
+   "finished": 1760000108.25,
+   "error": null,
+   "started": 1760000105.0
+  },
+  {
+   "id": "job-b",
+   "params": {
+    "mode": "img2img",
+    "model": "anima-turbo-v1.1.safetensors",
+    "family": "anima",
+    "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+    "steps": 12,
+    "width": 1024,
+    "height": 1024,
+    "loras": [
+     {
+      "name": "jgdxstyle_e5.safetensors",
+      "strength": 1.0
+     },
+     {
+      "name": "ghost_fx.safetensors",
+      "strength": 0.6
+     }
+    ]
+   },
+   "info": {
+    "seed": 202,
+    "prompt": "",
+    "width": 0,
+    "height": 1024
+   },
+   "status": "done",
+   "created": 1760000200.0,
+   "finished": 1760000211.5,
+   "error": null,
+   "started": 1760000205.0
+  },
+  null,
+  [
+   "job-e",
+   "job-f"
+  ],
+  [
+   {
+    "id": "job-f",
+    "params": {
+     "mode": "txt2img",
+     "model": "qwen21_turbo.safetensors",
+     "family": "qwen21",
+     "prompt": "a cat on a sofa",
+     "steps": 4,
+     "width": 0,
+     "height": 768
+    },
+    "status": "queued",
+    "created": 1760000600.0,
+    "finished": null,
+    "error": null,
+    "started": null,
+    "summary": {
+     "mode": "txt2img",
+     "model": "qwen21_turbo.safetensors",
+     "prompt": "a cat on a sofa",
+     "seed": 606,
+     "width": 0,
+     "height": 768,
+     "steps": 4,
+     "idea": ""
+    },
+    "images": []
+   },
+   {
+    "id": "job-e",
+    "params": {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "1girl, orange hair",
+     "steps": 8,
+     "width": 896,
+     "height": 1152,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 0.8
+      }
+     ],
+     "idea": "橘髮女孩"
+    },
+    "status": "running",
+    "created": 1760000500.0,
+    "finished": null,
+    "error": null,
+    "started": 1760000505.0,
+    "summary": {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "prompt": "1girl, orange hair",
+     "seed": 505,
+     "width": 896,
+     "height": 1152,
+     "steps": 8,
+     "idea": "橘髮女孩"
+    },
+    "images": []
+   },
+   {
+    "id": "job-d",
+    "params": {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "1girl, orange hair",
+     "steps": 8,
+     "width": 896,
+     "height": 1152,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 0.8
+      }
+     ],
+     "idea": "橘髮女孩"
+    },
+    "status": "error",
+    "created": 1760000400.0,
+    "finished": 1760000418.0,
+    "error": "ComfyUI 爆顯存",
+    "started": null,
+    "summary": {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "prompt": "1girl, orange hair",
+     "seed": 404,
+     "width": 896,
+     "height": 1152,
+     "steps": 8,
+     "idea": "橘髮女孩"
+    },
+    "images": []
+   },
+   {
+    "id": "job-c",
+    "params": {
+     "mode": "txt2img",
+     "model": "qwen21_turbo.safetensors",
+     "family": "qwen21",
+     "prompt": "a cat on a sofa",
+     "steps": 4,
+     "width": 0,
+     "height": 768
+    },
+    "status": "done",
+    "created": 1760000300.0,
+    "finished": 1760000314.75,
+    "error": null,
+    "started": 1760000305.0,
+    "summary": {
+     "mode": "txt2img",
+     "model": "qwen21_turbo.safetensors",
+     "prompt": "a cat on a sofa",
+     "seed": 303,
+     "width": 0,
+     "height": 768,
+     "steps": 4,
+     "idea": ""
+    },
+    "images": [
+     {
+      "id": 4,
+      "deleted": 0
+     }
+    ]
+   },
+   {
+    "id": "job-b",
+    "params": {
+     "mode": "img2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "steps": 12,
+     "width": 1024,
+     "height": 1024,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 1.0
+      },
+      {
+       "name": "ghost_fx.safetensors",
+       "strength": 0.6
+      }
+     ]
+    },
+    "status": "done",
+    "created": 1760000200.0,
+    "finished": 1760000211.5,
+    "error": null,
+    "started": 1760000205.0,
+    "summary": {
+     "mode": "img2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文",
+     "seed": 202,
+     "width": 1024,
+     "height": 1024,
+     "steps": 12,
+     "idea": ""
+    },
+    "images": [
+     {
+      "id": 3,
+      "deleted": 0
+     }
+    ]
+   },
+   {
+    "id": "job-a",
+    "params": {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "1girl, orange hair",
+     "steps": 8,
+     "width": 896,
+     "height": 1152,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 0.8
+      }
+     ],
+     "idea": "橘髮女孩"
+    },
+    "status": "done",
+    "created": 1760000100.0,
+    "finished": 1760000108.25,
+    "error": null,
+    "started": 1760000105.0,
+    "summary": {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "prompt": "1girl, orange hair, resolved",
+     "seed": 101,
+     "width": 896,
+     "height": 1152,
+     "steps": 8,
+     "idea": "橘髮女孩"
+    },
+    "images": [
+     {
+      "id": 1,
+      "deleted": 0
+     },
+     {
+      "id": 2,
+      "deleted": 1
+     }
+    ]
+   }
+  ],
+  [
+   {
+    "id": "job-f",
+    "params": {
+     "mode": "txt2img",
+     "model": "qwen21_turbo.safetensors",
+     "family": "qwen21",
+     "prompt": "a cat on a sofa",
+     "steps": 4,
+     "width": 0,
+     "height": 768
+    },
+    "status": "queued",
+    "created": 1760000600.0,
+    "finished": null,
+    "error": null,
+    "started": null,
+    "summary": {
+     "mode": "txt2img",
+     "model": "qwen21_turbo.safetensors",
+     "prompt": "a cat on a sofa",
+     "seed": 606,
+     "width": 0,
+     "height": 768,
+     "steps": 4,
+     "idea": ""
+    },
+    "images": []
+   },
+   {
+    "id": "job-e",
+    "params": {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "1girl, orange hair",
+     "steps": 8,
+     "width": 896,
+     "height": 1152,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 0.8
+      }
+     ],
+     "idea": "橘髮女孩"
+    },
+    "status": "running",
+    "created": 1760000500.0,
+    "finished": null,
+    "error": null,
+    "started": 1760000505.0,
+    "summary": {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "prompt": "1girl, orange hair",
+     "seed": 505,
+     "width": 896,
+     "height": 1152,
+     "steps": 8,
+     "idea": "橘髮女孩"
+    },
+    "images": []
+   }
+  ],
+  3.25,
+  4.875,
+  6.5,
+  9.75,
+  null,
+  6.5,
+  {
+   "id": 1,
+   "filename": "a_00001_.png",
+   "subfolder": "AnimaWeb",
+   "type": "output",
+   "mode": "txt2img",
+   "prompt": "1girl, orange hair",
+   "negative": "worst quality",
+   "seed": 101,
+   "width": 896,
+   "height": 1152,
+   "params": {
+    "mode": "txt2img",
+    "model": "anima-turbo-v1.1.safetensors",
+    "family": "anima",
+    "prompt": "1girl, orange hair",
+    "steps": 8,
+    "width": 896,
+    "height": 1152,
+    "loras": [
+     {
+      "name": "jgdxstyle_e5.safetensors",
+      "strength": 0.8
+     }
+    ],
+    "idea": "橘髮女孩"
+   },
+   "job": "job-a",
+   "created": 1760000060.0,
+   "fav": 1,
+   "deleted": 0,
+   "idea": "橘髮女孩",
+   "trashed": null
+  },
+  {
+   "id": 3,
+   "filename": "b_00001_.png",
+   "subfolder": "AnimaWeb",
+   "type": "output",
+   "mode": "img2img",
+   "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+   "negative": "bad hands",
+   "seed": 202,
+   "width": 1024,
+   "height": 1024,
+   "params": {
+    "mode": "img2img",
+    "model": "anima-turbo-v1.1.safetensors",
+    "family": "anima",
+    "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+    "steps": 12,
+    "width": 1024,
+    "height": 1024,
+    "loras": [
+     {
+      "name": "jgdxstyle_e5.safetensors",
+      "strength": 1.0
+     },
+     {
+      "name": "ghost_fx.safetensors",
+      "strength": 0.6
+     }
+    ]
+   },
+   "job": "job-b",
+   "created": 1760000180.0,
+   "fav": 1,
+   "deleted": 0,
+   "idea": null,
+   "trashed": null
+  },
+  {
+   "id": 5,
+   "filename": "old.png",
+   "subfolder": "",
+   "type": "output",
+   "mode": "upscale",
+   "prompt": "legacy import",
+   "negative": "",
+   "seed": 5,
+   "width": 512,
+   "height": 512,
+   "params": {
+    "mode": "upscale",
+    "prompt": "legacy import",
+    "seed": 5
+   },
+   "job": null,
+   "created": 1760000300.0,
+   "fav": 0,
+   "deleted": 0,
+   "idea": null,
+   "trashed": null
+  },
+  null,
+  {
+   "total": 4,
+   "items": [
+    {
+     "id": 5,
+     "filename": "old.png",
+     "subfolder": "",
+     "mode": "upscale",
+     "prompt": "legacy import",
+     "idea": null,
+     "seed": 5,
+     "width": 512,
+     "height": 512,
+     "created": 1760000300.0,
+     "fav": 0,
+     "trashed": null,
+     "model": null,
+     "family": null
+    },
+    {
+     "id": 4,
+     "filename": "c_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "a cat on a sofa",
+     "idea": null,
+     "seed": 303,
+     "width": 1024,
+     "height": 768,
+     "created": 1760000240.0,
+     "fav": 0,
+     "trashed": null,
+     "model": "qwen21_turbo.safetensors",
+     "family": "qwen21"
+    },
+    {
+     "id": 3,
+     "filename": "b_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "img2img",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "idea": null,
+     "seed": 202,
+     "width": 1024,
+     "height": 1024,
+     "created": 1760000180.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    },
+    {
+     "id": 1,
+     "filename": "a_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "1girl, orange hair",
+     "idea": "橘髮女孩",
+     "seed": 101,
+     "width": 896,
+     "height": 1152,
+     "created": 1760000060.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    }
+   ]
+  },
+  {
+   "total": 2,
+   "items": [
+    {
+     "id": 3,
+     "filename": "b_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "img2img",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "idea": null,
+     "seed": 202,
+     "width": 1024,
+     "height": 1024,
+     "created": 1760000180.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    },
+    {
+     "id": 1,
+     "filename": "a_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "1girl, orange hair",
+     "idea": "橘髮女孩",
+     "seed": 101,
+     "width": 896,
+     "height": 1152,
+     "created": 1760000060.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    }
+   ]
+  },
+  {
+   "total": 2,
+   "items": [
+    {
+     "id": 4,
+     "filename": "c_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "a cat on a sofa",
+     "idea": null,
+     "seed": 303,
+     "width": 1024,
+     "height": 768,
+     "created": 1760000240.0,
+     "fav": 0,
+     "trashed": null,
+     "model": "qwen21_turbo.safetensors",
+     "family": "qwen21"
+    },
+    {
+     "id": 1,
+     "filename": "a_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "1girl, orange hair",
+     "idea": "橘髮女孩",
+     "seed": 101,
+     "width": 896,
+     "height": 1152,
+     "created": 1760000060.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    }
+   ]
+  },
+  {
+   "total": 1,
+   "items": [
+    {
+     "id": 1,
+     "filename": "a_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "1girl, orange hair",
+     "idea": "橘髮女孩",
+     "seed": 101,
+     "width": 896,
+     "height": 1152,
+     "created": 1760000060.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    }
+   ]
+  },
+  {
+   "total": 1,
+   "items": [
+    {
+     "id": 3,
+     "filename": "b_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "img2img",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "idea": null,
+     "seed": 202,
+     "width": 1024,
+     "height": 1024,
+     "created": 1760000180.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    }
+   ]
+  },
+  {
+   "total": 0,
+   "items": []
+  },
+  {
+   "total": 1,
+   "items": [
+    {
+     "id": 2,
+     "filename": "a_00002_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "1girl, ghost",
+     "idea": null,
+     "seed": 102,
+     "width": 896,
+     "height": 1152,
+     "created": 1760000120.0,
+     "fav": 0,
+     "trashed": 1760009999.5,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    }
+   ]
+  },
+  {
+   "total": 2,
+   "items": [
+    {
+     "id": 3,
+     "filename": "b_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "img2img",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "idea": null,
+     "seed": 202,
+     "width": 1024,
+     "height": 1024,
+     "created": 1760000180.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    },
+    {
+     "id": 1,
+     "filename": "a_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "1girl, orange hair",
+     "idea": "橘髮女孩",
+     "seed": 101,
+     "width": 896,
+     "height": 1152,
+     "created": 1760000060.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    }
+   ]
+  },
+  {
+   "total": 3,
+   "items": [
+    {
+     "id": 5,
+     "filename": "old.png",
+     "subfolder": "",
+     "mode": "upscale",
+     "prompt": "legacy import",
+     "idea": null,
+     "seed": 5,
+     "width": 512,
+     "height": 512,
+     "created": 1760000300.0,
+     "fav": 0,
+     "trashed": null,
+     "model": null,
+     "family": null
+    },
+    {
+     "id": 3,
+     "filename": "b_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "img2img",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "idea": null,
+     "seed": 202,
+     "width": 1024,
+     "height": 1024,
+     "created": 1760000180.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    },
+    {
+     "id": 1,
+     "filename": "a_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "1girl, orange hair",
+     "idea": "橘髮女孩",
+     "seed": 101,
+     "width": 896,
+     "height": 1152,
+     "created": 1760000060.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    }
+   ]
+  },
+  {
+   "total": 1,
+   "items": [
+    {
+     "id": 4,
+     "filename": "c_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "a cat on a sofa",
+     "idea": null,
+     "seed": 303,
+     "width": 1024,
+     "height": 768,
+     "created": 1760000240.0,
+     "fav": 0,
+     "trashed": null,
+     "model": "qwen21_turbo.safetensors",
+     "family": "qwen21"
+    }
+   ]
+  },
+  {
+   "total": 1,
+   "items": [
+    {
+     "id": 3,
+     "filename": "b_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "img2img",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "idea": null,
+     "seed": 202,
+     "width": 1024,
+     "height": 1024,
+     "created": 1760000180.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    }
+   ]
+  },
+  {
+   "total": 3,
+   "items": [
+    {
+     "id": 5,
+     "filename": "old.png",
+     "subfolder": "",
+     "mode": "upscale",
+     "prompt": "legacy import",
+     "idea": null,
+     "seed": 5,
+     "width": 512,
+     "height": 512,
+     "created": 1760000300.0,
+     "fav": 0,
+     "trashed": null,
+     "model": null,
+     "family": null
+    },
+    {
+     "id": 4,
+     "filename": "c_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "a cat on a sofa",
+     "idea": null,
+     "seed": 303,
+     "width": 1024,
+     "height": 768,
+     "created": 1760000240.0,
+     "fav": 0,
+     "trashed": null,
+     "model": "qwen21_turbo.safetensors",
+     "family": "qwen21"
+    },
+    {
+     "id": 3,
+     "filename": "b_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "img2img",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "idea": null,
+     "seed": 202,
+     "width": 1024,
+     "height": 1024,
+     "created": 1760000180.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    }
+   ]
+  },
+  {
+   "total": 2,
+   "items": [
+    {
+     "id": 3,
+     "filename": "b_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "img2img",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "idea": null,
+     "seed": 202,
+     "width": 1024,
+     "height": 1024,
+     "created": 1760000180.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    },
+    {
+     "id": 1,
+     "filename": "a_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "1girl, orange hair",
+     "idea": "橘髮女孩",
+     "seed": 101,
+     "width": 896,
+     "height": 1152,
+     "created": 1760000060.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    }
+   ]
+  },
+  {
+   "total": 4,
+   "items": [
+    {
+     "id": 1,
+     "filename": "a_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "1girl, orange hair",
+     "idea": "橘髮女孩",
+     "seed": 101,
+     "width": 896,
+     "height": 1152,
+     "created": 1760000060.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    },
+    {
+     "id": 3,
+     "filename": "b_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "img2img",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "idea": null,
+     "seed": 202,
+     "width": 1024,
+     "height": 1024,
+     "created": 1760000180.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    },
+    {
+     "id": 4,
+     "filename": "c_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "a cat on a sofa",
+     "idea": null,
+     "seed": 303,
+     "width": 1024,
+     "height": 768,
+     "created": 1760000240.0,
+     "fav": 0,
+     "trashed": null,
+     "model": "qwen21_turbo.safetensors",
+     "family": "qwen21"
+    },
+    {
+     "id": 5,
+     "filename": "old.png",
+     "subfolder": "",
+     "mode": "upscale",
+     "prompt": "legacy import",
+     "idea": null,
+     "seed": 5,
+     "width": 512,
+     "height": 512,
+     "created": 1760000300.0,
+     "fav": 0,
+     "trashed": null,
+     "model": null,
+     "family": null
+    }
+   ]
+  },
+  {
+   "total": 4,
+   "items": [
+    {
+     "id": 3,
+     "filename": "b_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "img2img",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "idea": null,
+     "seed": 202,
+     "width": 1024,
+     "height": 1024,
+     "created": 1760000180.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    },
+    {
+     "id": 1,
+     "filename": "a_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "1girl, orange hair",
+     "idea": "橘髮女孩",
+     "seed": 101,
+     "width": 896,
+     "height": 1152,
+     "created": 1760000060.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    },
+    {
+     "id": 5,
+     "filename": "old.png",
+     "subfolder": "",
+     "mode": "upscale",
+     "prompt": "legacy import",
+     "idea": null,
+     "seed": 5,
+     "width": 512,
+     "height": 512,
+     "created": 1760000300.0,
+     "fav": 0,
+     "trashed": null,
+     "model": null,
+     "family": null
+    },
+    {
+     "id": 4,
+     "filename": "c_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "a cat on a sofa",
+     "idea": null,
+     "seed": 303,
+     "width": 1024,
+     "height": 768,
+     "created": 1760000240.0,
+     "fav": 0,
+     "trashed": null,
+     "model": "qwen21_turbo.safetensors",
+     "family": "qwen21"
+    }
+   ]
+  },
+  {
+   "total": 4,
+   "items": [
+    {
+     "id": 4,
+     "filename": "c_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "txt2img",
+     "prompt": "a cat on a sofa",
+     "idea": null,
+     "seed": 303,
+     "width": 1024,
+     "height": 768,
+     "created": 1760000240.0,
+     "fav": 0,
+     "trashed": null,
+     "model": "qwen21_turbo.safetensors",
+     "family": "qwen21"
+    },
+    {
+     "id": 3,
+     "filename": "b_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "img2img",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "idea": null,
+     "seed": 202,
+     "width": 1024,
+     "height": 1024,
+     "created": 1760000180.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    }
+   ]
+  },
+  {
+   "total": 1,
+   "items": [
+    {
+     "id": 3,
+     "filename": "b_00001_.png",
+     "subfolder": "AnimaWeb",
+     "mode": "img2img",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "idea": null,
+     "seed": 202,
+     "width": 1024,
+     "height": 1024,
+     "created": 1760000180.0,
+     "fav": 1,
+     "trashed": null,
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima"
+    }
+   ]
+  },
+  {
+   "models": [
+    "anima-turbo-v1.1.safetensors",
+    "qwen21_turbo.safetensors"
+   ],
+   "loras": [
+    "ghost_fx.safetensors",
+    "jgdxstyle_e5.safetensors"
+   ],
+   "alive": 4,
+   "trash": 1,
+   "fav": 2
+  },
+  [
+   {
+    "id": 1,
+    "filename": "a_00001_.png",
+    "subfolder": "AnimaWeb",
+    "type": "output",
+    "mode": "txt2img",
+    "prompt": "1girl, orange hair",
+    "negative": "worst quality",
+    "seed": 101,
+    "width": 896,
+    "height": 1152,
+    "params": {
+     "mode": "txt2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "1girl, orange hair",
+     "steps": 8,
+     "width": 896,
+     "height": 1152,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 0.8
+      }
+     ],
+     "idea": "橘髮女孩"
+    },
+    "job": "job-a",
+    "created": 1760000060.0,
+    "fav": 1,
+    "deleted": 0,
+    "idea": "橘髮女孩",
+    "trashed": null
+   },
+   {
+    "id": 3,
+    "filename": "b_00001_.png",
+    "subfolder": "AnimaWeb",
+    "type": "output",
+    "mode": "img2img",
+    "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+    "negative": "bad hands",
+    "seed": 202,
+    "width": 1024,
+    "height": 1024,
+    "params": {
+     "mode": "img2img",
+     "model": "anima-turbo-v1.1.safetensors",
+     "family": "anima",
+     "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+     "steps": 12,
+     "width": 1024,
+     "height": 1024,
+     "loras": [
+      {
+       "name": "jgdxstyle_e5.safetensors",
+       "strength": 1.0
+      },
+      {
+       "name": "ghost_fx.safetensors",
+       "strength": 0.6
+      }
+     ]
+    },
+    "job": "job-b",
+    "created": 1760000180.0,
+    "fav": 1,
+    "deleted": 0,
+    "idea": null,
+    "trashed": null
+   }
+  ],
+  [],
+  [
+   [
+    "",
+    "old.png"
+   ],
+   [
+    "AnimaWeb",
+    "a_00001_.png"
+   ],
+   [
+    "AnimaWeb",
+    "a_00002_.png"
+   ],
+   [
+    "AnimaWeb",
+    "b_00001_.png"
+   ],
+   [
+    "AnimaWeb",
+    "c_00001_.png"
+   ],
+   [
+    "sub/dir",
+    "old2.png"
+   ]
+  ],
+  [
+   {
+    "id": 2,
+    "name": "Anima 寫實",
+    "data": {
+     "steps": 30,
+     "cfg": 4.5
+    },
+    "created": 1700000002.0
+   },
+   {
+    "id": 1,
+    "name": "快速 8 步",
+    "data": {
+     "steps": 8,
+     "cfg": 1.5,
+     "sampler": "euler"
+    },
+    "created": 1700000001.0
+   }
+  ],
+  {
+   "ghost_fx.safetensors": {
+    "fav": true,
+    "note": ""
+   },
+   "jgdxstyle_e5.safetensors": {
+    "triggers": [
+     "jgdxstyle"
+    ],
+    "strength": 0.9
+   }
+  }
+ ],
+ "tables": {
+  "images": [
+   {
+    "id": 1,
+    "filename": "a_00001_.png",
+    "subfolder": "AnimaWeb",
+    "type": "output",
+    "mode": "txt2img",
+    "prompt": "1girl, orange hair",
+    "negative": "worst quality",
+    "seed": 101,
+    "width": 896,
+    "height": 1152,
+    "params": "{\"mode\": \"txt2img\", \"model\": \"anima-turbo-v1.1.safetensors\", \"family\": \"anima\", \"prompt\": \"1girl, orange hair\", \"steps\": 8, \"width\": 896, \"height\": 1152, \"loras\": [{\"name\": \"jgdxstyle_e5.safetensors\", \"strength\": 0.8}], \"idea\": \"橘髮女孩\"}",
+    "job": "job-a",
+    "created": 1760000060.0,
+    "fav": 1,
+    "deleted": 0,
+    "idea": "橘髮女孩",
+    "trashed": null
+   },
+   {
+    "id": 2,
+    "filename": "a_00002_.png",
+    "subfolder": "AnimaWeb",
+    "type": "output",
+    "mode": "txt2img",
+    "prompt": "1girl, ghost",
+    "negative": "",
+    "seed": 102,
+    "width": 896,
+    "height": 1152,
+    "params": "{\"mode\": \"txt2img\", \"model\": \"anima-turbo-v1.1.safetensors\", \"family\": \"anima\", \"prompt\": \"1girl, orange hair\", \"steps\": 8, \"width\": 896, \"height\": 1152, \"loras\": [{\"name\": \"jgdxstyle_e5.safetensors\", \"strength\": 0.8}], \"idea\": \"橘髮女孩\"}",
+    "job": "job-a",
+    "created": 1760000120.0,
+    "fav": 0,
+    "deleted": 1,
+    "idea": null,
+    "trashed": 1760009999.5
+   },
+   {
+    "id": 3,
+    "filename": "b_00001_.png",
+    "subfolder": "AnimaWeb",
+    "type": "output",
+    "mode": "img2img",
+    "prompt": "masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end",
+    "negative": "bad hands",
+    "seed": 202,
+    "width": 1024,
+    "height": 1024,
+    "params": "{\"mode\": \"img2img\", \"model\": \"anima-turbo-v1.1.safetensors\", \"family\": \"anima\", \"prompt\": \"masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end\", \"steps\": 12, \"width\": 1024, \"height\": 1024, \"loras\": [{\"name\": \"jgdxstyle_e5.safetensors\", \"strength\": 1.0}, {\"name\": \"ghost_fx.safetensors\", \"strength\": 0.6}]}",
+    "job": "job-b",
+    "created": 1760000180.0,
+    "fav": 1,
+    "deleted": 0,
+    "idea": null,
+    "trashed": null
+   },
+   {
+    "id": 4,
+    "filename": "c_00001_.png",
+    "subfolder": "AnimaWeb",
+    "type": "output",
+    "mode": "txt2img",
+    "prompt": "a cat on a sofa",
+    "negative": null,
+    "seed": 303,
+    "width": 1024,
+    "height": 768,
+    "params": "{\"mode\": \"txt2img\", \"model\": \"qwen21_turbo.safetensors\", \"family\": \"qwen21\", \"prompt\": \"a cat on a sofa\", \"steps\": 4, \"width\": 0, \"height\": 768}",
+    "job": "job-c",
+    "created": 1760000240.0,
+    "fav": 0,
+    "deleted": 0,
+    "idea": null,
+    "trashed": null
+   },
+   {
+    "id": 5,
+    "filename": "old.png",
+    "subfolder": "",
+    "type": "output",
+    "mode": "upscale",
+    "prompt": "legacy import",
+    "negative": "",
+    "seed": 5,
+    "width": 512,
+    "height": 512,
+    "params": "{\"mode\": \"upscale\", \"prompt\": \"legacy import\", \"seed\": 5}",
+    "job": null,
+    "created": 1760000300.0,
+    "fav": 0,
+    "deleted": 0,
+    "idea": null,
+    "trashed": null
+   },
+   {
+    "id": 6,
+    "filename": "old2.png",
+    "subfolder": "sub/dir",
+    "type": "output",
+    "mode": "imported",
+    "prompt": "",
+    "negative": "",
+    "seed": null,
+    "width": 640,
+    "height": 480,
+    "params": "{}",
+    "job": null,
+    "created": 1760000360.0,
+    "fav": 0,
+    "deleted": 2,
+    "idea": null,
+    "trashed": null
+   }
+  ],
+  "jobs": [
+   {
+    "id": "job-a",
+    "params": "{\"mode\": \"txt2img\", \"model\": \"anima-turbo-v1.1.safetensors\", \"family\": \"anima\", \"prompt\": \"1girl, orange hair\", \"steps\": 8, \"width\": 896, \"height\": 1152, \"loras\": [{\"name\": \"jgdxstyle_e5.safetensors\", \"strength\": 0.8}], \"idea\": \"橘髮女孩\"}",
+    "info": "{\"seed\": 101, \"prompt\": \"1girl, orange hair, resolved\", \"width\": 896, \"height\": 1152}",
+    "status": "done",
+    "created": 1760000100.0,
+    "finished": 1760000108.25,
+    "error": null,
+    "started": 1760000105.0
+   },
+   {
+    "id": "job-b",
+    "params": "{\"mode\": \"img2img\", \"model\": \"anima-turbo-v1.1.safetensors\", \"family\": \"anima\", \"prompt\": \"masterpiece, best quality, 很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、很長的中文描述、end\", \"steps\": 12, \"width\": 1024, \"height\": 1024, \"loras\": [{\"name\": \"jgdxstyle_e5.safetensors\", \"strength\": 1.0}, {\"name\": \"ghost_fx.safetensors\", \"strength\": 0.6}]}",
+    "info": "{\"seed\": 202, \"prompt\": \"\", \"width\": 0, \"height\": 1024}",
+    "status": "done",
+    "created": 1760000200.0,
+    "finished": 1760000211.5,
+    "error": null,
+    "started": 1760000205.0
+   },
+   {
+    "id": "job-c",
+    "params": "{\"mode\": \"txt2img\", \"model\": \"qwen21_turbo.safetensors\", \"family\": \"qwen21\", \"prompt\": \"a cat on a sofa\", \"steps\": 4, \"width\": 0, \"height\": 768}",
+    "info": "{\"seed\": 303, \"prompt\": \"a cat on a sofa\", \"width\": 0}",
+    "status": "done",
+    "created": 1760000300.0,
+    "finished": 1760000314.75,
+    "error": null,
+    "started": 1760000305.0
+   },
+   {
+    "id": "job-d",
+    "params": "{\"mode\": \"txt2img\", \"model\": \"anima-turbo-v1.1.safetensors\", \"family\": \"anima\", \"prompt\": \"1girl, orange hair\", \"steps\": 8, \"width\": 896, \"height\": 1152, \"loras\": [{\"name\": \"jgdxstyle_e5.safetensors\", \"strength\": 0.8}], \"idea\": \"橘髮女孩\"}",
+    "info": "{\"seed\": 404}",
+    "status": "error",
+    "created": 1760000400.0,
+    "finished": 1760000418.0,
+    "error": "ComfyUI 爆顯存",
+    "started": null
+   },
+   {
+    "id": "job-e",
+    "params": "{\"mode\": \"txt2img\", \"model\": \"anima-turbo-v1.1.safetensors\", \"family\": \"anima\", \"prompt\": \"1girl, orange hair\", \"steps\": 8, \"width\": 896, \"height\": 1152, \"loras\": [{\"name\": \"jgdxstyle_e5.safetensors\", \"strength\": 0.8}], \"idea\": \"橘髮女孩\"}",
+    "info": "{\"seed\": 505}",
+    "status": "running",
+    "created": 1760000500.0,
+    "finished": null,
+    "error": null,
+    "started": 1760000505.0
+   },
+   {
+    "id": "job-f",
+    "params": "{\"mode\": \"txt2img\", \"model\": \"qwen21_turbo.safetensors\", \"family\": \"qwen21\", \"prompt\": \"a cat on a sofa\", \"steps\": 4, \"width\": 0, \"height\": 768}",
+    "info": "{\"seed\": 606}",
+    "status": "queued",
+    "created": 1760000600.0,
+    "finished": null,
+    "error": null,
+    "started": null
+   }
+  ],
+  "presets": [
+   {
+    "id": 1,
+    "name": "快速 8 步",
+    "data": "{\"steps\": 8, \"cfg\": 1.5, \"sampler\": \"euler\"}",
+    "created": 1700000001.0
+   },
+   {
+    "id": 2,
+    "name": "Anima 寫實",
+    "data": "{\"steps\": 30, \"cfg\": 4.5}",
+    "created": 1700000002.0
+   }
+  ],
+  "lora_meta": [
+   {
+    "name": "ghost_fx.safetensors",
+    "data": "{\"fav\": true, \"note\": \"\"}"
+   },
+   {
+    "name": "jgdxstyle_e5.safetensors",
+    "data": "{\"triggers\": [\"jgdxstyle\"], \"strength\": 0.9}"
+   }
+  ],
+  "columns": {
+   "images": [
+    "id",
+    "filename",
+    "subfolder",
+    "type",
+    "mode",
+    "prompt",
+    "negative",
+    "seed",
+    "width",
+    "height",
+    "params",
+    "job",
+    "created",
+    "fav",
+    "deleted",
+    "idea",
+    "trashed"
+   ],
+   "jobs": [
+    "id",
+    "params",
+    "info",
+    "status",
+    "created",
+    "finished",
+    "error",
+    "started"
+   ],
+   "presets": [
+    "id",
+    "name",
+    "data",
+    "created"
+   ],
+   "lora_meta": [
+    "name",
+    "data"
+   ]
+  }
+ }
+}
