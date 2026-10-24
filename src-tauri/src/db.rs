@@ -809,7 +809,9 @@ mod tests {
         let c = db.add_image("c.png", "AnimaWeb", "output", &json!({}), &json!({}), Some("job-c")).unwrap();
         let mut rows: Vec<Row> = [a, b, c].iter().map(|&i| db.image(i).unwrap().unwrap()).collect();
         db.add_gen_seconds(&mut rows).unwrap();
-        assert_eq!(rows[0]["gen_seconds"], json!(42.0));
+        // 從記開始時間到存圖之間也在計時；GitHub 的機器慢，實測會多出 0.3 秒，所以給幾秒的餘裕
+        let gs = rows[0]["gen_seconds"].as_f64().unwrap();
+        assert!((42.0..45.0).contains(&gs), "{gs}");
         assert!(!rows[1].contains_key("gen_seconds") && !rows[2].contains_key("gen_seconds"));
         drop(db);
         let _ = std::fs::remove_dir_all(&dir);
