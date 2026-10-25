@@ -284,3 +284,8 @@ ComfyUI 只讀它自己 input 資料夾裡的檔：
 拆幀 `POST /api/studio/frames/split` 的 JSON、`split_file` 的 query 可加 `cpu:true`（query 為 `cpu=true`）強制 CPU；預設要求 `-hwaccel cuda`，失敗清除本次部分輸出後改 CPU 重試。meta 的 `decode` 為 `cuda_preferred`、`cpu` 或 `cpu_fallback`，前者表示已要求 CUDA，不保證每種 codec 都由 GPU 解碼或更快。
 `GET /api/studio/frames/storage?sid=<id>` 回傳這份 `session` 及已移除 `trash` 的 path、bytes、sessions、skipped。不給 sid 只查看待刪除。
 `POST /api/studio/frames/clear`：`{scope:"session",sid:"<id>",confirm:true}` 永久刪除這份拆幀及修改；`{scope:"trash",confirm:true}` 清空已移除的拆幀。透過 anima_api 呼叫時還要提供工具層 confirm:true。回傳 bytes（實際釋放）、removed（份數）、skipped（未清除數）。使用者必須明確同意這個範圍，不能把拆幀編輯成果當一般可重建快取。原影片與接回後的影片不受影響。處理中會拒絕清理；不追蹤 junction/symlink。
+
+
+### 安裝精靈沿用舊資料
+`GET /api/setup/scan` 的 data 各筆增加 valid、problem；current 的位置優先，多份有效資料不可只依 images 大小替使用者決定。installations 是唯讀安裝紀錄，program_dir 是目前程式目錄，兩者不等於資料目錄。
+`POST /api/setup/check`／`run` 可帶 `data_mode:"reuse"|"new"`。reuse 必須能讀原本的 data/anima.db；若明確選到名為 data 且含 anima.db 的內層會使用其父目錄。check 回 data.path（實際位置）、valid、problem、selection_problem；請把實際路徑與使用者確認再 run。new 遇到既有圖庫會拒絕，改用 reuse 或選新位置。失效原路徑不能當空白新圖庫；讀不到資料庫也不能自動重建。舊客戶端未帶 data_mode 仍相容，但也拒絕讀不到的既有資料庫。

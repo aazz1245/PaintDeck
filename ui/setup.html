@@ -32,6 +32,7 @@
   .opt input[type=radio], .opt input[type=checkbox] { margin: 3px 0 0; accent-color: var(--acc); width: 16px; height: 16px; }
   .opt:has(input:disabled) { cursor: default; opacity: .8; }
   .opt b { font-weight: 800; }
+  .path { overflow-wrap: anywhere; }
   .opt .path { font: 12.5px/1.4 var(--f-data); word-break: break-all; }
   .opt input[type=text] { width: 100%; margin-top: 6px; font-family: var(--f-data); font-size: 12.5px; }
   .pickrow { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
@@ -86,6 +87,7 @@
           <h2>歡迎！先看看這台電腦</h2>
           <p class="muted">繪匣 PaintDeck 在你自己的電腦上用 AI 畫圖，畫圖的引擎是 ComfyUI。接下來幾步會決定資料放哪裡、裝好需要的東西。每一步都可以重來，已經有的不會重複下載。</p>
           <div class="screen" id="sysScreen" aria-live="polite">正在檢查這台電腦…</div>
+          <div class="note" id="reuseNotice" hidden></div>
           <div id="sysWarn"></div>
           <div class="note">
             <b>網路</b>
@@ -117,6 +119,7 @@
         <!-- 3. 模型 -->
         <div data-page="2" hidden>
           <h2>要下載哪些生圖模型？</h2>
+          <div class="note" id="locationSummary"></div>
           <p class="muted">模型從官方來源（Hugging Face、GitHub、Civitai）下載到 ComfyUI 的 models 資料夾。已經有的會跳過，網路斷掉之後再按一次會接著下載。</p>
           <div class="note">
             <label class="lbl" for="wizCivitaiKey">Civitai API 金鑰（選填）</label>

@@ -3,6 +3,7 @@ import { $, $$, api as baseApi, store, fmtBytes, debounce } from "./util.js";
 import { setIc, appIcon } from "./deck.js";
 import * as i18n from "./i18n.js";
 import { mountNet } from "./net.js";
+import { reuseDefaults, locationRequest, samePath } from "./setup-reuse.js";
 
 // 介面語言：設定頁選過簡中／英文，精靈也照著翻（先翻原始畫面，之後長出來的字由 i18n.js 的監看器接手）
 await i18n.init();
@@ -16,7 +17,7 @@ let failedRun = false, scanHint = "正在檢查這台電腦…";
 // /setup#models：主畫面的「下載模型…」「去下載模型」。位置照目前的設定自動填好，檢查過就直接跳到「要下載哪些模型」
 let jumpModels = location.hash === "#models";
 // packs：勾選的功能包（Set，第三頁第一次打開時預設基本版）；gpu、amd_gfx：第二頁的 ComfyUI 版本、A 卡架構（gpu.rs，存在 comfy.json）
-const pick = { data: null, dataNew: "", comfy: null, comfyNew: "", comfyManual: "", packs: null, gpu: "auto", amd_gfx: "", python: "", external: false };
+const pick = { data: null, dataNew: "", dataManual: "", comfy: null, comfyNew: "", comfyManual: "", packs: null, gpu: "auto", amd_gfx: "", python: "", external: false };
 const inMain = location.pathname === "/setup"; // 正式畫面裡打開的「安裝與修復」
 
 // ---------------------------------------------------------------- 外觀、視窗按鈕
@@ -77,6 +78,8 @@ F("prevBtn").onclick = () => go(page - 1);
 F("nextBtn").onclick = () => {
   if (page === 0 && !scan) return;
   if (page === 1 && !placesReady()) return;
+  if (page === 2 && pick.data === "new" && (scan.current || scan.data.length) &&
+      !confirm("你選擇建立空白圖庫，舊資料不會搬移或刪除。確定要全新開始，而不是沿用原資料嗎？")) return;
   if (page === 3) {
     if (!finished) return;
     if (failedRun) startRun(); // 有失敗或停止：用剛才的選擇再跑一次（已經下載的不會重抓）
@@ -171,19 +174,34 @@ async function loadScan() {
 // 網路（net.js）：一打開就測一次，連不上的來源先講清楚（大陸使用者要開梯子）
 mountNet(F("netBox"), { autoTest: true });
 
-// 預設選擇：目前的設定 → 圖最多的舊資料（和它旁邊的 ComfyUI）→ 全新安裝
+// 原設定優先；沒有設定且找到多份資料時，必須自己選，不以圖片數決定。
 function presetPicks() {
-  const cur = scan.current;
-  const best = [...scan.data].sort((a, b) => (b.images || 0) - (a.images || 0))[0];
-  pick.data = cur?.data_root || best?.path || "new";
+  Object.assign(pick, reuseDefaults(scan));
   pick.dataNew = scan.fresh.data_root;
-  const sib = scan.data.find((d) => d.path === pick.data)?.comfy;
-  pick.comfy = cur?.comfy_dir || sib || scan.comfy[0]?.path || "new";
   pick.comfyNew = scan.fresh.comfy_dir;
   pick.gpu = scan.prefs?.gpu || "auto";
   pick.amd_gfx = scan.prefs?.amd_gfx || "";
   pick.python = scan.prefs?.python || "";
   pick.external = !!scan.prefs?.external;
+  renderReuse();
+}
+
+function renderReuse() {
+  const box = F("reuseNotice");
+  const installed = scan.installations || [];
+  box.hidden = !(scan.current || scan.data.length || installed.some(x => x.legacy));
+  if (box.hidden) return;
+  const message = scan.current ? "已找到原設定，優先沿用原本的資料與 ComfyUI；若路徑失效，請在下一頁指定正確位置。"
+    : scan.data.length === 1 && scan.data[0].valid ? "找到一份既有資料，已優先選取。下一頁確認位置後就能接續使用。"
+    : scan.data.length ? "找到多份或待修復的資料，下一頁請選你原本使用的那份；不會用圖片數量替你決定。"
+    : "找到舊版安裝紀錄，但還沒找到圖庫；下一頁可用「自己指定舊資料」找回原位置。";
+  box.innerHTML = `<b>接續使用 Anima／PaintDeck 的既有資料</b><p>${message}</p>
+    <p class="muted sm">改名不需要搬動圖庫或重下載模型；資料資料夾仍可叫 anima_data。</p>
+    <details><summary>程式位置與舊版安裝紀錄</summary>
+      <p>目前程式位置：<span class="path" translate="no">${esc(scan.program_dir || "—")}</span></p>
+      ${installed.map(x => `<p>${esc(x.name)}：<span class="path" translate="no">${esc(x.path)}</span>${x.exists ? "" : "（位置已不存在）"}</p>`).join("")}
+      <p class="muted sm">程式位置和資料位置是分開的。請勿同時啟動新舊版；若兩版裝在相同位置，先確認路徑再處理舊的解除安裝項目，避免移除新版。MCP 請到設定頁重新複製。</p>
+    </details>`;
 }
 
 // ---------------------------------------------------------------- 2. 位置
@@ -200,7 +218,8 @@ function renderPlaces() {
     h += opt("data", scan.current.data_root, pick.data === scan.current.data_root, `<b>目前使用中</b><div class="path">${esc(scan.current.data_root)}</div>`);
   for (const d of scan.data)
     h += opt("data", d.path, pick.data === d.path,
-      `<b>沿用這份資料</b><div class="path">${esc(d.path)}</div><div class="muted sm">圖庫 ${d.images ?? "?"} 張・最後使用 ${esc(d.modified || "—")}${d.comfy ? "・旁邊有 ComfyUI" : ""}</div>`);
+      `<b>沿用這份資料</b><div class="path">${esc(d.path)}</div><div class="muted sm">圖庫 ${d.images ?? "?"} 張・最後使用 ${esc(d.modified || "—")}${d.comfy ? "・已找到對應 ComfyUI" : ""}</div>${d.problem ? `<div class="st-err sm">${esc(d.problem)}</div>` : ""}`);
+  h += opt("data", "manual", pick.data === "manual", `<b>自己指定舊資料</b><div class="muted sm">選包含 data 資料夾的那一層；若選到裡面的 data，也會辨識並沿用外層，不另建空白圖庫。</div><div class="pickrow"><input type="text" id="dataManual" value="${esc(pick.dataManual)}" aria-label="舊資料位置" spellcheck="false"><button class="akey sm" type="button" data-pick="dataManual">選資料夾…</button></div>`);
   h += opt("data", "new", pick.data === "new", `<b>全新開始</b><div class="muted sm">建立新的資料夾（圖庫是空的）</div><div class="pickrow"><input type="text" id="dataNew" value="${esc(pick.dataNew)}" aria-label="新資料夾位置" spellcheck="false"><button class="akey sm" type="button" data-pick="dataNew">選資料夾…</button></div>`);
   F("dataOpts").innerHTML = h;
 
@@ -228,7 +247,8 @@ function renderPlaces() {
     renderPlaces();
   }));
   $$("input[name=comfy]").forEach((r) => (r.onchange = () => { pick.comfy = r.value; recheck(); }));
-  F("dataNew").oninput = (e) => { pick.dataNew = e.target.value; recheck(); };
+  F("dataNew").oninput = (e) => { pick.dataNew = e.target.value; pick.data = "new"; $("input[name=data][value=new]").checked = true; recheck(); };
+  F("dataManual").oninput = (e) => { pick.dataManual = e.target.value; pick.data = "manual"; $("input[name=data][value=manual]").checked = true; recheck(); };
   F("comfyNew").oninput = (e) => { pick.comfyNew = e.target.value; recheck(); };
   F("comfyManual").oninput = (e) => { pick.comfyManual = e.target.value.trim().replace(/^"(.*)"$/, "$1"); recheck(); };
   F("comfyPy").oninput = (e) => { pick.python = e.target.value.trim().replace(/^"(.*)"$/, "$1"); manualPick(); recheck(); };
@@ -287,6 +307,7 @@ function gpuNote(c) {
 // 「選資料夾…」：後端跳出 Windows 的選資料夾視窗（setup.rs pick_folder）。
 // 新建的兩個（資料、下載 ComfyUI）選的是「放在哪裡」，名字自動接上；選到的本來就叫這個名字就不接
 const PICK = {
+  dataManual: { title: "選原本的生圖站資料資料夾", leaf: "", radio: ["data", "manual"] },
   dataNew: { title: "選資料要放在哪裡", leaf: "anima_data", radio: ["data", "new"] },
   comfyNew: { title: "選 ComfyUI 要下載到哪裡", leaf: "ComfyUI_windows_portable", radio: ["comfy", "new"] },
   comfyManual: { title: "選 ComfyUI 的資料夾", leaf: "", radio: ["comfy", "manual"] },
@@ -306,24 +327,29 @@ async function pickInto(id) {
 }
 
 const chosen = () => ({
-  data_root: (pick.data === "new" ? pick.dataNew : pick.data).trim(),
-  comfy_dir: (pick.comfy === "new" ? pick.comfyNew : pick.comfy === "manual" ? pick.comfyManual : pick.comfy).trim(),
+  ...locationRequest(pick),
   gpu: pick.gpu,
   amd_gfx: pick.amd_gfx,
-  // Python 位置、我自己開：只有「自己指定」才送（其他選項送空字串，把上次自己指定的清掉）
-  python: pick.comfy === "manual" ? pick.python : "",
-  ...(pick.comfy === "manual" ? { external: pick.external } : {}),
+  // 沿用目前 ComfyUI 時保留自訂 Python／自行啟動設定。
+  python: pick.comfy === "manual" || samePath(locationRequest(pick).comfy_dir, scan?.current?.comfy_dir) ? pick.python : "",
+  external: pick.comfy === "manual" || samePath(locationRequest(pick).comfy_dir, scan?.current?.comfy_dir) ? pick.external : false,
 });
 
 // 只收最後一次檢查的結果：改了位置以後，晚回的舊檢查不能蓋掉新的（不然會拿舊位置的結果放行「下一步」）
 let checkSeq = 0;
-const recheck = debounce(async () => {
+function recheck() {
   const seq = ++checkSeq;
+  chk = null;
+  F("nextBtn").disabled = true;
+  F("checkOut").innerHTML = `<div class="muted sm">檢查中…</div>`;
+  checkPlaces(seq, chosen());
+}
+const checkPlaces = debounce(async (seq, request) => {
   F("nextBtn").disabled = true;
   F("checkOut").innerHTML = `<div class="muted sm">檢查中…</div>`;
   let r;
   try {
-    r = await api("/api/setup/check", { json: chosen() });
+    r = await api("/api/setup/check", { json: request });
   } catch (e) {
     if (seq !== checkSeq) return;
     chk = null;
@@ -343,7 +369,10 @@ const recheck = debounce(async () => {
 function placesReady() {
   if (!chk) return false;
   let why = "";
-  if (pick.comfy !== "new" && !chk.comfy.ok) why = "選的 ComfyUI 資料夾不能用，請換一個或選「自動下載」";
+  if (!pick.data) why = "請先選擇要沿用哪份資料，或明確選擇全新開始";
+  else if (chk.data.selection_problem) why = chk.data.selection_problem;
+  else if (pick.data !== "new" && !chk.data.valid) why = chk.data.problem || "找不到可沿用的圖庫，請重新指定資料位置";
+  else if (pick.comfy !== "new" && !chk.comfy.ok) why = "選的 ComfyUI 資料夾不能用，請換一個或選「自動下載」";
   else if (pick.comfy === "new" && !chk.comfy.ok && chk.comfy.exists) why = "要下載 ComfyUI 的位置已經有別的東西了，請換一個空的位置";
   else if (!chk.comfy.ok && chk.gpu.own) why = "選了「用我自己已經能跑的 ComfyUI」：請選你的 ComfyUI 資料夾，不要選「自動下載」";
   else if (!chk.comfy.ok && chk.variant === "unknown") why = "偵測不到顯示卡：請先選 ComfyUI 版本";
@@ -394,7 +423,9 @@ function renderCheck() {
   F("gpuNote").innerHTML = gpuNote(c);
   if (F("dlNote")) F("dlNote").innerHTML = dlNote(c.variant, c.comfy.download_size, c.gpu.legacy);
   const rows = [
-    ["資料資料夾", c.data.ok ? `<span class="st-ok">✓ 沿用</span>・圖庫 ${c.data.images ?? 0} 張` : `<span class="st-no">● 會新建</span>`],
+    ["資料資料夾", `<div class="path" translate="no">${esc(c.data.path)}</div>` + (c.data.selection_problem ? `<span class="st-err">${esc(c.data.selection_problem)}</span>` : c.data.valid ? `<span class="st-ok">✓ 沿用</span>・圖庫 ${c.data.images ?? 0} 張` : `<span class="st-no">● 會新建</span>`) +
+      (!samePath(c.data.path, chosen().data_root) ? `<div class="muted sm">已辨識內層 data，實際使用上方的外層資料夾。</div>` : "") +
+      (pick.data === "new" && c.data.valid ? `<button class="akey sm" type="button" id="reuseSelected">改為沿用這份資料</button>` : "")],
     ["ComfyUI", c.comfy.ok ? `<span class="st-ok">✓ ${esc(c.comfy.version || "可以用")}</span>${c.comfy.portable === false ? `<div class="muted sm">整合包或自己安裝的 ComfyUI（用它自己的 Python 開）</div>` : ""}${c.comfy.external ? `<div class="muted sm">你自己開這份 ComfyUI，生圖站只連過去</div>` : ""}${oldNote(c)}${torchNote(c)}`
       : c.comfy.exists ? `<span class="st-err">✗ 這個資料夾不能用</span><div class="muted sm">${esc(c.comfy.problem || "")}</div>${inner()}`
       : comfyDownload(c)],
@@ -409,6 +440,8 @@ function renderCheck() {
     ["硬碟可用空間", `資料 ${gb(c.data.free)}・ComfyUI ${gb(c.comfy.free)}`],
   ];
   F("checkOut").innerHTML = `<table class="tbl">${rows.filter(Boolean).map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join("")}</table>`;
+  const reuse = F("reuseSelected");
+  if (reuse) reuse.onclick = () => { pick.data = "manual"; pick.dataManual = c.data.path; renderPlaces(); };
   const use = F("useInner");
   if (use) use.onclick = () => { pick.comfyManual = F("comfyManual").value = c.comfy.inner; recheck(); };
 }
@@ -428,6 +461,9 @@ function packLine(p) {
 }
 
 function renderModels() {
+  F("locationSummary").innerHTML = `<b>本次使用的位置</b><p>${chk.data.valid ? "沿用圖庫與設定" : "建立空白圖庫"}：<span class="path" translate="no">${esc(chk.data.path)}</span></p>
+    <p>${chk.comfy.ok ? "沿用 ComfyUI 與模型" : "下載新的 ComfyUI"}：<span class="path" translate="no">${esc(chk.comfy.path)}</span></p>
+    <p class="muted sm">資料留在原位置，下面只補勾選項目缺少的檔案；確認位置後再開始。</p>`;
   F("wizCivitaiSaved").textContent = chk.data.has_key ? "這個資料位置已儲存金鑰；留空即可沿用。" : "尚未儲存 Civitai 金鑰；沒有金鑰也可以繼續安裝其他項目。";
   F("wizCivitaiKey").oninput = renderModels;
   const packs = chk.packs, basic = chk.basic_packs;
@@ -437,8 +473,9 @@ function renderModels() {
   // 低配（顯存 8GB 以下、記憶體 16GB 以下）：基本版裡的 Qwen、MOSS 模型很大，預設只裝動漫（Anima）
   const lite = !cpu && !!scan?.lite?.lite;
   // 第一次打開、或回第二頁改了版本（CPU ↔ 有顯示卡）：重設預設勾選
-  const key = `${cpu}|${lite}`;
-  if (!pick.packs || pick.packsKey !== key) { pick.packs = new Set(cpu ? [] : lite ? ["anima"] : basic); pick.packsKey = key; }
+  const reuse = !!chk.data.valid;
+  const key = `${cpu}|${lite}|${reuse}|${chk.data.path}`;
+  if (!pick.packs || pick.packsKey !== key) { pick.packs = new Set(cpu || reuse ? [] : lite ? ["anima"] : basic); pick.packsKey = key; }
   const label = Object.fromEntries(packs.map((p) => [p.id, p.label]));
   const row = (p) => `<label class="opt"><input type="checkbox" data-pack="${esc(p.id)}"${wanted(p) ? " checked" : ""}${packDone(p) ? " disabled" : ""}>
     <div><b>${esc(p.label)}</b>${p.requires ? ` <span class="muted sm">要先有：</span><span class="muted sm">${esc(label[p.requires])}</span>` : ""}

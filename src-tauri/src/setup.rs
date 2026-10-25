@@ -115,6 +115,8 @@ const FFMPEG: (&str, u64) = (
 const UA: &str = "Mozilla/5.0 (anima-app setup)";
 const NODE: &str = "anima_prompt_enhancer";
 
+mod reuse;
+
 // ---------------------------------------------------------------- 設定檔
 #[derive(Debug, Clone, PartialEq)]
 pub struct Config {
@@ -250,7 +252,7 @@ fn uninstall_locations(name: &str) -> Vec<PathBuf> {
             if !text(h, &sub, "DisplayName").is_some_and(|d| d.to_lowercase().contains(name)) {
                 continue;
             }
-            let loc = text(h, &sub, "InstallLocation").map(PathBuf::from).or_else(|| {
+            let loc = text(h, &sub, "InstallLocation").map(|s| PathBuf::from(s.trim_matches('"'))).or_else(|| {
                 let icon = text(h, &sub, "DisplayIcon")?;
                 let exe = icon.trim_start_matches('"').split(['"', ',']).next()?.to_string();
                 Path::new(&exe).parent().map(Path::to_path_buf)
@@ -823,13 +825,18 @@ fn detect_guarded(fresh: bool) -> Option<(Vec<Value>, bool)> {
 }
 
 pub fn scan(current: Option<&Config>) -> Value {
-    let (data, comfy) = find_installs();
+    let (mut data, mut comfy) = find_installs();
+    let installations = reuse::installations();
+    let program_dir = std::env::current_exe().ok().and_then(|p| p.parent().map(Path::to_path_buf));
+    reuse::include_known(current, &installations, program_dir.as_deref(), &mut data, &mut comfy);
     let data: Vec<Value> = data
         .iter()
         .map(|d| {
             let sib = d.parent().map(|p| p.join("ComfyUI_windows_portable")).filter(|p| comfy_ok(p));
-            json!({"path": d.to_string_lossy(), "images": image_count(d), "modified": mtime(&d.join("data").join("anima.db")),
-                   "comfy": sib.map(|p| p.to_string_lossy().to_string())})
+            let mut info = reuse::data_info(d);
+            info["modified"] = mtime(&d.join("data/anima.db"));
+            info["comfy"] = json!(current.filter(|c| crate::model_dirs::same(&c.data_root, d)).map(|c| c.comfy_dir.clone()).or(sib));
+            info
         })
         .collect();
     let comfy: Vec<Value> = comfy
@@ -874,6 +881,7 @@ pub fn scan(current: Option<&Config>) -> Value {
             json!({"data_root": c.data_root.to_string_lossy(), "comfy_dir": c.comfy_dir.to_string_lossy(), "problem": c.problem(),
                    "version": v, "old": comfy_too_old(v.as_deref())})
         }),
+        "installations": installations, "program_dir": program_dir,
         "data": data, "comfy": comfy, "disks": disks, "gpus": gpus, "driver_min": gpu::DRIVER_MIN, "driver_min_legacy": gpu::DRIVER_MIN_LEGACY,
         "comfy_min_version": COMFY_MIN_VERSION,
         "variant": variant, "windows_build": gpu::windows_build(), "lite": lite_view(&gpus, ram_total()),
@@ -1256,7 +1264,8 @@ pub(crate) fn files_under(dir: &Path) -> Vec<PathBuf> {
 
 /// g＝這台電腦的 ComfyUI 該怎麼裝（gpu::plan_for：第二頁的選擇＋偵測到的顯示卡）
 fn check(res: &Path, p: &Plan, g: &gpu::GpuPlan) -> Value {
-    let data_ok = p.data_root.join("data").is_dir();
+    let data_info = reuse::data_info(&p.data_root);
+    let data_ok = data_info["valid"] == true;
     let extra = crate::model_dirs::load(&p.data_root.join("data"));
     let layout = comfy_layout_with(&p.comfy_dir, &p.opt);
     let comfy = layout.is_some();
@@ -1303,8 +1312,8 @@ fn check(res: &Path, p: &Plan, g: &gpu::GpuPlan) -> Value {
         None => !comfy && variant == "amd" && !g.own && !g.rocm10.is_empty(),
     };
     json!({
-        "data": {"path": p.data_root.to_string_lossy(), "ok": data_ok, "images": data_ok.then(|| image_count(&p.data_root)).flatten(),
-                 "has_key": data_ok && !settings::civitai_key(&settings::load(&p.data_root.join("data").join("settings.json"))).is_empty(),
+        "data": {"path": p.data_root.to_string_lossy(), "ok": data_ok, "valid": data_info["valid"], "problem": data_info["problem"], "images": data_info["images"],
+                 "has_key": p.data_root.join("data").is_dir() && !settings::civitai_key(&settings::load(&p.data_root.join("data").join("settings.json"))).is_empty(),
                  "free": free},
         "comfy": {"path": p.comfy_dir.to_string_lossy(), "ok": comfy, "version": version,
                   "old": comfy_too_old(version.as_deref()), "min_version": COMFY_MIN_VERSION,
@@ -2975,7 +2984,7 @@ fn plan_from(body: &Value) -> Result<Plan, String> {
         opt.external = b;
     }
     Ok(Plan {
-        data_root: get("data_root")?,
+        data_root: reuse::normalize_data_root(&get("data_root")?, body["data_mode"].as_str()),
         comfy_dir: get("comfy_dir")?,
         opt,
     })
@@ -3004,7 +3013,9 @@ async fn api_check(State(s): S, Json(body): Json<Value>) -> Response {
     reply(
         tokio::task::spawn_blocking(move || {
             let (gpus, ok) = detect_guarded(false).unwrap_or_default();
-            check(&res, &p, &gpu::plan_for(&prefs.gpu, &prefs.amd_gfx, &gpus, ok))
+            let mut result = check(&res, &p, &gpu::plan_for(&prefs.gpu, &prefs.amd_gfx, &gpus, ok));
+            result["data"]["selection_problem"] = json!(reuse::validate_choice(&p.data_root, body["data_mode"].as_str()).err());
+            result
         })
         .await
         .unwrap_or(Value::Null),
@@ -3199,6 +3210,10 @@ async fn api_run(State(s): S, Json(body): Json<Value>) -> Response {
         Ok(v) => v,
         Err(e) => return bad(e),
     };
+    let validate_root = p.data_root.clone();
+    let mode = body["data_mode"].as_str().map(str::to_string);
+    if let Err(e) = tokio::task::spawn_blocking(move || reuse::validate_choice(&validate_root, mode.as_deref()))
+        .await.unwrap_or_else(|_| Err("無法確認資料位置，請重新檢查".into())) { return bad(e); }
     if let Err(e) = install_key(&body) { return bad(e); }
     if !s.begin() { return bad("已經在安裝了"); }
     let lock = s.settings_lock.get().unwrap_or(&s.local_settings_lock).clone();
