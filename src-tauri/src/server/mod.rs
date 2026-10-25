@@ -390,6 +390,10 @@ pub fn router(app: Shared) -> Router {
             post(api_gallery::prune_missing),
         )
         .route(
+            "/api/gallery/repair_missing",
+            post(api_gallery::repair_missing),
+        )
+        .route(
             "/api/image/{id}",
             get(api_gallery::image_info)
                 .post(api_gallery::image_update)

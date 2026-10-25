@@ -41,6 +41,17 @@ export function init() {
     F("galSort").value = "new"; F("galDateCustom").hidden = true; F("galQ").value = "";
     saveFilters(); reload();
   };
+  F("galRepair").onclick = async () => {
+    if (!confirm("生圖站找不到檔案的圖，直接跟 ComfyUI 要回來？\n（圖還在 ComfyUI 手上就救得回來；ComfyUI 要開著）")) return;
+    const r = await api("/api/gallery/repair_missing", { json: {} });
+    if (!r.missing) return toast("圖庫的檔案都在，不用修", "ok");
+    if (r.repaired) {
+      toast(r.still ? `救回 ${r.repaired} 張；還有 ${r.still} 張 ComfyUI 手上也沒有` : `救回 ${r.repaired} 張`, r.still ? "err" : "ok");
+    } else {
+      toast(`救不回來：${r.error || "ComfyUI 手上沒有這些圖"}`, "err");
+    }
+    reload();
+  };
   F("galPrune").onclick = async () => {
     if (!confirm("把「檔案已經不在硬碟上」的圖從圖庫拿掉？\n（只清圖庫紀錄，不會動任何檔案）")) return;
     const r = await api("/api/gallery/prune_missing", { json: {} });

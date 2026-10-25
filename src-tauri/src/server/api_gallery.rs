@@ -67,6 +67,52 @@ pub fn file_of(p: &Paths, r: &Row) -> PathBuf {
     }
 }
 
+fn in_trash(r: &Row) -> bool {
+    r.get("deleted").and_then(Value::as_i64) == Some(1)
+}
+
+/// 生圖站認定的 output 找不到檔案時，直接跟 ComfyUI 要（/view）寫回預期的位置。
+///
+/// 會變成這樣的情形都救得回來：生圖站連到的 ComfyUI 跟設定裡的「ComfyUI 資料夾」不是同一份
+/// （例如自己開的官方桌面版在 8188、生圖站卻記著另一份）、ComfyUI 自己用 --output-directory
+/// 指到別的資料夾、沿用舊資料以後 ComfyUI 換了位置。圖還在 ComfyUI 手上就抓回來。
+pub async fn fetch_from_comfy(app: &super::App, r: &Row) -> Result<(), super::ApiError> {
+    let dst = out_path(&app.paths, r);
+    let bytes = app
+        .comfy
+        .view(s(r, "filename"), s(r, "subfolder"), "output")
+        .await
+        .map_err(|e| bad(e.0))?;
+    if bytes.is_empty() {
+        return Err(bad("ComfyUI 回傳的是空檔案"));
+    }
+    if let Some(dir) = dst.parent() {
+        std::fs::create_dir_all(dir).map_err(internal)?;
+    }
+    // 先寫 .part 再改名：中途斷掉不會留下半張圖
+    let mut tmp = dst.clone().into_os_string();
+    tmp.push(".recover.part");
+    let tmp = PathBuf::from(tmp);
+    std::fs::write(&tmp, &bytes).map_err(internal)?;
+    std::fs::rename(&tmp, &dst).map_err(|e| {
+        let _ = std::fs::remove_file(&tmp);
+        internal(e)
+    })
+}
+
+/// ComfyUI 現在有沒有反應：websocket 說在線就算，還沒連上（剛開、剛重連）就實際打一次
+async fn comfy_up(app: &super::App) -> bool {
+    app.comfy.live().online || app.comfy.get("/system_stats").await.is_ok()
+}
+
+/// 這張圖不在生圖站認定的位置時，先問 ComfyUI 要回來再回報結果（ComfyUI 沒開就什麼都不做）
+async fn recover(app: &super::App, r: &Row) -> bool {
+    if in_trash(r) || out_path(&app.paths, r).exists() || !comfy_up(app).await {
+        return false;
+    }
+    fetch_from_comfy(app, r).await.is_ok()
+}
+
 fn qint(q: &HashMap<String, String>, k: &str, default: i64) -> Result<i64, super::ApiError> {
     match q.get(k) {
         None => Ok(default),
@@ -363,6 +409,38 @@ pub async fn prune_missing(State(app): State<Shared>) -> ApiResult {
     ok(json!({"count": n}))
 }
 
+/// 把「生圖站找不到檔案」的紀錄，改從正在跑的 ComfyUI 要回來（寫回預期的 output 位置，見 fetch_from_comfy）。
+/// ComfyUI 手上也沒有的（真的被刪掉）就維持原狀，交給「清理遺失的紀錄」處理。
+pub async fn repair_missing(State(app): State<Shared>) -> ApiResult {
+    if !comfy_up(&app).await {
+        return Err(bad(
+            "ComfyUI 沒開：先開 ComfyUI（設定頁有「開 ComfyUI」）再回來按修復",
+        ));
+    }
+    let mut rows = app
+        .db
+        .q("SELECT id, filename, subfolder, deleted FROM images WHERE deleted=0", [])?;
+    let total = rows.len();
+    let mut repaired = 0usize;
+    let mut first_err: Option<String> = None;
+    // 只修「現在真的找不到」的，正常的不碰；一次最多 500 張，避免整庫幾千張卡住
+    rows.retain(|r| !out_path(&app.paths, r).exists());
+    let missing = rows.len();
+    for r in rows.into_iter().take(500) {
+        match fetch_from_comfy(&app, &r).await {
+            Ok(()) => repaired += 1,
+            Err(e) => {
+                first_err.get_or_insert(e.1);
+            }
+        }
+    }
+    if repaired > 0 {
+        eprintln!("圖庫修復：從 ComfyUI 要回 {repaired} 張（原本有 {missing} 張找不到，共 {total} 筆紀錄）");
+    }
+    ok(json!({"ok": true, "total": total, "missing": missing, "still": missing - repaired,
+              "repaired": repaired, "error": if repaired == 0 { first_err } else { None }}))
+}
+
 /// 自己建的暫存檔：回應送完（或中斷）就刪掉
 struct TempFile(PathBuf);
 impl Drop for TempFile {
@@ -442,6 +520,9 @@ pub async fn export_zip(State(app): State<Shared>, Body(body): Body) -> ApiResul
 
 pub async fn img(State(app): State<Shared>, UrlPath(id): UrlPath<i64>) -> ApiResult {
     let r = app.db.image(id)?.ok_or_else(|| not_found("找不到"))?;
+    if !file_of(&app.paths, &r).exists() && recover(&app, &r).await {
+        // 從 ComfyUI 要回來了，直接往下讀（file_of 會拿到新位置）
+    }
     file_response(file_of(&app.paths, &r), Some("max-age=31536000")).await
 }
 
@@ -515,7 +596,16 @@ pub fn thumb_source(app: &super::App, id: i64) -> Result<PathBuf, super::ApiErro
 pub async fn thumb(State(app): State<Shared>, UrlPath(id): UrlPath<i64>) -> ApiResult {
     let dst = app.paths.thumbs.join(format!("{id}.webp"));
     if !dst.exists() {
-        let src = thumb_source(&app, id)?;
+        let mut src = thumb_source(&app, id);
+        if src.is_err() {
+            // 檔案不在生圖站認定的 output（換過 ComfyUI、output 指到別處）：先問 ComfyUI 要回來
+            if let Some(r) = app.db.image(id)? {
+                if recover(&app, &r).await {
+                    src = thumb_source(&app, id);
+                }
+            }
+        }
+        let src = src?;
         let d = dst.clone();
         blocking(move || make_thumb(&src, &d))
             .await

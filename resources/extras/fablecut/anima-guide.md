@@ -94,6 +94,7 @@ ComfyUI 只讀它自己 input 資料夾裡的檔：
 - 篩選選單的值：`GET /api/gallery/facets`。
 - 匯出 zip：`POST /api/export {ids:[…]}`。
 - 圖檔裡（PNG metadata）存著完整參數，讀回來重畫最準。
+- **檔案不見了**：圖庫紀錄只記 ComfyUI 的相對位置（`output\<subfolder>\<檔名>`）。換過 ComfyUI、ComfyUI 自己用 `--output-directory` 指到別的資料夾、或沿用舊資料但 ComfyUI 搬家時，整庫會顯示「檔案不見了」。`POST /api/gallery/repair_missing` 會直接跟正在跑的 ComfyUI（`/view`）把檔案要回來、寫回預期的位置（ComfyUI 要開著；非破壞性，最多一次修 500 張，回 `missing`／`repaired`／`still`）。ComfyUI 手上也沒有的才算真的遺失，那時再用 `POST /api/gallery/prune_missing` 把紀錄從圖庫拿掉。`/img/<id>`、`/thumb/<id>` 在檔案找不到時也會自己試著要一次。
 
 ## 提示詞
 
