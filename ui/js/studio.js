@@ -18,6 +18,17 @@ export function init() {
   // 拍攝單標題列上的「短片／長片」：按鈕在 <summary> 裡，別讓它順便收合
   $("#videoSub").addEventListener("click", (e) => { const b = e.target.closest("button[data-sub]"); if (!b) return; e.preventDefault(); openVideo(b.dataset.sub); });
   F("stAiOpen").onclick = openAi;
+  // 標題列的「AI MCP」：每一頁都看得到（同樣開這個視窗）
+  const top = F("aiBtn");
+  if (top) top.onclick = openAi;
+  // 第一次開程式的一次性導引（按「知道了」或開過視窗就不再跳）
+  if (F("aiHint") && !store.get(AI_HINT_KEY, false)) F("aiHint").hidden = false;
+  if (F("aiHintOpen")) F("aiHintOpen").onclick = () => openAi();
+  if (F("aiHintHide")) F("aiHintHide").onclick = hideAiHint;
+  // AI MCP 燈號：開程式先問一次，之後每 10 秒問（MCP 伺服器 15 秒一次心跳）
+  refreshAiLink();
+  const aiTimer = setInterval(refreshAiLink, 10000);
+  if (aiTimer.unref) aiTimer.unref();
   initEdit();
   initFrames();
   setTab(tab, true);
@@ -200,20 +211,52 @@ async function openExports() {
 }
 
 // ---------------------------------------------------------------- 給 AI 操作
-/** 「給 AI 操作」視窗（影音工作台和設定頁共用） */
+/** 第一次接 AI 時貼給它的開場白（要它先看狀態、讀說明、動手前先問） */
+const AI_HELLO = "先用 anima_status 看生圖站的狀態，需要細節就用 anima_docs 讀說明。要花錢、刪東西、改設定之前一定要先問我；每做完一步就跟我說結果，不要自己一直往下做。";
+const AI_HINT_KEY = "aiHintSeen";
+
+/** 關掉導引橫幅，並記住（之後不再跳） */
+function hideAiHint() {
+  const h = F("aiHint");
+  if (h) h.hidden = true;
+  store.set(AI_HINT_KEY, true);
+}
+
+/** 標題列的 AI MCP 燈號：問後端最近一次 MCP 心跳（未接上紅燈、接上綠燈） */
+async function refreshAiLink() {
+  const chip = F("aiBtn");
+  if (!chip) return;
+  try {
+    const r = await api("/api/ai/link");
+    chip.classList.toggle("on", !!r.online);
+    const st = F("aiState");
+    if (st) st.textContent = r.online ? "已接上" : "未接上";
+    chip.title = r.online
+      ? `AI MCP：已接上（${r.client || "AI 程式"}），點這裡看設定`
+      : "AI MCP：還沒接上（點這裡看怎麼接）";
+  } catch {
+    chip.classList.remove("on");
+  }
+}
+
+/** 「給 AI 操作」視窗（影音工作台、設定頁、標題列的 AI MCP 共用） */
 export async function openAi() {
+  hideAiHint();
+  refreshAiLink();
   openModal("#stAiModal");
   F("stAiNote").textContent = "";
   let r;
   try { r = await api("/api/studio/ai"); } catch (e) { return toast(e.message, "err"); }
   F("stAiMcp").value = r.mcp_json;
   F("stAiGuide").value = r.guide;
+  F("stAiHello").value = AI_HELLO;
   const copy = (id, text, what) => (F(id).onclick = async () => { await copyText(text); F("stAiNote").textContent = `已複製${what}`; });
   copy("stAiCopyMcp", r.mcp_json, " MCP 設定");
   copy("stAiCopyToml", r.codex_toml, " Codex 版設定");
   copy("stAiCopyGuide", r.guide, "說明，貼給 AI 就行");
+  copy("stAiCopyHello", AI_HELLO, "開場白，貼進 AI 的第一個訊息就行");
   if (!r.mcp.mcpServers[r.mcp_name].command.toLowerCase().endsWith("node.exe")) {
-    F("stAiNote").textContent = "還沒有 Node.js：先到「剪輯台」分頁按「下載剪輯工具」，設定裡的路徑才會是對的";
+    F("stAiNote").textContent = "還沒有 Node.js：到「剪輯台」分頁按「下載剪輯工具」，或打開「安裝與修復」再跑一次安裝，設定裡的路徑才會是對的";
   }
 }
 

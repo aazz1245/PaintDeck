@@ -129,8 +129,7 @@ ComfyUI 只讀它自己 input 資料夾裡的檔：
 ## 提示詞庫（整套設定＋片段）
 
 - `GET /api/lib`：全部（整套設定 kind=set、片段 kind=snippet，有資料夾、標籤、適用模型、置頂）。
-- 存一筆：`POST /api/lib {id?, kind:"set"|"snippet", name, folder?, tags?:[…], family?, fav?, note?, data, image_id?}`（有 id＝改那筆，只送要改的欄位也可以；`data` 是整套生成參數或片段文字；`image_id` 拿圖庫那張當縮圖，`thumb:null` 拿掉縮圖）。
-- 刪：`DELETE /api/lib/<id>`（要確認）。用過一次記一下：`POST /api/lib/used {id}`。
+- 存一筆：`POST /api/lib {id?, kind:"set"|"snippet", name, folder?, tags?:[…], family?, fav?, note?, data, image_id?}`（有 id＝改那筆，只送要改的欄位也可以；`data` 是整套生成參數或片段文字；`image_id` 拿圖庫那張當縮圖，`thumb:null` 拿掉縮圖）。- 刪：`DELETE /api/lib/<id>`（要確認）。用過一次記一下：`POST /api/lib/used {id}`。
 
 ## 資產庫（角色、場景、道具…全站共用）
 
@@ -170,7 +169,9 @@ ComfyUI 只讀它自己 input 資料夾裡的檔：
 一整頁分格漫畫：選版型、每格寫景別／內容／台詞／狀聲詞 → **MOSS-Image 一次畫完整頁**（格子、台詞、狀聲詞都在同一張圖裡）。
 - `GET /api/comic/meta`：版型（L3、L4、L4w、L5、L6、K4…，每格的位置名稱）、景別、對話框位置的選項。
 - `GET /api/comic/projects`、`GET /api/comic/project/<id>`、`POST /api/comic/project/new {title, copy_from?}`。
-- 改內容：`POST /api/comic/project {id, title?, layout?, trigger?, cast?（角色外貌）, light?, mood?, panels:[{shot, what, line, bubble, sfx}], count?}`。`what` 寫英文畫面內容（這格沒寫 what 就不畫）。
+- 改內容：`POST /api/comic/project {id, title?, layout?, trigger?, cast?（角色外貌）, light?, mood?, script?（這段劇情）, custom?:{rows:[{h, cells:[w,…]}]}, panels:[{shot, what, line, bubble, sfx}], count?}`。`what` 寫英文畫面內容（這格沒寫 what 就不畫）。`layout:"custom"` 時用 `custom.rows` 自己排：最多 6 列、每列 4 格、全部 8 格，`h`／`cells` 的數字是比例（1～4）。
+- 自訂版面長怎樣：`POST /api/comic/layout {project}` → `{desc, slots:[{en, zh}]}`（`desc` 就是提示詞裡那句版型描述，`slots` 是每一格的位置名，閱讀順序右上先）。
+- AI 排分鏡：`POST /api/comic/script {id, story, mode?}` → `{ok}`，背景叫本機通用版 35B 把劇情拆成每一格並直接寫進作品（`mode:"fill"` 只空白格，預設；`"all"` 整頁重寫）。進度走 websocket type `comic`（phase `script`、最後 `end`）；做完重新 `GET /api/comic/project/<id>` 就拿得到新格子。第一次要載入 35B，約 1～2 分鐘。
 - 預覽組好的提示詞：`POST /api/comic/prompts {project}`。
 - 畫：`POST /api/comic/run {id, count?}`；停：`POST /api/comic/stop {id}`；結果在專案的 `runs`（圖庫編號）。
 
@@ -260,6 +261,33 @@ ComfyUI 只讀它自己 input 資料夾裡的檔：
 - 雲端（給生圖助手和 H3 用）：`GET /api/agent/cloud`。開機、關機、改設定都要確認。
 - 雲端選卡：`GET /api/agent/cloud` 的 `gpus` 是能選的卡（推薦三張＋RunPod 目錄自動抓的 48GB 以上 NVIDIA 卡；`stock` High／Medium／Low，空字串＝現在租光；`preset:false` 的還沒實測）。`GET /api/agent/cloud/gpus` 馬上重抓（平常每 10 分鐘自動）。開機帶 `{confirm:true, gpu:<key>}`。
 - websocket `ws://…/ws` 會推送進度（type：image、finish、progress、queue、director、comic、h3、agent…）；MCP 不需要，輪詢 API 就好。
+
+## 其他 API（上面沒有一條一條寫的）
+
+`anima_api` 打得到下面全部；會花錢、刪東西、改設定的照樣要 `confirm:true`（先問使用者）。
+
+| 用途 | 呼叫 |
+|---|---|
+| 任務清單／清紀錄 | `GET /api/jobs`、`POST /api/jobs/clear`（確認） |
+| 回收區清空／恢復原廠 | `POST /api/trash/empty`、`GET,POST /api/reset`（都要確認） |
+| 開視窗／開資料夾 | `POST /api/app/show`、`POST /api/reveal {path}` |
+| 設定匯出匯入 | `GET /api/settings/export`、`POST /api/settings/import`（確認） |
+| 預設組 | `GET,POST /api/presets`、`DELETE /api/presets/{id}` |
+| 模型 | `GET /api/models/inventory`、`GET /api/models/dirs`、`GET /api/models/downloads`、`POST /api/models/scan`、`POST /api/models/download`（確認）、`POST /api/models/restart_comfy` |
+| 匯入的工作流 | `GET,POST /api/image/workflows`、`GET /api/image/workflows/{id}/fields`、`POST /api/image/workflows/{id}/options`、`GET,POST /api/image/workflows/{id}/export`；影片 `GET,POST /api/video/workflows`、`/api/video/workflows/{id}` |
+| 出圖的工作流圖 | `POST /api/gen/export_graph` |
+| 資產庫的圖 | `POST /api/assets/{id}/apply`、`POST /api/assets/{id}/to_input`、`GET /api/assets/file/{name}` |
+| 提示詞庫排序 | `POST /api/lib/order {ids}`、`POST /api/lib/folder`、`POST /api/lib/used` |
+| 漫畫台刪作品／拿掉結果 | `POST /api/comic/project/delete {id}`、`POST /api/comic/run/remove {id, page}` |
+| 剪輯台控制 | `POST /api/studio/start`、`POST /api/studio/stop`、`GET /api/studio/status`、`POST /api/studio/open`、`GET /api/studio/ai`（MCP 設定與說明） |
+| 拆幀單份與單幀 | `GET /api/studio/frames/{sid}`、`GET /api/studio/frames/{sid}/f/{n}`（大圖）、`…/t/{n}`（縮圖） |
+| 分鏡表 | `GET /api/shotsheet/meta`、`POST /api/shotsheet/check`、`/compose`、`/polish`、`/template`、`/danger` |
+| 配音 | `GET,POST /api/voices`、`POST /api/voices/tts`、`POST /api/voices/tts_workflow`、`DELETE /api/voices/{id}` |
+| 生圖玩法 | `GET /api/play/models`、`POST /api/play/save_grid` |
+| 停掉背景改寫／排分鏡 | `POST /api/pe/cancel {rid}`（排分鏡的 rid 是 `comic-<作品編號>`） |
+| 改寫的系統提示詞 | `GET,POST /api/pe/prompts`（確認） |
+| LoRA | `POST /api/loras/delete`（確認）、`POST /api/loras/meta` |
+| 安裝精靈（有掛才有） | `GET /api/setup/status`、`POST /api/setup/check`、`POST /api/setup/run` |
 
 ## 已知的坑
 

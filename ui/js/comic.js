@@ -11,6 +11,7 @@ let META = null;     // 版型、景別、對話框位置（後端給，跟組�
 let P = null;        // 目前的作品
 let running = false;
 let shown = false;
+let SLOTS = [];      // 這一頁每一格的中文位置名（自訂版面由後端算，跟組提示詞同一份程式）
 
 // 版型縮圖（30×42 的格子示意，閱讀順序右上先）
 const R = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}"/>`;
@@ -21,6 +22,7 @@ const THUMB = {
   L5: R(1, 1, 28, 12) + R(15.75, 14.5, 13.25, 12.5) + R(1, 14.5, 13.25, 12.5) + R(15.75, 28.5, 13.25, 12.5) + R(1, 28.5, 13.25, 12.5),
   L6: [1, 14.67, 28.33].map((y) => R(15.75, y, 13.25, 12.67) + R(1, y, 13.25, 12.67)).join(""),
   K4: [1, 11.25, 21.5, 31.75].map((y) => R(1, y, 28, 9.25)).join(""),
+  CUSTOM: R(1, 1, 13.5, 13.5) + R(15.5, 1, 13.5, 13.5) + R(1, 16.5, 13.5, 24.5) + R(15.5, 16.5, 13.5, 24.5),
 };
 const SFX = ["ドキドキ", "ズキュン", "チュッ", "ギュッ", "ビクッ", "スリッ", "ズチュッ", "パンッ", "ズプッ", "ビュルッ", "ズバッ", "ドーン", "ゴゴゴ", "バンッ", "シーン"];
 
@@ -62,6 +64,38 @@ const EXAMPLES = [
 const blankPanel = () => ({ shot: "a medium shot", what: "", line: "", bubble: "top", sfx: "" });
 const layoutOf = (id) => META?.layouts.find((l) => l.id === id) || META?.layouts[0];
 
+// ---------------------------------------------------------------- 自訂版面（列／格，權重只是比例）
+const blankCustom = () => ({ rows: [{ h: 2, cells: [1, 1] }, { h: 1, cells: [1] }] });
+function customRows() {
+  if (!P.custom || !Array.isArray(P.custom.rows) || !P.custom.rows.length) P.custom = blankCustom();
+  return P.custom.rows;
+}
+const customCount = () => (P?.custom?.rows || []).reduce((a, r) => a + (r.cells?.length || 0), 0);
+/** 這一頁有幾格（自訂版面的話算列／格，不靠後端） */
+function layoutCount() {
+  if (!P) return 0;
+  if (P.layout === "custom") return customCount();
+  return layoutOf(P.layout)?.slots.length || 0;
+}
+const n = () => layoutCount();
+
+/** 每一格的中文位置名：預設版型用後端附的清單；自訂版面問後端（跟組提示詞同一份程式） */
+async function refreshSlots() {
+  if (!P) return;
+  if (P.layout !== "custom") {
+    SLOTS = layoutOf(P.layout)?.slots || [];
+    return;
+  }
+  try {
+    const r = await api("/api/comic/layout", { json: { project: payload() } });
+    SLOTS = r.slots.map((s) => s.zh);
+    if (F("cmWireInfo")) F("cmWireInfo").textContent = r.desc;
+  } catch (e) {
+    SLOTS = ["這一格"];
+    if (F("cmWireInfo")) F("cmWireInfo").textContent = e.message;
+  }
+}
+
 // ---------------------------------------------------------------- 載入
 export async function show() {
   shown = true;
@@ -73,8 +107,11 @@ export async function show() {
 }
 
 function fillStatic() {
-  F("cmLayouts").replaceChildren(...META.layouts.map((l) => el("button", { type: "button", class: "cm-lay", "data-id": l.id, title: l.name,
-    onclick: () => setLayout(l.id) }, svgThumb(l.id), el("span", {}, l.id))));
+  F("cmLayouts").replaceChildren(
+    ...META.layouts.map((l) => el("button", { type: "button", class: "cm-lay", "data-id": l.id, title: l.name,
+      onclick: () => setLayout(l.id) }, svgThumb(l.id), el("span", {}, l.id))),
+    el("button", { type: "button", class: "cm-lay", "data-id": "custom", title: "自己排：列數、每列幾格、高度和寬度都可以調",
+      onclick: () => setLayout("custom") }, svgThumb("CUSTOM"), el("span", {}, "自訂")));
   F("cmExample").append(...EXAMPLES.map((x, i) => el("option", { value: String(i) }, x.name)));
   const dl = el("datalist", { id: "cmSfxList" }, ...SFX.map((s) => el("option", { value: s })));
   document.body.append(dl);
@@ -111,7 +148,7 @@ async function openProject(id) {
   if (seq !== openSeq) return;
   P = p;
   store.set("cmProject", id);
-  fillForm();
+  await fillForm();
   renderRuns();
   setRunning(!!P.running);
 }
@@ -126,39 +163,170 @@ async function reload() {
 }
 
 // ---------------------------------------------------------------- 左邊：表單
-function fillForm() {
+async function fillForm() {
   F("cmTrigger").value = P.trigger || "";
   F("cmCast").value = P.cast || "";
   F("cmLight").value = P.light || "";
   F("cmMood").value = P.mood || "";
+  F("cmScript").value = P.script || "";
   F("cmCount").value = String(Math.min(4, P.count || 4));
   layoutUi();
+  await refreshSlots();
+  ensurePanels();
+  layoutUi();
   renderPanels();
+  renderWire();
   imgInfo();
   preview();
 }
 
 function layoutUi() {
   F("cmLayouts").querySelectorAll(".cm-lay").forEach((b) => b.classList.toggle("on", b.dataset.id === P.layout));
-  F("cmLayoutName").textContent = layoutOf(P.layout)?.name || "";
+  F("cmLayoutName").textContent = P.layout === "custom" ? "自己排的版面" : layoutOf(P.layout)?.name || "";
+  if (F("cmCustomBox")) F("cmCustomBox").hidden = P.layout !== "custom";
 }
 
-function setLayout(id) {
+function ensurePanels() {
+  const k = Math.max(n(), 1);
+  P.panels = P.panels || [];
+  while (P.panels.length < k) P.panels.push(blankPanel());
+}
+
+async function setLayout(id) {
   if (running || id === P.layout) return;
   P.layout = id;
-  const n = layoutOf(id).slots.length;
+  if (id === "custom" && !P.custom?.rows?.length) P.custom = blankCustom();
+  await refreshSlots();
   // 格數變了：留著前面寫好的，不夠的補空白；多出來的先藏起來（換回來還在）
-  P.panels = Array.from({ length: Math.max(n, P.panels?.length || 0) }, (_, i) => P.panels?.[i] || blankPanel());
+  ensurePanels();
   layoutUi();
   renderPanels();
+  renderWire();
   changed();
+}
+
+// ---------------------------------------------------------------- 自訂版面：示意圖＋列／格控制
+function renderWire() {
+  const box = F("cmWire");
+  const ctl = F("cmWireCtl");
+  if (!box || !ctl) return;
+  if (!P || P.layout !== "custom") {
+    box.replaceChildren();
+    ctl.replaceChildren();
+    return;
+  }
+  const rows = customRows();
+  const W = 150, H = 225, PAD = 2;
+  const totalH = rows.reduce((a, r) => a + (r.h || 1), 0) || 1;
+  // 編號照閱讀順序：上面先、同一列右邊先
+  let readNo = 1;
+  const order = rows.map((r, ri) => {
+    const idx = [];
+    for (let k = r.cells.length - 1; k >= 0; k--) idx[k] = readNo++;
+    return idx;
+  });
+  const parts = [];
+  let y = 0;
+  rows.forEach((r, ri) => {
+    const rh = ((r.h || 1) / totalH) * H;
+    const totalW = r.cells.reduce((a, w) => a + (w || 1), 0) || 1;
+    let x = 0;
+    r.cells.forEach((w, ci) => {
+      const cw = ((w || 1) / totalW) * W;
+      parts.push(`<rect data-i="${order[ri][ci] - 1}" x="${(x + PAD).toFixed(1)}" y="${(y + PAD).toFixed(1)}" width="${Math.max(cw - PAD * 2, 5).toFixed(1)}" height="${Math.max(rh - PAD * 2, 5).toFixed(1)}" rx="3"/>`);
+      parts.push(`<text x="${(x + cw / 2).toFixed(1)}" y="${(y + rh / 2).toFixed(1)}">${order[ri][ci]}</text>`);
+      x += cw;
+    });
+    y += rh;
+  });
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "這一頁的版面示意圖");
+  svg.innerHTML = parts.join("");
+  svg.addEventListener("click", (e) => {
+    const r = e.target.closest("rect");
+    if (!r) return;
+    F("cmPanels").querySelectorAll(".cm-panel")[+r.dataset.i]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  });
+  const btn = (label, title, fn) => el("button", { type: "button", class: "minikey", title, disabled: running, onclick: fn }, label);
+  const rowCtl = rows.map((r, ri) =>
+    el("div", { class: "cm-wire-row" },
+      el("span", { class: "vfd amb" }, String(ri + 1).padStart(2, "0")),
+      el("span", { class: "cm-wire-hint" }, `${r.cells.length} 格`),
+      btn("＋格", "這一列多一格", () => addCell(ri)),
+      btn("－格", "這一列少一格", () => delCell(ri)),
+      btn("高＋", "這一列高一點", () => bumpH(ri, 1)),
+      btn("高－", "這一列矮一點", () => bumpH(ri, -1)),
+      btn("寬度", "換這一列的寬度分配", () => cycleWidth(ri))));
+  box.replaceChildren(svg);
+  ctl.replaceChildren(
+    el("div", { class: "row gap wrap" },
+      btn("＋列", "整頁多一列", addRow),
+      btn("－列", "拿掉最後一列", delRow),
+      el("span", { class: "muted sm" }, `${rows.length} 列・${rows.reduce((a, r) => a + r.cells.length, 0)} 格`)),
+    el("div", { class: "cm-wire-rows" }, ...rowCtl));
+}
+
+function wireChanged() {
+  renderWire();
+  refreshSlots().then(() => {
+    ensurePanels();
+    renderPanels();
+    changed();
+  });
+}
+function addRow() {
+  if (customRows().length >= 6) return toast("最多 6 列", "err");
+  P.custom.rows.push({ h: 1, cells: [1] });
+  wireChanged();
+}
+function delRow() {
+  const rows = customRows();
+  if (rows.length <= 1) return toast("至少要有一列", "err");
+  rows.pop();
+  wireChanged();
+}
+function addCell(ri) {
+  const rows = customRows();
+  if (rows[ri].cells.length >= 4) return toast("一列最多 4 格", "err");
+  if (rows.reduce((a, r) => a + r.cells.length, 0) >= 8) return toast("一頁最多 8 格", "err");
+  rows[ri].cells.push(1);
+  wireChanged();
+}
+function delCell(ri) {
+  const rows = customRows();
+  if (rows[ri].cells.length <= 1) return toast("一列至少要有一格", "err");
+  rows[ri].cells.pop();
+  wireChanged();
+}
+function bumpH(ri, d) {
+  const rows = customRows();
+  rows[ri].h = Math.min(4, Math.max(1, (rows[ri].h || 1) + d));
+  wireChanged();
+}
+/** 寬度輪流：等分 → 右邊寬 → 左邊寬（三格以上先換最右、再換最左） */
+function cycleWidth(ri) {
+  const rows = customRows();
+  const cells = rows[ri].cells;
+  if (cells.length < 2) return toast("這一列只有一格，沒有寬度可以調", "err");
+  const flat = cells.every((w) => w === 1);
+  if (flat) {
+    cells[cells.length - 1] = 2;
+  } else if (cells[cells.length - 1] === 2) {
+    cells[cells.length - 1] = 1;
+    cells[0] = 2;
+  } else {
+    cells.fill(1);
+  }
+  wireChanged();
 }
 
 function renderPanels() {
   const box = F("cmPanels");
   box.innerHTML = "";
-  const L = layoutOf(P.layout);
-  L.slots.forEach((slot, i) => {
+  const slots = SLOTS.length ? SLOTS : Array.from({ length: n() }, (_, i) => `第 ${i + 1} 格`);
+  slots.forEach((slot, i) => {
     const c = P.panels[i] || (P.panels[i] = blankPanel());
     const sel = (opts, val, on) => {
       const s = el("select", {}, ...opts.map(([v, t]) => el("option", { value: v }, t)));
@@ -192,12 +360,11 @@ function imgInfo() {
 
 function readForm() {
   if (!P) return;
-  Object.assign(P, { trigger: F("cmTrigger").value, cast: F("cmCast").value, light: F("cmLight").value, mood: F("cmMood").value, count: +F("cmCount").value });
+  Object.assign(P, { trigger: F("cmTrigger").value, cast: F("cmCast").value, light: F("cmLight").value, mood: F("cmMood").value, script: F("cmScript").value, count: +F("cmCount").value });
   changed();
 }
 
-const n = () => layoutOf(P.layout).slots.length;
-const payload = () => ({ ...P, panels: P.panels.slice(0, n()) });
+const payload = () => ({ ...P, panels: (P.panels || []).slice(0, Math.max(n(), 1)) });
 
 function changed() {
   saveSoon();
@@ -212,7 +379,7 @@ const saveSoon = debounce(() => save(), 600);
 async function save() {
   if (!P) return;
   const body = { id: P.id };
-  for (const k of ["title", "layout", "trigger", "cast", "light", "mood", "panels", "image", "count"]) body[k] = P[k];
+  for (const k of ["title", "layout", "trigger", "cast", "light", "mood", "panels", "custom", "script", "image", "count"]) body[k] = P[k];
   try { await api("/api/comic/project", { json: body }); } catch (e) { toast("作品存檔失敗：" + e.message, "err"); }
 }
 
@@ -261,8 +428,9 @@ function setRunning(on) {
   F("cmStop").hidden = !on;
   for (const id of ["cmRun", "cmNew", "cmDel", "cmRename", "cmProj", "cmExample", "cmImgUse", "cmImgAuto"]) F(id).disabled = on;
   // 畫的時候改了也不會影響這一輪（提示詞已經組好送出），乾脆鎖住免得以為有生效
-  for (const id of ["cmTrigger", "cmCast", "cmLight", "cmMood", "cmCount"]) F(id).disabled = on;
+  for (const id of ["cmTrigger", "cmCast", "cmLight", "cmMood", "cmScript", "cmScriptGo", "cmCount"]) F(id).disabled = on;
   for (const box of ["cmPanels", "cmLayouts"]) F(box).querySelectorAll("input, textarea, select, button").forEach((x) => (x.disabled = on));
+  if (P?.layout === "custom") renderWire();
   if (!on && F("cmStatus").classList.contains("amb")) status("待機");
   renderRuns();
 }
@@ -288,7 +456,7 @@ async function run() {
 /** websocket：main.js 收到 type=comic 轉給這裡 */
 export function onEvent(m) {
   if (!P || m.id !== P.id) return;
-  if (m.phase === "end") { status(m.msg || "完成", "g"); toast(`漫畫台：${m.msg || "完成"}`, "ok"); setRunning(false); reload(); return; }
+  if (m.phase === "end") { status(m.msg || "完成", "g"); toast(`漫畫台：${m.msg || "完成"}`, "ok"); setRunning(false); openProject(P.id); return; }
   if (m.phase === "error") { status("失敗", "r"); toast(`漫畫台：${m.msg}`, "err"); setRunning(false); reload(); return; }
   status(m.msg || m.phase, "amb");
   if (m.phase === "page") reload();
@@ -317,13 +485,13 @@ export function init() {
     if (!P || !confirm(`把作品「${P.title}」移到待刪除？（畫好的圖還在圖庫）`)) return;
     try { await api("/api/comic/project/delete", { json: { id: P.id } }); await loadProjects(null); } catch (e) { toast(e.message, "err"); }
   };
-  F("cmExample").onchange = () => {
+  F("cmExample").onchange = async () => {
     const x = EXAMPLES[+F("cmExample").value];
     F("cmExample").value = "";
     if (!x || running) return;
     if (P.panels.some((c) => c.what?.trim()) && !confirm(`套用範例「${x.name}」會蓋掉現在寫的內容。繼續？`)) return;
     Object.assign(P, { layout: x.layout, cast: x.cast || "", light: x.light || "", mood: x.mood || "", panels: x.panels.map((c) => ({ ...c })) });
-    fillForm();
+    await fillForm();
     changed();
   };
   for (const id of ["cmTrigger", "cmCast", "cmLight", "cmMood"]) F(id).addEventListener("input", readForm);
@@ -340,6 +508,22 @@ export function init() {
     toast("畫整頁會用：" + b.model, "ok");
   };
   F("cmImgAuto").onclick = () => { P.image = null; imgInfo(); changed(); };
+  // AI 排分鏡：35B 照劇情把每格寫好（背景跑，回來走 type=comic 的 script／end 事件）
+  F("cmScriptGo").onclick = async () => {
+    if (!P || running) return;
+    const story = F("cmScript").value.trim();
+    if (!story) return toast("先在上面寫這段劇情（中文就好）", "err");
+    const fillOnly = F("cmScriptFill").checked;
+    const vis = (P.panels || []).slice(0, Math.max(n(), 1));
+    if (fillOnly && !vis.some((c) => !c.what?.trim())) return toast("這一頁的格子都寫好了，沒有空白格可以填", "err");
+    if (!fillOnly && vis.some((c) => c.what?.trim()) && !confirm("會蓋掉這一頁已經寫好的格子。繼續？")) return;
+    await save();
+    status("排分鏡中…", "amb");
+    try {
+      await api("/api/comic/script", { json: { id: P.id, story, mode: fillOnly ? "fill" : "all", brain: F("cmScriptBrain").value } });
+      setRunning(true);
+    } catch (e) { status("待機"); toast(e.message, "err"); }
+  };
   F("cmCopyPage").onclick = () => copyText(F("cmPrPage").value).then(() => toast("已複製整頁提示詞", "ok"));
   F("cmRun").onclick = () => run();
   F("cmStop").onclick = async () => { await api("/api/comic/stop", { json: { id: P.id } }); status("停止中…", "amb"); };

@@ -2995,11 +2995,28 @@ impl Service {
         max_tokens: i64,
         temperature: f64,
     ) -> Result<String, String> {
+        self.general_chat_as(rid, system, user, images, max_tokens, temperature, None).await
+    }
+
+    /// 同上，但可以指定通用模型：None＝照設定頁的 pe_general（auto 會優先 35B），
+    /// "35b"／"9b" 強制那一顆（漫畫台排分鏡預設就用 35B）。
+    #[allow(clippy::too_many_arguments)]
+    pub async fn general_chat_as(
+        self: &Arc<Self>,
+        rid: &str,
+        system: &str,
+        user: &str,
+        images: &[String],
+        max_tokens: i64,
+        temperature: f64,
+        model: Option<&str>,
+    ) -> Result<String, String> {
         let core = self
             .core
             .clone()
             .ok_or_else(|| self.error.clone().unwrap_or_default())?;
         let c = core.clone();
+        let wanted = model.map(str::to_owned);
         self.hub_chat(&core, rid, "director_llm", true, |em| async move {
             let core = c;
             let imgs = if images.is_empty() {
@@ -3008,7 +3025,8 @@ impl Service {
                 let (dir, names) = (self.input_dir.clone(), images.to_vec());
                 run_blocking(move || Service::load_images(&dir, &names)).await?
             };
-            core.set_general(self.opt("pe_general").as_str().unwrap_or("auto"));
+            let choice = wanted.unwrap_or_else(|| self.opt("pe_general").as_str().unwrap_or("auto").to_string());
+            core.set_general(&choice);
             // 有圖要掛 mmproj（adult_vision）；只寫文字時，已經開著的 adult_vision 也能用，省得重新載入
             let c = core.clone();
             let running_kind = run_blocking(move || c.read_state().get("kind").and_then(Value::as_str).map(str::to_owned)).await;

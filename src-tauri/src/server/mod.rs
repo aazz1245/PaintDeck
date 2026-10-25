@@ -406,6 +406,9 @@ pub fn router(app: Shared) -> Router {
         .route("/thumb/{id}", get(api_gallery::thumb))
         // 提示詞工具、預設組、LoRA
         .route("/api/tags", get(api_misc::tags))
+        // AI（MCP）連線狀態：標題列的燈號
+        .route("/api/ai/heartbeat", post(api_misc::ai_heartbeat))
+        .route("/api/ai/link", get(api_misc::ai_link))
         .route("/api/tagger", post(api_gallery::tagger))
         .route(
             "/api/presets",
@@ -467,6 +470,8 @@ pub fn router(app: Shared) -> Router {
         .route("/api/comic/run", post(api_comic::run))
         .route("/api/comic/stop", post(api_comic::stop))
         .route("/api/comic/prompts", post(api_comic::prompts))
+        .route("/api/comic/layout", post(api_comic::layout_preview))
+        .route("/api/comic/script", post(api_comic::script))
         .route("/api/comic/run/remove", post(api_comic::run_remove))
         // 生圖助手
         .route("/api/agent/sessions", get(api_agent::sessions))

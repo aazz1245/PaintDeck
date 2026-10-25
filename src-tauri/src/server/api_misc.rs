@@ -1,10 +1,58 @@
 //! 恢復原廠、tag 自動完成、預設組、LoRA 備註與移到待刪除（前幾樣對照舊版 server.py 同名的函式）。
 use super::{bad, basename, blocking, file_response, internal, not_found, ok, ApiResult, Body, Shared};
 use crate::maint;
+use crate::director::tx;
+use crate::py::now;
 use axum::extract::{Path as UrlPath, Query, State};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::path::{Component, Path, PathBuf};
+use std::sync::Mutex;
+
+// ---------------------------------------------------------------- AI（MCP）連線狀態
+/// MCP 伺服器（mcp-server.js）每 15 秒回報一次心跳；這裡只記最後一次，
+/// 標題列的「AI MCP」燈號就看這個。85 秒沒收到＝AI 程式關掉了（或沒接）。
+const AI_LINK_TTL: f64 = 85.0;
+
+#[derive(Clone)]
+struct AiSeen {
+    at: f64,
+    client: String,
+    pid: i64,
+}
+
+static AI_LINK: Mutex<Option<AiSeen>> = Mutex::new(None);
+
+/// POST /api/ai/heartbeat {client?, pid?}：MCP 伺服器說「我在」（不需要 confirm，什麼都不會改）
+pub async fn ai_heartbeat(Body(b): Body) -> ApiResult {
+    let client = {
+        let c = tx(&b["client"]).trim().to_string();
+        if c.is_empty() { "MCP".to_string() } else { c.chars().take(40).collect() }
+    };
+    let pid = b["pid"].as_i64().unwrap_or(0);
+    if let Ok(mut g) = AI_LINK.lock() {
+        *g = Some(AiSeen { at: now(), client, pid });
+    }
+    ok(json!({"ok": true}))
+}
+
+/// GET /api/ai/link：{online, client, age, ttl}。網頁拿來點 AI MCP 的燈號
+pub async fn ai_link() -> ApiResult {
+    let seen = AI_LINK.lock().ok().and_then(|g| g.clone());
+    let age = seen.as_ref().map(|s| (now() - s.at).max(0.0)).unwrap_or(f64::MAX);
+    let online = age <= AI_LINK_TTL;
+    let (client, pid) = seen
+        .filter(|_| online)
+        .map(|s| (s.client, s.pid))
+        .unwrap_or_default();
+    ok(json!({
+        "online": online,
+        "client": client,
+        "pid": pid,
+        "age": if age.is_finite() { age } else { -1.0 },
+        "ttl": AI_LINK_TTL,
+    }))
+}
 
 // ---------------------------------------------------------------- 一鍵恢復原廠（可救回）
 pub async fn reset_info(State(app): State<Shared>) -> ApiResult {

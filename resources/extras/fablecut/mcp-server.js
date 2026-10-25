@@ -1278,6 +1278,34 @@ async function handle(msg) {
 }
 
 let buf = "", pending = 0, stdinClosed = false;
+
+/* ── Anima 生圖站：回報「AI 已接上」（站台標題列的 AI MCP 燈號） ──
+   每 15 秒打一次 /api/ai/heartbeat；站台 85 秒沒收到就當斷線（紅燈）。
+   站台沒開、或不是生圖站的設定（沒有 ANIMA_URL）就安靜跳過。 */
+function animaHeartbeat() {
+  const base = process.env.ANIMA_URL;
+  if (!base) return;
+  const body = JSON.stringify({ client: "MCP", pid: process.pid });
+  const ping = () => {
+    try {
+      const u = new URL("/api/ai/heartbeat", base);
+      const req = http.request({
+        hostname: u.hostname, port: u.port || 80, path: u.pathname, method: "POST",
+        headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) },
+        timeout: 4000,
+      }, (res) => res.resume());
+      req.on("error", () => {});
+      req.on("timeout", () => req.destroy());
+      req.write(body);
+      req.end();
+    } catch { /* 站台沒開就算了 */ }
+  };
+  ping();
+  const t = setInterval(ping, 15000);
+  if (t.unref) t.unref();
+}
+animaHeartbeat();
+
 process.stdin.setEncoding("utf8");
 process.stdin.on("data", (chunk) => {
   buf += chunk;

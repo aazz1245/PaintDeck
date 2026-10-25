@@ -62,7 +62,8 @@ pub async fn meta() -> ApiResult {
         .map(|(id, zh, _, slots)| json!({"id": id, "name": zh, "slots": slots.iter().map(|s| s.1).collect::<Vec<_>>()}))
         .collect();
     let pairs = |v: &[(&str, &str)]| v.iter().map(|(en, zh)| json!([en, zh])).collect::<Vec<_>>();
-    ok(json!({"layouts": layouts, "shots": pairs(c::SHOTS), "bubbles": pairs(c::BUBBLES)}))
+    ok(json!({"layouts": layouts, "custom": {"id": "custom", "max_rows": 6, "max_cells": 4, "max_panels": 8},
+              "shots": pairs(c::SHOTS), "bubbles": pairs(c::BUBBLES)}))
 }
 
 pub async fn projects(State(app): State<Shared>) -> ApiResult {
@@ -91,7 +92,7 @@ pub async fn project_new(State(app): State<Shared>, Body(b): Body) -> ApiResult 
 }
 
 /// 網頁可以改的欄位（runs 是背景工作寫的，網頁存檔不能蓋掉）
-const EDITABLE: [&str; 9] = ["title", "layout", "trigger", "cast", "light", "mood", "panels", "image", "count"];
+const EDITABLE: [&str; 11] = ["title", "layout", "trigger", "cast", "light", "mood", "panels", "custom", "script", "image", "count"];
 
 pub async fn project_save(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let id = tx(&b["id"]);
@@ -260,6 +261,9 @@ pub async fn run(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let (a, id2, t2) = (app.clone(), id.clone(), token.clone());
     spawn(&app, &id, token, async move {
         let (app, id, token) = (a, id2, t2);
+        // 畫圖前先關掉 AI 改寫的 llama-server（35B 會占 7～8GB 顯存），跟生成頁走同一套；
+        // 排分鏡反過來：PE 載入前會叫 ComfyUI /free（pe.rs 的 ensure），兩邊互相讓路
+        app.pe.release_for_generation().await;
         ensure_family(&app, MOSS).await;
         emit(&app, &id, "msg", format!("畫 {count} 張整頁…"), None);
         let jobs = submit_jobs(&app, q, count).await.map_err(|e| e.1)?;
@@ -284,4 +288,100 @@ pub async fn run(State(app): State<Shared>, Body(b): Body) -> ApiResult {
 /// 預覽組好的提示詞：{project}（網頁還沒存的內容也可以）→ {page, family}
 pub async fn prompts(Body(b): Body) -> ApiResult {
     ok(json!({"page": c::moss_page(&b["project"]).map_err(bad)?, "family": MOSS}))
+}
+
+/// 這一頁的版面長什麼樣：{project} → {desc, slots:[{en, zh}]}。網頁的自訂版面編輯器用它算格子名字，
+/// 跟組提示詞用同一份程式，兩邊不會各算一套。
+pub async fn layout_preview(Body(b): Body) -> ApiResult {
+    let (desc, slots) = c::layout_of(&b["project"]).map_err(bad)?;
+    ok(json!({
+        "desc": desc,
+        "slots": slots.iter().map(|(en, zh)| json!({"en": en, "zh": zh})).collect::<Vec<_>>(),
+    }))
+}
+
+// ================================================================ AI 排分鏡（35B）
+/// {id, story, mode}：叫通用版的 35B 把這段劇情拆成每一格，填回作品。
+/// 背景跑，進度用 type=comic phase=script；結束一樣走 end／error（網頁重讀作品就拿到新的格）。
+/// mode＝"fill"（只填空白的格，預設）／"all"（整頁重寫，原本寫好的會被蓋掉）
+pub async fn script(State(app): State<Shared>, Body(b): Body) -> ApiResult {
+    let id = tx(&b["id"]);
+    let story = tx(&b["story"]);
+    if story.trim().is_empty() {
+        return Err(bad("先寫這段劇情（中文就好），AI 才有東西可以拆"));
+    }
+    let all = tx(&b["mode"]) == "all";
+    // 排分鏡用哪顆：預設 35B（台詞好）；記憶體不夠可以指定 9b
+    let brain = if tx(&b["brain"]) == "9b" { "9b" } else { "35b" };
+    load(&app, &id)?;
+    let token = begin(&app, &id)?;
+    let (a, id2, story2) = (app.clone(), id.clone(), story.clone());
+    spawn(&app, &id, token, async move { write_script(&a, &id2, &story2, all, brain).await });
+    ok(json!({"ok": true}))
+}
+
+/// 排分鏡本體：叫 LLM → 解析 → 填回作品。JSON 讀不出來重試一次。
+async fn write_script(app: &Shared, id: &str, story: &str, all: bool, brain: &str) -> Step {
+    let p = load(app, id).map_err(|e| e.1)?;
+    let n = c::layout_of(&p)?.1.len();
+    if n == 0 {
+        return Err("版型不對，先重新選一個版型".into());
+    }
+    emit(app, id, "script", format!("AI 排分鏡中…（{brain} 第一次要載入模型，可能要一兩分鐘）"), None);
+    let (sys, user) = c::script_messages(&p, story);
+    let rid = format!("comic-{id}");
+    let mut last = String::new();
+    for attempt in 0..2 {
+        let r = app
+            .pe
+            .general_chat_as(&rid, &sys, &user, &[], 2000, if attempt == 0 { 0.7 } else { 0.9 }, Some(brain))
+            .await?;
+        let Some(panels) = c::parse_script(&r, n) else {
+            eprintln!(
+                "漫畫台 {id}：分鏡 JSON 讀不出來（第 {} 次）：{}",
+                attempt + 1,
+                r.chars().take(300).collect::<String>()
+            );
+            last = r;
+            continue;
+        };
+        let filled = panels.iter().filter(|c| !tx(&c["what"]).trim().is_empty()).count();
+        update(app, id, |p| {
+            let olds = p["panels"].as_array().cloned().unwrap_or_default();
+            let mut out: Vec<Value> = (0..n)
+                .map(|i| {
+                    let new = panels[i].clone();
+                    let old = olds.get(i).cloned().unwrap_or_else(|| json!({}));
+                    // 只填空白的格：原本寫好內容的格不動；台詞／對話框位置有寫過就留著
+                    if !all && !tx(&old["what"]).trim().is_empty() {
+                        return old;
+                    }
+                    if all {
+                        return new;
+                    }
+                    let mut v = new;
+                    for k in ["line", "sfx", "bubble"] {
+                        let ov = tx(&old[k]).trim().to_string();
+                        if !ov.is_empty() {
+                            v[k] = json!(ov);
+                        }
+                    }
+                    v
+                })
+                .collect();
+            // 版型外還留著的格（換到格數多的版型時會用到）不要動
+            if olds.len() > n {
+                out.extend(olds[n..].iter().cloned());
+            }
+            p["panels"] = json!(out);
+        })
+        .await
+        .map_err(|e| e.1)?;
+        emit(app, id, "script", format!("AI 排好 {filled} 格"), None);
+        return Ok(());
+    }
+    Err(format!(
+        "模型輸出的格式壞掉了，可以再按一次。輸出開頭：{}",
+        last.chars().take(120).collect::<String>()
+    ))
 }

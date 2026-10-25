@@ -30,8 +30,16 @@
           <button type="button" role="radio" data-t="light" aria-checked="false">淺</button><button type="button" role="radio" data-t="auto" aria-checked="true">自動</button><button type="button" role="radio" data-t="dark" aria-checked="false">深</button>
         </div></div>
       <button class="minikey" id="soundBtn" type="button" data-ic="spk" aria-pressed="true" title="按鍵音效" aria-label="按鍵音效"></button>
+      <div class="ai-slot">
+        <button class="chip-status ai" id="aiBtn" type="button" title="AI MCP：讓 Claude、Codex、Cursor 這類 AI 直接操作生圖站"><span class="led"></span><span class="t">AI MCP</span><span class="st" id="aiState">未接上</span></button>
+      </div>
       <button class="minikey txt" id="helpBtn" type="button" title="快捷鍵與說明（?）" aria-label="快捷鍵與說明">?</button>
       <div class="wctl" id="wctl" hidden><button class="minikey" type="button" data-ic="min" data-win="min" aria-label="最小化"></button><button class="minikey" type="button" data-ic="max" data-win="max" aria-label="最大化"></button><button class="minikey red" type="button" data-ic="power" data-win="close" aria-label="關閉"></button></div>
+    </div>
+    <div class="notice ai-hint" id="aiHint" hidden>
+      <span class="grow"><b>AI 可以幫你操作整個生圖站</b>：接上 Claude、Codex 或 Cursor 之後，用聊天就能叫它生圖、翻圖庫、畫漫畫、剪影片。按右上角「AI MCP」有設定和說明。</span>
+      <button class="akey sm go" id="aiHintOpen" type="button">怎麼接</button>
+      <button class="akey sm" id="aiHintHide" type="button">知道了</button>
     </div>
   </header>
 
@@ -979,6 +987,13 @@
         <div class="cm-layouts" id="cmLayouts"></div>
         <div class="muted sm" id="cmLayoutName"></div>
       </section>
+      <section class="box" id="cmCustomBox" hidden>
+        <label>自訂版面</label>
+        <div class="muted sm">示意圖就是這一頁的分格。編號是閱讀順序（上面先、同一列右邊先）；點編號跳到那一格。</div>
+        <div class="cm-wire" id="cmWire"></div>
+        <div id="cmWireCtl"></div>
+        <div class="muted sm" id="cmWireInfo"></div>
+      </section>
       <section class="box">
         <label>整頁共用</label>
         <span class="sub">畫風觸發詞（可空；有掛畫風 LoRA 才需要）</span>
@@ -990,6 +1005,16 @@
         <input type="text" id="cmLight" placeholder="例：Warm lamplight on sweaty skin in a dark bedroom.">
         <span class="sub">整頁氣氛（英文，可空）</span>
         <input type="text" id="cmMood" placeholder="例：sweet, awkward romantic-comedy">
+      </section>
+      <section class="box">
+        <label>AI 排分鏡</label>
+        <div class="muted sm">寫一段劇情（中文就好），本機 35B 會照目前的版型、角色和氣氛拆成每一格的畫面與台詞。第一次要載入模型，約 1～2 分鐘。</div>
+        <textarea id="cmScript" rows="4" spellcheck="false" placeholder="例：她半夜醒來，發現旁邊的人不見了；走到客廳，看見桌上留著一封信，手開始發抖。"></textarea>
+        <div class="row gap wrap">
+          <button class="akey sm" id="cmScriptGo" type="button">AI 排分鏡</button>
+          <label class="row gap" title="35B 台詞比較好，但要吃很多記憶體（建議同時關掉其他大模型）；記憶體不夠就用 9B"><select id="cmScriptBrain"><option value="35b">35B（台詞好）</option><option value="9b">9B（快、省記憶體）</option></select></label>
+          <label class="row gap" title="已經寫好內容的格不會被蓋掉"><input type="checkbox" id="cmScriptFill" checked> 只填空白的格</label>
+        </div>
       </section>
       <section class="box">
         <label>每一格</label>
@@ -1665,15 +1690,19 @@
 <div class="modal" id="stAiModal" hidden>
   <div class="dialog wide">
     <div class="row between"><b>讓 AI 操作生圖站</b><button class="minikey red" data-close data-ic="power" type="button" aria-label="關閉"></button></div>
-    <div class="muted sm">支援 MCP 的 AI 程式（Claude Desktop、Claude Code、Codex CLI、Cursor…）可以直接操作整個生圖站：生圖、看圖庫、漫畫台、導演台、H3 影片、生圖助手、提示詞庫，也能剪片（你在「剪輯台」分頁看得到它即時改）和修幀。會花錢、刪東西、改設定的操作，AI 一定要先問過你才會做。<br>生圖站要開著 AI 才連得到。ChatGPT 網頁版、手機 App 連不到你電腦裡的程式，用不了。</div>
+    <div class="muted sm">支援 MCP 的 AI 程式（Claude Desktop、Claude Code、Codex CLI、Cursor…）可以直接操作整個生圖站：生圖、看圖庫、漫畫台、導演台、H3 影片、生圖助手、提示詞庫、資產庫，也能剪片（你在「剪輯台」分頁看得到它即時改）和修幀。會花錢、刪東西、改設定的操作，AI 一定要先問過你才會做。<br>生圖站要開著 AI 才連得到。ChatGPT 網頁版、手機 App 連不到你電腦裡的程式，用不了。</div>
     <label for="stAiMcp">1. 把生圖站接到 AI 程式（MCP 設定）</label>
-    <div class="muted sm">Claude Desktop：設定 → 開發者 → 編輯設定，把下面 <code>anima</code> 那一段放進 <code>mcpServers</code>（以前貼過 <code>fablecut</code> 的，換成這一段），存檔後重開 Claude。Claude Code：存成專案資料夾裡的 <code>.mcp.json</code>。Codex CLI：按「複製 Codex 版」貼進 <code>~/.codex/config.toml</code>。</div>
+    <div class="muted sm">Claude Desktop：設定 → 開發者 → 編輯設定，把下面 <code>anima</code> 那一段放進 <code>mcpServers</code>（以前貼過 <code>fablecut</code> 的，換成這一段），存檔後重開 Claude。Claude Code：存成專案資料夾裡的 <code>.mcp.json</code>，或跑 <code>claude mcp add</code>。Codex CLI：按「複製 Codex 版」貼進 <code>~/.codex/config.toml</code>。Cursor：貼進 <code>%USERPROFILE%\.cursor\mcp.json</code>。</div>
     <textarea id="stAiMcp" rows="9" readonly spellcheck="false"></textarea>
     <div class="row gap wrap"><button class="akey sm" id="stAiCopyMcp" type="button">複製 MCP 設定</button><button class="akey sm" id="stAiCopyToml" type="button" title="Codex CLI 的 ~/.codex/config.toml">複製 Codex 版（TOML）</button></div>
     <label for="stAiGuide">2. 開工前把這段說明貼給 AI</label>
-    <div class="muted sm">接了 MCP 的 AI 會自己讀說明，這步可以跳過。沒辦法接 MCP 的 AI，把這段貼給它：裡面有全站每個功能的網址和用法。</div>
+    <div class="muted sm">接了 MCP 的 AI 會自己讀說明，這步可以跳過。沒辦法接 MCP 的 AI，把這段貼給它：裡面有主要功能的網址和用法；沒一條一條列到的用 <code>anima_api</code> 直接打，權限一樣（會花錢、刪東西、改設定的還是要先問你）。</div>
     <textarea id="stAiGuide" rows="10" readonly spellcheck="false"></textarea>
     <div class="row gap wrap"><button class="akey sm go" id="stAiCopyGuide" type="button">複製說明</button><span class="muted sm" id="stAiNote"></span></div>
+    <label for="stAiHello">3. 第一次跟它說什麼（複製貼上就好）</label>
+    <div class="muted sm">接好之後直接開一個新對話，把這段貼給它，它就知道要先看狀態、讀說明、動手前先問你。</div>
+    <textarea id="stAiHello" rows="3" readonly spellcheck="false"></textarea>
+    <div class="row gap wrap"><button class="akey sm" id="stAiCopyHello" type="button">複製開場白</button></div>
   </div>
 </div>
 
