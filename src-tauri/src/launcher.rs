@@ -142,13 +142,26 @@ fn comfy_reply(v: &serde_json::Value) -> bool {
         .is_some_and(|s| !s.is_empty())
 }
 
+fn norm_path(p: &str) -> String {
+    p.replace('/', "\\").trim_end_matches('\\').to_lowercase()
+}
+
+/// 這份 ComfyUI 吃的資料夾（input／output／models 所在）：啟動參數有 --base-directory 就是它指的那個，沒有就是 main.py 那層。
+/// 同一個 main.py 帶別的 --base-directory 開出來的是另一份資料（例如隔離測試用的），input 不在生圖站存圖的地方，所以不能算同一份
+fn argv_is_ours(argv: &[String], main: &str, root: &str) -> bool {
+    match argv.windows(2).find(|w| w[0] == "--base-directory") {
+        Some(w) => w[1] == root,
+        None => argv.iter().any(|a| a == main),
+    }
+}
+
 /// 這份 ComfyUI 已經被別的啟動器開在其他 port（官方桌面版預設 8000；秋葉、StabilityMatrix 也能改 port）：找出來直接用。
 /// 不然生圖站會在 8188 再開第二個，同一張顯卡各載一份模型，顯存一下就爆。
 /// 只認「同一份安裝」：/system_stats 的 argv 是同一個 main.py（或 --base-directory 同一個資料夾），
 /// 或 /internal/folder_paths 的模型資料夾在這份 ComfyUI 底下。別份 ComfyUI 不碰
 pub fn find_running(comfy_dir: &Path, ports: &[u16]) -> Option<u16> {
     let layout = crate::setup::comfy_layout(comfy_dir)?;
-    let norm = |p: &str| p.replace('/', "\\").trim_end_matches('\\').to_lowercase();
+    let norm = norm_path;
     let (main, root) = (norm(&layout.main.to_string_lossy()), norm(&layout.root.to_string_lossy()));
     let client = reqwest::blocking::Client::builder()
         .no_proxy()
@@ -164,7 +177,7 @@ pub fn find_running(comfy_dir: &Path, ports: &[u16]) -> Option<u16> {
         }
         let Some(v) = get(port, "/system_stats").filter(comfy_reply) else { return false };
         let argv: Vec<String> = v["system"]["argv"].as_array().into_iter().flatten().filter_map(|a| a.as_str()).map(norm).collect();
-        if argv.contains(&main) || argv.windows(2).any(|w| w[0] == "--base-directory" && w[1] == root) {
+        if argv_is_ours(&argv, &main, &root) {
             return true;
         }
         // argv 是相對路徑（ComfyUI\main.py）時看模型資料夾：{"checkpoints": [[路徑…], [副檔名…]], …}
@@ -195,11 +208,14 @@ pub fn other_install_on(comfy_dir: &Path, port: u16) -> bool {
     else {
         return false;
     };
-    let theirs = v["system"]["argv"]
-        .as_array()
+    let argv: Vec<&str> = v["system"]["argv"].as_array().into_iter().flatten().filter_map(|a| a.as_str()).collect();
+    // 同一個 main.py 但 --base-directory 指到別處：input／output 不是生圖站讀寫的那份，一樣算別份
+    let root = norm_path(&layout.root.to_string_lossy());
+    if argv.windows(2).any(|w| w[0] == "--base-directory" && norm_path(w[1]) != root) {
+        return true;
+    }
+    let theirs = argv
         .into_iter()
-        .flatten()
-        .filter_map(|a| a.as_str())
         .map(Path::new)
         .find(|p| p.is_absolute() && p.file_name().is_some_and(|n| n.eq_ignore_ascii_case("main.py")))
         .and_then(|p| std::fs::canonicalize(p).ok());
@@ -487,6 +503,23 @@ mod tests {
         ));
         assert!(!comfy_reply(&serde_json::json!({"system": {}})));
         assert!(!comfy_reply(&serde_json::json!({"status": "ok"})));
+    }
+
+    #[test]
+    fn same_main_py_other_base_directory_is_not_ours() {
+        let argv = |a: &[&str]| a.iter().map(|s| norm_path(s)).collect::<Vec<_>>();
+        let main = norm_path(r"D:\AI\ComfyUI_windows_portable\ComfyUI\main.py");
+        let root = norm_path(r"D:\AI\ComfyUI_windows_portable\ComfyUI");
+        // 整合包照常開：只有 main.py
+        assert!(argv_is_ours(&argv(&[r"D:\AI\ComfyUI_windows_portable\ComfyUI\main.py", "--port", "8188"]), &main, &root));
+        // 隔離測試版：同一個 main.py，--base-directory 指到別處（這次的診斷包就是連到這種，input 對不上）
+        let other = argv(&[r"D:\AI\ComfyUI_windows_portable\ComfyUI\main.py", "--port", "8189", "--base-directory", r"D:\AI\anima_app\待刪除\av27\comfy"]);
+        assert!(!argv_is_ours(&other, &main, &root));
+        // 官方桌面版：main.py 在安裝資料夾，靠 --base-directory 指到資料夾
+        let desk = norm_path(r"C:\Users\u\AppData\Local\Programs\ComfyUI\resources\ComfyUI\main.py");
+        let data = norm_path(r"D:\ComfyData");
+        assert!(argv_is_ours(&argv(&[r"C:\Users\u\AppData\Local\Programs\ComfyUI\resources\ComfyUI\main.py", "--base-directory", r"D:\ComfyData/"]), &desk, &data));
+        assert!(!argv_is_ours(&argv(&["--port", "8000"]), &desk, &data));
     }
 
     #[test]
