@@ -2,6 +2,7 @@
 import { $, el, api, toast } from "./util.js";
 import { app } from "./state.js";
 import * as i18n from "./i18n.js";
+import { resetDock } from "./dock.js";
 import { LTX_NAME, H3_NAME } from "./gen.js";
 import * as models from "./models.js";
 import { mountNet } from "./net.js";
@@ -10,6 +11,7 @@ import { openAi } from "./studio.js";
 import * as vidmap from "./vidmap.js";
 import * as updates from "./updates.js";
 import * as cache from "./cache.js";
+import * as diagnostics from "./diagnostics.js";
 
 // 恢復原廠預設勾選：圖庫、上傳暫存、預設組（LoRA 備註和設定預設不勾，免得連 Civitai 存好的觸發詞也清掉）
 const DEFAULT_PARTS = ["gallery", "uploads", "presets"];
@@ -19,11 +21,18 @@ const BROWSER_KEYS = ["form", "pe", "recent", "snippets", "snippetsMoved", "libV
 export function init() {
   updates.init();
   cache.init();
+  diagnostics.init();
   $("#setAiOpen").onclick = openAi;
   models.init();
   // 介面語言（i18n.js）：存起來、重新整理頁面
   $("#setLang").value = i18n.current();
   $("#setLang").onchange = () => i18n.choose($("#setLang").value);
+  // 自由版面（dock.js）：每頁的面板位置、大小、浮動、隱藏全部恢復預設
+  $("#dockReset").onclick = () => {
+    if (!confirm("把所有頁面的面板位置、大小都恢復成預設？")) return;
+    resetDock();
+    toast("版面都恢復成預設了", "ok");
+  };
   // 儲存失敗要講出來（不然按了沒反應，使用者以為存好了）
   $("#setKeySave").onclick = async () => {
     try {
@@ -49,7 +58,7 @@ export function init() {
     if (!(temp >= 0.1 && temp <= 1.5)) return toast("隨機程度請填 0.1～1.5", "err");
     if ($("#setPeMode").value === "partial" && !(layers >= 1 && layers <= 40)) return toast("層數請填 1～40", "err");
     try {
-      await api("/api/settings", { json: { pe_mode: $("#setPeMode").value, pe_general: $("#setPeGeneral").value, pe_partial_layers: layers || 16, pe_idle: idle, pe_temperature: temp,
+      await api("/api/settings", { json: { pe_mode: $("#setPeMode").value, pe_engine: $("#setPeEngine").value, pe_general: $("#setPeGeneral").value, pe_partial_layers: layers || 16, pe_idle: idle, pe_temperature: temp,
         pe_close_after: $("#setPeClose").checked, pe_zh: $("#setPeZh").checked, pe_think: $("#setPeThink").checked } });
       await app.refreshState();
       toast("已儲存（下次改寫生效；換執行方式會重新載入模型）", "ok");
@@ -302,6 +311,7 @@ export function onState(st) {
   if (document.activeElement !== $("#setNeg")) $("#setNeg").value = s.negative || "";
   if (!$("#setPe").contains(document.activeElement)) {
     $("#setPeMode").value = s.pe_mode || "gpu";
+    $("#setPeEngine").value = s.pe_engine === "official" ? "official" : "general";
     $("#setPeGeneral").value = s.pe_general || "auto";
     $("#setPeLayers").value = s.pe_partial_layers ?? 16;
     $("#setPeIdle").value = s.pe_idle ?? 120;
@@ -318,7 +328,9 @@ export function onPe(pe) {
   if (!pe) return;
   if (!pe.ok) { $("#setPeState").textContent = "無法使用：" + pe.error; return; }
   const a = pe.available || {};
-  const miss = ["t2i", "i2i"].filter((k) => !a[k]);
+  // 預設用通用模型；選了官方 PE 才看 PE 那兩顆
+  const official = $("#setPeEngine")?.value === "official";
+  const miss = official ? ["t2i", "i2i"].filter((k) => !a[k]).map((k) => "官方 PE " + k) : a.adult ? [] : ["通用模型 9B／35B"];
   $("#setPeState").textContent = (pe.running ? `執行中：${pe.kind}（${pe.ngl === 0 ? "CPU" : pe.ngl >= 99 ? "GPU" : "GPU " + pe.ngl + " 層"}）` : "目前沒有載入")
     + (miss.length ? `・缺模型：${miss.join("、")}` : "") + (a.server ? "" : "・缺 llama-server.exe");
 }
@@ -326,6 +338,7 @@ export function onPe(pe) {
 // 開機時改寫節點還沒就緒、提示詞清單讀失敗的話，進設定頁再讀一次
 let netShown = false;
 export function show() {
+  diagnostics.scan();
   loadReset(); loadVideo(); models.show(); if (!PROMPTS.length) loadPrompts();
   if (!netShown) { netShown = true; mountNet($("#netBox")); } // 網路（代理、下載來源）：第一次打開設定頁才讀
   mountComfyOpts($("#comfyOptsBox")); // ComfyUI 啟動方式：每次打開都重讀（安裝與修復可能改過）

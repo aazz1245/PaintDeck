@@ -4,6 +4,7 @@
 //!   即時事件    WS   /ws                    進度、即時預覽、完成的圖、下載進度
 //!   其餘 API 見 router()
 mod api_agent;
+mod api_agent_tools;
 mod api_assets;
 mod api_charsheet;
 mod api_bundle;
@@ -19,13 +20,17 @@ mod api_lib;
 mod api_misc;
 mod api_pe;
 mod api_play;
+mod api_refmod;
+mod api_runninghub;
 mod api_studio;
 mod api_video;
+mod api_video_review;
 mod api_voice;
 mod api_wf;
 mod api_models;
 mod api_update;
 mod api_cache;
+mod api_diagnostics;
 
 use crate::civitai::Civitai;
 use crate::comfy::Comfy;
@@ -52,6 +57,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const APP_ID: &str = "anima-2";
 
 pub struct App {
+    pub diagnostics: Arc<crate::diagnostics::Store>,
     pub cache: Arc<crate::cache::Control>,
     pub setup: OnceLock<Arc<crate::setup::Setup>>,
     pub updates: Arc<crate::updater::Service>,
@@ -140,9 +146,7 @@ impl<S: Send + Sync> FromRequest<S> for Body {
 
 /// 在背景執行緒跑會卡住的工作（搬檔案、縮圖、打包 zip、組節點圖）
 pub async fn blocking<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> T {
-    tokio::task::spawn_blocking(f)
-        .await
-        .expect("背景工作意外中止")
+    crate::diagnostics::blocking(f).await
 }
 
 /// 只留檔名（擋掉 ..\ 之類的路徑）
@@ -331,6 +335,7 @@ pub fn router(app: Shared) -> Router {
         .route("/api/settings/import", post(api_gen::settings_import))
         // 影片模型（內建 LTX-2.3 或匯入的 ComfyUI 工作流）
         .route("/api/video/workflows", get(api_video::list).post(api_video::add))
+        .route("/api/video/media/upload", post(api_video::upload_media).layer(DefaultBodyLimit::max(220 * 1024 * 1024)))
         .route("/api/video/workflows/{id}", get(api_video::detail).post(api_video::set_map).delete(api_video::remove))
         // 生圖工作流（匯入的 ComfyUI 工作流，生成頁模型選單選「⚙ 工作流：…」）
         .route("/api/image/workflows", get(api_wf::list).post(api_wf::import))
@@ -360,6 +365,12 @@ pub fn router(app: Shared) -> Router {
         .route("/api/models/downloads", get(api_models::downloads))
         .route("/api/models/restart_comfy", post(api_models::restart_comfy))
         // 生成與任務
+        .route("/api/diagnostics", get(api_diagnostics::list))
+        .route("/api/diagnostics/job/{job}", get(api_diagnostics::job))
+        .route("/api/diagnostics/preferences", post(api_diagnostics::preferences))
+        .route("/api/diagnostics/clear", post(api_diagnostics::clear))
+        .route("/api/diagnostics/{id}/report", post(api_diagnostics::report))
+        .route("/api/diagnostics/{id}/export", get(api_diagnostics::export))
         .route("/api/generate", post(api_gen::generate))
         .route("/api/detail", post(api_play::detail))
         .route("/api/play/models", get(api_play::models))
@@ -426,12 +437,21 @@ pub fn router(app: Shared) -> Router {
         .route("/api/assets/{id}/file/remove", post(api_assets::remove_file))
         .route("/api/assets/{id}/to_input", post(api_assets::to_input))
         .route("/api/assets/{id}/apply", post(api_assets::apply))
+        .route("/api/assets/{id}/refmod", post(api_assets::make_refmod))
+        .route("/api/refmod/status", get(api_refmod::status))
+        .route("/api/refmod/install", post(api_refmod::install))
+        .route("/api/runninghub", get(api_runninghub::get))
+        .route("/api/runninghub/config", post(api_runninghub::config))
+        .route("/api/runninghub/test", post(api_runninghub::test))
         .route("/api/assets/file/{name}", get(api_assets::get_file))
         .route("/api/charsheet/prompt", post(api_charsheet::prompt))
         .route("/api/charsheet/tags", post(api_charsheet::tags))
+        .route("/api/charsheet/spec", post(api_charsheet::spec))
         .route("/api/loras/meta", post(api_misc::lora_meta))
         .route("/api/loras/delete", post(api_misc::lora_delete))
         .route("/lora_preview/{file}", get(api_misc::lora_preview))
+        .route("/api/loras/local-preview", get(api_misc::lora_local_preview))
+        .route("/api/civitai/bases", get(api_misc::civitai_bases))
         .route("/api/civitai/search", get(api_misc::civitai_search))
         .route("/api/civitai/download", post(api_misc::civitai_download))
         .route("/api/downloads", get(api_misc::downloads))
@@ -454,6 +474,11 @@ pub fn router(app: Shared) -> Router {
         .route("/api/director/projects", get(api_director::projects))
         .route("/api/director/project", post(api_director::project_save))
         .route("/api/director/project/new", post(api_director::project_new))
+        .route("/api/director/from_sheet", post(api_director::from_sheet))
+        .route("/api/director/take/select", post(api_director::take_select))
+        .route("/api/director/tail/candidates", post(api_video_review::candidates))
+        .route("/api/director/tail/select", post(api_video_review::select))
+        .route("/api/director/review/{id}/{name}", get(api_video_review::image))
         .route("/api/director/project/delete", post(api_director::project_delete))
         .route("/api/director/project/{id}", get(api_director::project_get))
         .route("/api/director/write", post(api_director::write))
@@ -471,6 +496,7 @@ pub fn router(app: Shared) -> Router {
         .route("/api/comic/stop", post(api_comic::stop))
         .route("/api/comic/prompts", post(api_comic::prompts))
         .route("/api/comic/layout", post(api_comic::layout_preview))
+        .route("/api/comic/layout/ai", post(api_comic::layout_ai))
         .route("/api/comic/script", post(api_comic::script))
         .route("/api/comic/run/remove", post(api_comic::run_remove))
         // 生圖助手
@@ -481,6 +507,8 @@ pub fn router(app: Shared) -> Router {
         .route("/api/agent/session/{id}", get(api_agent::session_get))
         .route("/api/agent/say", post(api_agent::say))
         .route("/api/agent/stop", post(api_agent::stop))
+        .route("/api/agent/confirm", post(api_agent::confirm))
+        .route("/api/agent/fill", post(api_agent::fill))
         .route("/api/agent/loras", get(api_agent::loras))
         .route("/api/agent/loras/learn", post(api_agent::learn))
         .route("/api/agent/loras/stop", post(api_agent::learn_stop))
@@ -500,6 +528,7 @@ pub fn router(app: Shared) -> Router {
         .route("/api/h3/write", post(api_h3::write))
         .route("/api/h3/chains", get(api_h3chain::list))
         .route("/api/h3/chain/save", post(api_h3chain::save))
+        .route("/api/h3/chain/take/select", post(api_h3chain::select_take))
         .route("/api/h3/chain/delete", post(api_h3chain::delete))
         .route("/api/h3/chain/run", post(api_h3chain::run))
         .route("/api/h3/chain/stop", post(api_h3chain::stop))
@@ -552,6 +581,7 @@ pub fn router(app: Shared) -> Router {
         .nest_service(static_prefix(), ServeDir::new(web.clone()))
         .nest_service("/static", ServeDir::new(web))
         .layer(middleware::from_fn(no_stale_static))
+        .layer(middleware::from_fn_with_state(app.clone(), api_diagnostics::capture))
         .layer(middleware::from_fn(only_local))
         .layer(middleware::from_fn_with_state(app.clone(), update_gate))
         .layer(DefaultBodyLimit::max(64 * 1024 * 1024))
@@ -643,7 +673,9 @@ pub async fn start(paths: Paths, comfy_url: &str) -> Result<Shared, String> {
     crate::model_dirs::init_comfy(&paths.comfy_root);
     let db = Arc::new(Db::open(&paths.db).map_err(|e| format!("開資料庫失敗：{e}"))?);
     let hub = Hub::new();
+    let diagnostics = crate::diagnostics::Store::new(&paths);
     let comfy = Comfy::new(comfy_url, db.clone(), hub.clone());
+    comfy.attach_diagnostics(diagnostics.clone());
     comfy.start();
     let civitai = Civitai::new(
         &paths.loras,
@@ -668,6 +700,7 @@ pub async fn start(paths: Paths, comfy_url: &str) -> Result<Shared, String> {
     let data_dir = paths.data.clone();
     let studio = crate::studio::Studio::new(&paths.res, &paths.data);
     let app = Arc::new(App {
+        diagnostics,
         cache: Arc::new(crate::cache::Control::default()),
         setup: OnceLock::new(),
         updates: Arc::new(crate::updater::Service::new(&data_dir)),
@@ -692,6 +725,7 @@ pub async fn start(paths: Paths, comfy_url: &str) -> Result<Shared, String> {
         restart_comfy: OnceLock::new(),
     });
     api_cloud::spawn_idle_watch(&app);
+    api_diagnostics::start_monitor(&app);
     // 舊版導演台角色卡搬進資產庫（只做一次；失敗下次開導演台或重開站會再試）
     let a = app.clone();
     tokio::spawn(async move {

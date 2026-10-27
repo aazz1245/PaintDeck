@@ -15,6 +15,7 @@ import * as director from "./director.js";
 import * as studio from "./studio.js";
 import * as comic from "./comic.js";
 import * as agent from "./agent.js";
+import { onAgentUi } from "./agentui.js";
 import * as play from "./play.js";
 import * as h3 from "./h3.js";
 import * as h3chain from "./h3chain.js";
@@ -22,6 +23,8 @@ import * as shotsheet from "./shotsheet.js";
 import * as framepick from "./framepick.js";
 import * as charsheet from "./charsheet.js";
 import * as i18n from "./i18n.js";
+import * as diagnostics from "./diagnostics.js";
+import { mountDock } from "./dock.js";
 
 function showPage(p) {
   app.page = p;
@@ -78,6 +81,7 @@ function connect() {
   ws.onmessage = (ev) => {
     if (typeof ev.data !== "string") return gen.onPreview(ev.data);
     const m = JSON.parse(ev.data);
+    diagnostics.onEvent(m);
     switch (m.type) {
       case "hello": setOnline(m.online, m.remaining); if (connectedOnce) refreshState(); connectedOnce = true; break;
       case "comfy": setOnline(m.online); if (m.online) refreshState(); else toast("ComfyUI 連線中斷，正在重新連線…", "err"); break;
@@ -88,6 +92,7 @@ function connect() {
       case "director": case "director_llm": director.onEvent(m); break;
       case "comic": comic.onEvent(m); break;
       case "agent": case "agent_llm": case "agent_lora": agent.onEvent(m); break;
+      case "agent_ui": onAgentUi(m); break;
       case "agent_cloud": agent.onEvent(m); h3.onEvent(m); h3chain.onEvent(m); break;
       case "h3": h3.onEvent(m); break;
       case "h3chain": h3chain.onEvent(m); break;
@@ -135,6 +140,36 @@ function labelControls() {
 }
 labelControls();
 
+// 生成頁的停靠式版面（dock.js）：看圖區＋生成鈕固定在中間，其他面板可以搬到左／右／下區、收起、拉寬。要在 i18n 前面組好，面板標題才會一起翻
+mountDock($("#page-gen"), {
+  name: "gen",
+  main: [$("#page-gen > .monitor"), $("#genRow")],
+  panels: [
+    { id: "source", title: "模型與輸入", zone: "left" },
+    { id: "prompt", title: "提示詞", zone: "left" },
+    { id: "lora", title: "LoRA 卡匣", zone: "left" },
+    { id: "params", title: "尺寸與模式設定", zone: "left" },
+    { id: "extra", title: "附加", zone: "left" },
+    { id: "sampler", title: "取樣與種子", zone: "left" },
+    { id: "recent", title: "幻燈片匣", zone: "right", min: 100 },
+  ],
+  sizes: { top: 160, left: 350, right: 118, bottom: 200 },
+});
+// 其他頁（2026-10-26 使用者：「我剛講的是所有，包含其他功能的介面」）：每頁原本的欄位 → 一欄當主區，其他欄變面板
+{
+  const cols = (host) => [...$(host).children];
+  const dockCols = (name, host, mainAt, panels, sizes) => {
+    const c = cols(host);
+    mountDock($(host), { name, inset: true, main: c[mainAt], panels: panels.map((p) => ({ ...p, el: c[p.at] })), sizes: { top: 220, left: 380, right: 340, bottom: 260, ...sizes } });
+  };
+  dockCols("assets", "#page-assets .as-wrap", 0, [{ id: "edit", title: "編輯資產", zone: "right", at: 1, min: 360 }], { right: 420 });
+  dockCols("director", "#page-director section[data-tab=plan] > .dir-cols", 1, [{ id: "story", title: "劇情與設定", zone: "left", at: 0, min: 300 }], { left: 400 });
+  dockCols("frames", "#frCols", 0, [{ id: "frames", title: "全部的幀", zone: "right", at: 1 }], { right: 420 });
+  dockCols("h3", "#h3Work", 1, [{ id: "start", title: "起手式與素材", zone: "left", at: 0, min: 300 }, { id: "shoot", title: "開拍與成品", zone: "right", at: 2, min: 280 }], { left: 360, right: 330 });
+  dockCols("h3long", "#page-director section[data-sub=long] > .dir-cols", 1, [{ id: "film", title: "長片設定", zone: "left", at: 0, min: 300 }, { id: "shoot", title: "開拍與成品", zone: "right", at: 2, min: 280 }], { left: 360, right: 330 });
+  dockCols("comic", "#page-comic .cm-cols", 1, [{ id: "layout", title: "版型與分格", zone: "left", at: 0, min: 320 }], { left: 440 });
+}
+
 // 介面語言：存的不是繁中才載入（簡中 OpenCC、英文字典）；先翻好原始畫面再讓各頁初始化（觀景窗的字會被 deck.js 切成小段），
 // 之後新長出來的字由 MutationObserver 接著翻。繁中直接回來，不用等。
 await i18n.init();
@@ -167,3 +202,17 @@ function fromHash() {
 }
 window.addEventListener("hashchange", fromHash);
 fromHash();
+
+// 生圖助手改成獨立視窗：頂列的「✦ 助手」開新視窗（桌面版走 main.rs 的 open_assistant，瀏覽器版用 window.open），
+// 新視窗載入同一頁加 ?solo=agent，只顯示助手頁（css 的 .solo）
+const solo = new URLSearchParams(location.search).get("solo") === "agent";
+if (solo) {
+  document.documentElement.classList.add("solo");
+  document.title = "繪匣 助手";
+  showPage("agent");
+}
+$("#assistBtn").addEventListener("click", () => {
+  const tauri = window.__TAURI__;
+  if (tauri?.core) tauri.core.invoke("open_assistant").catch((e) => console.warn("開不了助手視窗", e));
+  else window.open("/?solo=agent#agent", "paintdeck-assistant", "width=560,height=860");
+});

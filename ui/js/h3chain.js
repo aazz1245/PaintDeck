@@ -7,16 +7,22 @@ import { pickFromGallery, openLightboxRecord } from "./gallery.js";
 const F = (id) => document.getElementById(id);
 const SECS = [5, 6, 8, 10, 12, 15];
 const LANGS = ["Chinese", "English", "Japanese", "Cantonese", "Korean"];
-const ST = { todo: "還沒拍", running: "拍攝中", done: "拍好了", error: "失敗", stopped: "已停止" };
+const ST = { todo: "還沒拍", running: "拍攝中", done: "拍好了", error: "失敗", stopped: "已停止", review: "待選片" };
 const FILE_MAX = 30 * 2 ** 20;
 let list = [];          // /api/h3/chains
 let chain = null;       // 正在看的那條（/api/h3/chain/{id}）
 let cloud = null;       // /api/agent/cloud
+let rhub = null;        // /api/runninghub（長片選 RunningHub 拍時看金鑰）
 let saveTimer = null;
 let lastMsg = "";
+let openRevision = 0;
+let listRevision = 0, saveRevision = 0, editRevision = 0;
+let selecting = null;
 
 const btn = (label, onclick, cls = "akey sm", title = "") => el("button", { class: cls, type: "button", title: title || undefined, onclick }, label);
-const running = () => !!chain?.running;
+const running = () => !!chain?.running || (!!chain && selecting === chain);
+const current = (owner, revision) => chain === owner && openRevision === revision;
+const sizeLocked = () => Array.isArray(chain?.size) || (chain?.segments || []).some(s => s.status === "done" || s.selected_take || s.pending_take || (s.takes || []).length);
 const fileB64 = (file) => new Promise((ok, no) => {
   const fr = new FileReader();
   fr.onload = () => ok(String(fr.result).split(",")[1] || "");
@@ -33,7 +39,12 @@ function setStatus(msg, cls = "g") {
 
 // ================================================================ 讀、存
 async function loadList(want) {
-  try { list = (await api("/api/h3/chains")).chains; } catch (e) { return toast(e.message, "err"); }
+  const revision = openRevision, ticket = ++listRevision;
+  let loaded;
+  try { loaded = (await api("/api/h3/chains")).chains; }
+  catch (e) { if (revision === openRevision && ticket === listRevision) toast(e.message, "err"); return; }
+  if (revision !== openRevision || ticket !== listRevision) return;
+  list = loaded;
   const sel = F("hcList");
   sel.replaceChildren(...list.map((c) => el("option", { value: c.id }, `${c.title}（${c.done}／${c.segments} 段）`)));
   if (!list.length) sel.append(el("option", { value: "" }, "還沒有長片：按「＋ 新的」"));
@@ -43,17 +54,21 @@ async function loadList(want) {
 }
 
 async function open(id) {
+  const ticket = ++openRevision;
   clearTimeout(saveTimer);
   if (!id) { chain = null; return paint(); }
-  try { chain = await api(`/api/h3/chain/${id}`); } catch (e) { chain = null; toast(e.message, "err"); }
+  try { const loaded = await api(`/api/h3/chain/${id}`); if (ticket !== openRevision) return; chain = loaded; }
+  catch (e) { if(ticket !== openRevision) return; chain = null; toast(e.message, "err"); }
   if (chain) store.set("hcId", chain.id);
   paint();
   // 從拍攝單套用過來的長片：拍攝單帶回上面（草稿有東西時先問）
-  if (chain?.sheet) import("./shotsheet.js").then((m) => m.offerLoad(chain.sheet)).catch(() => {});
+  const owner = chain;
+  if (owner?.sheet) import("./shotsheet.js").then((m) => { if (current(owner, ticket)) m.offerLoad(owner.sheet); }).catch(() => {});
 }
 
 /** 拍攝單「套用到長片」：每段的提示詞、首幀、參考圖、拍攝單本身寫進目前這條（已經有拍好的段就問要不要另存一條新的）。回 true＝存好了 */
-export async function applySheet({ sheet, prompts, first = null, refs = [] }) {
+export async function applySheet({ sheet, prompts, first = null, refs = [], segRefs = [] }) {
+  const owner = chain, revision = openRevision;
   let base = chain;
   if (base && running()) { toast("這條長片正在拍：等拍完或停掉再套用", "err"); return false; }
   if (base && (base.segments || []).some((s) => s.status === "done")) {
@@ -63,46 +78,68 @@ export async function applySheet({ sheet, prompts, first = null, refs = [] }) {
   const body = {
     ...(base || {}), title: base?.title && base.title !== "未命名長片" ? base.title : sheet.title || "拍攝單長片",
     look: "", scene: "", style: "", voice: "", sound: "", ref: null, first: first || null, refs, sheet,
-    segments: prompts.map((text, i) => ({ secs: sheet.segments[i]?.secs || 10, text, lines: [], last: null, status: "todo" })),
+    segments: prompts.map((text, i) => ({ secs: sheet.segments[i]?.secs || 10, text, lines: [], last: null, status: "todo", ...(Array.isArray(segRefs[i]) ? { refs: segRefs[i] } : {}),
+      entry: sheet.segments[i]?.entry, exit: sheet.segments[i]?.exit, inherit_entry: sheet.segments[i]?.inherit_entry })),
     final: null,
   };
   if (!base) delete body.id;
   let r;
   try { r = await api("/api/h3/chain/save", { json: { chain: body } }); } catch (e) { toast(e.message, "err"); return false; }
+  if (!current(owner, revision)) return false;
   await loadList(r.id);
   return true;
 }
 
 /** 欄位改了：0.8 秒後存（拍攝中不能存） */
 function changed() {
+  editRevision++;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(save, 800);
 }
 
 async function save() {
   clearTimeout(saveTimer);
-  if (!chain || running()) return;
+  if (!chain || running()) return false;
+  const owner = chain, revision = openRevision, edit = editRevision, ticket = ++saveRevision;
   try {
-    const r = await api("/api/h3/chain/save", { json: { chain } });
+    const r = await api("/api/h3/chain/save", { json: { chain: structuredClone(owner) } });
+    if (!current(owner, revision) || edit !== editRevision || ticket !== saveRevision) return false;
     if (!chain.id) return loadList(r.id);
     // 不整個換掉：畫面上的段落卡還拿著原本的物件，換掉之後再打的字會改到舊物件
     for (const k of ["id", "est", "running", "size", "updated"]) chain[k] = r[k];
+    let resultsChanged = false;
+    for (let i = 0; i < (r.segments || []).length; i++) {
+      const local = owner.segments[i], saved = r.segments[i];
+      if (!local) continue;
+      for (const k of ["status", "error", "seed", "took", "head", "frames", "handover", "files", "check", "takes", "selected_take", "pending_take"]) {
+        if (JSON.stringify(local[k] ?? null) !== JSON.stringify(saved[k] ?? null)) resultsChanged = true;
+        local[k] = structuredClone(saved[k] ?? null);
+      }
+    }
+    owner.final = structuredClone(r.final ?? null);
+    if (resultsChanged) paintSegs();
+    paintRun();
     const o = [...F("hcList").options].find((x) => x.value === r.id);
     if (o) o.textContent = `${r.title}（${r.segments.filter((x) => x.status === "done").length}／${r.segments.length} 段）`;
     paintEst();  // 段落卡不重畫：正在打字的框會失去游標
-  } catch (e) { toast(e.message, "err"); }
+    return true;
+  } catch (e) { if (current(owner, revision)) toast(e.message, "err"); return false; }
 }
 
 async function create() {
+  const owner = chain, revision = openRevision;
   try {
-    const r = await api("/api/h3/chain/save", { json: { chain: { title: "未命名長片", segments: [{ secs: 10, text: "" }] } } });
+    const r = await api("/api/h3/chain/save", { json: { chain: { title: "未命名長片", review: true, segments: [{ secs: 10, text: "" }] } } });
+    if (!current(owner, revision)) return;
     await loadList(r.id);
   } catch (e) { toast(e.message, "err"); }
 }
 
 async function remove() {
   if (!chain || !confirm(`「${chain.title}」移到待刪除？（已經進圖庫的長片不受影響）`)) return;
-  try { await api("/api/h3/chain/delete", { json: { id: chain.id } }); } catch (e) { return toast(e.message, "err"); }
+  const owner = chain, revision = openRevision;
+  try { await api("/api/h3/chain/delete", { json: { id: owner.id } }); } catch (e) { return toast(e.message, "err"); }
+  if (!current(owner, revision)) return;
   chain = null;
   toast("已移到待刪除", "ok");
   loadList();
@@ -111,15 +148,26 @@ async function remove() {
 // ================================================================ 畫面
 function paint() {
   const on = !!chain;
-  for (const id of ["hcTitle", "hcLook", "hcScene", "hcStyle", "hcVoice", "hcSound", "hcAspect", "hcQuality", "hcDel", "hcAddSeg", "hcRun", "hcJoin"]) F(id).disabled = !on;
+  for (const id of ["hcTitle", "hcLook", "hcScene", "hcStyle", "hcVoice", "hcSound", "hcAspect", "hcQuality", "hcWhere", "hcDel", "hcAddSeg", "hcRun", "hcJoin"]) F(id).disabled = !on;
   F("hcTitle").value = chain?.title || "";
   for (const [id, k] of [["hcLook", "look"], ["hcScene", "scene"], ["hcStyle", "style"], ["hcVoice", "voice"], ["hcSound", "sound"]]) F(id).value = chain?.[k] || "";
   F("hcAspect").value = chain?.aspect || "9:16";
   F("hcQuality").value = chain?.quality || "std";
+  F("hcWhere").value = chain?.where || "runpod";
   paintPic("hcRef", "ref", "角色參考圖（臉、髮型、服裝）");
   paintPic("hcFirst", "first", "第 1 段的第一格（可不放）");
+  let mode = F("hcReviewMode");
+  if (!mode) {
+    const input = el("input", { type:"checkbox", id:"hcReviewMode" });
+    const row = el("label", {class:"check film-review-mode"}, input, "逐鏡審片：拍好一鏡後先選版本，再繼續下一鏡");
+    F("hcSegs").before(row);
+    input.onchange = () => { if(chain) { chain.review=input.checked; changed(); } };
+    mode = input;
+  }
+  mode.checked = chain?.review === true;
+  mode.disabled = !chain || running();
   paintSegs();
-  paintEst();
+  paintCloud();
   paintRun();
 }
 
@@ -135,12 +183,15 @@ function paintPic(box, key, label) {
 /** 選一張圖放進 input（走 H3 影片台的 /api/h3/media），拿到檔名給 cb */
 function pickInto(cb, from) {
   if (!chain || running()) return;
+  const owner = chain, revision = openRevision;
   const put = async (body) => {
+    if (!current(owner, revision)) return;
     try {
       const r = await api("/api/h3/media", { json: body, timeout: 5 * 60 * 1000 });
+      if (!current(owner, revision)) return;
       if (r.kind !== "image") throw new Error("這裡要放圖");
       cb(r.name);
-    } catch (e) { toast(e.message, "err"); }
+    } catch (e) { if (current(owner, revision)) toast(e.message, "err"); }
   };
   if (from === "gallery") return pickFromGallery((rec) => put({ gallery_id: rec.id }), { title: "從圖庫選一張圖" }).catch((e) => toast(e.message, "err"));
   const inp = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp", hidden: true });
@@ -165,7 +216,7 @@ function paintSegs() {
 }
 
 function segEl(s, i) {
-  const lock = running() || s.status === "done";
+  const lock = running() || s.status === "done" || !!s.pending_take;
   const st = el("span", { class: `h3-st ${s.status === "todo" ? "" : s.status}` }, ST[s.status] || s.status);
   const secs = el("select", { "aria-label": "秒數", disabled: lock }, ...SECS.map((n) => el("option", { value: n }, `${n} 秒`)));
   secs.value = String(s.secs);
@@ -177,14 +228,48 @@ function segEl(s, i) {
     s.took ? el("span", { class: "muted sm" }, `花了 ${mins(s.took)}`) : null,
     el("span", { class: "grow" }),
     s.status !== "todo" && !running() ? btn("從這段重拍", () => rerun(i), "akey sm", "這段和後面的段全部重拍（後面的段是接這段拍的）") : null,
-    !lock && i > lastDone() && chain.segments.length > 1 ? btn("×", () => { chain.segments.splice(i, 1); paintSegs(); changed(); }, "h3-x", "刪掉這一段") : null);
+    !lock && !(s.takes || []).length && i > lastDone() && chain.segments.length > 1 ? btn("×", () => { chain.segments.splice(i, 1); paintSegs(); changed(); }, "h3-x", "刪掉這一段") : null);
   const lines = el("div", { class: "h3-lines" }, ...(s.lines || []).map((ln, j) => lineEl(s, ln, j, lock)));
   const out = [hd, text, lines];
   if (!lock) out.push(el("div", { class: "row gap wrap" }, btn("＋ 台詞", () => { (s.lines ||= []).push({ at: 1, lang: "Chinese", text: "" }); paintSegs(); changed(); })));
   out.push(lastEl(s, lock));
+  if (Array.isArray(s.refs)) out.push(el("div", { class: "muted sm" }, `參考圖：這段只送 ${s.refs.length}／${(chain.refs || []).length} 張（在拍攝單改）`));
   if (s.error) out.push(el("div", { class: "warn-text sm" }, s.error));
   if (s.status === "done") out.push(resultEl(s, i));
+  if ((s.takes || []).length) out.push(takesEl(s,i));
+  if (s.draft) out.push(el("details",{class:"film-takes"},el("summary",{},"切版前保留的未拍草稿"),
+    el("pre",{translate:"no",style:"white-space:pre-wrap"},JSON.stringify(s.draft,null,2)),
+    btn("套回草稿",async()=>{if(running())return;Object.assign(s,s.draft);delete s.draft;await save();await open(chain.id);},"akey sm")));
   return el("div", { class: "h3-shot" }, ...out);
+}
+
+function takesEl(s, i) {
+  const list = el("div", {class:"film-takes-grid"});
+  for (const take of s.takes || []) {
+    const chosen = take.id === s.selected_take;
+    const file = take.result?.files?.end;
+    const adopt = btn(chosen ? "已採用" : "採用這版", async () => {
+      if (running()) return;
+      if (!chosen && chain.segments.slice(i+1).some(x=>x.status==="done") && !confirm("採用不同版本後，後面的鏡頭需要重新接續；所有舊版本會保留。繼續嗎？")) return;
+      const owner = chain, revision = openRevision;
+      clearTimeout(saveTimer);
+      if (!(await save()) || !current(owner, revision)) return;
+      selecting = owner;
+      paint();
+      try {
+        const selected = await api("/api/h3/chain/take/select", {json:{id:owner.id,seg:i,take_id:take.id}});
+        if (current(owner, revision)) chain = selected;
+      } catch(e) { if (current(owner, revision)) toast(e.message,"err"); }
+      finally { if (selecting === owner) selecting = null; if (openRevision === revision) paint(); }
+    });
+    adopt.disabled = (chosen && !s.pending_take) || running();
+    list.append(el("div", {class:`film-take ${chosen ? "selected" : ""}`}, el("b",{},take.label || "拍攝版本"),
+      file ? el("video", {class:"h3-prev",src:`/api/h3/chain/${chain.id}/file/${encodeURIComponent(file)}`,controls:true,preload:"none",playsinline:true}) : null,
+      adopt,el("details",{},el("summary",{},"拍攝配方"),el("pre",{translate:"no"},JSON.stringify(take.recipe,null,2)))));
+  }
+  return el("details",{class:"film-takes",open:!!s.pending_take},el("summary",{},"拍攝版本",el("span",{class:"muted sm"},` (${s.takes.length})`)),
+    s.pending_take ? el("p",{class:"muted sm"},"新版本尚未採用，下一鏡會等待你的選擇。") : null,list,
+    !running() ? btn("重拍這鏡並審片",()=>{chain.review=true;run(i);},"akey sm") : null);
 }
 
 function lineEl(s, ln, j, lock) {
@@ -228,30 +313,43 @@ function paintEst() {
   const todo = chain.segments.filter((s) => s.status !== "done");
   const secs = todo.reduce((a, s) => a + s.secs, 0);
   const price = cloud?.pod && cloud.price ? `・每小時約 US$${(+cloud.price).toFixed(2)}，這次約 US$${((chain.est / 3600) * cloud.price).toFixed(2)}` : "";
-  F("hcEst").textContent = todo.length
-    ? `還有 ${todo.length} 段、${secs} 秒影片，雲端大約要算 ${mins(chain.est)}（第一次載入模型再加約 15 分鐘）${price}`
-    : "全部拍好了";
+  // RunningHub：照秒扣幣（48GB 每秒 0.4），不用載模型、沒有開機時間
+  const rate = (rhub?.rates || []).find((r) => r.instance === rhub?.instance)?.coins_per_sec ?? 0.4;
+  F("hcEst").textContent = !todo.length ? "全部拍好了"
+    : chain.where === "runninghub" ? `還有 ${todo.length} 段、${secs} 秒影片，RunningHub 大約要算 ${mins(chain.est)}，約 ${Math.round(chain.est * rate)} RH 幣（實際照秒算）`
+    : `還有 ${todo.length} 段、${secs} 秒影片，雲端大約要算 ${mins(chain.est)}（第一次載入模型再加約 15 分鐘）${price}`;
   const sz = chain.size ? `畫面 ${chain.size[0]}×${chain.size[1]}（第 1 段拍好後固定）` : "畫面大小在第 1 段開拍時決定：有首幀就照首幀的比例";
   F("hcSizeNote").textContent = sz;
 }
 
 function paintCloud() {
+  if (chain?.where === "runninghub") {
+    F("hcCloud").textContent = !rhub ? "讀不到 RunningHub 設定" : rhub.has_key
+      ? "用 RunningHub 拍：不用開雲端；每段一個任務，上一段最後約 0.9 秒的畫面和聲音當下一段的開頭（RefMod 不能用）"
+      : "還沒填 RunningHub 的 API Key：到「H3 影片」分頁「在哪跑 → RunningHub」填";
+    F("hcGoCloud").hidden = !!rhub?.has_key;
+    F("hcGoCloud").textContent = "到「H3 影片」分頁填金鑰";
+    paintEst();
+    return;
+  }
+  F("hcGoCloud").textContent = "到「H3 影片」分頁開雲端";
   const st = cloud;
   const packs = st?.pod_packs || st?.packs || {};
   const ok = st?.phase === "ready" && packs.h3;
   F("hcCloud").textContent = !st ? "讀不到雲端狀態" : ok ? `雲端好了（${st.gpu || "雲端"}）${st.idle_left != null ? `・再閒置 ${st.idle_left} 分鐘自動關` : ""}`
-    : st.phase === "ready" ? "雲端這台沒裝 H3 影片包" : `雲端${{ off: "沒開", starting: "開機中…", stopping: "關機中…" }[st.phase] || st.phase}：長片只能用雲端`;
+    : st.phase === "ready" ? "雲端這台沒裝 H3 影片包" : `雲端${{ off: "沒開", starting: "開機中…", stopping: "關機中…" }[st.phase] || st.phase}：要先開雲端，或在「在哪拍」改用 RunningHub`;
   F("hcGoCloud").hidden = ok;
   paintEst();
 }
 
 function paintRun() {
   const r = running();
-  F("hcRun").disabled = !chain || r;
+  F("hcRun").disabled = !chain || r || chain.segments.some(s=>s.pending_take);
+  if (F("hcReviewMode")) F("hcReviewMode").disabled = !chain || r;
   F("hcStop").disabled = !r;
   F("hcJoin").disabled = !chain || r || !chain.segments.every((s) => s.status === "done");
   F("hcAddSeg").disabled = !chain || r || chain.segments.length >= 30;
-  for (const id of ["hcAspect", "hcQuality"]) F(id).disabled = !chain || r || lastDone() >= 0;
+  for (const id of ["hcAspect", "hcQuality", "hcWhere"]) F(id).disabled = !chain || r || sizeLocked();
   const fin = chain?.final;
   const ck = fin?.check;
   const hits = ck?.seam_hits || [];
@@ -272,15 +370,17 @@ async function openFinal(id) {
 // ================================================================ 開拍、停、接
 async function run(from) {
   if (!chain) return;
+  const owner = chain, revision = openRevision;
   // 從拍攝單來的長片：開拍前健檢（舊長片沒有拍攝單，時間軸那幾條規則對不上，不檢）
-  if (chain.sheet) {
+  if (owner.sheet) {
     const ss = await import("./shotsheet.js");
-    if (!(await ss.precheck(chain.segments.map((s) => s.text || ""), chain.sheet))) return;
+    if (!current(owner, revision) || !(await ss.precheck(owner.segments.map((s) => s.text || ""), owner.sheet))) return;
   }
-  await save();
-  const body = { id: chain.id };
+  if (!current(owner, revision) || !(await save()) || !current(owner, revision)) return;
+  const body = { id: owner.id };
   if (from != null) body.from = from;
-  try { await api("/api/h3/chain/run", { json: body }); } catch (e) { return toast(e.message, "err"); }
+  try { await api("/api/h3/chain/run", { json: body }); } catch (e) { if (current(owner, revision)) toast(e.message, "err"); return; }
+  if (!current(owner, revision)) return;
   chain.running = true;
   lastMsg = "開拍";
   setStatus("拍攝中");
@@ -300,7 +400,9 @@ async function stop() {
 
 async function join() {
   if (!chain) return;
-  try { await api("/api/h3/chain/join", { json: { id: chain.id } }); } catch (e) { return toast(e.message, "err"); }
+  const owner = chain, revision = openRevision;
+  try { await api("/api/h3/chain/join", { json: { id: owner.id } }); } catch (e) { if (current(owner, revision)) toast(e.message, "err"); return; }
+  if (!current(owner, revision)) return;
   chain.running = true;
   paintRun();
 }
@@ -318,7 +420,7 @@ export function onEvent(m) {
     if (!chain.running || (m.seg != null && chain.segments[m.seg]?.status !== "running")) open(chain.id);
     return;
   }
-  setStatus({ seg_done: m.msg, done: "全部拍好、接好了", error: "失敗", stopped: "已停止" }[m.state] || m.msg, m.state === "error" ? "r" : "g");
+  setStatus({ seg_done: m.msg, done: "全部拍好、接好了", error: "失敗", stopped: "已停止", review: "待選片" }[m.state] || m.msg, m.state === "error" ? "r" : "g");
   if (m.state === "error") toast(m.msg, "err");
   if (m.state === "done") toast(`${chain.title}：接好了，進圖庫了`, "ok");
   if (m.state === "seg_done") open(chain.id); else loadList(chain.id);
@@ -326,6 +428,7 @@ export function onEvent(m) {
 
 export async function show() {
   try { cloud = await api("/api/agent/cloud"); } catch { cloud = null; }
+  try { rhub = await api("/api/runninghub"); } catch { rhub = null; }
   paintCloud();
   await loadList();
 }
@@ -338,8 +441,8 @@ export function init() {
   for (const [id, k] of [["hcLook", "look"], ["hcScene", "scene"], ["hcStyle", "style"], ["hcVoice", "voice"], ["hcSound", "sound"]]) {
     F(id).oninput = () => { if (chain) { chain[k] = F(id).value; changed(); } };
   }
-  for (const [id, k] of [["hcAspect", "aspect"], ["hcQuality", "quality"]]) {
-    F(id).onchange = () => { if (chain) { chain[k] = F(id).value; changed(); } };
+  for (const [id, k] of [["hcAspect", "aspect"], ["hcQuality", "quality"], ["hcWhere", "where"]]) {
+    F(id).onchange = () => { if (chain) { chain[k] = F(id).value; changed(); paintCloud(); } };
   }
   F("hcAddSeg").onclick = () => {
     if (!chain) return;

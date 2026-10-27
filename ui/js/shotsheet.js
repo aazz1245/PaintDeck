@@ -19,9 +19,17 @@ const BRAINS = [["9b", "9B（快）"], ["35b", "35B（準）"], ["cloud", "雲�
 // /api/shotsheet/meta 回來前先用這組（跟 shotsheet.rs 的常數一樣）
 const LIM = { tail: 1.6, handover: 0.7, early: 1, min_secs: 5, max_secs: 15, max_segs: 30, max_cast: 4, max_refs: 8 };
 
-const seg = (secs = 10) => ({ secs, beats: [], prompt: "", mirror: "", manual: false });
+const emptyState = () => ({ actors: [], light: "", camera: "", notes: "" });
+const stateHasContent = (s) => !!s && ((s.actors || []).some((a) => Object.values(a).some((v) => String(v || "").trim())) || [s.light, s.camera, s.notes].some((v) => String(v || "").trim()));
+function fillState(v = {}) {
+  v = v && typeof v === "object" ? v : {};
+  const text = (x, n) => String(x || "").trim().slice(0, n);
+  return { actors: (Array.isArray(v.actors) ? v.actors : []).slice(0, 8).map((a) => Object.fromEntries(["who", "position", "pose", "holding", "gaze", "wardrobe"].map((k) => [k, text(a?.[k], k === "who" ? 80 : 500)]))),
+    light: text(v.light, 1000), camera: text(v.camera, 1000), notes: text(v.notes, 2000) };
+}
+const seg = (secs = 10) => ({ secs, beats: [], prompt: "", mirror: "", manual: false, ref_off: [], entry: emptyState(), exit: emptyState(), inherit_entry: true });
 function blank() {
-  return { v: 1, title: "", lang: "zh", cast: [], first: { file: null, asset_id: null, gallery_id: null }, refs: { on: false, items: [] },
+  return { v: 1, engine: "h3", title: "", lang: "zh", cast: [], first: { file: null, asset_id: null, gallery_id: null }, refs: { on: false, items: [] },
     scene: { text: "", layout: {} }, style: "", camera: "", sound: { ambient: "", music: "" }, early: true, segments: [seg()] };
 }
 
@@ -32,6 +40,9 @@ let issues = [];          // 最近一次健檢
 let box = null;           // #shBody；init 之前（測試）不畫
 let seq = 0;              // 自動重組的順序：舊的回應晚到就丟掉
 let ask = issuesDialog;   // 健檢有問題時問使用者（測試換成假的）
+let workflows = [];       // 可選引擎只存在拍攝單，不改全域影片設定
+let applying = false;
+const stateOpen = new WeakSet();
 const castImgs = new Map(); // 角色資產的圖（/apply 回來的），「用角色的圖」當參考圖時用
 
 /** 補齊欄位：草稿、範本、長片帶回來的都過一次 */
@@ -40,14 +51,17 @@ function fill(x) {
   x = x && typeof x === "object" ? x : {};
   const segs = Array.isArray(x.segments) && x.segments.length ? x.segments.slice(0, LIM.max_segs) : [{}];
   return {
-    ...b, title: x.title || "", lang: x.lang === "en" ? "en" : "zh", style: x.style || "", camera: x.camera || "", early: x.early !== false,
+    ...b, engine: x.engine === "ltx" ? "ltx23" : x.engine || "h3", title: x.title || "", lang: x.lang === "en" ? "en" : "zh", style: x.style || "", camera: x.camera || "", early: x.early !== false,
     first: { ...b.first, ...(x.first || {}) },
     refs: { on: !!x.refs?.on, items: (x.refs?.items || []).slice(0, LIM.max_refs).map((r) => ({ file: r.file || null, asset_id: r.asset_id ?? null, who: r.who || "" })) },
     scene: { text: x.scene?.text || "", layout: { ...(x.scene?.layout || {}) } },
     sound: { ambient: x.sound?.ambient || "", music: x.sound?.music || "" },
     cast: (x.cast || []).slice(0, LIM.max_cast).map((c, i) => ({ asset_id: c.asset_id ?? null, speaker: `S${i + 1}`, name: c.name || "",
-      look_zh: c.look_zh || "", look_en: c.look_en || "", voice: c.voice || "", lang: normLang(c.lang) })),
+      look_zh: c.look_zh || "", look_en: c.look_en || "", voice: c.voice || "", lang: normLang(c.lang), locked: !!c.locked, refmod: c.refmod || "" })),
+    refmod: !!x.refmod,
     segments: segs.map((s) => ({ ...seg(Number(s.secs) || 10), prompt: s.prompt || "", mirror: s.mirror || "", manual: !!s.manual,
+      ref_off: (Array.isArray(s.ref_off) ? s.ref_off : []).filter((f) => typeof f === "string" && f),
+      entry: fillState(s.entry), exit: fillState(s.exit), inherit_entry: s.inherit_entry !== false,
       beats: (s.beats || []).map((t) => ({ from: Number(t.from) || 0, to: Number(t.to) || 0, action: t.action || "", who: t.who || "", lang: normLang(t.lang), line: t.line || "", sfx: t.sfx || "" })) })),
   };
 }
@@ -55,11 +69,36 @@ function fill(x) {
 // ================================================================ 對外
 export function current() { return S; }
 
+export function requiresFirstFrame(engine = S.engine) {
+  if (engine === "h3" || engine === "ltx23") return true;
+  const flow = workflows.find((w) => w.id === engine);
+  if (!flow?.info || !("image" in flow.info)) return true;
+  return !!flow.info.image || (flow.media_slots || flow.info.media_slots || []).some((s) => s.kind === "image" && s.role === "first");
+}
+
+export function effectiveEntry(i) {
+  const s = S.segments[i];
+  return i > 0 && s.inherit_entry && !stateHasContent(s.entry) ? S.segments[i - 1].exit : s.entry;
+}
+
+export function setEngine(engine) {
+  engine = engine || "h3";
+  if (engine === S.engine) return true;
+  if (S.segments.some((s) => s.manual && (s.prompt.trim() || s.mirror.trim()))
+      && !confirm("切換引擎會依拍攝欄位重新組提示詞，覆蓋手改內容。繼續？")) { paint(); return false; }
+  S.engine = engine;
+  for (const s of S.segments) Object.assign(s, { prompt: "", mirror: "", manual: false });
+  issues = []; estimate = [];
+  save(); paint();
+  return true;
+}
+
 /** 從範本或長片的 sheet 帶入 */
 export function load(sheet) {
   ++seq;
   S = fill(sheet);
   issues = [];
+  estimate = [];
   save(false);
   paint();
 }
@@ -95,7 +134,9 @@ export async function composeNow({ ask: askFirst = false } = {}) {
   }
   (r.segments || []).forEach((p, i) => {
     const s = S.segments[i];
-    if (!s || (s.manual && !overwrite)) return;
+    if (!s) return;
+    // 手改過的段：後端把鎖定角色的設定表接回去（kept），其他照使用者寫的
+    if (s.manual && !overwrite) { if (p.kept != null) Object.assign(s, { prompt: p.kept, mirror: p.kept_mirror ?? s.mirror }); return; }
     Object.assign(s, { prompt: p.prompt, mirror: p.mirror, manual: false });
   });
   save(false);
@@ -105,7 +146,7 @@ export async function composeNow({ ask: askFirst = false } = {}) {
 }
 
 // 提示詞、對照手改過會標 manual；沒手改的是程式組的，隨時能重組，不算使用者寫的東西
-const hasContent = (s) => s.manual || s.beats.some((b) => b.action.trim() || b.line.trim() || b.sfx.trim());
+const hasContent = (s) => s.manual || stateHasContent(s.entry) || stateHasContent(s.exit) || s.beats.some((b) => b.action.trim() || b.line.trim() || b.sfx.trim());
 const hasDraft = () => S.title.trim() || S.cast.length || S.first.file || S.refs.items.length || S.scene.text.trim() || Object.values(S.scene.layout).some(Boolean) || S.camera.trim() || S.style.trim() || Object.values(S.sound).some(Boolean) || S.segments.some(hasContent);
 
 /** 改段數。要拿掉的段寫了東西先問；1 段切到短片區、2 段以上切到長片區 */
@@ -117,33 +158,63 @@ export function setSegCount(n) {
     if (lost.length && !confirm(`第 ${lost.join("、")} 段已經寫了東西，確定拿掉？`)) { paint(); return false; }
     S.segments.splice(n);
   } else while (S.segments.length < n) S.segments.push(seg());
-  if ((cur === 1) !== (n === 1)) studio.openVideo(n === 1 ? "short" : "long");
+  if (S.engine === "h3" && (cur === 1) !== (n === 1)) studio.openVideo(n === 1 ? "short" : "long");
   save();
   paint();
   return true;
 }
 
-/** 從資產加一個角色（外觀、聲音、語言由 /apply 帶入），最多 4 個，依順序叫 S1～S4 */
+/** 從資產加一個角色（外觀、聲音、語言由 /apply 帶入），最多 4 個，依順序叫 S1～S4。
+ *  鎖定設定表的角色：外觀用設定表原文（每段描述最前面原封不動放上），正面特寫＋轉身圖自動放進參考圖、綁這個角色（圖文雙管齊下） */
 export async function addCast(it) {
   if (S.cast.length >= LIM.max_cast) { toast(`角色最多 ${LIM.max_cast} 個`, "err"); return false; }
   let p;
   try { p = await api(`/api/assets/${it.id}/apply`, { json: { family: "h3" } }); } catch (e) { toast(e.message, "err"); return false; }
   if (S.cast.length >= LIM.max_cast) { toast(`角色最多 ${LIM.max_cast} 個`, "err"); return false; }
   castImgs.set(it.id, p.images || []);
-  S.cast.push({ asset_id: it.id, speaker: `S${S.cast.length + 1}`, name: it.name || "", look_zh: p.text || it.data?.look_zh || "",
-    look_en: it.data?.look_en || "", voice: p.voice || "", lang: normLang(p.lang) });
+  const locked = !!p.locked;
+  const c = { asset_id: it.id, speaker: `S${S.cast.length + 1}`, name: it.name || "",
+    look_zh: locked ? p.spec?.zh || "" : p.text || it.data?.look_zh || "", look_en: locked ? p.spec?.en || "" : it.data?.look_en || "",
+    voice: p.voice || "", lang: normLang(p.lang), locked, refmod: locked ? p.refmod || "" : "" };
+  S.cast.push(c);
+  if (locked) await lockedRefs(c, p.images || []);
   save();
   paint();
   return true;
 }
 
+/** 鎖定角色的固定參考圖（apply 給 H3 的是正面特寫＋轉身圖）放進參考圖、綁這個角色；範本留下的空格先補；放不下就提醒 */
+async function lockedRefs(c, files) {
+  const draft = S;
+  let put = 0;
+  for (const f of files) {
+    if (S.refs.items.filter((x) => x.file).length >= LIM.max_refs) {
+      toast(`參考圖最多 ${LIM.max_refs} 張：「${c.name}」還有 ${files.length - put} 張沒放進去`, "err");
+      break;
+    }
+    let r;
+    try { r = await api(`/api/assets/${c.asset_id}/to_input`, { json: { file: f } }); } catch (e) { toast(e.message, "err"); continue; }
+    if (S !== draft || !S.cast.includes(c)) return;
+    const item = { file: r.name, asset_id: c.asset_id, who: c.speaker };
+    const empty = S.refs.items.find((x) => !x.file && x.asset_id === c.asset_id);
+    if (empty) Object.assign(empty, item); else S.refs.items.push(item);
+    put++;
+  }
+  if (put) S.refs.on = true;
+}
+
 /** 拿掉一個角色：後面的往前補號，時間軸和參考圖的「誰」跟著換，指到被拿掉的人就清空 */
 export function removeCast(i) {
-  S.cast.splice(i, 1);
+  const [gone] = S.cast.splice(i, 1);
+  // 鎖定角色自動放的參考圖一起拿掉（同一個資產、綁同一個人的那幾張）
+  if (gone?.locked) S.refs.items = S.refs.items.filter((r) => !(r.asset_id === gone.asset_id && r.who === gone.speaker));
   const map = {};
   S.cast.forEach((c, k) => { map[c.speaker] = `S${k + 1}`; c.speaker = `S${k + 1}`; });
   const re = (w) => (w ? map[w] || "" : "");
-  for (const s of S.segments) for (const b of s.beats) b.who = re(b.who);
+  for (const s of S.segments) {
+    for (const b of s.beats) b.who = re(b.who);
+    for (const state of [s.entry, s.exit]) for (const a of state.actors) if (/^S\d+$/.test(a.who)) a.who = re(a.who);
+  }
   for (const r of S.refs.items) r.who = re(r.who);
   save();
   paint();
@@ -152,6 +223,7 @@ export function removeCast(i) {
 /** 第 i 段能安排新動作的範圍（跟 shotsheet.rs 的 region 一樣） */
 function region(i) {
   const secs = S.segments[i].secs;
+  if (S.engine !== "h3") return [0, secs];
   return [i > 0 ? LIM.tail : 0, i + 1 < S.segments.length ? Math.round((secs - LIM.handover) * 1000) / 1000 : secs];
 }
 
@@ -237,7 +309,10 @@ function paintHeadEl() {
   count.onchange = () => setSegCount(count.value);
   const tpl = el("select", { class: "sm", "aria-label": "從範本開始", onchange: () => useTemplate(tpl) }, el("option", { value: "" }, "從範本開始…"));
   fillTemplates(tpl);
+  const engines = [["h3", "MiniMax H3"], ["ltx23", "LTX-2.3（內建）"], ...workflows.filter((w) => !["h3", "ltx23"].includes(w.id)).map((w) => [w.id, `自訂：${w.name || w.id}`])];
+  if (!engines.some(([id]) => id === S.engine)) engines.push([S.engine, `自訂：${S.engine}（目前找不到）`]);
   return el("div", { class: "row wrap sh-head" },
+    el("label", { class: "row" }, el("span", {}, "影片引擎"), select(S.engine, engines, setEngine, { "aria-label": "拍攝單影片引擎" })),
     el("label", { class: "row" }, el("span", {}, "段數"), count, help()),
     el("span", { class: "piano row", role: "group", "aria-label": "提示詞語言" },
       ...[["zh", "中文"], ["en", "English"]].map(([k, t]) => el("button", { type: "button", class: S.lang === k ? "on" : "", onclick: () => { S.lang = k; save(); paint(); } }, t))),
@@ -261,7 +336,7 @@ async function useTemplate(sel) {
   if (hasDraft() && !confirm(`用範本「${it.name}」蓋掉目前的拍攝單？`)) return;
   load(it.data);
   api(`/api/lib/used`, { json: { id: it.id } }).catch(() => {});
-  if (S.segments.length > 1) studio.openVideo("long");
+  if (S.engine === "h3" && S.segments.length > 1) studio.openVideo("long");
   composeNow();
 }
 
@@ -289,8 +364,10 @@ function castEl() {
   const rows = S.cast.map((c, i) => el("div", { class: "sh-cast" },
     el("b", { class: "sh-sp", translate: "no" }, c.speaker),
     field("input", c.name, (v) => (c.name = v), { placeholder: "名字", "aria-label": "名字", class: "sh-name" }),
-    field("textarea", c.look_zh, (v) => (c.look_zh = v), { rows: 2, placeholder: "外觀（中文）", "aria-label": "外觀（中文）" }),
-    field("textarea", c.look_en, (v) => (c.look_en = v), { rows: 2, placeholder: "Look (English)", "aria-label": "外觀（英文）" }),
+    ...(c.locked
+      ? [c.look_zh, c.look_en].map((t) => el("div", { class: "sh-locked sm", title: "資產庫鎖定的設定表：每段描述最前面原封不動放上，AI 潤飾也不會動；要改請到資產庫解鎖" }, "🔒 ", t || "—"))
+      : [field("textarea", c.look_zh, (v) => (c.look_zh = v), { rows: 2, placeholder: "外觀（中文）", "aria-label": "外觀（中文）" }),
+        field("textarea", c.look_en, (v) => (c.look_en = v), { rows: 2, placeholder: "Look (English)", "aria-label": "外觀（英文）" })]),
     field("input", c.voice, (v) => (c.voice = v), { placeholder: "聲音（例：溫柔的成年女聲）", "aria-label": "聲音", class: "sh-voice" }),
     select(c.lang, LANGS.slice(1).concat([["", "（沒寫＝中文）"]]), (v) => (c.lang = v), { "aria-label": "說話語言", class: "sh-lang" }),
     btn("×", () => removeCast(i), "h3-x", "拿掉這個角色")));
@@ -354,8 +431,13 @@ function refsEl() {
   const fromCast = () => {
     for (const c of S.cast) if (c.asset_id) addRef(() => assetImage({ id: c.asset_id, name: c.name }), c.speaker);
   };
+  const locked = S.cast.filter((c) => c.locked);
+  const noMod = locked.filter((c) => !c.refmod).map((c) => c.name || c.speaker);
   return sec("參考圖",
     el("label", { class: "check inline" }, field("input", on, (v) => { S.refs.on = v; paint(); }, { type: "checkbox" }), " 送參考圖（長相）"),
+    S.engine === "h3" && locked.length ? el("label", { class: "check inline", title: "鎖定角色在資產庫做過 RefMod 的，H3 拍片時把它接在條件上（實驗）；雲端開機時會裝 RefMod 外掛" },
+      field("input", S.refmod, (v) => { S.refmod = v; paint(); }, { type: "checkbox" }), " 用 RefMod 鎖臉（實驗）") : null,
+    S.engine === "h3" && S.refmod && noMod.length ? el("p", { class: "sh-warn sm" }, `${noMod.join("、")} 還沒做 RefMod：到資產庫的角色卡按「做 RefMod」，再把角色重新加一次`) : null,
     on ? el("p", { class: "sh-warn sm" }, "參考圖只拿來看長相；仰臉的圖會讓接續段一開頭就仰臉。") : null,
     on ? el("div", {}, ...items,
       el("div", { class: "row wrap" }, S.cast.some((c) => c.asset_id) ? btn("＋ 用角色的圖", fromCast) : null, btn("＋ 上傳", () => addRef(uploaded)))) : null);
@@ -434,18 +516,72 @@ function addBeat(i) {
   paint();
 }
 
+function continuityStateEl(i, key, label) {
+  const s = S.segments[i], value = s[key];
+  const inherited = key === "entry" && i > 0 && s.inherit_entry && !stateHasContent(value) && stateHasContent(S.segments[i - 1].exit);
+  const labels = [["who", "角色（S1 或名字）"], ["position", "站位"], ["pose", "姿態"], ["holding", "持物與左右手"], ["gaze", "視線"], ["wardrobe", "服裝"]];
+  const rows = value.actors.map((actor, k) => el("div", { class: "sh-layout", style: "margin-top:8px" },
+    el("div", { style: "display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px" },
+      ...labels.map(([name, title]) => el("label", { class: "sm" }, el("span", {}, title),
+        field("input", actor[name], (v) => (actor[name] = v), { "aria-label": `${label} ${k + 1} ${title}`, placeholder: title })))),
+    btn("拿掉角色狀態", () => { value.actors.splice(k, 1); save(); paint(); })));
+  const inheritedText = inherited ? [
+    ...S.segments[i - 1].exit.actors.map((a) => labels.filter(([k]) => a[k]).map(([k, t]) => `${t}：${a[k]}`).join("；")),
+    ...[["light", "光向"], ["camera", "鏡頭軸線"], ["notes", "備註"]].filter(([k]) => S.segments[i - 1].exit[k]).map(([k, t]) => `${t}：${S.segments[i - 1].exit[k]}`),
+  ].join("\n") : "";
+  return el("details", { class: "sh-layout", open: stateOpen.has(value), ontoggle: (event) => {
+    if (event.currentTarget.open) stateOpen.add(value); else stateOpen.delete(value);
+  } },
+    el("summary", { class: "sm" }, label + (inherited ? "（沿用上鏡結束）" : stateHasContent(value) ? "（已填）" : "（選填）")),
+    key === "entry" && i > 0 ? el("label", { class: "check inline" },
+      field("input", s.inherit_entry, (v) => { s.inherit_entry = v; paint(); }, { type: "checkbox", "aria-label": `第 ${i + 1} 段沿用上鏡結束` }), " 開始狀態空白時，沿用上鏡結束") : null,
+    inherited ? el("pre", { class: "muted sm", style: "white-space:pre-wrap" }, inheritedText) : null,
+    key === "entry" && i > 0 ? el("p", { class: "muted sm" }, "手填開始狀態會優先使用；留白才沿用。沒有填寫的細節不會自動補造。") : null,
+    ...rows,
+    value.actors.length < 8 ? btn("＋ 角色狀態", () => { stateOpen.add(value); value.actors.push({ who: "", position: "", pose: "", holding: "", gaze: "", wardrobe: "" }); save(); paint(); }) : null,
+    ...[["light", "光向"], ["camera", "鏡頭軸線"], ["notes", "備註"]].map(([name, title]) => el("label", { class: "row sm", style: "margin-top:6px" },
+      el("span", {}, title), field("input", value[name], (v) => (value[name] = v), { "aria-label": `${label} ${title}`, placeholder: title }))));
+}
+
+/** H3 每段送哪幾張參考圖：點圖切換；關掉的這段不送，提示詞的圖號照剩下的重排 */
+function segRefsEl(i) {
+  const files = S.refs.items.filter((r) => r.file);
+  if (S.engine !== "h3" || !S.refs.on || !files.length) return null;
+  const s = S.segments[i];
+  const off = new Set(s.ref_off);
+  const used = files.filter((r) => !off.has(r.file)).length;
+  return el("div", { class: "row wrap sh-segrefs" }, el("span", { class: "muted sm", title: "某個角色的圖這段全部關掉＝這段沒有這個角色：圖、外觀描述、鎖定設定都不送" }, `這段送的參考圖 ${used}／${files.length}`),
+    ...files.map((r) => {
+      const c = S.cast.find((x) => x.speaker === r.who);
+      const name = c ? `${r.who} ${c.name}` : r.who || "參考圖";
+      const on = !off.has(r.file);
+      return el("button", { type: "button", class: "sh-segref" + (on ? "" : " off"), "aria-pressed": String(on),
+        title: `${name}：${on ? "這段會送，點一下改成不送" : "這段不送，點一下改成送"}`,
+        onclick: () => { s.ref_off = on ? [...s.ref_off, r.file] : s.ref_off.filter((f) => f !== r.file); save(); paint(); } }, thumbOf(r.file));
+    }));
+}
+
+/** 第 i 段實際送的參考圖檔名 */
+function segRefFiles(i) {
+  if (!S.refs.on) return [];
+  const off = S.segments[i]?.ref_off || [];
+  return S.refs.items.filter((r) => r.file && !off.includes(r.file)).map((r) => r.file);
+}
+
 function timelineEl() {
   const n = S.segments.length;
   const cards = S.segments.map((s, i) => el("div", { class: "sh-seg", id: `shSeg${i}` },
     el("div", { class: "row sh-seg-hd" }, el("b", {}, `第 ${i + 1} 段`),
       field("input", s.secs, (v) => { s.secs = Math.max(LIM.min_secs, Math.min(LIM.max_secs, Number(v) || 10)); }, { type: "number", min: LIM.min_secs, max: LIM.max_secs, step: 1, class: "sh-num", "aria-label": "秒數", onchange: () => paint() }),
       el("span", { class: "muted sm" }, "秒"), el("span", { class: "grow" }), s.manual ? el("span", { class: "sh-manual sm" }, "提示詞手改過") : null),
+    segRefsEl(i),
     el("div", { class: "sh-scale-wrap", id: `shScale${i}` }, ...scaleEl(i).childNodes),
+    continuityStateEl(i, "entry", "開始狀態"), continuityStateEl(i, "exit", "結束狀態"),
     ...s.beats.map((_, k) => beatEl(i, k)),
     btn("＋ 一截", () => addBeat(i))));
   return sec("時間軸",
-    el("label", { class: "check inline" }, field("input", S.early, (v) => (S.early = v), { type: "checkbox" }), ` 自動提早 ${LIM.early} 秒（H3 的動作常常比寫的晚出來）`),
-    n > 1 ? el("p", { class: "muted sm" }, `第 2 段起，開頭 ${LIM.tail} 秒是上一段的尾巴；後面還有段的話，最後 ${LIM.handover} 秒留給下一段接手。這兩塊不要放新動作。`) : null,
+    S.engine === "h3" ? el("label", { class: "check inline" }, field("input", S.early, (v) => (S.early = v), { type: "checkbox" }), ` 自動提早 ${LIM.early} 秒（H3 的動作常常比寫的晚出來）`) : null,
+    S.engine === "h3" && n > 1 ? el("p", { class: "muted sm" }, `第 2 段起，開頭 ${LIM.tail} 秒是上一段的尾巴；後面還有段的話，最後 ${LIM.handover} 秒留給下一段接手。這兩塊不要放新動作。`) : null,
     ...cards);
 }
 
@@ -487,7 +623,8 @@ function promptsEl() {
     ...rows,
     el("ol", { class: "sh-issues", id: "shIssues" }),
     el("div", { class: "row" }, el("span", { class: "grow" }),
-      btn(n === 1 ? "套用到短片" : "套用到長片", () => applyTo(), "akey", n === 1 ? "把首幀、參考圖、提示詞放進下面的 H3 短片" : "把每段的提示詞、首幀、參考圖寫進下面的長片")));
+      btn(S.engine !== "h3" ? "套用到導演台" : n === 1 ? "套用到短片" : "套用到長片", () => applyTo(), "akey",
+        S.engine !== "h3" ? "建立導演專案，保留這份拍攝單、引擎與連戲狀態" : n === 1 ? "把首幀、參考圖、提示詞放進下面的 H3 短片" : "把每段的提示詞、首幀、參考圖寫進下面的長片")));
 }
 
 /** 自動重組只換掉「沒手改過、而且沒在打字」的那幾格，不整個重畫（游標才不會跳走） */
@@ -507,20 +644,40 @@ function paintIssues() {
 }
 
 /** 套用到下面的短片（1 段）或長片（2 段以上）。還沒組過的段先組 */
-async function applyTo() {
+export async function applyTo() {
+  if (applying) return;
+  applying = true;
+  try {
   if (!(await composeNow())) return;
+  const draft = S, version = seq;
   const prompts = S.segments.map((s) => s.prompt);
   if (prompts.some((p) => !p.trim())) return toast("有段落還沒有提示詞：先按「直接組」", "err");
   const first = S.first.file || null;
   const refs = S.refs.on ? S.refs.items.filter((r) => r.file).map((r) => r.file) : [];
-  if (S.segments.length === 1) {
+  if (S.engine !== "h3") {
+    if (!(await precheck(prompts)) || S !== draft || seq !== version) return;
+    const needFirst = requiresFirstFrame();
+    const gen = needFirst ? await import("./gen.js") : null;
+    const image = gen?.baseParams() || {};
+    const imageOK = image.model && image.family !== "custom";
+    if (needFirst && !first && !imageOK) return toast("請先放首幀，或在生成頁選生第一格用的模型", "err");
+    const body = { sheet: structuredClone(S), prompts, engine: S.engine };
+    if (imageOK) body.image = image;
+    const r = await api("/api/director/from_sheet", { json: body });
+    const director = await import("./director.js");
+    studio.openTab("plan");
+    await director.openProject(r.id);
+    toast("拍攝單已套用到導演台", "ok");
+  } else if (S.segments.length === 1) {
     studio.openVideo("short");
-    await h3.applySheet({ sheet: structuredClone(S), prompt: prompts[0], secs: S.segments[0].secs, first, refs });
+    await h3.applySheet({ sheet: structuredClone(S), prompt: prompts[0], secs: S.segments[0].secs, first, refs: segRefFiles(0) });
     toast("套用到短片了：按送出前會先健檢", "ok");
-  } else if (await h3chain.applySheet({ sheet: S, prompts, first, refs })) {
+  } else if (await h3chain.applySheet({ sheet: S, prompts, first, refs, segRefs: S.segments.map((_, i) => (segRefFiles(i).length === refs.length ? null : segRefFiles(i))) })) {
     studio.openVideo("long");
     toast(`套用到長片了：${S.segments.length} 段`, "ok");
   }
+  } catch (e) { toast(e.message, "err"); }
+  finally { applying = false; }
 }
 
 /** 長片打開時帶回它存的拍攝單：一樣的就不動；目前草稿有寫東西先問 */
@@ -547,6 +704,7 @@ export async function show() {
       Object.assign(LIM, meta.limits || {});
     } catch (e) { toast(e.message, "err"); }
   }
+  try { const r = await api("/api/video/workflows"); workflows = r.workflows || []; } catch (e) { toast(e.message, "err"); }
   paint();
   if (!estimate.length) composeNow();
 }

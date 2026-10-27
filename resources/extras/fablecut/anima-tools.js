@@ -70,6 +70,7 @@ async function imageBlock(p) {
 // ---------------------------------------------------------------- 危險操作
 // 沒帶 confirm:true 不送。GET 一律放行；DELETE 一律要確認。
 const DANGER = [
+  [/^\/api\/diagnostics\/(clear|preferences)$/, "永久清除已結束的診斷紀錄，或調整會自動刪除舊診斷的保留設定"],
   [/^\/api\/studio\/frames\/clear$/, "永久清除拆幀圖片、聲音及修幀紀錄，無法復原"],
   [/^\/api\/cache\/clear$/, "清除可重建快取與安裝暫存，未完成的下載可能需要重新下載"],
   [/^\/api\/app\/update\/(install|preferences)$/, "安裝新版並重新開啟程式，或更改自動檢查更新設定"],
@@ -421,7 +422,7 @@ async function call(name, a) {
       const what = danger(method, p, a.body);
       if (what && a.confirm !== true) return needConfirm(what, method, p);
       let body = a.body;
-      if (what && ["/api/agent/cloud/start", "/api/app/update/install", "/api/cache/clear", "/api/studio/frames/clear"].includes(p)) body = { ...(body || {}), confirm: true };
+      if (what && ["/api/agent/cloud/start", "/api/app/update/install", "/api/cache/clear", "/api/diagnostics/clear", "/api/studio/frames/clear"].includes(p)) body = { ...(body || {}), confirm: true };
       const url = p + qs(a.query);
       const data = body === undefined ? (method === "GET" || method === "DELETE" ? undefined : {}) : body;
       const buf = data === undefined ? undefined : Buffer.from(JSON.stringify(data));

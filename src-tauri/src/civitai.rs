@@ -1,4 +1,4 @@
-//! Civitai：搜尋 Anima／Qwen 2.1／MOSS-Image 的 LoRA、下載到 ComfyUI 的 loras 資料夾、存觸發詞與預覽圖。對照舊版 civitai.py。
+//! Civitai：按基底模型搜尋 LoRA、下載到 ComfyUI 的 loras 資料夾、存觸發詞與預覽圖。對照舊版 civitai.py。
 //!
 //! Qwen 2.1 的 LoRA 放在 loras\qwen21\、MOSS 的放在 loras\moss\ 子資料夾，和 Anima 的分開（生圖站看檔頭分家族，資料夾只是好整理）。
 //! API 文件：https://developer.civitai.com/docs/api/public-rest
@@ -18,12 +18,20 @@ use std::time::Duration;
 pub const API: &str = "https://civitai.com/api/v1";
 const UA: &str = "AnimaWeb/1.0";
 
-/// 網頁上的基底模型選項 → 存放的子資料夾（Anima 放 loras 根目錄）
-pub fn base_subdir(base: &str) -> &'static str {
+/// 基底模型 → 存放的子資料夾。未知的新模型用安全且穩定的名稱隔開，不混進 Anima。
+pub fn base_subdir(base: &str) -> String {
     match base {
-        "Qwen 2.1" => "qwen21",
-        "MOSS Image" => "moss",
-        _ => "",
+        "Anima" => String::new(),
+        "Qwen 2.1" => "qwen21".into(),
+        "MOSS Image" | "MOSS Image Base" => "moss".into(),
+        "Krea 2" | "Krea 2 Turbo" => "krea2".into(),
+        "SDXL 1.0" => "sdxl".into(),
+        "SD 1.5" => "sd15".into(),
+        b => {
+            let slug: String = b.to_ascii_lowercase().chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).take(40).collect();
+            let hash = b.as_bytes().iter().fold(2_166_136_261u32, |h, x| (h ^ u32::from(*x)).wrapping_mul(16_777_619));
+            format!("other\\{}_{hash:08x}", slug.trim_matches('_'))
+        }
     }
 }
 
@@ -32,6 +40,8 @@ pub fn base_subdir(base: &str) -> &'static str {
 pub fn base_models(base: &str) -> Vec<&str> {
     match base {
         "MOSS Image" => vec!["MOSS Image", "MOSS Image Base"],
+        // Krea 官方建議在 Raw 練 LoRA，套到 Turbo 推論；兩種標記要一起找。
+        "Krea 2" | "Krea 2 Turbo" => vec!["Krea 2", "Krea 2 Turbo"],
         b => vec![b],
     }
 }
@@ -59,9 +69,10 @@ fn round1(x: f64) -> f64 {
 fn version_for<'a>(model: &'a Value, base: &str, version_id: Option<i64>) -> Option<&'a Value> {
     let vs = model["modelVersions"].as_array()?;
     if let Some(id) = version_id {
-        if let Some(v) = vs.iter().find(|v| v["id"].as_i64() == Some(id)) {
+        if let Some(v) = vs.iter().find(|v| v["id"].as_i64() == Some(id) && base_is(base, v)) {
             return Some(v);
         }
+        return None;
     }
     vs.iter().find(|v| base_is(base, v))
 }
@@ -208,6 +219,12 @@ impl Civitai {
 
     pub fn subdir(&self, base: &str) -> PathBuf {
         self.lora_dir.join(base_subdir(base))
+    }
+
+    /// 選項跟 Civitai 的 BaseModel enum 同步；前端仍可輸入新名稱，不用等生圖站更新。
+    pub async fn bases(&self) -> Result<Vec<String>, String> {
+        let data = self.get_json(&format!("{API}/enums"), &[]).await?;
+        Ok(data["BaseModel"].as_array().into_iter().flatten().filter_map(Value::as_str).map(str::to_owned).collect())
     }
 
     /// 參數一對一對應 Civitai 搜尋的查詢欄位，包成結構反而難對照，所以放行參數個數的警告
@@ -421,6 +438,7 @@ impl Civitai {
             ("modelId", m["id"].clone()),
             ("versionId", v["id"].clone()),
             ("version", v.get("name").cloned().unwrap_or(Value::Null)),
+            ("base_model", v.get("baseModel").cloned().unwrap_or(Value::Null)),
             (
                 "triggers",
                 v.get("trainedWords").cloned().unwrap_or(json!([])),
@@ -478,5 +496,12 @@ mod tests {
         assert_eq!(base_subdir("MOSS Image"), "moss");
         assert_eq!(base_subdir("Anima"), "");
         assert_eq!(base_subdir("Qwen 2.1"), "qwen21");
+        assert_eq!(base_subdir("Krea 2"), "krea2");
+        assert_eq!(base_subdir("Krea 2 Turbo"), "krea2");
+        let k = json!({"modelVersions": [{"id": 4, "baseModel": "Krea 2 Turbo"}]});
+        assert_eq!(version_for(&k, "Krea 2", None).unwrap()["id"], 4);
+        assert!(base_subdir("Flux.3").starts_with("other\\flux_3_"));
+        assert!(!base_subdir("../../escape").contains(".."));
+        assert!(version_for(&m, "Anima", Some(2)).is_none());
     }
 }

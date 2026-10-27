@@ -17,6 +17,14 @@ const BRAIN_NOTE = {
 };
 const KIND_ZH = { style: "畫風", character: "角色", clothing: "服裝", concept: "概念", pose: "姿勢", detail: "細節", lighting: "光影", other: "其他" };
 const FAM_NAME = { qwen21: "Qwen 2.1", moss: "MOSS-Image", anima: "Anima" };
+// 工具的中文名（跟 src-tauri/src/agent_tools.rs 的 zh 一樣）
+const TOOL_ZH = { models: "看模型清單", set_model: "換生圖模型", gallery: "查圖庫", image_info: "看圖的參數", look: "看圖", edit: "改圖", upscale: "放大",
+  remove_bg: "去背", fix: "修臉修手", outpaint: "擴圖", video: "做影片", character_sheet: "角色多視圖", comic: "畫漫畫", assets: "看資產庫",
+  trash: "移到回收區", guide: "讀寫法", docs: "讀說明書", api: "直接呼叫 API", open_page: "切換頁面" };
+// 寫法庫（跟 src-tauri/src/agent.rs 的 GUIDES 一樣）
+const GUIDE_ZH = { anima: "Anima", qwen: "Qwen 2.1 文生圖", qwen_edit: "Qwen 2.1 改圖", qwen_multiref: "Qwen 2.1 多圖參考", moss: "MOSS-Image",
+  other: "SDXL 系", ltx_video: "LTX-2.3 影片", h3_video: "H3 影片" };
+const toolZh = (t) => TOOL_ZH[t] || t;
 
 let S = null;          // 目前的對話（整份）
 let running = false;   // 目前的對話有背景工作在跑
@@ -79,7 +87,7 @@ async function openSession(id) {
   running = !!S.running;
   // 跑到一半才打開（換對話、重新整理）：照最後一件事推它現在在想、在畫還是在看圖
   const last = (S.events || []).at(-1);
-  const drawing = last?.kind === "act" && last.action?.action === "generate";
+  const drawing = last?.kind === "act" && ["generate", "call"].includes(last.action?.action);
   phase = running ? (drawing ? "render" : "think") : "";
   live = !running ? "" : drawing ? "畫圖中…" : last?.kind === "result" ? "看圖、逐項對照中…" : "想提示詞…";
   liveLlm = "";
@@ -115,14 +123,29 @@ function paintSettings() {
   F("agRounds").value = String(st.rounds || 3);
   F("agCount").value = String(st.count || 2);
   F("agAuto").checked = st.auto !== false;
-  F("agThink").checked = !!st.think;
+  // 伺服器會把舊值（true／五段時期的 mid、max）換成三段，這裡只是保險
+  F("agThink").value = { true: "high", mid: "low", max: "high" }[st.think] || (["off", "low", "high"].includes(st.think) ? st.think : "off");
   F("agLoras").checked = st.loras !== false;
+  const show = st.show !== false;
+  F("agMode").style.setProperty("--pos", show ? 0 : 1);
+  for (const btn of F("agMode").querySelectorAll("button")) btn.setAttribute("aria-checked", String((btn.dataset.v === "show") === show));
+  // 動手做／只寫詞：只寫詞不畫圖，「讓我看」和輪數用不到
+  const words = st.mode === "prompt";
+  F("agKind").style.setProperty("--pos", words ? 1 : 0);
+  for (const btn of F("agKind").querySelectorAll("button")) btn.setAttribute("aria-checked", String((btn.dataset.k === "prompt") === words));
+  F("agMode").hidden = words;
+  F("agTarget").hidden = !words;
+  F("agTarget").value = GUIDE_ZH[st.target] ? st.target : "auto";
   baseInfo();
 }
 
 function baseInfo() {
   const b = S?.settings?.base;
   const box = F("agBaseInfo");
+  if (S?.settings?.mode === "prompt") {
+    box.textContent = "只寫詞不需要啟動 ComfyUI；可在上方選擇寫法。";
+    return;
+  }
   if (!b) { box.textContent = "還沒設定：先到「生成」頁選好模型和設定，再回來按下面的按鈕。"; return; }
   const fam = FAM_NAME[b.family] || b.family || "";
   let t = `${b.model}（${fam}）・${b.steps} 步・CFG ${b.cfg}${b.loras?.length ? `・固定掛 LoRA ${b.loras.length} 個` : ""}`;
@@ -195,6 +218,15 @@ function eventNodes(ev, prevResult) {
           loras.length ? el("div", {}, "LoRA：" + loras.join("、")) : null,
           el("details", {}, el("summary", {}, "提示詞"), el("pre", {}, ev.used_prompt || a.prompt || "")),
           thoughtBox(ev.thought)));
+      } else if (a.action === "call") {
+        if (a.say) out.push(el("div", { class: "ag-msg agent" }, who("AGENT", look), el("span", { translate: "no" }, a.say)));
+        const args = JSON.stringify(a.args || {});
+        out.push(el("div", { class: "ag-tool" },
+          el("span", { class: "t" }, `▶ TOOL`), `${toolZh(a.tool)}${ev.secs ? ` · 想 ${secs(ev.secs)}` : ""}`,
+          args !== "{}" ? el("details", {}, el("summary", {}, "參數"), el("pre", {}, args)) : null,
+          thoughtBox(ev.thought)));
+      } else if (a.action === "prompt") {
+        out.push(promptCard(a, ev));
       } else if (a.action === "finish") {
         out.push(el("div", { class: "ag-msg agent" },
           who("AGENT", `交卷${a.best?.length ? `：選 #${a.best.join("、#")}` : ""}`),
@@ -208,11 +240,28 @@ function eventNodes(ev, prevResult) {
       }
       break;
     }
+    case "tool":
+      out.push(el("div", { class: "ag-tool" + (ev.ok === false ? " err" : "") },
+        el("span", { class: "t" }, ev.ok === false ? "✗ TOOL" : "■ TOOL"), ev.zh || toolZh(ev.tool), ev.secs ? ` · ${secs(ev.secs)}` : "",
+        ev.text && ev.ok !== false ? el("details", {}, el("summary", {}, "給助手的結果"), el("pre", {}, ev.text)) : null));
+      break;
+    case "confirm": {
+      const wait = ev.state === "wait";
+      const args = JSON.stringify(ev.call?.args || {});
+      out.push(el("div", { class: "ag-confirm" + (wait ? "" : " done"), role: wait ? "alert" : null },
+        el("b", {}, wait ? "助手想做這件事，要你准：" : ev.state === "yes" ? "你准了：" : "你沒准："),
+        el("div", {}, `${toolZh(ev.call?.tool)}・${ev.why || ""}`),
+        args !== "{}" ? el("details", {}, el("summary", {}, "細節"), el("pre", {}, args)) : null,
+        wait && !running ? el("div", { class: "row" },
+          el("button", { class: "akey sm warn", type: "button", onclick: () => answer(true) }, "准"),
+          el("button", { class: "akey sm", type: "button", onclick: () => answer(false) }, "不准")) : null));
+      break;
+    }
     case "result": {
       const n = ev.ids?.length || 0;
       out.push(el("div", { class: "ag-tool" + (n ? "" : " err") },
-        el("span", { class: "t" }, `■ R${ev.round} DONE`),
-        `${n} 張 · 畫 ${secs(ev.secs)}${n ? ` · #${ev.ids.join("、#")}` : ""}`,
+        el("span", { class: "t" }, ev.tool === "look" ? "■ LOOK" : `■ R${ev.round} DONE`),
+        ev.tool === "look" ? `看 #${(ev.ids || []).join("、#")}` : `${ev.tool ? toolZh(ev.tool) + " · " : ""}${n} 張 · ${secs(ev.secs)}${n ? ` · #${ev.ids.join("、#")}` : ""}`,
         ev.errors?.length ? el("div", { style: "color:var(--ph-red)" }, ev.errors.join("；")) : null));
       break;
     }
@@ -226,6 +275,26 @@ function eventNodes(ev, prevResult) {
   return out;
 }
 
+// 只寫詞的成果：提示詞卡（填進主視窗的生成頁、複製）
+function promptCard(a, ev) {
+  const size = a.width && a.height ? ` · ${a.width}×${a.height}` : "";
+  const fill = async () => {
+    try {
+      await api("/api/agent/fill", { json: { prompt: a.prompt, negative: a.negative || "", width: a.width, height: a.height } });
+      toast("已填進主視窗的生成頁", "ok");
+    } catch (e) { toast(e.message, "err"); }
+  };
+  return el("div", { class: "ag-prompt" },
+    el("div", { class: "hd" }, el("b", {}, "提示詞卡"), ` · ${GUIDE_ZH[a.guide] || a.guide || ""}${size}${ev.secs ? ` · 想 ${secs(ev.secs)}` : ""}`),
+    a.note ? el("div", { class: "note", translate: "no" }, a.note) : null,
+    el("pre", { translate: "no" }, a.prompt || ""),
+    a.negative ? el("div", { class: "neg", translate: "no" }, "負面：" + a.negative) : null,
+    el("div", { class: "row" },
+      el("button", { class: "akey sm", type: "button", onclick: fill }, "填入生成頁"),
+      el("button", { class: "akey sm", type: "button", onclick: () => copyText(a.prompt || "").then(() => toast("已複製提示詞", "ok")) }, "複製")),
+    thoughtBox(ev.thought));
+}
+
 function paintTranscript(jump) {
   const box = F("agScreen");
   const stick = jump || nearBottom(box);
@@ -233,7 +302,7 @@ function paintTranscript(jump) {
   const evs = S?.events || [];
   if (!evs.length) {
     box.append(el("div", { class: "ag-empty" },
-      "用中文說你想要什麼圖，越具體越好（人物、衣服、地點、光線、構圖）。\n助手會自己寫英文提示詞、畫、看圖對照你的每一項要求，不對就改了再畫，最後把最好的交給你。\n畫到一半也可以插話，下一輪就照你說的改。"));
+      "用中文說你想要什麼圖，越具體越好（人物、衣服、地點、光線、構圖）。\n助手會自己寫英文提示詞、畫、看圖對照你的每一項要求，不對就改了再畫，最後把最好的交給你。\n畫到一半也可以插話，下一輪就照你說的改。\n也能叫它做別的：放大、去背、修臉修手、改圖、擴圖、角色三視圖、做影片、畫漫畫、查圖庫、換模型…花錢、刪東西、改設定之前會先問你。"));
     box.lastChild.style.whiteSpace = "pre-line";
   }
   let lastRound = 0;
@@ -262,7 +331,7 @@ function paintStrip() {
   const best = new Set(evs.filter((e) => e.kind === "act" && e.action?.action === "finish").flatMap((e) => e.action.best || []));
   const size = {};
   for (const e of evs) if (e.kind === "act" && e.action?.action === "generate") size[e.round] = [e.action.width, e.action.height];
-  const results = evs.filter((e) => e.kind === "result");
+  const results = evs.filter((e) => e.kind === "result" && e.tool !== "look");
   const all = results.flatMap((e) => e.ids || []);
   const rows = [];
   if (running && phase === "render") {
@@ -296,14 +365,15 @@ function paintReadout() {
   let i = evs.length - 1;
   while (i >= 0 && !(evs[i].kind === "user" && !evs[i].mid)) i--;
   const since = evs.slice(i + 1);
-  const used = since.filter((e) => e.kind === "result").length;
+  const used = since.filter((e) => e.kind === "result" && !e.tool).length;
   F("agRoundR").textContent = `${used}/${S?.settings?.auto === false ? 1 : S?.settings?.rounds || 3}`;
   const lastAct = evs.slice().reverse().find((e) => e.kind === "act");
   F("agSecsR").textContent = lastAct?.secs ? secs(lastAct.secs) : "—";
   const st = F("agStateR");
   const last = evs[evs.length - 1];
   const [t, c] = running ? (phase === "render" ? ["RENDER", ""] : ["THINK", ""])
-    : last?.kind === "error" ? ["ERROR", "r"] : last?.kind === "act" && last.action?.action === "finish" ? ["DONE", "g"] : ["IDLE", "g"];
+    : last?.kind === "error" ? ["ERROR", "r"] : last?.kind === "confirm" && last.state === "wait" ? ["WAIT", ""]
+    : last?.kind === "act" && last.action?.action === "finish" ? ["DONE", "g"] : ["IDLE", "g"];
   st.textContent = t;
   st.className = c;
 }
@@ -331,7 +401,7 @@ async function say() {
   if (F("agGo").disabled) return;  // 上一句還在送（Ctrl+Enter 連按、按住不放）
   const text = F("agSay").value.trim();
   if ((!text && !att.length) || !S) return;
-  if (!S.settings.base) return toast("還沒選生圖模型：先按右邊的「用生成頁目前的設定」", "err");
+  if (S.settings.mode !== "prompt" && !S.settings.base) return toast("還沒選生圖模型：先按右邊的「用生成頁目前的設定」", "err");
   if (S.settings.brain === "cloud" && cloud?.phase !== "ready") return toast("雲端還沒開好：先按「開雲端」，等燈號變綠；或把腦袋切回 9B／35B", "err");
   F("agGo").disabled = true;
   try {
@@ -352,6 +422,19 @@ async function say() {
     toast(e.message, "err");
   } finally {
     F("agGo").disabled = false;
+  }
+}
+
+async function answer(yes) {
+  if (!S || running) return;
+  try {
+    await api("/api/agent/confirm", { json: { id: S.id, ok: yes } });
+    phase = "render"; live = yes ? "照你准的去做…" : "換個方式想…"; liveLlm = "";
+    setRunning(true);
+    paintTranscript(true);
+    await reload();
+  } catch (e) {
+    toast(e.message, "err");
   }
 }
 
@@ -755,16 +838,25 @@ export function init() {
     if (!S) return;
     try { await api("/api/agent/stop", { json: { id: S.id } }); status("停止中…", "amb"); } catch (e) { toast(e.message, "err"); }
   };
+  F("agMode").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-v]");
+    if (b) saveSettings({ show: b.dataset.v === "show" });
+  });
+  F("agKind").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-k]");
+    if (b) saveSettings({ mode: b.dataset.k });
+  });
+  F("agTarget").onchange = (e) => saveSettings({ target: e.target.value });
   F("agBrain").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-b]");
     if (!b || !S || b.dataset.b === S.settings.brain) return;
     // 雲端預設「先想再答」（快到不差這點時間）；本機預設不開（35B 先想會很久）
-    saveSettings({ brain: b.dataset.b, think: b.dataset.b === "cloud" });
+    saveSettings({ brain: b.dataset.b, ...(b.dataset.b === "cloud" && S?.settings?.think === "off" ? { think: "high" } : {}) });
   });
   F("agRounds").addEventListener("change", (e) => saveSettings({ rounds: +e.target.value }));
   F("agCount").addEventListener("change", (e) => saveSettings({ count: +e.target.value }));
   F("agAuto").onchange = (e) => saveSettings({ auto: e.target.checked });
-  F("agThink").onchange = (e) => saveSettings({ think: e.target.checked });
+  F("agThink").onchange = (e) => saveSettings({ think: e.target.value });
   F("agLoras").onchange = (e) => saveSettings({ loras: e.target.checked });
   F("agBaseUse").onclick = async () => {
     const b = gen.baseParams();

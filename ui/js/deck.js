@@ -98,7 +98,19 @@ function watchValue(input, cb) {
   if (input.tagName === "SELECT") new MutationObserver(cb).observe(input, { childList: true });
 }
 
-// ---------------------------------------------------------------- 旋鈕：上下拖曳、滾輪、方向鍵；有刻度的會喀一聲
+// ---------------------------------------------------------------- 旋鈕：繞圈拖曳、滾輪、方向鍵；有刻度的會喀一聲
+/** 指標從角度 a0 轉到 a1（度，atan2 的 -180～180）轉了幾度：走近的那邊，順時針為正 */
+export function turnDelta(a0, a1) {
+  let d = a1 - a0;
+  while (d > 180) d -= 360;
+  while (d <= -180) d += 360;
+  return d;
+}
+/** 轉幾度跳一格：刻度照 270 度的弧平分（指針跟著手），選項很多時至少 6 度一格，免得手抖就跳 */
+export function stepDegrees(count) {
+  return Math.max(6, 270 / Math.max(1, count - 1));
+}
+
 function knob(box) {
   const input = F(box.dataset.for);
   box.innerHTML = `<div class="dial" role="slider" tabindex="0" aria-label="${box.dataset.label}"><span class="ind"></span></div><span class="vfd g"></span><span class="k">${box.dataset.label}</span>`;
@@ -122,7 +134,7 @@ function knob(box) {
     const vs = values(), i = index(), n = Math.max(1, vs.length - 1);
     ind.style.setProperty("--rot", `${-135 + (i / n) * 270}deg`);
     const v = isSel ? input.value : +input.value;
-    out.textContent = isSel ? v : (+input.step || 1) < 1 ? (+v).toFixed(1) : String(v);
+    out.textContent = isSel ? (input.selectedOptions[0]?.textContent || v) : (+input.step || 1) < 1 ? (+v).toFixed(1) : String(v);
     dial.setAttribute("aria-valuenow", String(v));
     box.classList.toggle("off", input.disabled);
     dial.setAttribute("aria-disabled", String(input.disabled));
@@ -139,11 +151,21 @@ function knob(box) {
     click("detent");
   };
   watchValue(input, paint);
-  let y0 = 0, i0 = 0;
+  // 像真的旋鈕一樣繞著中心轉：累積轉過的角度，順時針加、逆時針減，可以連轉好幾圈（超過兩端就停在兩端）
   dial.addEventListener("pointerdown", (e) => {
     if (input.disabled) return;
-    dial.setPointerCapture(e.pointerId); y0 = e.clientY; i0 = index();
-    dial.onpointermove = (ev) => setIndex(i0 + Math.round((y0 - ev.clientY) / Math.max(4, 160 / values().length)));
+    dial.setPointerCapture(e.pointerId);
+    const r = dial.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const at = (ev) => Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI;
+    const near = (ev) => Math.hypot(ev.clientX - cx, ev.clientY - cy) < 6; // 太靠中心角度會亂跳，不算
+    const i0 = index(), per = stepDegrees(values().length);
+    let last = at(e), acc = 0;
+    dial.onpointermove = (ev) => {
+      const a = at(ev);
+      if (!near(ev)) acc += turnDelta(last, a);
+      last = a;
+      setIndex(i0 + Math.round(acc / per));
+    };
   });
   dial.addEventListener("pointerup", () => (dial.onpointermove = null));
   dial.addEventListener("wheel", (e) => { e.preventDefault(); setIndex(index() + (e.deltaY < 0 ? 1 : -1)); }, { passive: false });
@@ -398,7 +420,17 @@ function windowControls() {
 }
 
 // ---------------------------------------------------------------- 初始化
+/** 看圖框（#win）釘在原點：圖片貼著它定位，被捲到就整張歪掉（2026-10-26 朋友回報縮放、拉寬後圖片飄移）。
+ *  CSS 已經是 overflow: clip，這裡是舊瀏覽器的保險：一開始、被捲到、變大小時都歸零 */
+export function pinView(win, Observer = globalThis.ResizeObserver) {
+  const zero = () => { if (win.scrollTop || win.scrollLeft) { win.scrollTop = 0; win.scrollLeft = 0; } };
+  zero();
+  win.addEventListener("scroll", zero);
+  if (Observer) new Observer(zero).observe(win);
+}
+
 export function init() {
+  pinView(F("win"));
   $$("[data-ic]").forEach((el) => setIc(el, el.dataset.ic));
   $$("[data-app]").forEach((el) => (el.outerHTML = appIcon(+el.dataset.app)));
   paintSound();

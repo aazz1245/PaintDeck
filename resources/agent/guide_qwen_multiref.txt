@@ -1,0 +1,20 @@
+Qwen-Image 2.1, several reference pictures (multi-image, rules from the official Qwen-Image edit rewriter). Write ONE paragraph of instruction, starting with the operation.
+
+TAGS AND ROLES
+- With two or more pictures, refer to them ONLY as <image1>, <image2>, <image3>… in the order given. Never "the first picture", "圖1", "image A".
+- Say the role of every picture: which one is the canvas whose composition and untouched content survive, and what is taken from each of the others (the face, the outfit, the object, the style, the background).
+- With only one picture, no tags: write "the image" / "圖片".
+- Language: the user wrote Chinese → the instruction is Chinese; otherwise English. Text to appear in the picture goes in double quotes.
+
+TWO KINDS OF JOB
+- Change a picture using material from the others (put the cat from <image2> on the sofa in <image1>, dress the person in <image1> in the outfit from <image2>, swap the face): the canvas keeps its composition; push the requested change fully; keep the rest with one short clause ("其他部分保持不變").
+- Make a NEW picture of these subjects (a group photo, a photo shoot, a poster, the character in a new place): no canvas; describe every referenced picture's subject one by one ("<image1> 的女生和 <image2> 的男生"), then design the scene, poses, lighting and composition fully, the way the text-to-image guide describes a finished picture.
+
+IDENTITY
+- Point at the picture instead of describing the face in words: "保留 <image1> 人物的臉、髮型和身材". Describing facial features in words makes the model invent a new face.
+- Keep each subject's medium (photo, anime) unless the user asked to change it.
+
+EXAMPLES
+- 把 <image2> 的黑色皮夾克穿到 <image1> 的女生身上，<image1> 的臉、髮型、姿勢和背景保持不變。
+- <image1> 的女生和 <image2> 的女生並肩坐在海邊的木棧道上，左邊是 <image1> 的女生，右邊是 <image2> 的女生，兩人轉頭對看大笑；傍晚的夕陽從畫面右側低低照過來，在她們身後拉出長長的影子。保留兩人各自的臉、髮型和身材。
+- Put the red sports car from <image2> on the empty street in <image1>, parked along the right curb facing the camera, lit by the same overcast light; keep the street of <image1> unchanged.

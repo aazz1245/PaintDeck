@@ -35,7 +35,7 @@ function sheetModule({ api, confirmAnswer = true, extras = {} } = {}) {
     ...extras,
   });
   vm.runInContext(source + `
-globalThis.subject = { load, current: () => S, composeNow, setSegCount, addCast, removeCast, precheck, setAsk: (f) => { ask = f; } };`,
+globalThis.subject = { load, current: () => S, composeNow, setSegCount, addCast, removeCast, precheck, applyTo, setAsk: (f) => { ask = f; } };`,
   context, { filename: 'shotsheet.js' });
   return { s: context.subject, asked, opened, saved };
 }
@@ -128,6 +128,49 @@ test('cast_gets_speakers_in_order', async () => {
   // 最多 4 個
   for (const id of [4, 5, 6]) await m.s.addCast({ id, name: `角色${id}`, kind: 'char', data: {} });
   assert.equal(m.s.current().cast.length, 4);
+});
+
+test('locked_cast_uses_spec_and_binds_portrait_sheet_refs', async () => {
+  const toInput = [];
+  const api = async (url, opts) => {
+    const id = Number(url.match(/assets\/(\d+)/)[1]);
+    if (url.endsWith('/to_input')) { toInput.push(opts.json.file); return { name: `aw_${opts.json.file}`, width: 512, height: 768 }; }
+    if (id === 7) return { text: 'TAGS', locked: true, spec: { zh: '女性，橘髮。', en: 'female, orange hair.', tags: '1girl' }, images: ['7_1.png', '7_2.png'], voice: 'v', lang: 'ja', warn: [], refmod: 'paintdeck/pd_char_7' };
+    return { text: '外觀8', images: ['8_1.png'], voice: '', lang: '', warn: [], locked: false };
+  };
+  const m = sheetModule({ api });
+  m.s.load({ segments: [{}], refs: { on: false, items: [{ file: 'mine.png', who: '' }] } });
+  await m.s.addCast({ id: 8, name: '乙', kind: 'char', data: { look_en: 'a man' } });
+  await m.s.addCast({ id: 7, name: '甲', kind: 'char', data: { look_en: 'OLD' } });
+  const S = m.s.current();
+  assert.deepEqual(plain(S.cast.map((c) => [c.speaker, c.locked, c.look_zh, c.look_en])),
+    [['S1', false, '外觀8', 'a man'], ['S2', true, '女性，橘髮。', 'female, orange hair.']]);
+  assert.equal(S.refs.on, true, '鎖定角色的圖一定要送');
+  assert.deepEqual(plain(S.cast.map((c) => c.refmod)), ['', 'paintdeck/pd_char_7'], '只有鎖定角色記 RefMod');
+  assert.deepEqual(plain(S.refs.items), [{ file: 'mine.png', asset_id: null, who: '' },
+    { file: 'aw_7_1.png', asset_id: 7, who: 'S2' }, { file: 'aw_7_2.png', asset_id: 7, who: 'S2' }]);
+  assert.deepEqual(toInput, ['7_1.png', '7_2.png'], '沒鎖的角色不自動放圖');
+  // 拿掉鎖定角色：它自動放的參考圖一起拿掉，別人的留著
+  m.s.removeCast(1);
+  assert.deepEqual(plain(m.s.current().refs.items.map((r) => r.file)), ['mine.png']);
+  // 參考圖快滿：放得下幾張放幾張
+  const m2 = sheetModule({ api });
+  m2.s.load({ segments: [{}], refs: { on: true, items: Array.from({ length: 7 }, (_, k) => ({ file: `r${k}.png` })) } });
+  await m2.s.addCast({ id: 7, name: '甲', kind: 'char', data: {} });
+  assert.equal(m2.s.current().refs.items.length, 8);
+  assert.equal(m2.s.current().refs.items[7].file, 'aw_7_1.png');
+  // 存檔再讀回：locked 留著
+  m2.s.load(plain(m2.s.current()));
+  assert.equal(m2.s.current().cast[0].locked, true);
+});
+
+test('compose_puts_locked_head_back_into_manual_prompts', async () => {
+  const api = async () => ({ segments: [{ prompt: 'new1', mirror: 'm1', kept: 'HEAD 手改的', kept_mirror: 'HEAD mine' }], estimate: [] });
+  const m = sheetModule({ api });
+  m.s.load({ segments: [{ prompt: '手改的', mirror: 'mine', manual: true }] });
+  await m.s.composeNow();
+  const seg = m.s.current().segments[0];
+  assert.deepEqual([seg.prompt, seg.mirror, seg.manual], ['HEAD 手改的', 'HEAD mine', true]);
 });
 
 test('framepick_ignores_other_jobs', async () => {
@@ -256,4 +299,34 @@ test('shrink_does_not_ask_for_auto_composed_prompts', async () => {
   assert.equal(m.s.setSegCount(2), true);
   assert.equal(m.asked.length, 0);
   assert.equal(m.s.current().segments.length, 2);
+});
+
+test('segment_ref_off_reaches_long_film_and_short', async () => {
+  const api = async () => ({ segments: [{ prompt: 'p1', mirror: 'm1' }, { prompt: 'p2', mirror: 'm2' }], estimate: [] });
+  let got = null;
+  const h3chain = { applySheet: async (o) => { got = o; return true; } };
+  const m = sheetModule({ api, extras: { h3chain } });
+  m.s.load({ engine: 'h3', refs: { on: true, items: [{ file: 'r1.png', who: 'S1' }, { file: 'r2.png', who: 'S2' }] },
+    segments: [{ secs: 10, ref_off: ['r1.png', 7] }, { secs: 10 }] });
+  assert.deepEqual(plain(m.s.current().segments.map((x) => x.ref_off)), [['r1.png'], []], '不是字串的丟掉；舊草稿沒有就是空的');
+  await m.s.applyTo();
+  assert.deepEqual(plain(got.refs), ['r1.png', 'r2.png'], '整條照舊帶全部');
+  assert.deepEqual(plain(got.segRefs), [['r2.png'], null], '有關掉的段才帶自己的，沒關的照用整條的');
+  // 單段：送去短片的就是這段實際要送的
+  let short = null;
+  const m2 = sheetModule({ api: async () => ({ segments: [{ prompt: 'p1', mirror: 'm1' }], estimate: [] }), extras: { h3: { applySheet: async (o) => { short = o; } } } });
+  m2.s.load({ engine: 'h3', refs: { on: true, items: [{ file: 'r1.png' }, { file: 'r2.png' }] }, segments: [{ secs: 10, ref_off: ['r2.png'] }] });
+  await m2.s.applyTo();
+  assert.deepEqual(plain(short.refs), ['r1.png']);
+});
+
+test('apply_long_writes_segment_refs_only_where_picked', async () => {
+  const calls = [];
+  const m = chainModule({ api: async (url, o) => { calls.push([url, o?.json]); return { id: 'c1' }; }, confirmAnswer: true });
+  m.c.setChain({ id: 'c1', title: '空的', segments: [{ status: 'todo', text: '' }] });
+  assert.equal(await m.c.applySheet({ sheet: sheet3, prompts: ['p1', 'p2', 'p3'], refs: ['r1.png', 'r2.png'], segRefs: [null, ['r2.png'], []] }), true);
+  const segs = calls[0][1].chain.segments;
+  assert.equal('refs' in segs[0], false);
+  assert.deepEqual(plain(segs[1].refs), ['r2.png']);
+  assert.deepEqual(plain(segs[2].refs), []);
 });

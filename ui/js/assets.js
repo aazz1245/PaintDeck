@@ -15,7 +15,7 @@ export const KIND_NAME = Object.fromEntries(KINDS);
 const MEDIA = new Set(["char", "scene", "frame", "outfit", "prop", "fx", "sound", "shot"]);
 /** 圖片用途：鍵、中文名（順序就是拿去用時的排序） */
 export const ROLES = [
-  ["src", "原圖"], ["sheet", "多視圖（穿衣）"], ["face", "臉部特寫"], ["sheet_nude", "多視圖（裸體）"], ["detail", "細節"],
+  ["src", "原圖"], ["portrait", "正面特寫"], ["sheet", "多視圖（穿衣）"], ["face", "臉部特寫表"], ["sheet_nude", "多視圖（裸體）"], ["detail", "細節"],
   ["pose", "姿勢"], ["outfit", "服裝"], ["other", "其他"],
 ];
 const LAYOUT = [["top", "上方"], ["bottom", "下方"], ["left", "左邊"], ["right", "右邊"], ["fg", "前景"], ["mid", "中景"], ["bg", "遠景"], ["light", "光線"]];
@@ -130,6 +130,7 @@ function fill() {
   F("asDel").hidden = !cur.id;
   paintImgs();
   paintAudio();
+  paintCard();
   byKind();
   paint();
 }
@@ -153,6 +154,58 @@ function paintImgs() {
       ...ROLES.map(([r, name]) => el("option", { value: r, selected: im.role === r }, name))),
     el("button", { class: "akey sm", type: "button", title: "拿掉這張（搬到待刪除）", onclick: () => removeFile(im.file) }, "拿掉"))));
   if (!imgs.length) box.append(el("div", { class: "muted sm" }, "還沒有圖片"));
+}
+
+/** 角色卡狀態：四樣東西有沒有；設定表鎖住時顯示固定文字（唯讀，要改去工坊解鎖） */
+export function cardState(d) {
+  const has = (role) => (d?.images || []).some((im) => im.role === role);
+  const sp = d?.spec;
+  return [
+    ["多視圖", has("sheet")], ["正面特寫", has("portrait")],
+    ["設定表", sp?.locked ? "locked" : sp && Object.values(sp.fields || {}).some((f) => f?.zh || f?.en) ? "open" : false],
+    ["RefMod", !!d?.refmod?.file],
+  ];
+}
+
+function paintCard() {
+  const d = cur.data || {};
+  const word = (v) => (v === "locked" ? "🔒 已鎖定" : v === "open" ? "寫了還沒鎖" : v ? "✓ 有" : "— 還沒有");
+  const sp = d.spec;
+  const canMod = cur.kind === "char" && (d.images || []).length;
+  F("asCard").replaceChildren(
+    el("div", { class: "row wrap gap as-card-state" }, ...cardState(d).map(([name, v]) => el("span", { class: "chip" + (v ? " on" : "") }, `${name}：${word(v)}`))),
+    sp?.locked ? el("div", { class: "cs-spec-block" }, el("div", {}, sp.block_zh), el("div", {}, sp.block_en), el("div", { class: "muted" }, sp.block_tags)) : "",
+    canMod ? el("div", { class: "row wrap gap" },
+      el("button", { class: "akey sm", type: "button", onclick: makeRefmod,
+        title: "用本機 ComfyUI 把正面特寫編成 H3 的 RefMod（只用 H3 影片 VAE，幾十秒）；拍攝單勾「用 RefMod 鎖臉」時，H3 拍片會接上它" },
+        d.refmod?.file ? "重做 RefMod" : "做 RefMod"),
+      el("span", { class: "muted sm" }, d.refmod?.file ? `已做：${d.refmod.name}` : "RefMod（實驗）：正面特寫編成 H3 的固定參考，拍片鎖臉用")) : "");
+}
+
+/** 做 RefMod：本機沒有外掛就問要不要裝（裝完要重開 ComfyUI），有了就做 */
+async function makeRefmod() {
+  if (!cur?.id) return toast("先存這個角色", "err");
+  let st;
+  try { st = await api("/api/refmod/status"); } catch (e) { return toast(e.message, "err"); }
+  if (!st.online) return toast("本機的 ComfyUI 沒有連線", "err");
+  if (!st.loaded) {
+    if (!st.installed) {
+      if (!confirm(`做 RefMod 要先在本機 ComfyUI 裝外掛 ComfyUI-MiniMaxH3Mod（繪匣審過的版本 ${st.commit.slice(0, 7)}，只用 torch／numpy／Pillow，不連網）。\n要裝嗎？裝完要重開 ComfyUI。`)) return;
+      try { await api("/api/refmod/install", { json: {}, timeout: 10 * 60 * 1000 }); } catch (e) { return toast(e.message, "err"); }
+    }
+    if (!confirm("RefMod 外掛裝好了，要重開 ComfyUI 才會載入。現在重開嗎？（正在跑的工作會中斷）")) return toast("之後重開 ComfyUI，再按一次「做 RefMod」", "ok");
+    try { await api("/api/models/restart_comfy", { json: {} }); } catch (e) { return toast(e.message, "err"); }
+    return toast("ComfyUI 重開中：等狀態列變綠，再按一次「做 RefMod」", "ok");
+  }
+  return editAction(async () => {
+    const it = await saveCurrent(true);
+    if (!it) return;
+    toast("做 RefMod 中…（本機 ComfyUI，第一次要載入 H3 影片 VAE）", "ok");
+    cur = await api(`/api/assets/${it.id}/refmod`, { json: {}, timeout: 16 * 60 * 1000 });
+    const i = items.findIndex((x) => x.id === cur.id);
+    if (i >= 0) items[i] = cur;
+    toast(`RefMod 做好了：${cur.data?.refmod?.name || ""}`, "ok");
+  });
 }
 
 function paintAudio() {

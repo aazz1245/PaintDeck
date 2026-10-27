@@ -1,5 +1,6 @@
 // 資產抽屜：生成、導演分鏡、H3 影片台、漫畫、助手共用。點一個資產 → 後端照目前的模型轉換（/api/assets/{id}/apply）→ 插文字、放圖。
-// mount(box, ctx)：ctx = { family(), insert(text), images?: { base?(r), control?(r), ref?: {add(r), count(), max} } }。
+// mount(box, ctx)：ctx = { family(), insert(text), images?: { base?(r), control?(r), ref?: {add(r), count(), max, has?(name)} }, lock?(chip) }。
+// lock：鎖定設定表的角色不插字，交給頁面做成標籤（生成頁，見 lockedchips.js）；chip = {id, name, zh, en, tags, refs}。
 // r 是 /api/to_input 的 {name, width, height}；ref.add 回傳加入後的 1 起算編號，放不下回 null。
 import { api, el, toast, store } from "./util.js";
 import * as assets from "./assets.js";
@@ -82,6 +83,7 @@ async function apply(d, it, fam) {
   if (fam !== "qwen21") for (const w of p.warn || []) toast(w, "err");
   const imgs = d.ctx.images || {};
   let text = p.text || "";
+  const added = [];  // 這次放進多圖參考的檔名（鎖定標籤送出時照目前順序換成 <imageN>）
   try {
     if (fam === "qwen21" && imgs.ref && p.images.length) {
       const max = imgs.ref.max || 10;
@@ -94,11 +96,13 @@ async function apply(d, it, fam) {
       // 複製期間使用者仍可改參考圖；等全部複製完再同步加入、取得實際編號及插文字。
       const tags = [];
       for (const r of ready) {
+        // 鎖定角色再點一次：已經在參考圖裡的同一張不重複放，照樣記給標籤
+        if (p.locked && d.ctx.lock && imgs.ref.has?.(r.name)) { added.push(r.name); continue; }
         if (imgs.ref.count() >= max) break;
         const n = imgs.ref.add(r);
-        if (n) tags.push(`<image${n}>`);
+        if (n) { tags.push(`<image${n}>`); added.push(r.name); }
       }
-      if (p.images.length > room || tags.length < ready.length || (p.warn || []).some((w) => w.includes("10"))) toast(`參考圖最多 ${max} 張`, "err");
+      if (p.images.length > room || added.length < ready.length || (p.warn || []).some((w) => w.includes("10"))) toast(`參考圖最多 ${max} 張`, "err");
       if (tags.length && imgs.ref.count() > 4) toast(`目前有 ${imgs.ref.count()} 張參考圖，4 張以內細節最好`, "err");
       if (tags.length) text = `${it.name}（${tags.join("")}）${text ? "：" + text : ""}`;
     }
@@ -109,7 +113,11 @@ async function apply(d, it, fam) {
       : `「${it.name}」聲音：${p.voice || "—"}；語言：${p.lang || "—"}`;
     text = [text, voice].filter(Boolean).join("\n");
   }
-  if (text) d.ctx.insert(text);
+  const locked = !!(p.locked && d.ctx.lock);
+  if (locked) {
+    d.ctx.lock({ id: it.id, name: it.name, zh: p.spec?.zh || "", en: p.spec?.en || "", tags: p.spec?.tags || "", refs: added });
+    toast(`「${it.name}」的設定表鎖在提示詞最前面（送出時才接上）`, "ok");
+  } else if (text) d.ctx.insert(text);
   if (fam === "anima" && p.images.length && (imgs.base || imgs.control)) {
     d.menu = el("div", { class: "row wrap adr-menu" },
       el("span", { class: "sm" }, `「${it.name}」有圖：`),
@@ -117,7 +125,7 @@ async function apply(d, it, fam) {
       imgs.control ? el("button", { class: "akey sm", type: "button", onclick: () => putImage(d, it, p.images[0], imgs.control) }, "當構圖控制") : null,
       el("button", { class: "akey sm", type: "button", onclick: () => { d.menu = null; paint(d); } }, "不用圖"));
     paint(d);
-  } else if (text) toast(`已插入「${it.name}」`, "ok");
+  } else if (text && !locked) toast(`已插入「${it.name}」`, "ok");
 }
 
 async function putImage(d, it, file, put) {

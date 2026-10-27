@@ -20,6 +20,12 @@ const FACE: &str = "A character expression sheet of {who}, head and shoulders on
 on a plain light gray background. Top row, all with a calm neutral expression: front view, three-quarter view, side profile view. \
 Bottom row, all front view: a happy smile, an angry frown, a shy blush. The face, eye color, hairstyle, hair color and accessories \
 match <image1> exactly in every portrait, every head the same size with the same lighting, no text.";
+/// 正面特寫（2026-10-27 角色卡）：單人、正臉、肩膀以上、平光素背景，鎖臉用的固定參考圖
+pub const PORTRAIT_W: u32 = 1024;
+pub const PORTRAIT_H: u32 = 1024;
+const PORTRAIT: &str = "A front-view head-and-shoulders portrait of {who}, one person only: looking straight at the camera with a calm neutral expression, \
+shoulders square to the camera, the whole head and hair inside the frame, even soft studio lighting, plain light gray background. \
+The face, eye color, hairstyle, hair color, skin tone, makeup and every mark or accessory match <image1> exactly. No text.";
 /// 生成頁是 Anima（動漫）時加的畫風字；其他家族照定稿的畫風，不加
 const ANIME: &str = " Anime illustration, clean line art, cel shading.";
 
@@ -29,6 +35,7 @@ pub fn prompt(kind: &str, desc: &str, family: &str) -> Option<(String, u32, u32)
     let (tpl, w, h) = match kind {
         "turnaround" => (TURN, TURN_W, TURN_H),
         "face" => (FACE, FACE_W, FACE_H),
+        "portrait" => (PORTRAIT, PORTRAIT_W, PORTRAIT_H),
         _ => return None,
     };
     let desc = desc.trim().trim_end_matches('.');
@@ -72,6 +79,27 @@ pub fn filter_tags(tags: &[String]) -> Vec<String> {
         })
 }
 
+/// 讀圖模型填角色設定表的系統提示（欄位見 charspec::FIELDS）
+pub const SYSTEM_SPEC: &str = r#"You fill in a fixed spec sheet for ONE character (an adult) from reference images of that character. Return JSON only, no prose:
+{"fields": {"sex": F, "age": F, "hair_style": F, "hair_color": F, "face": F, "eyes": F, "skin": F, "body": F, "marks": F, "outfit": F}}
+where every F is {"zh": "<short Traditional Chinese phrase>", "en": "<short English phrase>", "tags": ["<Danbooru tag>", ...]}.
+
+Rules:
+- Only objective, visible, lasting features. Never pose, expression, background, lighting or camera.
+- Every phrase must stand alone in a prompt. en examples: "female", "looks in her mid 20s", "long straight hair reaching the waist", "orange hair", "oval face", "amber almond-shaped eyes", "fair skin", "slender build". zh examples: "女性", "外觀二十五歲上下", "及腰長直髮", "橘色頭髮", "鵝蛋臉", "琥珀色杏眼", "白皙膚色", "纖細體型".
+- age: the apparent adult age.
+- marks: permanent features that identify this character (mole, scar, tattoo, freckles, heterochromia, an accessory always worn). Separate several with "; " in en and "；" in zh. Empty strings when there are none.
+- outfit: the clothes in the images (kept apart because it can change).
+- tags: real Danbooru tags, lowercase with spaces (e.g. "orange hair", "mole under eye"), 0 to 6 per field.
+- Use the notes (name, sex, existing description and tags) when they agree with the images; when they disagree, the images win."#;
+
+/// 模型回的設定表 → 乾淨的 fields（每一格 {zh, en, tags}）；讀不出 JSON 回 None
+pub fn spec_fields(reply: &str) -> Option<serde_json::Value> {
+    let m = serde_json::Value::Object(crate::director::json_in(reply)?);
+    let fields = if m["fields"].is_object() { m["fields"].clone() } else { m };
+    Some(crate::charspec::clean(&serde_json::json!({"fields": fields}))["fields"].clone())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -85,7 +113,21 @@ mod tests {
         assert!(p.contains("<image1>") && !p.contains("Anime illustration"));
         assert_eq!((w, h), (FACE_W, FACE_H));
         assert!(prompt("x", "", "anima").is_none());
-        assert!([w, h, TURN_W, TURN_H].iter().all(|v| v.is_multiple_of(32)));
+        assert!([w, h, TURN_W, TURN_H, PORTRAIT_W, PORTRAIT_H].iter().all(|v| v.is_multiple_of(32)));
+        let (p, w, h) = prompt("portrait", "an adult woman with orange hair", "anima").unwrap();
+        assert!(p.contains("<image1>") && p.contains("head-and-shoulders") && p.contains("an adult woman with orange hair") && p.ends_with("cel shading."));
+        assert_eq!((w, h), (PORTRAIT_W, PORTRAIT_H));
+    }
+
+    #[test]
+    fn spec_reply_is_cleaned() {
+        let reply = "好的\n{\"fields\": {\"hair_color\": {\"zh\": \"橘髮\", \"en\": \"orange hair\", \"tags\": [\"Orange_Hair\"]}, \"junk\": 1}}";
+        let f = spec_fields(reply).unwrap();
+        assert_eq!(f["hair_color"]["tags"], serde_json::json!(["orange hair"]));
+        assert_eq!(f.as_object().unwrap().len(), crate::charspec::FIELDS.len());
+        assert!(spec_fields("沒有 JSON").is_none());
+        // 模型直接回欄位（沒包 fields）也收
+        assert_eq!(spec_fields("{\"sex\": {\"en\": \"female\"}}").unwrap()["sex"]["en"], "female");
     }
 
     #[test]

@@ -25,6 +25,64 @@ pub fn tx(v: &Value) -> String {
 /// 不用子資料夾：AI 改寫讀參考圖時只取檔名（pe::Service::load_images）
 pub const INPUT_PREFIX: &str = "adir_";
 
+/// 拍攝版本採用時投影回每段的欄位；其餘提示詞與導演設定不隨切版改寫。
+pub const DIRECTOR_RESULT_KEYS: &[&str] = &["video_id", "video_file", "last_frame", "frame_id", "frame_image", "video_job", "frame_job", "references", "trim_out", "selected_frame", "status", "error"];
+pub const RESULT_KEYS: &[&str] = DIRECTOR_RESULT_KEYS;
+
+/// 切換上游版本後，沿著「接上一段」清掉下游目前結果。候選版本完整保留。
+pub fn invalidate_dependents(project: &mut Value, index: usize) {
+    if let Some(segs) = project["segments"].as_array_mut() {
+        for seg in segs.iter_mut().skip(index + 1) {
+            if !truthy(seg.get("continue")) { break; }
+            crate::film_takes::ensure_legacy(seg, RESULT_KEYS);
+            crate::film_takes::clear_current(seg, RESULT_KEYS);
+            seg["stale"] = json!("上一鏡採用版本已變更，請重拍或採用與目前上游相容的版本");
+        }
+    }
+    project["final"] = Value::Null;
+}
+
+/// 合片只使用已採用、沒有待審候選且沒有失效的鏡頭。
+pub fn ready_for_concat(seg: &Value) -> bool {
+    seg["video_id"].as_i64().is_some() && tx(&seg["status"]) == "done" && seg["pending_take"].is_null() && seg["stale"].is_null()
+}
+
+/// 下游描述使用已採用影片的真實提示詞，未生成的文字改動仍可當作重拍草稿。
+pub fn selected_video_prompt(seg: &Value) -> String {
+    let take = seg["takes"].as_array().and_then(|a| a.iter().find(|t| t["id"] == seg["selected_take"]));
+    take.and_then(|t| t["recipe"]["params"]["prompt_resolved"].as_str().or_else(|| t["recipe"]["params"]["prompt"].as_str()))
+        .filter(|p| !p.is_empty()).map(str::to_string).unwrap_or_else(|| tx(&seg["video"]))
+}
+
+/// 採用歷史版本時還原對應生成規格；被取代的未拍草稿保留在 draft，供畫面明確套回。
+pub fn adopt_take_recipe(seg: &mut Value, id: &str) {
+    let Some(recipe) = seg["takes"].as_array().and_then(|a| a.iter().find(|t| t["id"] == id)).map(|t| t["recipe"].clone()) else { return; };
+    let mut replacement = Map::new();
+    if let Some(prompt) = recipe["params"]["prompt_resolved"].as_str().or_else(|| recipe["params"]["prompt"].as_str()) { replacement.insert("video".into(), json!(prompt)); }
+    if let Some(engine) = recipe["engine"].as_str() { replacement.insert("engine".into(), json!(engine)); }
+    if let Some(seconds) = recipe["params"]["video_seconds"].as_f64() { replacement.insert("seconds".into(), json!(seconds)); }
+    for key in ["entry", "exit", "shot_spec"] { if !recipe[key].is_null() { replacement.insert(key.into(), recipe[key].clone()); } }
+    // 完整 params 省略這些欄位代表當時沒有使用，不能殘留另一版的槽位、覆寫或 LoRA。
+    // legacy 沒有 params 時資訊未知，維持原狀，不偽造配方。
+    if let Some(params) = recipe["params"].as_object() {
+        for (key, empty) in [("media_slots", json!({})), ("wf_overrides", json!({})), ("video_loras", json!([]))] {
+            let old = params.get(key).filter(|v| if key == "video_loras" { v.is_array() } else { v.is_object() });
+            replacement.insert(key.into(), old.cloned().unwrap_or(empty));
+        }
+    }
+    if replacement.iter().any(|(k,v)| seg[k] != *v) {
+        let mut draft = Map::new();
+        for key in ["video", "video_zh", "engine", "seconds", "entry", "exit", "shot_spec", "media_slots", "wf_overrides", "video_loras"] {
+            if let Some(v) = seg.get(key) { draft.insert(key.into(), v.clone()); }
+        }
+        // 不把版本清單或上一份 draft 嵌進去，避免配方遞迴膨脹。
+        if !seg["draft"].is_object() { seg["draft"] = Value::Object(draft); }
+    }
+    let changed_prompt = replacement.get("video").is_some_and(|p| seg["video"] != *p);
+    for (key,value) in replacement { seg[key] = value; }
+    if changed_prompt { seg["video_zh"] = Value::Null; }
+}
+
 // ================================================================ 給模型的工作說明
 /// 分段：只決定段落和每段的大意，提示詞下一步一段一段寫（一次寫全部會太長、品質也掉）
 pub const SYSTEM_PLAN: &str = r#"You are a film director and storyboard artist. Split the user's story into consecutive shots for an AI video model. Each shot becomes ONE continuous clip of about {seconds} seconds made by image-to-video (LTX-2.3).
@@ -118,7 +176,7 @@ pub fn count_rule(n: i64, story_chars: usize) -> String {
 
 pub fn plan_messages(p: &Value, chars: &[Value]) -> (String, String) {
     let s = &p["settings"];
-    let secs = s["seconds"].as_i64().unwrap_or(5);
+    let secs = s["seconds"].as_f64().unwrap_or(5.0);
     let story = tx(&p["story"]);
     let sys = SYSTEM_PLAN
         .replace("{seconds}", &secs.to_string())
@@ -144,9 +202,9 @@ pub fn frame_rule(anima: bool) -> &'static str {
 /// 一段的提示詞請求。refs＝這段會當參考圖的角色（照順序是 <image1>、<image2>…）
 pub fn shot_messages(p: &Value, idx: usize, chars: &[Value], anima: bool, refs: &[String]) -> (String, String) {
     let s = &p["settings"];
-    let secs = s["seconds"].as_i64().unwrap_or(5);
     let segs = p["segments"].as_array().cloned().unwrap_or_default();
     let seg = segs.get(idx).cloned().unwrap_or(Value::Null);
+    let secs = seg["seconds"].as_f64().or_else(|| s["seconds"].as_f64()).unwrap_or(5.0);
     let list = |k: &str| -> String {
         s[k].as_array()
             .map(|a| a.iter().map(tx).filter(|t| !t.is_empty()).collect::<Vec<_>>().join(", "))
@@ -170,11 +228,7 @@ pub fn shot_messages(p: &Value, idx: usize, chars: &[Value], anima: bool, refs: 
     } else {
         format!("use this camera movement: {camera}.")
     };
-    let beats = match secs {
-        ..=3 => "2-3",
-        4..=6 => "3-4",
-        _ => "5-6",
-    };
+    let beats = if secs <= 3.0 { "2-3" } else if secs <= 6.0 { "3-4" } else { "5-6" };
     let style = s["style"].as_str().unwrap_or("");
     let video_style = match style {
         "anime" => "anime, 2D cel-shaded animation",
@@ -198,7 +252,7 @@ pub fn shot_messages(p: &Value, idx: usize, chars: &[Value], anima: bool, refs: 
     let mut ctx = vec![];
     if idx > 0 {
         ctx.push(format!("Previous shot: {}", line(idx - 1)));
-        let pv = tx(&segs[idx - 1]["video"]);
+        let pv = selected_video_prompt(&segs[idx - 1]);
         if !pv.is_empty() {
             ctx.push(format!("Previous shot's video prompt: {pv}"));
         }
@@ -459,7 +513,7 @@ pub fn blank_project(title: &str) -> Value {
     json!({
         "id": new_id(), "title": if title.trim().is_empty() { "未命名" } else { title.trim() }, "story": "", "created": now(), "updated": now(),
         "settings": {"segments": 0, "seconds": 5, "res": "720p", "style": "anime", "visual": "", "camera": [], "light": [], "extra": "",
-                     "characters": [], "image": null},
+                     "characters": [], "image": null, "review": true},
         "segments": [], "final": null,
     })
 }
@@ -467,6 +521,60 @@ pub fn blank_project(title: &str) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn switching_take_invalidates_only_the_connected_shot_chain() {
+        let mut p = json!({"final":{"id": 90}, "segments": [
+            {"video_id":1,"status":"done"},
+            {"continue":true,"video_id":2,"status":"done"},
+            {"continue":false,"video_id":3,"status":"done"},
+            {"continue":true,"video_id":4,"status":"done"}
+        ]});
+        invalidate_dependents(&mut p, 0);
+        assert!(p["segments"][1]["video_id"].is_null());
+        assert_eq!(p["segments"][1]["takes"][0]["result"]["video_id"], 2);
+        assert_eq!(p["segments"][2]["video_id"], 3);
+        assert_eq!(p["segments"][3]["video_id"], 4);
+        assert!(p["final"].is_null());
+        assert!(!ready_for_concat(&p["segments"][1]));
+        assert!(ready_for_concat(&p["segments"][2]));
+    }
+
+    #[test]
+    fn pending_candidate_cannot_be_used_for_concat_and_duration_is_per_shot() {
+        assert!(!ready_for_concat(&json!({"video_id":1,"status":"done","pending_take":"new"})));
+        let mut p = blank_project("fractional");
+        p["settings"]["seconds"] = json!(8.0);
+        p["segments"] = json!([{"title":"one","summary":"raises cup","seconds":7.5}]);
+        let (system, _) = shot_messages(&p, 0, &[], false, &[]);
+        assert!(system.contains("7.5-second"));
+        assert!(plan_messages(&p, &[]).0.contains("8 seconds"));
+    }
+
+    #[test]
+    fn selected_version_restores_recipe_without_losing_unfilmed_draft() {
+        let mut seg = json!({"video":"new unfilmed draft","engine":"workflow-b","takes":[{"id":"a","recipe":{"engine":"ltx23","params":{"prompt":"actual old action","video_seconds":7.5},"entry":{"notes":"cup in hand"}}}],"selected_take":"a"});
+        assert_eq!(selected_video_prompt(&seg), "actual old action");
+        adopt_take_recipe(&mut seg,"a");
+        assert_eq!(seg["video"], "actual old action");
+        assert_eq!(seg["draft"]["video"], "new unfilmed draft");
+        assert_eq!(seg["seconds"], 7.5);
+        assert_eq!(seg["engine"], "ltx23");
+        adopt_take_recipe(&mut seg,"a");
+        assert_eq!(seg["draft"]["video"], "new unfilmed draft");
+    }
+
+    #[test]
+    fn selected_version_clears_optional_recipe_fields_that_were_not_used() {
+        let mut seg = json!({"video":"new","media_slots":{"new_slot":"new.png"},"wf_overrides":{"88.steps":99},"video_loras":[{"name":"new.safetensors"}],
+            "takes":[{"id":"old","recipe":{"engine":"ltx23","params":{"prompt":"old"}}}]});
+        adopt_take_recipe(&mut seg,"old");
+        assert_eq!(seg["media_slots"], json!({}));
+        assert_eq!(seg["wf_overrides"], json!({}));
+        assert_eq!(seg["video_loras"], json!([]));
+        assert_eq!(seg["draft"]["media_slots"]["new_slot"], "new.png");
+        assert_eq!(seg["draft"]["video_loras"][0]["name"], "new.safetensors");
+    }
 
     #[test]
     fn json_in_tolerates_raw_newlines_in_strings() {

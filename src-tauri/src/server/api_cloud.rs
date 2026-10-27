@@ -388,6 +388,8 @@ const NODES: &str = r#"N=$A/ComfyUI/custom_nodes/Comfyui_Minimax_h3_latent_Upsca
 if [ ! -d $N ]; then git clone -q @UPNODE@ $N || { rm -rf $N; die "下載 H3 放大節點失敗（GitHub 連不上？）：關機再開一次"; }; git -C $N checkout -q @UPCOMMIT@ || { rm -rf $N; die "H3 放大節點切換版本失敗：關機再開一次"; }; fi
 N=$A/ComfyUI/custom_nodes/SelfLiftH3Sampler
 if [ ! -d $N ]; then { git clone -q @SLNODE@ $N && git -C $N checkout -q @SLCOMMIT@; } || { rm -rf $N; echo "SelfLift 節點沒裝起來（只是少「SelfLift 兩段取樣」）"; }; fi
+N=$A/ComfyUI/custom_nodes/@RMDIR@
+if [ ! -d $N ]; then { git clone -q @RMNODE@ $N && git -C $N checkout -q @RMCOMMIT@; } || { rm -rf $N; echo "RefMod 節點沒裝起來（只是少「用 RefMod 鎖臉」）"; }; fi
 "#;
 
 /// 啟動（或重新啟動）腦袋和 ComfyUI；只聽 127.0.0.1，外面要走 SSH 通道
@@ -452,6 +454,9 @@ fn fill(s: &str, dir: &str, llm_port: u16, comfy_port: u16, packs: Packs) -> Str
         .replace("@UPCOMMIT@", UPSCALER_COMMIT)
         .replace("@SLNODE@", SELFLIFT_NODE)
         .replace("@SLCOMMIT@", SELFLIFT_COMMIT)
+        .replace("@RMDIR@", crate::refmod::DIR)
+        .replace("@RMNODE@", crate::refmod::REPO)
+        .replace("@RMCOMMIT@", crate::refmod::COMMIT)
         .replace("@VRAM_MB@", &packs.vram_mb().to_string())
         .replace("@VRAM_NEED@", need)
         .replace("@DISK_MB@", &(packs.disk_gb() * 1000).to_string())
@@ -1864,6 +1869,31 @@ async fn ensure_lora(app: &Shared, pod: &Pod, name: &str) -> Result<String, Stri
     Ok(remote)
 }
 
+/// 「用 RefMod 鎖臉」：角色的 RefMod 檔傳到雲端 models/refmods/<名字>.safetensors。
+/// 每次都傳（一個一兩 MB），角色重做過也不會用到舊檔；網址模式沒辦法傳
+pub async fn upload_refmods(app: &Shared, mods: &[(String, PathBuf)], on_status: &(dyn Fn(String) + Send + Sync)) -> Result<(), String> {
+    if mods.is_empty() {
+        return Ok(());
+    }
+    if remote_options(app, "MiniMaxH3RefModApply", "curve_direction").await.is_empty() {
+        return Err("雲端沒有 RefMod 節點（開機時沒裝起來）：雲端關機再開一次，或把拍攝單的「用 RefMod 鎖臉」取消勾選".into());
+    }
+    let pod = app.agent.cloud.st().pod.clone().ok_or("網址模式的雲端不能上傳 RefMod：把拍攝單的「用 RefMod 鎖臉」取消勾選")?;
+    for (name, local) in mods {
+        if !crate::refmod::valid_name(name) {
+            return Err(format!("RefMod 名字不對：{name}"));
+        }
+        let (sub, file) = name.rsplit_once('/').unwrap_or(("", name.as_str()));
+        let d = format!("{}/ComfyUI/models/refmods/{sub}", pod.dir);
+        on_status(format!("上傳 RefMod {file}…"));
+        app.agent
+            .cloud
+            .ssh(&pod, &format!("mkdir -p '{d}' && cat > '{d}/{file}.part' && mv '{d}/{file}.part' '{d}/{file}.safetensors'"), Some(local), Duration::from_secs(10 * 60))
+            .await?;
+    }
+    Ok(())
+}
+
 /// 雲端 ComfyUI 某個節點欄位的選項（例如 UNETLoader 的 unet_name）。雲端沒開、讀不到就是空清單
 pub async fn remote_options(app: &Shared, node: &str, field: &str) -> Vec<String> {
     let cloud = &app.agent.cloud;
@@ -1949,6 +1979,9 @@ pub async fn render(app: &Shared, mut q: Map<String, Value>, count: i64, token: 
         let mut params = p.clone();
         params["seed"] = info["seed"].clone();
         params["prompt_resolved"] = info["prompt"].clone();
+        crate::diagnostics::remember_secret(&app.diagnostics,ck);
+        crate::diagnostics::snapshot("cloud_workflow_api", &Value::Object(nodes.clone()));
+        crate::diagnostics::snapshot("cloud_generation_parameters", &params);
         let r = cloud
             .req(reqwest::Method::POST, format!("{}/prompt", ep.comfy), ck)
             .json(&json!({"prompt": Value::Object(nodes), "client_id": "anima-agent"}))
@@ -1956,18 +1989,24 @@ pub async fn render(app: &Shared, mut q: Map<String, Value>, count: i64, token: 
             .await
             .map_err(|e| format!("送不到雲端 ComfyUI：{e}"))?;
         let v: Value = r.json().await.unwrap_or(Value::Null);
+        crate::diagnostics::event("cloud_prompt_response",v.clone());
         let pid = tx(&v["prompt_id"]);
         if pid.is_empty() {
             errors.push(format!("雲端 ComfyUI 不收：{}", v.to_string().chars().take(300).collect::<String>()));
             continue;
         }
+        if let Some(run)=crate::diagnostics::current() {run.store.link_job(&run.id,&format!("cloud-{pid}"));}
         jobs.push((pid, params, info));
     }
     let mut ids = vec![];
     // 停止時連同這一輪還在排隊的一起刪（同一台可能還有 H3 的工作：不清整個佇列）
     let pids: Vec<String> = jobs.iter().map(|j| j.0.clone()).collect();
     for (k, (pid, params, info)) in jobs.into_iter().enumerate() {
-        let entry = wait_done(cloud, &ep, &pid, &pids[k + 1..], token, &|_| {}).await?;
+        let result = wait_done(cloud, &ep, &pid, &pids[k + 1..], token, &|_| {}).await;
+        if let Err(e)=&result {crate::diagnostics::failure(e);}
+        let entry=result?;
+        app.diagnostics.job_event(&format!("cloud-{pid}"),"history_snapshot",&entry);
+        app.diagnostics.job_event(&format!("cloud-{pid}"),if entry["status"]["status_str"]=="success" {"execution_success"} else {"execution_error"},&entry["status"]);
         if entry["status"]["status_str"] != "success" {
             errors.push(format!("雲端生圖失敗：{}", entry["status"]["messages"].to_string().chars().rev().take(300).collect::<String>().chars().rev().collect::<String>()));
             continue;
@@ -2161,6 +2200,10 @@ pub fn has_output(app: &Shared, subfolder: &str, name: &str) -> bool {
     app.agent.cloud.st().inputs.contains(&format!("output:{subfolder}/{name}"))
 }
 
+pub fn invalidate_output(app: &Shared, subfolder: &str, name: &str) {
+    app.agent.cloud.st().inputs.remove(&format!("output:{subfolder}/{name}"));
+}
+
 pub fn mark_output(app: &Shared, subfolder: &str, name: &str) {
     app.agent.cloud.st().inputs.insert(format!("output:{subfolder}/{name}"));
 }
@@ -2274,6 +2317,8 @@ pub async fn run_raw(
     let cloud = &app.agent.cloud;
     let ep = cloud.endpoints().ok_or("雲端斷線了：到「雲端」那裡看狀態")?;
     let ck = ep.comfy_key.as_deref();
+    crate::diagnostics::remember_secret(&app.diagnostics, ck);
+    crate::diagnostics::snapshot("cloud_workflow_api", &Value::Object(nodes.clone()));
     let r = cloud
         .req(reqwest::Method::POST, format!("{}/prompt", ep.comfy), ck)
         .json(&json!({"prompt": Value::Object(nodes), "client_id": "anima-h3"}))
@@ -2281,7 +2326,9 @@ pub async fn run_raw(
         .await
         .map_err(|e| format!("送不到雲端 ComfyUI：{e}"))?;
     let v: Value = r.json().await.unwrap_or(Value::Null);
+    crate::diagnostics::event("cloud_prompt_response", v.clone());
     let pid = tx(&v["prompt_id"]);
+    if !pid.is_empty() {if let Some(run)=crate::diagnostics::current() {run.store.link_job(&run.id,&format!("cloud-{pid}"));}}
     if pid.is_empty() {
         return Err(format!("雲端 ComfyUI 不收：{}", v.to_string().chars().take(600).collect::<String>()));
     }
@@ -2292,7 +2339,14 @@ pub async fn run_raw(
             on_status(format!("雲端生成中…已 {secs} 秒"));
         }
     };
-    let entry = wait_done(cloud, &ep, &pid, &[], token, &tick).await?;
+    let result = wait_done(cloud, &ep, &pid, &[], token, &tick).await;
+    if let Err(e)=&result {
+        crate::diagnostics::failure(e);
+        app.diagnostics.job_event(&format!("cloud-{pid}"),"execution_interrupted",&json!({"reason":e,"outcome":"unknown"}));
+    }
+    let entry=result?;
+    app.diagnostics.job_event(&format!("cloud-{pid}"),"history_snapshot",&entry);
+    app.diagnostics.job_event(&format!("cloud-{pid}"),if entry["status"]["status_str"]=="success" {"execution_success"} else {"execution_error"},&entry["status"]);
     if entry["status"]["status_str"] != "success" {
         return Err(format!("雲端生成失敗：{}", exec_error(&entry)));
     }
@@ -2341,35 +2395,40 @@ pub async fn run_graph(
                 .bytes()
                 .await
                 .map_err(|e| format!("下載雲端的成品失敗：{e}"))?;
-            if sub.starts_with("AnimaWeb/_poster") {
-                let dir = app.paths.output.join("AnimaWeb").join("_poster");
-                std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-                std::fs::write(dir.join(&base), &bytes).map_err(|e| format!("存封面失敗：{e}"))?;
-                continue;
-            }
-            let dir = app.paths.output.join("AnimaWeb").join("cloud");
-            std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-            let t = chrono::Local::now().format("%Y%m%d_%H%M%S").to_string();
-            let mut fname = format!("{t}_{base}");
-            let mut k = 1;
-            while dir.join(&fname).exists() {
-                fname = format!("{t}_{k}_{base}");
-                k += 1;
-            }
-            std::fs::write(dir.join(&fname), &bytes).map_err(|e| format!("存成品失敗：{e}"))?;
-            let iid = app.db.add_image(&fname, "AnimaWeb/cloud", "output", info, params, Some(&job)).map_err(|e| e.to_string())?;
-            let image = app.db.image(iid).ok().flatten().map(|r| {
-                let mut rows = [r];
-                let _ = app.db.add_gen_seconds(&mut rows);
-                let [r] = rows;
-                Value::Object(r)
-            }).unwrap_or(Value::Null);
-            app.hub.send(json!({"type": "image", "job": job, "image": image}));
-            ids.push(iid);
+            ids.extend(keep_output(app, &sub, &base, &bytes, params, info, &job)?);
         }
     }
     let _ = app.db.set_job(&job, "done", None);
     Ok((job, ids))
+}
+
+/// 雲端成品存回本機：封面（AnimaWeb/_poster）放回原位不進圖庫；其他存 AnimaWeb/cloud、進圖庫、通知網頁。回圖庫編號
+pub(super) fn keep_output(app: &Shared, sub: &str, base: &str, bytes: &[u8], params: &Value, info: &Value, job: &str) -> Result<Option<i64>, String> {
+    if sub.starts_with("AnimaWeb/_poster") {
+        let dir = app.paths.output.join("AnimaWeb").join("_poster");
+        std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+        std::fs::write(dir.join(base), bytes).map_err(|e| format!("存封面失敗：{e}"))?;
+        return Ok(None);
+    }
+    let dir = app.paths.output.join("AnimaWeb").join("cloud");
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let t = chrono::Local::now().format("%Y%m%d_%H%M%S").to_string();
+    let mut fname = format!("{t}_{base}");
+    let mut k = 1;
+    while dir.join(&fname).exists() {
+        fname = format!("{t}_{k}_{base}");
+        k += 1;
+    }
+    std::fs::write(dir.join(&fname), bytes).map_err(|e| format!("存成品失敗：{e}"))?;
+    let iid = app.db.add_image(&fname, "AnimaWeb/cloud", "output", info, params, Some(job)).map_err(|e| e.to_string())?;
+    let image = app.db.image(iid).ok().flatten().map(|r| {
+        let mut rows = [r];
+        let _ = app.db.add_gen_seconds(&mut rows);
+        let [r] = rows;
+        Value::Object(r)
+    }).unwrap_or(Value::Null);
+    app.hub.send(json!({"type": "image", "job": job, "image": image}));
+    Ok(Some(iid))
 }
 
 #[cfg(test)]

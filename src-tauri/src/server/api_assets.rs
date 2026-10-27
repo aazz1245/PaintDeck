@@ -38,6 +38,9 @@ fn files_of(data: &Value) -> Vec<String> {
     if let Some(a) = data["audio"]["file"].as_str() {
         v.push(a.to_owned());
     }
+    if let Some(r) = data["refmod"]["file"].as_str() {
+        v.push(r.to_owned());
+    }
     v
 }
 
@@ -367,6 +370,26 @@ pub fn apply_plan(item: &Row, family: &str) -> Value {
     let all = images_by_role(data);
     let first_src: Vec<String> = first_image(data, "src").into_iter().collect();
     let mut warn: Vec<String> = vec![];
+    // 角色卡鎖住的設定表（2026-10-27）：文字用固定的那一段，參考圖只送正面特寫＋多視圖（圖文雙管）
+    let locked = if kind == "char" { crate::charspec::locked_blocks(data) } else { None };
+    if let Some((bz, be, bt)) = &locked {
+        let pick = |a: &str, b: &str| if a.is_empty() { b.to_string() } else { a.to_string() };
+        let fixed: Vec<String> = ["portrait", "sheet"].iter().filter_map(|r| first_image(data, r)).collect();
+        let fixed = if fixed.is_empty() { all.iter().take(2).cloned().collect() } else { fixed };
+        let (text, images) = match family {
+            "anima" => (pick(bt, be), all.clone()),
+            "comic" => (pick(bt, be), vec![]),
+            "moss" => (pick(be, bz), vec![]),
+            "qwen21" => (pick(be, bz), fixed),
+            "h3" => (pick(bz, be), fixed),
+            "ltx" => (pick(be, bz), first_src),
+            _ => (pick(be, bz), vec![]),
+        };
+        let av = matches!(family, "h3" | "ltx");
+        return json!({"text": text, "images": images, "warn": warn, "locked": true, "spec": {"zh": bz, "en": be, "tags": bt},
+                      "refmod": data["refmod"]["name"].as_str().unwrap_or(""),
+                      "voice": if av { s("voice") } else { String::new() }, "lang": if av { s("lang") } else { String::new() }});
+    }
     let (mut text, images, zh) = match family {
         "anima" => (tag_text, all.clone(), false),
         "comic" => (tag_text, vec![], false),
@@ -396,8 +419,56 @@ pub fn apply_plan(item: &Row, family: &str) -> Value {
         text = if text.is_empty() { line } else { format!("{text}{}{line}", if zh { "。" } else { ". " }) };
     }
     let av = matches!(family, "h3" | "ltx");
-    json!({"text": text, "images": images, "warn": warn,
+    json!({"text": text, "images": images, "warn": warn, "locked": false,
            "voice": if av { s("voice") } else { String::new() }, "lang": if av { s("lang") } else { String::new() }})
+}
+
+/// 角色做 RefMod 用哪張圖：正面特寫 → 原圖 → 第一張
+fn refmod_source(data: &Value) -> Option<String> {
+    first_image(data, "portrait")
+        .or_else(|| first_image(data, "src"))
+        .or_else(|| data["images"].as_array().and_then(|a| a.first()).and_then(|im| im["file"].as_str()).map(str::to_owned))
+}
+
+/// POST：角色的正面特寫做成 RefMod（本機 ComfyUI，只用 H3 影片 VAE 編碼），檔案收進資產（data.refmod）；回整筆資產。
+/// 重做會換成新檔，舊檔搬到待刪除
+pub async fn make_refmod(State(app): State<Shared>, UrlPath(id): UrlPath<i64>) -> ApiResult {
+    let row = asset_row(&app, id)?;
+    if row.get("kind").and_then(Value::as_str) != Some("char") {
+        return Err(bad("只有角色能做 RefMod"));
+    }
+    let file = refmod_source(row.get("data").unwrap_or(&Value::Null)).ok_or_else(|| bad("這個角色還沒有圖：先到角色卡工坊畫正面特寫"))?;
+    super::api_refmod::require_nodes(&app).await?;
+    let input = format!("aw_asset_{file}");
+    let (src, dst) = (assets_dir(&app.paths).join(&file), app.paths.input.join(&input));
+    blocking(move || std::fs::copy(&src, &dst)).await.map_err(|_| not_found("資產的圖不在硬碟上了"))?;
+    let name = crate::refmod::mod_name(id);
+    let full = crate::refmod::loader_name(&name);
+    let graph = crate::refmod::extract_graph(&input, &name, crate::h3::VAE, &row_name(&row));
+    app.pe.release_for_generation().await;
+    let pid = app.comfy.submit(&Value::Object(graph), &json!({})).await.map_err(|e| bad(e.0))?;
+    super::api_play::wait_history(&app, &pid, "做 RefMod ").await.map_err(bad)?;
+    let made = super::api_refmod::local_path(&app, &full);
+    if !made.is_file() {
+        return Err(bad(format!("ComfyUI 說做好了，卻找不到 {}（refmods 資料夾被設定到別處了？）", made.display())));
+    }
+    let _g = app.assets_lock.lock().await;
+    let row = asset_row(&app, id)?;
+    let mut data = row.get("data").cloned().unwrap_or_else(|| json!({}));
+    let dir = assets_dir(&app.paths);
+    let keep = next_name(&dir, id, "safetensors", &data);
+    let old: Vec<String> = data["refmod"]["file"].as_str().map(|f| vec![f.to_string()]).unwrap_or_default();
+    let to = dir.join(&keep);
+    blocking(move || -> std::io::Result<u64> {
+        std::fs::create_dir_all(&dir)?;
+        std::fs::copy(&made, &to)
+    })
+    .await
+    .map_err(internal)?;
+    data["refmod"] = json!({"file": keep, "name": full});
+    save_with_trash(&app, id, &row, data, &Thumb::Keep, &old)?;
+    let r = app.db.lib_item(id)?.ok_or_else(|| not_found("找不到這個資產（可能已經刪掉了）"))?;
+    ok(Value::Object(r))
 }
 
 /// 拿去用：{family} → apply_plan 的結果，並記一次「用過」
@@ -467,6 +538,48 @@ mod tests {
         assert_eq!(ltx["lang"], "ja");
         assert_eq!(apply_plan(&it, "comic")["voice"], "");
         assert_eq!(apply_plan(&it, "comic")["images"], json!([]), "漫畫只帶文字與 tag");
+    }
+
+    #[test]
+    fn refmod_name_and_source_image() {
+        let data = json!({"images": [{"file": "7_1.png", "role": "src"}, {"file": "7_2.png", "role": "portrait"}],
+                          "refmod": {"file": "7_3.safetensors", "name": "paintdeck/pd_char_7"},
+                          "spec": {"locked": true, "block_zh": "女性。", "block_en": "female.", "block_tags": "1girl"}});
+        assert_eq!(refmod_source(&data).as_deref(), Some("7_2.png"));
+        assert_eq!(refmod_source(&json!({"images": [{"file": "a.png", "role": "sheet"}]})).as_deref(), Some("a.png"));
+        assert_eq!(refmod_source(&json!({})), None);
+        let it = item("char", data);
+        assert_eq!(apply_plan(&it, "h3")["refmod"], "paintdeck/pd_char_7");
+    }
+
+    #[test]
+    fn apply_locked_spec_uses_fixed_text_and_portrait_sheet() {
+        let spec = crate::charspec::merge(
+            Some(&json!({"locked": true, "fields": {"sex": {"zh": "女性", "en": "female", "tags": ["1girl"]}, "hair_color": {"zh": "橘髮", "en": "orange hair", "tags": ["orange hair"]}}})),
+            None,
+        )
+        .unwrap();
+        let mut imgs = twelve();
+        imgs.as_array_mut().unwrap().push(json!({"file": "p.png", "role": "portrait"}));
+        let it = item("char", json!({"look_en": "OLD", "look_zh": "舊", "spec": spec, "images": imgs, "voice": "soft", "lang": "ja"}));
+        let q = apply_plan(&it, "qwen21");
+        assert_eq!(q["text"], "female, orange hair.");
+        assert_eq!(q["images"], json!(["p.png", "1_3.png"]), "正面特寫＋多視圖");
+        assert_eq!(q["locked"], true);
+        assert_eq!(q["spec"]["zh"], "女性，橘髮。");
+        let h = apply_plan(&it, "h3");
+        assert_eq!((h["text"].as_str(), h["lang"].as_str()), (Some("女性，橘髮。"), Some("ja")));
+        assert_eq!(h["images"], json!(["p.png", "1_3.png"]));
+        assert_eq!(apply_plan(&it, "anima")["text"], "1girl, orange hair");
+        assert_eq!(apply_plan(&it, "anima")["images"].as_array().unwrap().len(), 13, "Anima 照舊全部給前端選");
+        assert_eq!(apply_plan(&it, "moss")["images"], json!([]));
+        // 沒鎖：跟以前一樣用外觀描述
+        let open = item("char", json!({"look_en": "OLD", "spec": {"locked": false, "fields": {}}, "images": twelve()}));
+        assert_eq!(apply_plan(&open, "qwen21")["text"], "OLD");
+        assert_eq!(apply_plan(&open, "qwen21")["locked"], false);
+        // 只有一張原圖的鎖定角色：退回前兩張
+        let few = item("char", json!({"spec": spec, "images": [{"file": "s.png", "role": "src"}]}));
+        assert_eq!(apply_plan(&few, "h3")["images"], json!(["s.png"]));
     }
 
     #[test]

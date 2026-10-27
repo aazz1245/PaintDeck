@@ -9,6 +9,7 @@ use super::api_gallery::file_of;
 use super::api_gen::submit_jobs;
 use super::{bad, blocking, internal, not_found, ok, ApiError, ApiResult, Body, Shared};
 use crate::agent::{self as ag, LoraInfo, Store};
+use crate::agent_tools as at;
 use crate::director::tx;
 use crate::families::{self, ANIMA, MOSS, QWEN21};
 use crate::graphs;
@@ -20,6 +21,9 @@ use std::path::Path;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 use tokio_util::sync::CancellationToken;
+
+/// 「選了 35B、實際用 9B」那則提示的開頭（拿來判斷這段對話講過了沒）
+const NO_35B: &str = "腦袋選了 35B，但";
 
 pub struct Agent {
     pub store: Store,
@@ -192,7 +196,8 @@ pub async fn say(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     }
     let s = load(&app, &id)?;
     let st = &s["settings"];
-    if !st["base"].is_object() {
+    let words = st["mode"] == "prompt";
+    if !words && !st["base"].is_object() {
         return Err(bad("還沒選生圖模型：按「用生成頁目前的設定」"));
     }
     let cloud = st["brain"] == "cloud";
@@ -202,9 +207,10 @@ pub async fn say(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     if cloud && app.agent.cloud.live_packs().is_some_and(|p| !p.agent) {
         return Err(bad("雲端這台只裝了 H3 影片包，沒有助手的腦袋：關機後在雲端設定勾「生圖助手」再開"));
     }
-    if !cloud && !app.comfy.live().online {
+    if !words && !cloud && !app.comfy.live().online {
         return Err(bad("ComfyUI 沒有連線"));
     }
+    deny_waiting(&app, &id, "The user did not approve it and asked for something else instead.").await.map_err(bad)?;
     let t2 = if text.is_empty() { "看圖".to_string() } else { text.clone() };
     update(&app, &id, move |s| {
         if s["title"] == "新對話" {
@@ -218,6 +224,11 @@ pub async fn say(State(app): State<Shared>, Body(b): Body) -> ApiResult {
 }
 
 fn start(app: &Shared, id: &str) -> Result<(), ApiError> {
+    start_with(app, id, None)
+}
+
+/// pending＝使用者剛准的工具 {tool, args}：先做它再接著想
+fn start_with(app: &Shared, id: &str, pending: Option<Value>) -> Result<(), ApiError> {
     let token = {
         let mut runs = app.agent.runs.lock().unwrap_or_else(|e| e.into_inner());
         if runs.contains_key(id) {
@@ -228,8 +239,14 @@ fn start(app: &Shared, id: &str) -> Result<(), ApiError> {
         t
     };
     let (app, id) = (app.clone(), id.to_string());
-    tokio::spawn(async move {
-        let r = run(&app, &id, &token).await;
+    crate::diagnostics::spawn(async move {
+        let r = match pending {
+            Some(c) => match run_tool(&app, &id, &tx(&c["tool"]), &c["args"], &token).await {
+                Ok(()) => run(&app, &id, &token).await,
+                Err(e) => Err(e),
+            },
+            None => run(&app, &id, &token).await,
+        };
         app.agent.runs.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
         app.agent.cloud.touch();
         match r {
@@ -246,6 +263,96 @@ fn start(app: &Shared, id: &str) -> Result<(), ApiError> {
         }
     });
     Ok(())
+}
+
+/// 等確認的工具：最後一張 state=wait 的確認卡
+fn waiting(events: &[Value]) -> Option<usize> {
+    let k = events.iter().rposition(|e| ag::ev_kind(e) == "confirm")?;
+    (events[k]["state"] == "wait").then_some(k)
+}
+
+/// 把等確認的卡標成不准（使用者改說別的、按了不准），並告訴助手
+async fn deny_waiting(app: &Shared, id: &str, why: &str) -> Result<(), String> {
+    let s = load(app, id).map_err(|e| e.1)?;
+    let events = s["events"].as_array().cloned().unwrap_or_default();
+    let Some(k) = waiting(&events) else { return Ok(()) };
+    update(app, id, |s| s["events"][k]["state"] = json!("no")).await.map_err(|e| e.1)?;
+    let tool = tx(&events[k]["call"]["tool"]);
+    push(app, id, json!({"kind": "tool", "tool": tool, "ok": false, "text": why, "zh": "沒有准，不做"})).await
+}
+
+/// 確認卡的「准／不准」：{id, ok}。准就先做那個工具再接著跑；不准就告訴助手、讓它接著想
+pub async fn confirm(State(app): State<Shared>, Body(b): Body) -> ApiResult {
+    let id = tx(&b["id"]);
+    if app.agent.running(&id) {
+        return Err(bad("助手還在跑，等它停下來再按"));
+    }
+    let s = load(&app, &id)?;
+    let events = s["events"].as_array().cloned().unwrap_or_default();
+    let k = waiting(&events).ok_or_else(|| bad("沒有等你確認的事"))?;
+    if !truthy(b.get("ok")) {
+        deny_waiting(&app, &id, "The user did not approve this. Do not try it again; carry on without it, or tell the user.").await.map_err(bad)?;
+        start(&app, &id)?;
+        return ok(json!({"ok": true}));
+    }
+    update(&app, &id, |s| s["events"][k]["state"] = json!("yes")).await?;
+    start_with(&app, &id, Some(events[k]["call"].clone()))?;
+    ok(json!({"ok": true}))
+}
+
+/// 做一次工具：結果記成 tool 事件，有新圖再記一個 result（下一輪給它看）。
+/// 「讓我看」模式先叫主視窗切到那一頁，做完把參數和圖送過去。工具失敗不算整段出錯：告訴助手讓它自己想辦法
+async fn run_tool(app: &Shared, id: &str, tool: &str, args: &Value, token: &CancellationToken) -> Step {
+    let s = load(app, id).map_err(|e| e.1)?;
+    let st = s["settings"].clone();
+    let events = s["events"].as_array().cloned().unwrap_or_default();
+    let base = st["base"].as_object().cloned().unwrap_or_default();
+    let show = truthy(st.get("show"));
+    let page = at::page_of(tool, args);
+    if let (true, Some(page)) = (show, page) {
+        app.hub.send(json!({"type": "agent_ui", "id": id, "op": "goto", "page": page, "tool": tool}));
+    }
+    let zh = at::find(tool).map(|t| t.zh).unwrap_or(tool);
+    emit(app, id, "render", format!("{zh}…"));
+    let (uall, ask) = (ag::user_images(&events), ag::request_text(&events));
+    let brain = tx(&st["brain"]);
+    let cx = super::api_agent_tools::Ctx { sid: id, base: &base, count: st["count"].as_i64().unwrap_or(2), brain: &brain, user_images: &uall, ask: &ask };
+    let t0 = Instant::now();
+    match super::api_agent_tools::exec(app, &cx, tool, args, token).await {
+        Ok(o) => {
+            if let Some(b) = o.base {
+                update(app, id, move |s| s["settings"]["base"] = b).await.map_err(|e| e.1)?;
+            }
+            push(app, id, json!({"kind": "tool", "tool": tool, "args": args, "ok": true, "text": o.text, "zh": o.zh, "secs": t0.elapsed().as_secs_f64()})).await?;
+            if !o.ids.is_empty() {
+                let round = events.iter().filter(|e| ag::ev_kind(e) == "result").count() as i64 + 1;
+                push(app, id, json!({"kind": "result", "round": round, "ids": o.ids, "errors": [], "tool": tool, "secs": t0.elapsed().as_secs_f64()})).await?;
+            }
+            if let (true, Some(page)) = (show, page) {
+                app.hub.send(json!({"type": "agent_ui", "id": id, "op": "show", "page": page, "tool": tool, "params": o.params, "ids": o.ids}));
+            }
+        }
+        Err(e) if token.is_cancelled() => return Err(e),
+        Err(e) => {
+            push(app, id, json!({"kind": "tool", "tool": tool, "ok": false, "text": e, "zh": format!("{zh}失敗：{e}")})).await?;
+        }
+    }
+    Ok(())
+}
+
+/// 只寫詞的「填入生成頁」：助手視窗按了 → 叫主視窗把提示詞（和負面詞、尺寸）填進生成頁，其他欄位不動
+pub async fn fill(State(app): State<Shared>, Body(b): Body) -> ApiResult {
+    let prompt = tx(&b["prompt"]);
+    if prompt.trim().is_empty() {
+        return Err(bad("沒有提示詞可以填"));
+    }
+    let mut f = json!({"prompt": prompt, "negative": b["negative"]});
+    if let (Some(w), Some(h)) = (b["width"].as_i64(), b["height"].as_i64()) {
+        f["width"] = json!(w);
+        f["height"] = json!(h);
+    }
+    app.hub.send(json!({"type": "agent_ui", "op": "fill", "page": "gen", "fill": f}));
+    ok(json!({"ok": true}))
 }
 
 pub async fn stop(State(app): State<Shared>, Body(b): Body) -> ApiResult {
@@ -350,7 +457,19 @@ type Step = Result<(), String>;
 
 /// 退回說明（英文，給模型）→ 給使用者看的一句中文
 fn reject_zh(fb: &str) -> &'static str {
-    if fb.contains("copied the writing") {
+    if fb.starts_with("Your prompt omitted") {
+        "提示詞漏掉指定文字，退回請它原樣補齊"
+    } else if fb.starts_with("Unknown tool") {
+        "工具名稱寫錯，退回"
+    } else if fb.starts_with("Not allowed") {
+        "這件事助手不能做（要你自己按），退回"
+    } else if fb.starts_with("Redrawing with refs keeps") {
+        "圖生圖轉不了角度，請它改用「角色多視圖」"
+    } else if fb.contains("tool calls for this request") {
+        "工具叫太多次了，請它收尾"
+    } else if fb.contains(" needs \"") || fb.contains("must be") && fb.contains("api") {
+        "工具的參數寫錯，退回"
+    } else if fb.contains("copied the writing") {
         "它把「怎麼寫提示詞」的說明抄進提示詞，退回重寫"
     } else if fb.contains("English") {
         "提示詞寫成中文，退回請它改寫成英文"
@@ -438,9 +557,18 @@ async fn run(app: &Shared, id: &str, token: &CancellationToken) -> Step {
         }
         let s = load(app, id).map_err(|e| e.1)?;
         let st = s["settings"].clone();
+    crate::diagnostics::snapshot("assistant_settings", &st);
         let events = s["events"].as_array().cloned().unwrap_or_default();
-        let base = st["base"].as_object().cloned().ok_or("還沒選生圖模型：按「用生成頁目前的設定」")?;
-        let family = families::family_of(&app.paths.unet_roots(), &tx(&base["model"]));
+        let words = st["mode"] == "prompt";
+        let base = match st["base"].as_object().cloned() {
+            Some(base) => base,
+            None if words => Map::new(),
+            None => return Err("還沒選生圖模型：按「用生成頁目前的設定」".into()),
+        };
+        let model = base.get("model").map(tx).unwrap_or_default();
+        let family = if words && model.is_empty() { ANIMA } else { families::family_of(&app.paths.unet_roots(), &model) };
+        let target = tx(&st["target"]);
+        let family = if words { ag::prompt_family(&target, family) } else { family };
         let cat = catalog(app, family).await?;
         let fixed = fixed_loras(&base, &cat);
         let allow = truthy(st.get("loras"));
@@ -455,7 +583,7 @@ async fn run(app: &Shared, id: &str, token: &CancellationToken) -> Step {
         let images = ag::request_images(&events);
         let last = ag::last_generate(&events).cloned();
         let brain = tx(&st["brain"]);
-        let think = truthy(st.get("think"));
+        let think = ag::think_level(&st["think"]);
         // 使用者附的圖：模型看得到最新幾張；本機的 Qwen 2.1（多圖參考）／Anima、MOSS（圖生圖一張）還能把圖餵給生圖模型（雲端只畫文字）
         let uall = ag::user_images(&events);
         let uids: Vec<i64> = uall.iter().filter_map(|i| i["n"].as_i64()).collect();
@@ -467,12 +595,71 @@ async fn run(app: &Shared, id: &str, token: &CancellationToken) -> Step {
             _ => "",
         };
         let system = if uall.is_empty() { system } else { ag::with_images(&system, refs_mode) };
+        let ask = ag::request_text(&events);
+        // 用 look 看的圖不是它畫的：不要求逐項打勾、可以直接回話
+        let looked_only = ag::latest_result(&events).is_some_and(|e| e["tool"] == "look");
         let uparts = user_parts(app, &uall).await;
         let remote = if brain == "cloud" {
             Some(app.agent.cloud.endpoints().ok_or("雲端斷線了：到「雲端」那裡看狀態")?.remote())
         } else {
             None
         };
+        // 選了 35B 但機器上只有 9B：model_files 會默默用 9B，這裡講出來（同一段對話只講一次）
+        if remote.is_none() && !events.iter().any(|e| ag::ev_kind(e) == "note" && tx(&e["text"]).starts_with(NO_35B)) {
+            let a = app.clone();
+            let b = brain.clone();
+            if let Some(m) = blocking(move || a.pe.agent_model(&b)).await.filter(|m| crate::pe::brain_fell_back(&brain, m)) {
+                note(app, id, format!("{NO_35B}這台電腦找不到 Qwen3.6-35B-A3B 的模型檔，這次實際用的是 {m}（9B）。要用 35B 得先下載它的 gguf 和 mmproj。")).await;
+            }
+        }
+        // 只寫詞：照挑好的那份寫法寫一張提示詞卡就停（不畫圖、不叫工具）
+        if st["mode"] == "prompt" {
+            let target = tx(&st["target"]);
+            let guide = ag::GUIDES.iter().find(|g| g.0 == target).map(|g| g.0).unwrap_or_else(|| ag::pick_guide(family, uall.len(), &ask));
+            let gtext = app.pe.agent_text(ag::guide_text_id(guide).unwrap_or("agent_other"));
+            let system = ag::prompt_system(&app.pe.agent_text("agent_prompt"), &gtext, guide, family);
+            let mut msgs = ag::build_prompt_messages(&system, &events, &uparts);
+            if let Some(a) = msgs.as_array_mut() {
+                a.extend(extra.iter().cloned());
+            }
+            emit(app, id, "think", format!("照「{}」的寫法寫提示詞…", ag::guide_zh(guide)));
+            let t0 = Instant::now();
+            app.agent.cloud.touch();
+            let (content, reasoning) = app
+                .pe
+                .agent_chat(&rid(id), &msgs, ag::think_max_tokens(think), 0.7, ag::think_budget(think), &brain, remote.as_ref())
+                .await?;
+            app.agent.cloud.touch();
+            let secs = t0.elapsed().as_secs_f64();
+            let parsed = ag::parse_prompt_action(&content, family, guide).and_then(|a| {
+                if a.get("action").and_then(Value::as_str) == Some("prompt") {
+                    let prompt = a.get("prompt").map(tx).unwrap_or_default();
+                    let missing = crate::pe::missing_visible_text(&prompt, &ask);
+                    if !missing.is_empty() {
+                        return Err(format!("Your prompt omitted these exact strings to display in the image: {}. Include every string verbatim, in quotes, at its requested position. Give the whole corrected prompt.", serde_json::to_string(&missing).unwrap_or_default()));
+                    }
+                }
+                Ok(a)
+            });
+            match parsed {
+                Ok(action) => {
+                    let thought: String = reasoning.chars().take(6000).collect();
+                    push(app, id, json!({"kind": "act", "action": action, "secs": secs, "thought": thought})).await?;
+                    return Ok(());
+                }
+                Err(fb) => {
+                    rejects += 1;
+                    eprintln!("生圖助手 {id} 只寫詞退回（{rejects}）：{fb}");
+                    if rejects > ag::MAX_REJECTS {
+                        return Err(format!("助手連續 {rejects} 次寫不出能用的回覆，先停下來。可以換一顆腦袋或把要求說得更簡單再試一次。"));
+                    }
+                    note(app, id, reject_zh(&fb)).await;
+                    extra.push(json!({"role": "assistant", "content": content}));
+                    extra.push(json!({"role": "user", "content": format!("Rejected: {fb}")}));
+                    continue;
+                }
+            }
+        }
         let mut msgs = ag::build_messages_with(&system, &events, &look, &uparts, left, count);
         if let Some(a) = msgs.as_array_mut() {
             a.extend(extra.iter().cloned());
@@ -482,7 +669,7 @@ async fn run(app: &Shared, id: &str, token: &CancellationToken) -> Step {
         app.agent.cloud.touch();
         let (content, reasoning) = app
             .pe
-            .agent_chat(&rid(id), &msgs, if think { 6144 } else { 2048 }, 0.7, think, &brain, remote.as_ref())
+            .agent_chat(&rid(id), &msgs, ag::think_max_tokens(think), 0.7, ag::think_budget(think), &brain, remote.as_ref())
             .await?;
         app.agent.cloud.touch();
         let secs = t0.elapsed().as_secs_f64();
@@ -490,7 +677,7 @@ async fn run(app: &Shared, id: &str, token: &CancellationToken) -> Step {
             family,
             rounds_left: left,
             last: last.as_ref(),
-            saw_images: !look.is_empty(),
+            saw_images: !look.is_empty() && !looked_only,
             images: &images,
             catalog: &cat,
             fixed: &fixed,
@@ -499,6 +686,8 @@ async fn run(app: &Shared, id: &str, token: &CancellationToken) -> Step {
             user_images: &uids,
             request_user_images: &req_imgs,
             refs_mode,
+            ask: &ask,
+            calls_left: at::MAX_CALLS - ag::calls_used(&events),
         };
         let action = match ag::parse_action(&content, &check) {
             Ok(a) => {
@@ -522,6 +711,13 @@ async fn run(app: &Shared, id: &str, token: &CancellationToken) -> Step {
                 continue;
             }
         };
+        // 改圖、影片、Qwen 用附圖畫：這段對話還沒讀過那份寫法 → 先把寫法給它看，讓它照著重寫（這次的動作不算）
+        if let Some(g) = ag::needed_guide(&action, family, refs_mode).filter(|g| !ag::guide_read(&events, g)) {
+            note(app, id, format!("先讀「{}」的寫法，照著重寫", ag::guide_zh(g))).await;
+            run_tool(app, id, "guide", &json!({"name": g}), token).await?;
+            extra.clear();
+            continue;
+        }
         extra.clear();
         rejects = 0;
         nudged = false;
@@ -605,6 +801,18 @@ async fn run(app: &Shared, id: &str, token: &CancellationToken) -> Step {
                     return Err(format!("第 {round} 輪一張圖都沒畫出來：{}", errors.join("；")));
                 }
             }
+            "call" => {
+                let tool = tx(&action["tool"]);
+                let args = action["args"].clone();
+                let why = action.get("confirm").map(tx);
+                push(app, id, json!({"kind": "act", "action": action, "secs": secs, "thought": thought})).await?;
+                if let Some(why) = why {
+                    // 花錢、刪東西、改設定：停下來等使用者在助手視窗按准（POST /api/agent/confirm）
+                    push(app, id, json!({"kind": "confirm", "call": {"tool": tool, "args": args}, "why": why, "state": "wait"})).await?;
+                    return Ok(());
+                }
+                run_tool(app, id, &tool, &args, token).await?;
+            }
             _ => {
                 // finish／reply：交卷或回話，等使用者下一句
                 push(app, id, json!({"kind": "act", "action": action, "secs": secs, "thought": thought})).await?;
@@ -615,7 +823,7 @@ async fn run(app: &Shared, id: &str, token: &CancellationToken) -> Step {
 }
 
 /// 本機：送生成、等全部跑完、回傳圖庫編號和錯誤
-async fn render_local(app: &Shared, q: Map<String, Value>, count: i64, token: &CancellationToken) -> Result<(Vec<i64>, Vec<String>), String> {
+pub(super) async fn render_local(app: &Shared, q: Map<String, Value>, count: i64, token: &CancellationToken) -> Result<(Vec<i64>, Vec<String>), String> {
     let jobs = submit_jobs(app, q, count).await.map_err(|e| e.1)?;
     let pids: Vec<String> = jobs.iter().map(|j| tx(&j["job"])).collect();
     let errors = wait_all(app, &pids, token).await?;
@@ -631,7 +839,7 @@ async fn render_local(app: &Shared, q: Map<String, Value>, count: i64, token: &C
 }
 
 /// 等這幾個 ComfyUI 任務跑完；按停止就把還沒跑的從佇列拿掉、正在跑的中斷
-async fn wait_all(app: &Shared, pids: &[String], token: &CancellationToken) -> Result<Vec<String>, String> {
+pub(super) async fn wait_all(app: &Shared, pids: &[String], token: &CancellationToken) -> Result<Vec<String>, String> {
     let mut errors = vec![];
     let mut pending: Vec<String> = pids.to_vec();
     while !pending.is_empty() {
@@ -731,7 +939,7 @@ pub async fn learn(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let probe = b.get("probe").map(|v| truthy(Some(v))).unwrap_or(true);
     let total = targets.len();
     let a = app.clone();
-    tokio::spawn(async move {
+    crate::diagnostics::spawn(async move {
         let r = learn_run(&a, targets, meta, base, family, &brain, probe, &token).await;
         *a.agent.learn.lock().unwrap_or_else(|e| e.into_inner()) = None;
         match r {
@@ -798,7 +1006,7 @@ async fn learn_run(
         emit_learn(app, "progress", format!("讀線索：{}", l.stem()), done, total);
         let msgs = json!([{"role": "system", "content": ag::SYSTEM_LORA_META},
                           {"role": "user", "content": ag::lora_clues_text(l, &note_of(l), &tags_of(l), c)}]);
-        let (r, _) = app.pe.agent_chat("agent-learn", &msgs, 500, 0.3, false, brain, None).await?;
+        let (r, _) = app.pe.agent_chat("agent-learn", &msgs, 500, 0.3, None, brain, None).await?;
         match ag::parse_lora_desc(&r, "meta") {
             Some(d) => save_desc(app, &l.name, d, None)?,
             None => eprintln!("認識 LoRA {}：讀不出說明：{}", l.name, r.chars().take(200).collect::<String>()),
@@ -861,7 +1069,7 @@ async fn learn_run(
             {"type": "text", "text": ag::lora_clues_text(l, &note_of(l), &tags_of(l), c)},
         ]);
         let msgs = json!([{"role": "system", "content": ag::SYSTEM_LORA_PROBE}, {"role": "user", "content": content}]);
-        let (r, _) = app.pe.agent_chat("agent-learn", &msgs, 500, 0.3, false, brain, None).await?;
+        let (r, _) = app.pe.agent_chat("agent-learn", &msgs, 500, 0.3, None, brain, None).await?;
         match ag::parse_lora_desc(&r, "probe") {
             Some(d) => {
                 let (a2, l2, f2) = (app.clone(), l.clone(), b_file.clone());

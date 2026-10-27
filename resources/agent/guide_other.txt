@@ -1,1 +1,6 @@
-Write a detailed English prompt: subject, look, pose, outfit, setting, lighting, camera, style.
+SDXL-family anime or general model (Illustrious, NoobAI, Pony, plain SDXL). Write ONE line of comma-separated Danbooru-style tags followed by one short English sentence.
+- Start with quality tags: Pony models: score_9, score_8_up, score_7_up; Illustrious / NoobAI: masterpiece, best quality, very aesthetic; plain SDXL: high quality, detailed.
+- Then people count (1girl, 2girls, 1boy…), character and series if named, then hair, eyes, expression, each clothing piece with colour, pose, what each hand does, one framing tag (upper body, cowboy shot, full body), setting, lighting.
+- Lowercase tags, spaces between words. Weights (tag:1.2) work on these models; use them only for the one or two things that keep going missing.
+- The negative prompt works here (CFG 4 to 7): put unwanted things there (lowres, bad anatomy, bad hands, extra fingers, watermark, text).
+- Counts and left/right are weak in tags: repeat them in the closing sentence.

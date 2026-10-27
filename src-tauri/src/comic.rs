@@ -73,6 +73,9 @@ pub type Row = (u32, Vec<u32>);
 pub fn layout_of(p: &Value) -> Result<(String, Vec<(String, String)>), String> {
     let id = tx(&p["layout"]);
     if id == "custom" {
+        if is_free(&p["custom"]) {
+            return Ok(free_layout(&p["custom"]));
+        }
         return custom_layout(rows_of(p)?);
     }
     let l = layout(&id).ok_or_else(|| format!("沒有這個版型：{id}"))?;
@@ -223,6 +226,471 @@ pub fn custom_layout(rows: Vec<Row>) -> Result<(String, Vec<(String, String)>), 
     Ok((desc, slots))
 }
 
+// ================================================================ 排版工作台（2026-10-27，custom.v = 2）
+// 使用者：「他的[自訂]功能，能夠更加智能，可以自由堆疊，也更直覺，不要單純按鈕點一點」。
+// 一頁＝一刀一刀切出來的樹（tree）＋疊在上面的小格（insets）。設計：docs\superpowers\specs\2026-10-27-comic-free-layout-design.md
+// Node = {split:"row"|"col", at, slant, a, b} | {id, brk}；row＝橫的一刀（a 上 b 下），col＝直的一刀（a 左 b 右）。
+// 閱讀順序（日本漫畫）：橫刀先讀上面、直刀先讀右邊；疊的小格接在它底下那格後面。網頁 ui\js\comiclayout.js 用同一套規則。
+
+/// 一頁最多幾格（含疊的小格；MOSS 一頁畫得完的範圍）、最多疊幾個小格、樹最深幾層
+pub const MAX_PANELS: usize = 8;
+pub const MAX_INSETS: usize = 2;
+const MAX_DEPTH: usize = 8;
+
+/// 排版工作台的一格
+#[derive(Clone, Debug, PartialEq)]
+pub struct Cell {
+    pub id: String,
+    /// [x0, y0, x1, y1]，0～1、左上角原點（頁面是直的 2:3）
+    pub rect: [f64; 4],
+    /// 有一邊是斜的刀
+    pub slant: bool,
+    /// 人物破格
+    pub brk: bool,
+    /// 疊在別格上面的小格
+    pub inset: bool,
+}
+
+// 這一格哪幾邊是斜的刀（位元）
+const TOP: u8 = 1;
+const BOTTOM: u8 = 2;
+const LEFT: u8 = 4;
+const RIGHT: u8 = 8;
+
+fn r3(v: f64) -> f64 {
+    (v * 1000.0).round() / 1000.0
+}
+
+fn clean_id(v: &Value) -> String {
+    tx(&v["id"]).chars().filter(|c| c.is_ascii_alphanumeric() || matches!(c, '_' | '-')).take(16).collect()
+}
+
+/// custom 是不是排版工作台的格式（不是就是舊的 rows）
+pub fn is_free(custom: &Value) -> bool {
+    custom["v"].as_i64() == Some(2) || custom.get("tree").is_some_and(Value::is_object)
+}
+
+/// 整理樹：刀的位置夾在 0.15～0.85、斜度 ±0.2；格子 id 不重複；room＝還能再切幾刀（每切一刀多一格），切不下去的那塊就留一格
+fn clean_tree(node: &Value, depth: usize, room: &mut usize, seen: &mut std::collections::HashSet<String>, next: &mut usize) -> Value {
+    let split = tx(&node["split"]);
+    if (split == "row" || split == "col") && depth < MAX_DEPTH && *room > 0 {
+        *room -= 1;
+        let at = node["at"].as_f64().unwrap_or(0.5).clamp(0.15, 0.85);
+        let slant = node["slant"].as_f64().unwrap_or(0.0).clamp(-0.2, 0.2);
+        let slant = if slant.abs() < 0.01 { 0.0 } else { slant };
+        let a = clean_tree(&node["a"], depth + 1, room, seen, next);
+        let b = clean_tree(&node["b"], depth + 1, room, seen, next);
+        return json!({"split": split, "at": r3(at), "slant": r3(slant), "a": a, "b": b});
+    }
+    let mut id = clean_id(node);
+    while id.is_empty() || seen.contains(&id) {
+        *next += 1;
+        id = format!("p{next}");
+    }
+    seen.insert(id.clone());
+    json!({"id": id, "brk": node["brk"].as_bool() == Some(true)})
+}
+
+/// 疊的小格的方框：0～1、至少 8%×6%、最多 70%；讀不出來就 None
+fn inset_rect(v: &Value) -> Option<[f64; 4]> {
+    let g = |k: &str| v[k].as_f64().filter(|x| x.is_finite()).map(|x| x.clamp(0.0, 1.0));
+    let (x0, y0, x1, y1) = (g("x0")?, g("y0")?, g("x1")?, g("y1")?);
+    let r = [x0.min(x1), y0.min(y1), x0.max(x1), y0.max(y1)];
+    let (w, h) = (r[2] - r[0], r[3] - r[1]);
+    (w >= 0.08 && h >= 0.06 && w <= 0.7 && h <= 0.7).then_some(r)
+}
+
+/// 網頁、AI 給的 custom → 乾淨的 v2 格式（壞掉的地方修好、格數超過就少切幾刀；整個讀不出來就是一整格）
+pub fn clean_free(custom: &Value) -> Value {
+    let rects: Vec<(&Value, [f64; 4])> = custom["insets"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|v| inset_rect(v).map(|r| (v, r)))
+        .take(MAX_INSETS)
+        .collect();
+    let mut room = MAX_PANELS - rects.len() - 1;
+    let mut seen = std::collections::HashSet::new();
+    let mut next = 0usize;
+    let tree = clean_tree(&custom["tree"], 0, &mut room, &mut seen, &mut next);
+    let insets: Vec<Value> = rects
+        .into_iter()
+        .map(|(v, r)| {
+            let mut id = clean_id(v);
+            while id.is_empty() || seen.contains(&id) {
+                next += 1;
+                id = format!("p{next}");
+            }
+            seen.insert(id.clone());
+            json!({"id": id, "x0": r3(r[0]), "y0": r3(r[1]), "x1": r3(r[2]), "y1": r3(r[3]), "brk": v["brk"].as_bool() == Some(true)})
+        })
+        .collect();
+    json!({"v": 2, "tree": tree, "insets": insets})
+}
+
+fn walk(node: &Value, r: [f64; 4], edges: u8, out: &mut Vec<Cell>) {
+    let split = tx(&node["split"]);
+    if split == "row" || split == "col" {
+        let at = node["at"].as_f64().unwrap_or(0.5);
+        let cut = if node["slant"].as_f64().unwrap_or(0.0).abs() >= 0.01 { 1 } else { 0 };
+        let [x0, y0, x1, y1] = r;
+        if split == "row" {
+            let y = y0 + (y1 - y0) * at;
+            walk(&node["a"], [x0, y0, x1, y], (edges & !BOTTOM) | (cut * BOTTOM), out);
+            walk(&node["b"], [x0, y, x1, y1], (edges & !TOP) | (cut * TOP), out);
+        } else {
+            let x = x0 + (x1 - x0) * at;
+            // 直的一刀：右邊先讀
+            walk(&node["b"], [x, y0, x1, y1], (edges & !LEFT) | (cut * LEFT), out);
+            walk(&node["a"], [x0, y0, x, y1], (edges & !RIGHT) | (cut * RIGHT), out);
+        }
+        return;
+    }
+    out.push(Cell { id: tx(&node["id"]), rect: r, slant: edges != 0, brk: node["brk"].as_bool() == Some(true), inset: false });
+}
+
+/// 排版工作台的每一格，照閱讀順序（疊的小格接在它底下那格後面）
+pub fn free_cells(custom: &Value) -> Vec<Cell> {
+    let c = clean_free(custom);
+    let mut out = vec![];
+    walk(&c["tree"], [0.0, 0.0, 1.0, 1.0], 0, &mut out);
+    for v in c["insets"].as_array().into_iter().flatten() {
+        let Some(r) = inset_rect(v) else { continue };
+        let (cx, cy) = ((r[0] + r[2]) / 2.0, (r[1] + r[3]) / 2.0);
+        let host = out.iter().position(|k| !k.inset && cx >= k.rect[0] && cx <= k.rect[2] && cy >= k.rect[1] && cy <= k.rect[3]);
+        let mut at = host.map_or(out.len(), |h| h + 1);
+        while at < out.len() && out[at].inset {
+            at += 1;
+        }
+        out.insert(at, Cell { id: tx(&v["id"]), rect: r, slant: false, brk: v["brk"].as_bool() == Some(true), inset: true });
+    }
+    out
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum Vp {
+    Top,
+    Middle,
+    Bottom,
+    Full,
+}
+#[derive(Clone, Copy, PartialEq)]
+enum Hp {
+    Left,
+    Center,
+    Right,
+    Full,
+}
+
+fn vpos(r: &[f64; 4]) -> Vp {
+    let cy = (r[1] + r[3]) / 2.0;
+    if r[3] - r[1] >= 0.9 {
+        Vp::Full
+    } else if cy < 0.36 {
+        Vp::Top
+    } else if cy > 0.64 {
+        Vp::Bottom
+    } else {
+        Vp::Middle
+    }
+}
+
+fn hpos(r: &[f64; 4]) -> Hp {
+    let cx = (r[0] + r[2]) / 2.0;
+    if r[2] - r[0] >= 0.9 {
+        Hp::Full
+    } else if cx < 0.4 {
+        Hp::Left
+    } else if cx > 0.6 {
+        Hp::Right
+    } else {
+        Hp::Center
+    }
+}
+
+/// tall／wide／large／small／""（疊的小格一律 small）
+fn size_word(c: &Cell) -> &'static str {
+    let (w, h) = (c.rect[2] - c.rect[0], c.rect[3] - c.rect[1]);
+    if c.inset {
+        "small"
+    } else if h >= 0.9 && w < 0.75 {
+        "tall"
+    } else if w >= 0.9 && h < 0.45 {
+        "wide"
+    } else if w * h >= 0.3 {
+        "large"
+    } else if w * h <= 0.08 {
+        "small"
+    } else {
+        ""
+    }
+}
+
+/// 位置的英文：「top right」「middle」「right」…
+fn place_en(v: Vp, h: Hp) -> String {
+    match (v, h) {
+        (Vp::Middle, Hp::Center) => "middle".into(),
+        (Vp::Full, Hp::Center) => "center".into(),
+        _ => {
+            let vs = match v {
+                Vp::Top => "top",
+                Vp::Middle => "middle",
+                Vp::Bottom => "bottom",
+                Vp::Full => "",
+            };
+            let hs = match h {
+                Hp::Left => "left",
+                Hp::Right => "right",
+                _ => "",
+            };
+            [vs, hs].into_iter().filter(|s| !s.is_empty()).collect::<Vec<_>>().join(" ")
+        }
+    }
+}
+
+fn cell_en(c: &Cell) -> String {
+    let (v, h) = (vpos(&c.rect), hpos(&c.rect));
+    let slant = if c.slant { "slanted " } else { "" };
+    if c.inset {
+        let p = place_en(v, h);
+        return format!("small {slant}inset panel at the {}", if p.is_empty() { "center".into() } else { p });
+    }
+    if v == Vp::Full && h == Hp::Full {
+        return "full-page panel".into();
+    }
+    let words: Vec<String> = [slant.trim().to_string(), size_word(c).to_string(), place_en(v, h), "panel".into()]
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .collect();
+    words.join(" ")
+}
+
+fn cell_zh(c: &Cell) -> String {
+    let (v, h) = (vpos(&c.rect), hpos(&c.rect));
+    if !c.inset && v == Vp::Full && h == Hp::Full {
+        return "整頁那格".into();
+    }
+    let place = match (v, h) {
+        (Vp::Full, Hp::Left) => "左邊",
+        (Vp::Full, Hp::Right) => "右邊",
+        (Vp::Full, _) => "中間",
+        (Vp::Top, Hp::Full) => "最上面",
+        (Vp::Bottom, Hp::Full) => "最下面",
+        (Vp::Middle, Hp::Full) => "中間",
+        (Vp::Top, Hp::Left) => "左上",
+        (Vp::Top, Hp::Right) => "右上",
+        (Vp::Bottom, Hp::Left) => "左下",
+        (Vp::Bottom, Hp::Right) => "右下",
+        (Vp::Middle, Hp::Left) => "中間左邊",
+        (Vp::Middle, Hp::Right) => "中間右邊",
+        (Vp::Top, Hp::Center) => "上方中間",
+        (Vp::Bottom, Hp::Center) => "下方中間",
+        (Vp::Middle, Hp::Center) => "中間",
+    };
+    let slant = if c.slant { "斜切的" } else { "" };
+    if c.inset {
+        return format!("{place}{slant}疊的小格");
+    }
+    match size_word(c) {
+        "tall" => format!("{place}{slant}直長那格"),
+        "wide" => format!("{place}{slant}橫長那格"),
+        "large" => format!("{place}{slant}大格"),
+        "small" => format!("{place}{slant}小格"),
+        _ => format!("{place}{slant}那格"),
+    }
+}
+
+/// 整頁描述裡的一格（說法跟預設版型實測過的一樣：「a tall panel on the right that spans the full height of the page」）
+fn cell_phrase(c: &Cell, name: &str, host: Option<&str>) -> String {
+    let (v, h) = (vpos(&c.rect), hpos(&c.rect));
+    let slant = if c.slant { "slanted " } else { "" };
+    if c.inset {
+        return match host {
+            Some(hn) => format!("a {name} overlapping the {hn}"),
+            None => format!("a {name}"),
+        };
+    }
+    match (v, h, size_word(c)) {
+        (Vp::Full, Hp::Full, _) => "one full-page panel".into(),
+        (Vp::Full, _, "tall") => {
+            let side = match h {
+                Hp::Left => "on the left",
+                Hp::Right => "on the right",
+                _ => "in the middle",
+            };
+            format!("a {slant}tall panel {side} that spans the full height of the page")
+        }
+        (_, Hp::Full, "wide") => {
+            let at = match v {
+                Vp::Top => "the top",
+                Vp::Bottom => "the bottom",
+                _ => "the middle of the page",
+            };
+            format!("a {slant}wide panel across {at}")
+        }
+        _ => format!("a {name}"),
+    }
+}
+
+const NUM_EN: [&str; 9] = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight"];
+const ORD_EN: [&str; 9] = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth"];
+
+/// 排版工作台的版面 → (英文描述, 每一格的 (英文名, 中文名))；同名的格加序數（英文）或「第幾格」（中文）
+pub fn free_layout(custom: &Value) -> (String, Vec<(String, String)>) {
+    let cells = free_cells(custom);
+    let en: Vec<String> = cells.iter().map(cell_en).collect();
+    let zh: Vec<String> = cells.iter().map(cell_zh).collect();
+    let mut slots = Vec::with_capacity(cells.len());
+    for i in 0..cells.len() {
+        let same_en: Vec<usize> = (0..cells.len()).filter(|j| en[*j] == en[i]).collect();
+        let e = if same_en.len() > 1 {
+            let k = same_en.iter().position(|j| *j == i).unwrap_or(0) + 1;
+            format!("{} {}", ORD_EN[k.min(8)], en[i])
+        } else {
+            en[i].clone()
+        };
+        let z = if zh.iter().filter(|s| **s == zh[i]).count() > 1 { format!("{}（第{}格）", zh[i], i + 1) } else { zh[i].clone() };
+        slots.push((e, z));
+    }
+    let phrases: Vec<String> = cells
+        .iter()
+        .enumerate()
+        .map(|(i, c)| {
+            // 疊的小格：它底下那格是前面最近的一般格
+            let host = c.inset.then(|| (0..i).rev().find(|j| !cells[*j].inset).map(|j| slots[j].0.as_str())).flatten();
+            cell_phrase(c, &slots[i].0, host)
+        })
+        .collect();
+    let n = cells.len();
+    let desc = match n {
+        1 => phrases[0].clone(),
+        _ => {
+            let (last, rest) = phrases.split_last().expect("n >= 2");
+            format!("{} panels: {}, and {last}", NUM_EN[n.min(8)], rest.join(", "))
+        }
+    };
+    (desc, slots)
+}
+
+/// 每一格要不要人物破格（照閱讀順序；不是排版工作台的版面就是空的）
+pub fn breaks(p: &Value) -> Vec<bool> {
+    if tx(&p["layout"]) == "custom" && is_free(&p["custom"]) {
+        free_cells(&p["custom"]).iter().map(|c| c.brk).collect()
+    } else {
+        vec![]
+    }
+}
+
+// ================================================================ 用說的排版（站內助手幫忙拉格子）
+/// 給本機語言模型的系統提示：一句話（或這頁的劇情）→ 排版工作台的樹。回傳一定要是 JSON
+pub const SYSTEM_LAYOUT: &str = r#"You design the panel layout of ONE vertical manga page (portrait, 2:3). Return JSON only. No prose, no code fences.
+
+Describe the page as nested lists:
+{"rows": [ ... ]}   parts stacked from TOP to BOTTOM
+{"cols": [ ... ]}   parts side by side from LEFT to RIGHT
+Each part is a panel {"id":"p1"} or another {"rows":[...]} / {"cols":[...]}.
+Any part may have "size": a relative number (default 1). A bigger panel gets a bigger size.
+Optional on a panel: "brk": true = the character bursts out of the panel border; "slanted": true = the cut next to it is slanted.
+Small panels laid on top of a bigger panel go in "insets": [{"id":"p7","x0":0.62,"y0":0.72,"x1":0.95,"y1":0.95}] (0 to 1, origin top-left), at most 2.
+
+Output: {"plan": "<one short line: what goes where>", "page": {"rows": [...]} or {"cols": [...]}, "insets": [...]}
+Write "plan" first, then build "page" and "insets" to match the plan exactly.
+
+Rules:
+- Follow the request exactly. When it says how many panels go somewhere, list exactly that many there; count them before answering.
+- The current layout is only a reference. When the request describes a layout, build that layout and ignore the current panel count.
+- 1 to 8 panels in total, insets included. Use 4 to 6 when the request does not say.
+- Panel ids are p1, p2, p3 ... and unique. At most 3 levels of nesting.
+- The page reads right to left, top to bottom: the first story beat is the top right panel. Give the most important moment the biggest size.
+- Add insets only when the request asks for a small panel laid on top of another (疊、小格、inset). Otherwise "insets" is [].
+- Slanted (斜、斜切): "slanted": true on that panel. Breaking out of the frame (破格、衝出格子): "brk": true on that panel.
+
+Examples (request, then the JSON):
+左邊一格大特寫貫穿整頁，右邊切三格，右下疊一個小格
+{"plan":"cols: left 1 tall | right 3 stacked; small inset at the bottom right","page":{"cols":[{"id":"p4","size":1.4},{"rows":[{"id":"p1"},{"id":"p2"},{"id":"p3"}],"size":2}]},"insets":[{"id":"p5","x0":0.7,"y0":0.8,"x1":0.97,"y1":0.97}]}
+上面一格橫長，下面左右兩格，最後一格斜切而且人物破格
+{"plan":"rows: top 1 wide / bottom 2 side by side, the left one is read last, slanted and breaking out","page":{"rows":[{"id":"p1"},{"cols":[{"id":"p3","brk":true,"slanted":true},{"id":"p2"}],"size":2}]},"insets":[]}
+三排：上排兩格、中排一格大的、下排三格
+{"plan":"rows: 2 / 1 big / 3","page":{"rows":[{"cols":[{"id":"p2"},{"id":"p1"}]},{"id":"p3","size":1.6},{"cols":[{"id":"p6"},{"id":"p5"},{"id":"p4"}]}]},"insets":[]}"#;
+
+/// 用說的排版的訊息：(系統, 使用者)。ask＝使用者想怎麼排（中文可以；空白就照劇情自己排）
+pub fn layout_messages(p: &Value, ask: &str) -> (String, String) {
+    let story = field(p, "script");
+    let now = layout_of(p).map(|(d, _)| d).unwrap_or_default();
+    let or_free = |s: String| if s.trim().is_empty() { "(none)".to_string() } else { s };
+    let ask = if ask.trim().is_empty() {
+        "Design a layout that fits the story below.".to_string()
+    } else {
+        ask.trim().to_string()
+    };
+    let user = format!(
+        "Request (may be written in Chinese): {ask}\n\nStory of this page (decides which moment gets the biggest panel): {}\n\nCurrent layout: {}\n\nReturn the JSON now.",
+        or_free(story),
+        or_free(now),
+    );
+    (SYSTEM_LAYOUT.to_string(), user)
+}
+
+/// 模型輸出 → 乾淨的 v2 版面；讀不出版面就 None（呼叫的人重試）。
+/// 模型寫巢狀列表（`page: {rows|cols: [...]}`，小模型數格子比較準）；也收排版工作台的樹（`tree`）
+pub fn parse_layout(text: &str) -> Option<Value> {
+    use crate::director::json_in;
+    let m = Value::Object(json_in(text)?);
+    let obj = if m["custom"].is_object() { &m["custom"] } else { &m };
+    if obj["tree"].is_object() {
+        return Some(clean_free(obj));
+    }
+    let page = if obj["page"].is_object() { &obj["page"] } else { obj };
+    if !(page["rows"].is_array() || page["cols"].is_array()) {
+        return None;
+    }
+    let insets: Vec<Value> = obj["insets"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|v| {
+            let mut v = v.clone();
+            if v["id"].is_null() {
+                v["id"] = v["panel"].clone();
+            }
+            v
+        })
+        .collect();
+    Some(clean_free(&json!({"tree": nest_tree(page, 0), "insets": insets})))
+}
+
+/// 巢狀列表的一塊 → 樹：rows＝由上到下（橫刀），cols＝由左到右（直刀）；size 是比例
+fn nest_tree(n: &Value, depth: usize) -> Value {
+    let (split, list) = match (n["rows"].as_array(), n["cols"].as_array()) {
+        (Some(l), _) => ("row", l),
+        (None, Some(l)) => ("col", l),
+        _ => {
+            let id = if n["id"].is_null() { &n["panel"] } else { &n["id"] };
+            return json!({"id": tx(id), "brk": n["brk"].as_bool() == Some(true)});
+        }
+    };
+    let items: Vec<&Value> = list.iter().filter(|v| v.is_object()).collect();
+    match items.len() {
+        0 => json!({"id": ""}),
+        _ if depth >= MAX_DEPTH => nest_tree(items[0], depth + 1),
+        _ => nest_chain(split, &items, depth, true),
+    }
+}
+
+/// 一排 n 塊 → 一刀切下第一塊、剩下的再切；「slanted」的那塊旁邊那一刀斜（第一塊是它後面那刀）
+fn nest_chain(split: &str, items: &[&Value], depth: usize, first: bool) -> Value {
+    if items.len() == 1 {
+        return nest_tree(items[0], depth + 1);
+    }
+    let size = |v: &Value| v["size"].as_f64().filter(|x| x.is_finite() && *x > 0.0).unwrap_or(1.0).min(20.0);
+    let total: f64 = items.iter().map(|v| size(v)).sum();
+    let at = (size(items[0]) / total).clamp(0.15, 0.85);
+    let slanted = |v: &Value| v["slanted"].as_bool() == Some(true);
+    let slant = if slanted(items[1]) || (first && slanted(items[0])) { 0.1 } else { 0.0 };
+    json!({"split": split, "at": r3(at), "slant": slant,
+           "a": nest_tree(items[0], depth + 1), "b": nest_chain(split, &items[1..], depth + 1, false)})
+}
+
 fn field(v: &Value, k: &str) -> String {
     tx(&v[k]).trim().to_string()
 }
@@ -246,6 +714,7 @@ fn has_scene(c: &Value) -> bool {
 pub fn moss_page(p: &Value) -> Result<String, String> {
     let (desc, slots) = layout_of(p)?;
     let list = p["panels"].as_array().cloned().unwrap_or_default();
+    let brk = breaks(p);
     let mut sent = vec![format!(
         "The image is a vertical full-color anime manga page divided into {desc}, separated by thin black borders with white gutters, read from right to left."
     )];
@@ -275,6 +744,9 @@ pub fn moss_page(p: &Value) -> Result<String, String> {
                 "; a large pink hand-lettered Japanese sound effect \"{}\" floats nearby with small pink hearts",
                 sfx.replace('"', "\u{201D}")
             ));
+        }
+        if brk.get(i) == Some(&true) {
+            s.push_str("; the character bursts out of the panel border, overlapping the gutter");
         }
         sent.push(sentence(&s));
     }
@@ -323,10 +795,14 @@ pub fn script_messages(p: &Value, story: &str) -> (String, String) {
         (l.2.to_string(), l.3.iter().map(|(en, zh)| (en.to_string(), zh.to_string())).collect())
     });
     let n = slots.len();
+    let brk = breaks(p);
     let order: Vec<String> = slots
         .iter()
         .enumerate()
-        .map(|(i, (en, zh))| format!("{}. {} / {}", i + 1, en, zh))
+        .map(|(i, (en, zh))| {
+            let tail = if brk.get(i) == Some(&true) { " (the character breaks out of the frame: give it the climax)" } else { "" };
+            format!("{}. {} / {}{tail}", i + 1, en, zh)
+        })
         .collect();
     let or_free = |s: String| if s.trim().is_empty() { "(free choice)".to_string() } else { s };
     let user = format!(
@@ -534,6 +1010,158 @@ mod tests {
         }
         assert_eq!(blank("x")["panels"].as_array().unwrap().len(), layout("L4").unwrap().3.len());
         assert!(valid_id(&tx(&blank("")["id"])));
+    }
+
+    // ---------------------------------------------------------------- 排版工作台（v2）
+    fn free(tree: Value, insets: Value) -> Value {
+        json!({"layout": "custom", "custom": {"v": 2, "tree": tree, "insets": insets}})
+    }
+
+    #[test]
+    fn free_tall_left_and_three_right_read_right_to_left() {
+        // 左邊一格貫穿整頁，右邊切三格
+        let p = free(
+            json!({"split": "col", "at": 0.42, "a": {"id": "big"},
+                   "b": {"split": "row", "at": 0.33, "a": {"id": "r1"}, "b": {"split": "row", "at": 0.5, "a": {"id": "r2"}, "b": {"id": "r3"}}}}),
+            json!([]),
+        );
+        let ids: Vec<String> = free_cells(&p["custom"]).into_iter().map(|c| c.id).collect();
+        assert_eq!(ids, ["r1", "r2", "r3", "big"], "右邊先讀、上面先讀");
+        let (desc, slots) = layout_of(&p).unwrap();
+        assert!(desc.starts_with("four panels: a top right panel, a middle right panel, a bottom right panel, and "), "{desc}");
+        assert!(desc.ends_with("a tall panel on the left that spans the full height of the page"), "{desc}");
+        assert_eq!(slots[3], ("tall left panel".to_string(), "左邊直長那格".to_string()));
+        assert_eq!(slots[0], ("top right panel".to_string(), "右上那格".to_string()));
+    }
+
+    #[test]
+    fn free_inset_sits_after_its_host_and_is_named() {
+        let p = free(
+            json!({"split": "row", "at": 0.3, "a": {"id": "top"}, "b": {"id": "main"}}),
+            json!([{"id": "ins", "x0": 0.62, "y0": 0.72, "x1": 0.95, "y1": 0.95}]),
+        );
+        let ids: Vec<String> = free_cells(&p["custom"]).into_iter().map(|c| c.id).collect();
+        assert_eq!(ids, ["top", "main", "ins"]);
+        let (desc, slots) = layout_of(&p).unwrap();
+        assert_eq!(slots[0].0, "wide top panel");
+        assert_eq!(slots[1].0, "large bottom panel");
+        assert_eq!(slots[2], ("small inset panel at the bottom right".to_string(), "右下疊的小格".to_string()));
+        assert_eq!(
+            desc,
+            "three panels: a wide panel across the top, a large bottom panel, and a small inset panel at the bottom right overlapping the large bottom panel"
+        );
+    }
+
+    #[test]
+    fn free_slant_and_break_reach_the_prompt() {
+        let mut p = free(json!({"split": "row", "at": 0.5, "slant": 0.1, "a": {"id": "a"}, "b": {"id": "b", "brk": true}}), json!([]));
+        p["panels"] = json!([{"shot": "a close-up", "what": "her face"}, {"shot": "a wide shot", "what": "she jumps"}]);
+        let (_, slots) = layout_of(&p).unwrap();
+        assert_eq!(slots[0].0, "slanted large top panel");
+        assert_eq!(slots[1].1, "最下面斜切的大格");
+        assert_eq!(breaks(&p), vec![false, true]);
+        let s = moss_page(&p).unwrap();
+        assert!(
+            s.contains("The slanted large bottom panel shows a wide shot of she jumps; the character bursts out of the panel border"),
+            "{s}"
+        );
+        let (_, user) = script_messages(&p, "她跳起來");
+        assert!(user.contains("2. slanted large bottom panel / 最下面斜切的大格 (the character breaks out of the frame"), "{user}");
+        // 只有被斜刀碰到的那幾格是斜的
+        let q = free(
+            json!({"split": "row", "at": 0.5, "a": {"split": "row", "at": 0.5, "slant": 0.1, "a": {"id": "t1"}, "b": {"id": "t2"}}, "b": {"id": "low"}}),
+            json!([]),
+        );
+        let sl: Vec<bool> = free_cells(&q["custom"]).iter().map(|c| c.slant).collect();
+        assert_eq!(sl, vec![true, true, false]);
+    }
+
+    #[test]
+    fn free_duplicate_names_get_ordinals() {
+        // 上下兩排各兩格，再把右上切成上下兩小格 → 兩個「top right」
+        let p = free(
+            json!({"split": "row", "at": 0.6, "a": {"split": "col", "at": 0.5, "a": {"id": "l"},
+                   "b": {"split": "row", "at": 0.5, "a": {"id": "r1"}, "b": {"id": "r2"}}}, "b": {"id": "low"}}),
+            json!([]),
+        );
+        let (_, slots) = layout_of(&p).unwrap();
+        let en: Vec<&str> = slots.iter().map(|s| s.0.as_str()).collect();
+        assert_eq!(en.iter().collect::<std::collections::HashSet<_>>().len(), en.len(), "英文名不重複：{en:?}");
+        let zh: Vec<&str> = slots.iter().map(|s| s.1.as_str()).collect();
+        assert_eq!(zh.iter().collect::<std::collections::HashSet<_>>().len(), zh.len(), "中文名不重複：{zh:?}");
+    }
+
+    #[test]
+    fn free_layout_is_cleaned_and_capped() {
+        // 亂寫：位置超出範圍、id 重複、切太多刀、小格太小
+        let mut deep = json!({"id": "x"});
+        for _ in 0..12 {
+            deep = json!({"split": "row", "at": 2.0, "a": {"id": "x"}, "b": deep});
+        }
+        let c = clean_free(&json!({"tree": deep, "insets": [{"x0": 0.1, "y0": 0.1, "x1": 0.12, "y1": 0.11}, {"x0": 0.5, "y0": 0.5, "x1": 0.8, "y1": 0.8}]}));
+        let cells = free_cells(&c);
+        assert!(cells.len() <= MAX_PANELS, "{}", cells.len());
+        assert_eq!(cells.len(), MAX_PANELS, "切到滿：7 格＋1 個小格");
+        assert_eq!(cells.iter().filter(|k| k.inset).count(), 1, "太小的小格丟掉");
+        let mut ids: Vec<&str> = cells.iter().map(|k| k.id.as_str()).collect();
+        ids.sort_unstable();
+        ids.dedup();
+        assert_eq!(ids.len(), cells.len(), "id 不重複");
+        assert_eq!(c["tree"]["at"], 0.85, "位置夾在範圍內");
+        // 整個讀不出來也至少一格
+        assert_eq!(free_cells(&json!({"v": 2})).len(), 1);
+        let (desc, slots) = layout_of(&free(json!(null), json!(null))).unwrap();
+        assert_eq!((desc.as_str(), slots.len()), ("one full-page panel", 1));
+        assert_eq!(slots[0], ("full-page panel".to_string(), "整頁那格".to_string()));
+    }
+
+    #[test]
+    fn old_rows_still_work_and_parse_layout_reads_model_output() {
+        let old = custom(json!([{"h": 1, "cells": [1, 1]}]));
+        assert!(!is_free(&old["custom"]));
+        assert_eq!(layout_of(&old).unwrap().1.len(), 2);
+        assert!(breaks(&old).is_empty());
+        let txt = "好的：\n{\"tree\":{\"split\":\"col\",\"at\":0.5,\"a\":{\"id\":\"p2\"},\"b\":{\"id\":\"p1\"}},\"insets\":[]}";
+        let v = parse_layout(txt).unwrap();
+        assert_eq!(v["v"], 2);
+        let ids: Vec<String> = free_cells(&v).into_iter().map(|c| c.id).collect();
+        assert_eq!(ids, ["p1", "p2"]);
+        let wrapped = parse_layout("{\"custom\":{\"tree\":{\"id\":\"solo\"}}}").unwrap();
+        assert_eq!(free_cells(&wrapped)[0].id, "solo");
+        assert!(parse_layout("沒有 JSON").is_none());
+        assert!(parse_layout("{\"panels\":[]}").is_none());
+        let (sys, user) = layout_messages(&json!({"layout": "L3", "script": "她衝過來"}), "左邊一格大特寫");
+        assert!(sys.contains("{\"rows\": [ ... ]}"), "{sys}");
+        assert!(user.contains("左邊一格大特寫") && user.contains("她衝過來") && user.contains("tall panel on the right"), "{user}");
+    }
+
+    #[test]
+    fn parse_layout_reads_nested_rows_and_cols() {
+        // 模型寫巢狀列表：左邊一格直長、右邊三格（第二格斜、第三格破格）、右下疊小格
+        let txt = r#"{"plan":"x","page":{"cols":[{"id":"big","size":1.4},{"rows":[{"id":"r1"},{"id":"r2","slanted":true},{"id":"r3","brk":true}],"size":2}]},"insets":[{"panel":"s","x0":0.7,"y0":0.8,"x1":0.97,"y1":0.97}]}"#;
+        let v = parse_layout(txt).unwrap();
+        let cells = free_cells(&v);
+        let ids: Vec<&str> = cells.iter().map(|c| c.id.as_str()).collect();
+        assert_eq!(ids, ["r1", "r2", "r3", "s", "big"], "右邊先讀，小格接在右下那格後面");
+        assert_eq!(v["tree"]["split"], "col");
+        assert_eq!(v["tree"]["at"], 0.412, "size 1.4：2");
+        assert_eq!(v["tree"]["b"]["slant"], 0.1, "r2 前面那一刀斜");
+        assert_eq!(v["tree"]["b"]["b"]["slant"], 0.0);
+        assert!(cells[2].brk && !cells[0].brk);
+        // 一排四格一樣大：每一刀都切在剩下那段的等分上
+        let four = parse_layout(r#"{"page":{"rows":[{"id":"a"},{"id":"b"},{"id":"c"},{"id":"d"}]}}"#).unwrap();
+        let ys: Vec<f64> = free_cells(&four).iter().map(|c| (c.rect[1] * 100.0).round()).collect();
+        assert_eq!(ys, [0.0, 25.0, 50.0, 75.0]);
+        // 怪東西也不會當掉：空的、只有一格、太深、超過 8 格
+        assert_eq!(free_cells(&parse_layout(r#"{"page":{"rows":[]}}"#).unwrap()).len(), 1);
+        assert_eq!(free_cells(&parse_layout(r#"{"rows":[{"id":"solo"}]}"#).unwrap())[0].id, "solo");
+        let many: Vec<Value> = (0..12).map(|i| json!({"id": format!("x{i}")})).collect();
+        assert_eq!(free_cells(&parse_layout(&json!({"page": {"cols": many}}).to_string()).unwrap()).len(), MAX_PANELS);
+        let mut deep = json!({"id": "z"});
+        for _ in 0..20 {
+            deep = json!({"rows": [{"id": "y"}, deep]});
+        }
+        assert!(free_cells(&parse_layout(&json!({"page": deep}).to_string()).unwrap()).len() <= MAX_PANELS);
     }
 
     // ---------------------------------------------------------------- 自訂版面

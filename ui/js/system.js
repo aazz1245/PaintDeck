@@ -48,7 +48,9 @@ const PAGES = { 1: "gen", 2: "gallery", 3: "assets", 4: "loras", 5: "civitai", 6
 function globalKeys(e) {
   if (e.altKey && !e.ctrlKey && /^[0-9]$/.test(e.key) && !typing(e)) {
     if (e.key === "9") { e.preventDefault(); import("./queue.js").then((q) => q.toggle()); return; }
-    if (PAGES[e.key]) { e.preventDefault(); app.showPage(PAGES[e.key]); }
+    // 助手改成獨立視窗（頂列「✦ 助手」）：Alt＋8 也是開視窗，不在主畫面切頁
+    if (PAGES[e.key] === "agent") { e.preventDefault(); F("assistBtn").click(); }
+    else if (PAGES[e.key]) { e.preventDefault(); app.showPage(PAGES[e.key]); }
     return;
   }
   if (e.key === "Escape") {

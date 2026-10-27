@@ -2,6 +2,7 @@
 import { $, el, api, toast, debounce, store, modeName, fmtSecs } from "./util.js";
 import { app } from "./state.js";
 import { play } from "./sfx.js";
+import { downloadForJob } from "./diagnostics.js";
 
 const F = (id) => $("#" + id);
 let jobs = [], running = null, avgFallback = null, queued = 0;
@@ -146,7 +147,8 @@ function etaOf(j) {
 function tick() {
   const p = running && prog.get(running);
   const n = queued;
-  document.title = (p ? `(${Math.round((100 * p.value) / p.max)}%${n > 1 ? `・剩 ${n}` : ""}) ` : "") + "繪匣 PaintDeck";
+  const name = document.documentElement.classList.contains("solo") ? "繪匣 助手" : "繪匣 PaintDeck"; // 助手獨立視窗（main.js）
+  document.title = (p ? `(${Math.round((100 * p.value) / p.max)}%${n > 1 ? `・剩 ${n}` : ""}) ` : "") + name;
 }
 
 // ---------------------------------------------------------------- 畫面
@@ -192,7 +194,8 @@ function card(j, qpos) {
       ["queued", "running"].includes(j.status) ? el("button", { class: "btn sm danger", onclick: () => cancel(j) }, "取消") : null,
       !["queued", "running"].includes(j.status) ? el("button", { class: "btn sm", title: "同樣的參數、同一個種子再跑一次", onclick: () => retry(j, false) }, j.status === "done" ? "再跑一次" : "重試") : null,
       !["queued", "running"].includes(j.status) ? el("button", { class: "btn sm", title: "同樣的參數，換一個隨機種子", onclick: () => retry(j, true) }, "換種子再跑") : null,
-      el("button", { class: "btn sm", onclick: () => reuse(j) }, "重用參數")));
+      el("button", { class: "btn sm", onclick: () => reuse(j) }, "重用參數"),
+      el("button", { class: "btn sm", onclick: () => downloadForJob(j.id) }, "診斷包")));
   if (j.status === "running") paintProgress(c, j.id);
   return c;
 }

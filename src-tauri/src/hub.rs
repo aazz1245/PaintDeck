@@ -21,7 +21,11 @@ impl Hub {
         Hub(broadcast::channel(256).0)
     }
 
-    pub fn send(&self, v: Value) {
+    pub fn send(&self, mut v: Value) {
+        if let Some(run) = crate::diagnostics::current() {
+            if let Some(obj) = v.as_object_mut() { obj.insert("diagnostic_id".into(), serde_json::json!(run.id)); }
+        }
+        crate::diagnostics::hub_event(&v);
         let _ = self.0.send(Msg::Text(dumps(&v).into()));
     }
 

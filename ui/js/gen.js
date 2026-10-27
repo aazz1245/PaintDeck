@@ -1,5 +1,6 @@
 // 生成頁：表單、模式切換、送出任務、即時預覽、結果列與圖片動作
 import { $, $$, el, api, toast, debounce, store, uploadFile, pickFile, makeDrop, openModal, closeModal, modeName, isVideo, isVideoPreview, IMAGE_ONLY_ACTS, VIDEO_ONLY_ACTS, fmtSecs } from "./util.js";
+import { mediaSlotsControl } from "./video-slots.js";
 import { app } from "./state.js";
 import { attachAutocomplete } from "./autocomplete.js";
 import * as mask from "./mask.js";
@@ -16,6 +17,7 @@ import * as play from "./play.js";
 import * as wfpanel from "./wfpanel.js";
 import * as models from "./models.js";
 import * as drawer from "./assetdrawer.js";
+import * as lk from "./lockedchips.js";
 
 const SIZES = [
   ["直 1024×1536", 1024, 1536], ["直 832×1216", 832, 1216], ["直 896×1152", 896, 1152], ["方 1024×1024", 1024, 1024],
@@ -59,6 +61,7 @@ const QWEN_ANIME_NEG = "low quality, low resolution, blurry, jpeg artifacts, was
 export const S = {
   mode: "txt2img", init: null, mask: null, ctrl: null,
   loras: [], openNotes: new Set(), results: [], current: null, lastSeed: null, pending: new Map(), running: null, previewUrl: null,
+  locked: [],  // 鎖定角色標籤（lockedchips.js）：送出時接在提示詞最前面
 };
 
 const F = (id) => $("#" + id);
@@ -96,8 +99,10 @@ export function init() {
     images: {
       base: (r) => useInput("img2img", r),
       control: (r) => setCtrl(r),
-      ref: { add: (r) => { if (S.mode !== "multiref") setMode("multiref"); return refs.add(r); }, count: () => refs.get().length, max: refs.MAX },
+      ref: { add: (r) => { if (S.mode !== "multiref") setMode("multiref"); return refs.add(r); }, count: () => refs.get().length, max: refs.MAX,
+        has: (name) => refs.get().some((x) => x.name === name) },
     },
+    lock: (chip) => { S.locked = lk.addChip(S.locked, chip); renderLocked(); save(); },
   });
   lay = layoutEditor({ onChange: () => { layCount(); save(); } });
   F("layMount").append(lay.el);
@@ -259,8 +264,8 @@ export function init() {
     if (b && S.current && b.dataset.act !== "download") imageAction(b.dataset.act, S.current, b);
   });
 
-  F("genPanel").addEventListener("input", debounce(save, 400));
-  F("genPanel").addEventListener("change", debounce(save, 100));
+  F("page-gen").addEventListener("input", debounce(save, 400));
+  F("page-gen").addEventListener("change", debounce(save, 100));
   restore();
   seedRecent();
 }
@@ -611,6 +616,7 @@ function familyUI() {
   F("upscaleBox").hidden = S.mode !== "upscale" || cw;
   F("denoiseHint").textContent = (q ? MODE_HINT_Q : fam() === "moss" ? MODE_HINT_M : MODE_HINT)[S.mode] || "";
   pe.refreshTask();
+  renderLocked();
 }
 
 // ---------------------------------------------------------------- 模式
@@ -953,7 +959,7 @@ const FORM_IDS = ["prompt", "negative", "width", "height", "autoSize", "denoise"
 const pendingSel = {};
 
 function collectForm() {
-  const f = { mode: S.mode, loras: S.loras, init: S.init, ctrl: S.ctrl, refs: refs.get(), sheetRef: S.sheetRef, layout: lay?.get() || [] };
+  const f = { mode: S.mode, loras: S.loras, init: S.init, ctrl: S.ctrl, refs: refs.get(), sheetRef: S.sheetRef, layout: lay?.get() || [], locked: S.locked };
   for (const id of FORM_IDS) { const e = F(id); f[id] = e.type === "checkbox" ? e.checked : (id in pendingSel ? pendingSel[id] : e.value); }
   return f;
 }
@@ -972,7 +978,8 @@ function applyForm(f) {
   if (f.refs !== undefined) refs.set(f.refs);
   if (f.sheetRef !== undefined) { S.sheetRef = f.sheetRef; showSheetRef(); }
   if (f.layout !== undefined) { lay.set(f.layout); layCount(); }
-  for (const o of $$("output", F("genPanel"))) { const inp = o.closest("div, section")?.querySelector("input[type=range]"); if (inp) o.textContent = inp.value; }
+  if (f.locked !== undefined) { S.locked = Array.isArray(f.locked) ? f.locked : []; renderLocked(); }
+  for (const o of $$("output", F("page-gen"))) { const inp = o.closest("div, section")?.querySelector("input[type=range]"); if (inp) o.textContent = inp.value; }
   F("upRefineRow").hidden = !F("upRefine").checked;
   F("ipPadRow").hidden = F("ipArea").value !== "masked";
   if (app.state) S.family = fam();
@@ -981,6 +988,12 @@ function applyForm(f) {
 }
 
 const save = () => { store.set("form", collectForm()); promptx.refresh(); };
+
+// 鎖定角色標籤列：換模型、動參考圖時滑過去看的全文跟著變
+function renderLocked() {
+  lk.render(F("lkRow"), S.locked, { fam: fam(), refNames: S.mode === "multiref" ? refs.get().map((r) => r.name) : [],
+    onRemove: (id) => { S.locked = S.locked.filter((c) => c.id !== id); renderLocked(); save(); } });
+}
 
 function restore() {
   const d = {
@@ -1014,7 +1027,7 @@ export function applyParams(p, withMode = true) {
   lay.set(p.layout || []); layCount();  // 重用參數＝重現那張圖：沒有框的圖會把框清掉
   if (p.layout?.length) F("layBox").open = true;
   renderLoras(); modelHint();
-  for (const o of $$("output", F("genPanel"))) { const inp = o.closest("div, section")?.querySelector("input[type=range]"); if (inp) o.textContent = inp.value; }
+  for (const o of $$("output", F("page-gen"))) { const inp = o.closest("div, section")?.querySelector("input[type=range]"); if (inp) o.textContent = inp.value; }
   if (p.mode === "multiref" && p.refs) refs.set(p.refs.map((r) => ({ name: r.image, width: r.width, height: r.height, role: r.role || "person" })));
   // 文生圖、ComfyUI 匯入的、沒標模式的 → 文生圖；其餘（圖生圖、局部重繪、放大、四視圖、多圖參考）照原模式還原（輸入圖要自己再放一次）
   if (withMode) setMode(["img2img", "inpaint", "outpaint", "upscale", "sheet", "multiref"].includes(p.mode) ? p.mode : "txt2img");
@@ -1087,13 +1100,16 @@ async function generate() {
       return toast(`「${w.name}」沒有${modeName[S.mode] || S.mode}的工作流：換一個模式，或到「設定 → 模型與工作流」補匯入一個`, "err");
   }
   if (S.mode === "outpaint" && !Object.values(opVals()).some((v) => v > 0)) return toast("擴圖：至少填一邊要往外擴幾像素（或按下面的快捷鈕）", "err");
+  const refNames = () => (S.mode === "multiref" ? refs.get().map((r) => r.name) : []);
+  // 四視圖沒有提示詞框，不接
+  const full = (text) => (F("promptBox").hidden ? text : lk.withLocked(text, S.locked, fam(), refNames()));
   if (S.mode === "multiref") {
     if (fam() === "custom") {
       // 工作流組：參考圖放進標了 {{ref1}}、{{ref2}}… 的 Load Image，提示詞不用 <image1> 標記
       if (!refs.get().length) return toast("請先加入至少一張參考圖", "err");
     } else {
       if (fam() !== "qwen21") return toast("多圖參考只支援 Qwen 2.1 模型：在參考圖區按「換成 Qwen 2.1 Turbo」", "err");
-      const bad = refs.check(p.prompt);
+      const bad = refs.check(full(p.prompt));
       if (bad) return toast(bad, "err");
     }
   } else if (S.mode !== "txt2img" && !p.init_image) return toast("請先放入一張圖片", "err");
@@ -1115,7 +1131,7 @@ async function generate() {
   let sent = 0;
   try {
     for (const line of lines) {
-      const q = batch ? { ...p, prompt: line, idea: undefined, pe_prompt: undefined } : p;
+      const q = batch ? { ...p, prompt: full(line), idea: undefined, pe_prompt: undefined } : { ...p, prompt: full(p.prompt) };
       const r = await api("/api/generate", { json: { params: q, count } });
       for (const j of r.jobs) S.pending.set(j.job, { seed: j.seed });
       S.lastSeed = r.jobs[0]?.seed;
@@ -1291,10 +1307,23 @@ export async function videoEngine() {
   if (r.engine === r.builtin.id) return { id: r.builtin.id, name: LTX_NAME, builtin: true, info: null, error: "" };
   if (r.engine === "h3") return { id: "h3", name: H3_NAME, builtin: false, h3: true, info: null, error: "" };
   const w = r.workflows.find((x) => x.id === r.engine);
-  return { id: r.engine, name: w?.name || r.engine, builtin: false, info: w?.info || null, pins: w?.pins || [], error: w ? w.error || "" : "找不到這個工作流" };
+  return { id: r.engine, name: w?.name || r.engine, builtin: false, info: w?.info || null, pins: w?.pins || [], media_slots: w?.media_slots || w?.info?.media_slots || [], error: w ? w.error || "" : "找不到這個工作流" };
 }
 
 let vidRec = null, vidEng = null, vidH3 = [];
+let vidMedia = null, vidMediaEpoch = 0;
+function paintVidMedia() {
+  const epoch = ++vidMediaEpoch;
+  F("vidMediaSlots")?.remove();
+  vidMedia = null;
+  if (!vidEng || vidEng.builtin || vidH3Model()) return;
+  const all = store.get("vidMediaSlots", {}), id = vidEng.id;
+  vidMedia = mediaSlotsControl({ engine: vidEng, values: all[id] || {},
+    isCurrent: () => epoch === vidMediaEpoch && vidEng?.id === id && !vidH3Model(),
+    onchange: (values) => { if (epoch !== vidMediaEpoch) return; const saved = store.get("vidMediaSlots", {}); saved[id] = values; store.set("vidMediaSlots", saved); } });
+  vidMedia.element.id = "vidMediaSlots";
+  F("vidParams").after(vidMedia.element);
+}
 /** 「動起來」選的是不是 H3 本機：回傳模型檔名（空字串＝用設定裡的影片模型） */
 const vidH3Model = () => (F("vidModel").value.startsWith("h3:") ? F("vidModel").value.slice(3) : "");
 
@@ -1374,6 +1403,7 @@ function vidLoraParams() {
 // 選 H3：沒有預覽挑種子（LTX 專用）、說明換成 H3 的
 function paintVidModel() {
   paintPins();
+  paintVidMedia();
   paintVidLoras();
   const m = vidH3Model();
   if (!m) return paintVidEngine();
@@ -1391,6 +1421,7 @@ async function openVideo(rec) {
     if (eng.h3) return (await import("./h3.js")).startFrom(rec);
   } catch { /* 讀不到設定：照舊開下面的視窗，它會顯示錯誤 */ }
   vidRec = rec;
+  vidMediaEpoch++; vidMedia = null; F("vidMediaSlots")?.remove();
   F("vidSrc").src = `/img/${rec.id}`;
   openModal("#vidModal");
   F("vidPrompt").focus();
@@ -1427,13 +1458,14 @@ F("vidGo").onclick = async () => {
   const b = F("vidGo");
   b.disabled = true;
   try {
+    const media = vidMedia?.read() || {};
     const r = await api("/api/to_input", { json: { id: vidRec.id } });
     const preview = F("vidPreview").checked && !F("vidPreviewBox").hidden;
     const h3 = vidH3Model(), ov = pinOverrides(), vl = vidLoraParams();
     const res = await api("/api/generate", { json: { count: preview ? 3 : 1, params: {
       mode: "video", init_image: r.name, prompt, seed: -1, video_seconds: +F("vidSecs").value, video_res: F("vidRes").value,
       video_preview: preview, idea: vidRec.idea || "", model: "", ...(h3 ? { video_engine: "h3", h3_model: h3 } : {}), ...(ov ? { wf_overrides: ov } : {}),
-      ...(vl ? { video_loras: vl } : {}) } } });
+      ...(vl ? { video_loras: vl } : {}), ...(Object.keys(media).length ? { media_slots: media } : {}) } } });
     for (const j of res.jobs) S.pending.set(j.job, { seed: j.seed });
     renderStrip();
     closeModal("#vidModal");

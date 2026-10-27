@@ -17,6 +17,7 @@ use crate::h3chain::{self as hc, Store};
 use crate::studio;
 use axum::extract::{Path as UrlPath, State};
 use serde_json::{json, Value};
+use crate::{film_takes as takes, h3_takes as ht};
 use std::path::{Path, PathBuf};
 use tokio_util::sync::CancellationToken;
 
@@ -59,6 +60,7 @@ fn load(app: &Shared, id: &str) -> Result<Value, ApiError> {
 fn with_extra(app: &Shared, mut c: Value) -> Value {
     c["est"] = json!(hc::est_secs(&c));
     c["running"] = json!(app.h3.has(&task_of(&tx(&c["id"]))));
+    c["size_locked"] = json!(hc::size_locked(&c));
     c
 }
 
@@ -67,7 +69,22 @@ pub async fn list(State(app): State<Shared>) -> ApiResult {
 }
 
 pub async fn get(State(app): State<Shared>, UrlPath(id): UrlPath<String>) -> ApiResult {
-    let c = load(&app, &id)?;
+    let _g = LOCK.lock().await;
+    let mut c = load(&app, &id)?;
+    if !app.h3.has(&task_of(&id)) {
+        let before = c.clone();
+        let shape = c["size"].clone();
+        for seg in c["segments"].as_array_mut().into_iter().flatten() {
+            takes::ensure_legacy(seg, hc::RESULT_KEYS);
+            let selected = tx(&seg["selected_take"]);
+            for take in seg["takes"].as_array_mut().into_iter().flatten() {
+                if take["id"] == selected && take["recipe"]["legacy"] == true && take["recipe"]["size"].is_null() && !shape.is_null() {
+                    take["recipe"]["size"] = shape.clone();
+                }
+            }
+        }
+        if c != before { c = store(&app).save(&c).map_err(internal)?; }
+    }
     ok(with_extra(&app, c))
 }
 
@@ -83,8 +100,8 @@ pub async fn save(State(app): State<Shared>, Body(b): Body) -> ApiResult {
         if let Some(old) = store(&app).get(&id) {
             hc::check_edit(&old, &c).map_err(bad)?;
             for (i, s) in c["segments"].as_array_mut().into_iter().flatten().enumerate() {
-                for k in hc::RESULT_KEYS {
-                    s[*k] = old["segments"][i].get(*k).cloned().unwrap_or(Value::Null);
+                for k in hc::RESULT_KEYS.iter().copied().chain(["takes", "selected_take", "pending_take"]) {
+                    s[k] = old["segments"][i].get(k).cloned().unwrap_or(Value::Null);
                 }
                 if s["status"].is_null() {
                     s["status"] = json!("todo");
@@ -93,18 +110,45 @@ pub async fn save(State(app): State<Shared>, Body(b): Body) -> ApiResult {
             for k in ["created", "size", "final"] {
                 c[k] = old[k].clone();
             }
+            let global_changed = ["first", "ref", "refs", "look", "scene", "style", "voice", "sound", "sheet", "aspect", "quality"].iter().any(|k| old[*k] != c[*k]);
+            let changed = if global_changed { Some(0) } else {
+                c["segments"].as_array().into_iter().flatten().enumerate().find_map(|(i,seg)| {
+                    old["segments"].get(i).and_then(|prev| ["secs","text","lines","last","refs","entry","exit","inherit_entry"].iter().any(|k| prev[*k]!=seg[*k]).then_some(i))
+                })
+            };
+            if let Some(i) = changed {
+                let dir = store(&app).seg_dir(&id);
+                for seg in c["segments"].as_array_mut().into_iter().flatten() { ht::preserve(seg,&dir).map_err(bad)?; }
+                hc::reset_from(&mut c,i);
+            }
+
         }
     }
     let saved = store(&app).save(&c).map_err(internal)?;
     ok(with_extra(&app, saved))
 }
 
+/// 選片只切換索引與工作 latent，不會重新呼叫生成服務。
+pub async fn select_take(State(app): State<Shared>, Body(b): Body) -> ApiResult {
+    let id = tx(&b["id"]);
+    let _g = LOCK.lock().await;
+    if app.h3.has(&task_of(&id)) { return Err(bad("拍攝中不能切換版本")); }
+    let mut c = load(&app, &id)?;
+    let i = b["seg"].as_u64().map(|n| n as usize).filter(|i| c["segments"].get(*i).is_some()).ok_or_else(|| bad("沒有這一段"))?;
+    let dir = store(&app).seg_dir(&id);
+    for seg in c["segments"].as_array_mut().into_iter().flatten() { ht::preserve(seg, &dir).map_err(bad)?; }
+    let changed = ht::select(&mut c, &dir, i, &tx(&b["take_id"])).map_err(bad)?;
+    if changed { super::api_cloud::invalidate_output(&app, &hc::remote_dir(&id), &hc::latent_name(i + 1)); }
+    let c = store(&app).save(&c).map_err(internal)?;
+    ok(with_extra(&app,c))
+}
+
 pub async fn delete(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let id = tx(&b["id"]);
+    let _g = LOCK.lock().await;
     if app.h3.has(&task_of(&id)) {
         return Err(bad("拍攝中不能刪：先按「停」"));
     }
-    let _g = LOCK.lock().await;
     store(&app).trash(&id, &app.paths.root.join("待刪除")).map_err(bad)?;
     ok(json!({"ok": true}))
 }
@@ -122,11 +166,14 @@ fn begin(app: &Shared, id: &str) -> Result<CancellationToken, ApiError> {
 
 fn spawn(app: &Shared, id: &str, token: CancellationToken, work: impl std::future::Future<Output = Result<(), String>> + Send + 'static) {
     let (a, id) = (app.clone(), id.to_string());
-    tokio::spawn(async move {
+    crate::diagnostics::spawn(async move {
         let r = work.await;
         a.h3.take(&task_of(&id));
         match r {
-            Ok(()) => emit(&a, &id, None, "done", "完成"),
+            Ok(()) => {
+                let pending = store(&a).get(&id).is_some_and(|c| c["segments"].as_array().is_some_and(|ss| ss.iter().any(|s| s["pending_take"].is_string())));
+                emit(&a, &id, None, if pending { "review" } else { "done" }, if pending { "這一鏡已拍好，請比較版本並採用後繼續" } else { "完成" });
+            },
             Err(_) if token.is_cancelled() => emit(&a, &id, None, "stopped", "已停止"),
             Err(e) => emit(&a, &id, None, "error", super::api_h3::friendly_error(&e)),
         }
@@ -136,15 +183,33 @@ fn spawn(app: &Shared, id: &str, token: CancellationToken, work: impl std::futur
 /// {id, from?}
 pub async fn run(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let id = tx(&b["id"]);
+    let guard = LOCK.lock().await;
+    if app.h3.has(&task_of(&id)) { return Err(bad("這條長片已經在拍了")); }
     let mut c = load(&app, &id)?;
-    let packs = app.agent.cloud.live_packs().ok_or_else(|| bad("雲端還沒開好：到「H3 影片」分頁按「開雲端」，等燈號變綠（長片目前只能用雲端）"))?;
-    if !packs.h3 {
-        return Err(bad("雲端這台沒裝 H3 影片包：關機後到雲端設定勾「H3 影片」再開"));
+    if hc::on_runninghub(&c) {
+        super::api_runninghub::ready(&app).map_err(bad)?;
+        if !crate::refmod::names_of(&c).map_err(bad)?.is_empty() {
+            return Err(bad("RunningHub 上沒有生圖站的 RefMod：拍攝單取消「用 RefMod 鎖臉」，或改用雲端顯卡拍"));
+        }
+    } else {
+        let packs = app.agent.cloud.live_packs().ok_or_else(|| bad("雲端還沒開好：到「H3 影片」分頁按「開雲端」，等燈號變綠（或把這條長片改成用 RunningHub 拍）"))?;
+        if !packs.h3 {
+            return Err(bad("雲端這台沒裝 H3 影片包：關機後到雲端設定勾「H3 影片」再開"));
+        }
     }
     let n = c["segments"].as_array().map_or(0, Vec::len);
     if let Some(from) = b.get("from").and_then(crate::py::int) {
         if from < 0 || from as usize >= n {
             return Err(bad("沒有這一段"));
+        }
+        let dir = store(&app).seg_dir(&id);
+        let shape = c["size"].clone();
+        for seg in c["segments"].as_array_mut().into_iter().flatten() {
+            ht::preserve(seg, &dir).map_err(bad)?;
+            let selected = tx(&seg["selected_take"]);
+            for take in seg["takes"].as_array_mut().into_iter().flatten() {
+                if take["id"] == selected && take["recipe"]["size"].is_null() && !shape.is_null() { take["recipe"]["size"] = shape.clone(); }
+            }
         }
         hc::reset_from(&mut c, from as usize);
     }
@@ -158,15 +223,18 @@ pub async fn run(State(app): State<Shared>, Body(b): Body) -> ApiResult {
             }
         }
     }
-    let token = begin(&app, &id)?;
-    {
-        let _g = LOCK.lock().await;
-        if let Err(e) = store(&app).save(&c) {
-            app.h3.take(&task_of(&id));
-            return Err(internal(e));
-        }
+    if c["segments"].as_array().is_some_and(|ss| ss.iter().any(|s| s["pending_take"].is_string())) {
+        return Err(bad("還有未採用的拍攝版本，請先選片再繼續"));
     }
-    app.agent.cloud.touch();
+    let token = begin(&app, &id)?;
+    if let Err(e) = store(&app).save(&c) {
+        app.h3.take(&task_of(&id));
+        return Err(internal(e));
+    }
+    drop(guard);
+    if !hc::on_runninghub(&c) {
+        app.agent.cloud.touch();
+    }
     emit(&app, &id, None, "running", "開拍");
     let (a, id2, t2) = (app.clone(), id.clone(), token.clone());
     spawn(&app, &id, token, async move { run_chain(&a, &id2, &t2).await });
@@ -188,8 +256,11 @@ pub async fn stop(State(app): State<Shared>, Body(b): Body) -> ApiResult {
 
 pub async fn join_api(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let id = tx(&b["id"]);
-    load(&app, &id)?;
+    let guard = LOCK.lock().await;
+    let c = load(&app, &id)?;
+    if c["segments"].as_array().is_some_and(|ss| ss.iter().any(|s| s["pending_take"].is_string())) { return Err(bad("請先選定所有拍攝版本再合片")); }
     let token = begin(&app, &id)?;
+    drop(guard);
     let (a, id2) = (app.clone(), id.clone());
     spawn(&app, &id, token, async move { join(&a, &id2).await });
     ok(json!({"ok": true}))
@@ -199,6 +270,7 @@ pub async fn join_api(State(app): State<Shared>, Body(b): Body) -> ApiResult {
 pub fn file_ok(name: &str) -> bool {
     let b = name.as_bytes();
     name == "final.mp4"
+        || (name.starts_with("take_") && name.ends_with(".mp4") && ht::safe_file(name))
         || (name.len() == 13 && name.starts_with("seg") && b[3].is_ascii_digit() && b[4].is_ascii_digit() && (name.ends_with("_cut.mp4") || name.ends_with("_end.mp4")))
 }
 
@@ -229,6 +301,7 @@ async fn run_chain(app: &Shared, id: &str, token: &CancellationToken) -> Result<
             return Err(format!("第 {} 段：{e}", i + 1));
         }
         emit(app, id, Some(i), "seg_done", format!("第 {} 段拍好了", i + 1));
+        if store(app).get(id).is_some_and(|c| c["review"] == true) { return Ok(()); }
     }
     join(app, id).await
 }
@@ -241,6 +314,9 @@ fn pick_size(app: &Shared, c: &Value) -> [i64; 2] {
 }
 
 async fn run_seg(app: &Shared, id: &str, i: usize, token: &CancellationToken) -> Result<(), String> {
+    if store(app).get(id).is_some_and(|c| hc::on_runninghub(&c)) {
+        return run_seg_rh(app, id, i, token).await;
+    }
     let n = i + 1;
     update_seg(app, id, i, |s| {
         s["status"] = json!("running");
@@ -260,6 +336,8 @@ async fn run_seg(app: &Shared, id: &str, i: usize, token: &CancellationToken) ->
         status(format!("上傳素材 {f}…"));
         super::api_cloud::upload_input(app, &app.paths.input.join(&f)).await?;
     }
+    let refmods = super::api_refmod::asset_files(app, &crate::refmod::names_of(&c)?)?;
+    super::api_cloud::upload_refmods(app, &refmods, &status).await?;
     let sub = hc::remote_dir(id);
     let dir = store(app).seg_dir(id);
     if i > 0 {
@@ -277,6 +355,10 @@ async fn run_seg(app: &Shared, id: &str, i: usize, token: &CancellationToken) ->
     update_seg(app, id, i, |s| s["seed"] = json!(seed)).await?;
     let c = store(app).get(id).ok_or("長片不見了")?;
     let g = hc::seg_graph(&c, i, seed)?;
+    let recipe = json!({"engine":"h3", "seed":seed, "graph":g, "size":c["size"], "aspect":c["aspect"], "quality":c["quality"],
+        "prompt":hc::seg_prompt(&c,i), "sheet":c["sheet"], "first":c["first"], "refs":if seg["refs"].is_array() { seg["refs"].clone() } else { c["refs"].clone() }, "segment":{"secs":seg["secs"],"text":seg["text"],"lines":seg["lines"],"last":seg["last"],"entry":seg["entry"],"exit":seg["exit"],"inherit_entry":seg["inherit_entry"]}});
+    let source_take = i.checked_sub(1).map(|prev| tx(&c["segments"][prev]["selected_take"]));
+    let review = c["review"] == true;
     let t0 = std::time::Instant::now();
     let (_, entry) = super::api_cloud::run_raw(app, g, token, &status).await?;
     status("下載成品…".into());
@@ -296,16 +378,101 @@ async fn run_seg(app: &Shared, id: &str, i: usize, token: &CancellationToken) ->
     let took = t0.elapsed().as_secs();
     status("用拆幀台檢查跳點…".into());
     let check = check_video(app, format!("H3 長片 {id} 第 {n} 段"), &dir.join(format!("seg{n:02}_end.mp4"))).await;
+    let result = json!({"status":"done", "error":null, "seed":seed, "took":took, "files":files, "handover":texts.join("\n"),
+        "head":parse_num(&texts, r"head context (\d+)").unwrap_or(0), "frames":parse_num(&texts, r"(\d+) frames \|").unwrap_or(0), "check":check});
+    let _g = LOCK.lock().await;
+    let mut c = store(app).get(id).ok_or("長片不見了")?;
+    let seg = &mut c["segments"][i];
+    let new_take = takes::record(seg, recipe, result, source_take.as_deref());
+    ht::preserve(seg, &dir)?;
+    if review {
+        seg["status"] = json!(if seg["selected_take"].is_null() { "review" } else { "done" });
+    } else {
+        ht::select(&mut c, &dir, i, &new_take)?;
+    }
+    store(app).save(&c)?;
+    Ok(())
+}
+
+/// RunningHub 版的一段：一段一個任務。第 2 段起把上一段的影片（end）複製進 input 當「接著拍」，
+/// 拍好的影片開頭 CONTINUE_FRAMES 格是上一段尾巴的重疊，切掉後當 cut／end（沒有 latent、沒有交棒分析）
+async fn run_seg_rh(app: &Shared, id: &str, i: usize, token: &CancellationToken) -> Result<(), String> {
+    let n = i + 1;
     update_seg(app, id, i, |s| {
-        s["status"] = json!("done");
-        s["took"] = json!(took);
-        s["files"] = files;
-        s["handover"] = json!(texts.join("\n"));
-        s["head"] = json!(parse_num(&texts, r"head context (\d+)").unwrap_or(0));
-        s["frames"] = json!(parse_num(&texts, r"(\d+) frames \|").unwrap_or(0));
-        s["check"] = check;
+        s["status"] = json!("running");
+        s["error"] = Value::Null;
     })
     .await?;
+    let status = |m: String| emit(app, id, Some(i), "running", format!("第 {n} 段：{m}"));
+    status("準備…".into());
+    let c = store(app).get(id).ok_or("長片不見了")?;
+    if c["size"].is_null() {
+        let size = pick_size(app, &c);
+        update(app, id, |c| c["size"] = json!(size)).await?;
+    }
+    let dir = store(app).seg_dir(id);
+    let prev = if i > 0 {
+        let name = tx(&c["segments"][i - 1]["files"]["end"]);
+        let src = dir.join(&name);
+        if !ht::safe_file(&name) || !src.is_file() {
+            return Err(format!("第 {i} 段的影片不見了：從第 {i} 段重拍"));
+        }
+        // input 裡的名字每條長片、每段固定：重拍就蓋掉
+        let dst = format!("h3_rhchain_{id}_{i:02}.mp4");
+        std::fs::copy(&src, app.paths.input.join(&dst)).map_err(|e| format!("準備上一段的影片失敗：{e}"))?;
+        Some(dst)
+    } else {
+        None
+    };
+    let seg = c["segments"][i].clone();
+    let seed = seg["seed"].as_i64().unwrap_or_else(super::api_director::random_seed);
+    update_seg(app, id, i, |s| s["seed"] = json!(seed)).await?;
+    let c = store(app).get(id).ok_or("長片不見了")?;
+    let mut p = hc::rh_params(&c, i, prev.as_deref(), seed);
+    crate::runninghub::h3_defaults(&mut p);
+    let (q, input) = (p.clone(), app.paths.input.clone());
+    let (g, _info) = blocking(move || crate::h3::build(&q, &input, 0)).await.map_err(|e| e.0)?;
+    let recipe = json!({"engine":"h3", "where":"runninghub", "seed":seed, "graph":g, "params":p, "size":c["size"], "aspect":c["aspect"], "quality":c["quality"],
+        "prompt":hc::seg_prompt(&c,i), "sheet":c["sheet"], "first":c["first"], "refs":hc::seg_refs(&c, i), "segment":{"secs":seg["secs"],"text":seg["text"],"lines":seg["lines"],"last":seg["last"],"entry":seg["entry"],"exit":seg["exit"],"inherit_entry":seg["inherit_entry"]}});
+    let source_take = i.checked_sub(1).map(|prev| tx(&c["segments"][prev]["selected_take"]));
+    let review = c["review"] == true;
+    let t0 = std::time::Instant::now();
+    let (_, got) = super::api_runninghub::run_files(app, g, None, token, &status).await?;
+    let video = got.into_iter().find(|(sub, base, _)| sub.is_empty() && base.to_ascii_lowercase().ends_with(".mp4")).ok_or("RunningHub 沒有回影片")?;
+    let raw = dir.join(format!("seg{n:02}_rh.mp4"));
+    std::fs::write(&raw, &video.2).map_err(|e| format!("存影片失敗：{e}"))?;
+    status("切掉開頭重疊的那一截…".into());
+    let (end, cut) = (format!("seg{n:02}_end.mp4"), format!("seg{n:02}_cut.mp4"));
+    let head = if i > 0 { crate::h3::CONTINUE_FRAMES } else { 0 };
+    {
+        let (t, raw, end_p, cut_p) = (studio::tools(&app.paths.data), raw.clone(), dir.join(&end), dir.join(&cut));
+        blocking(move || -> Result<(), String> {
+            if head > 0 {
+                studio::trim_head(&t, &raw, &end_p, head)?;
+            } else {
+                std::fs::copy(&raw, &end_p).map_err(|e| e.to_string())?;
+            }
+            std::fs::copy(&end_p, &cut_p).map_err(|e| e.to_string())?;
+            Ok(())
+        })
+        .await?;
+    }
+    let took = t0.elapsed().as_secs();
+    status("用拆幀台檢查跳點…".into());
+    let check = check_video(app, format!("H3 長片 {id} 第 {n} 段"), &dir.join(&end)).await;
+    let result = json!({"status":"done", "error":null, "seed":seed, "took":took, "files":{"cut":cut, "end":end}, "handover":"RunningHub：接著上一支拍",
+        "head":head, "frames":0, "check":check});
+    let _g = LOCK.lock().await;
+    let mut c = store(app).get(id).ok_or("長片不見了")?;
+    let seg = &mut c["segments"][i];
+    let new_take = takes::record(seg, recipe, result, source_take.as_deref());
+    ht::preserve(seg, &dir)?;
+    if review {
+        seg["status"] = json!(if seg["selected_take"].is_null() { "review" } else { "done" });
+    } else {
+        ht::select(&mut c, &dir, i, &new_take)?;
+    }
+    store(app).save(&c)?;
     Ok(())
 }
 
@@ -395,7 +562,10 @@ pub fn join_parts(c: &Value, dir: &Path) -> Result<Vec<PathBuf>, String> {
             if s["status"] != "done" {
                 return Err(format!("第 {} 段還沒拍好", i + 1));
             }
-            let f = dir.join(format!("seg{:02}_{}.mp4", i + 1, if i == last { "end" } else { "cut" }));
+            let tag = if i == last { "end" } else { "cut" };
+            let name = s["files"][tag].as_str().map(str::to_string).unwrap_or_else(|| format!("seg{:02}_{tag}.mp4", i + 1));
+            if !ht::safe_file(&name) { return Err("影片檔名不正確".into()); }
+            let f = dir.join(name);
             if f.is_file() {
                 Ok(f)
             } else {

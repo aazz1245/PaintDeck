@@ -5,6 +5,7 @@ import { api, el, toast, debounce, store, copyText } from "./util.js";
 import { openLightbox } from "./gallery.js";
 import * as gen from "./gen.js";
 import * as drawer from "./assetdrawer.js";
+import * as CL from "./comiclayout.js";
 
 const F = (id) => document.getElementById(id);
 let META = null;     // 版型、景別、對話框位置（後端給，跟組提示詞同一份）
@@ -64,36 +65,41 @@ const EXAMPLES = [
 const blankPanel = () => ({ shot: "a medium shot", what: "", line: "", bubble: "top", sfx: "" });
 const layoutOf = (id) => META?.layouts.find((l) => l.id === id) || META?.layouts[0];
 
-// ---------------------------------------------------------------- 自訂版面（列／格，權重只是比例）
-const blankCustom = () => ({ rows: [{ h: 2, cells: [1, 1] }, { h: 1, cells: [1] }] });
-function customRows() {
-  if (!P.custom || !Array.isArray(P.custom.rows) || !P.custom.rows.length) P.custom = blankCustom();
-  return P.custom.rows;
+// ---------------------------------------------------------------- 自訂版面（排版工作台：comiclayout.js）
+/** 自訂版面一定是工作台的格式：舊作品的列／格轉成樹（閱讀順序不變，寫好的格子不用搬） */
+function freeCustom() {
+  if (!CL.isFree(P.custom)) P.custom = Array.isArray(P.custom?.rows) && P.custom.rows.length ? CL.rowsToTree(P.custom.rows) : CL.blank();
+  return P.custom;
 }
-const customCount = () => (P?.custom?.rows || []).reduce((a, r) => a + (r.cells?.length || 0), 0);
-/** 這一頁有幾格（自訂版面的話算列／格，不靠後端） */
+/** 這一頁有幾格（自訂版面自己算，不靠後端） */
 function layoutCount() {
   if (!P) return 0;
-  if (P.layout === "custom") return customCount();
+  if (P.layout === "custom") return CL.count(freeCustom());
   return layoutOf(P.layout)?.slots.length || 0;
 }
 const n = () => layoutCount();
 
-/** 每一格的中文位置名：預設版型用後端附的清單；自訂版面問後端（跟組提示詞同一份程式） */
+/** 每一格的中文位置名：預設版型用後端附的清單；自訂版面問後端（跟組提示詞同一份程式）。晚回的舊結果不蓋新的 */
+let slotSeq = 0;
 async function refreshSlots() {
   if (!P) return;
+  const seq = ++slotSeq;
   if (P.layout !== "custom") {
     SLOTS = layoutOf(P.layout)?.slots || [];
     return;
   }
+  freeCustom();
   try {
     const r = await api("/api/comic/layout", { json: { project: payload() } });
+    if (seq !== slotSeq) return;
     SLOTS = r.slots.map((s) => s.zh);
     if (F("cmWireInfo")) F("cmWireInfo").textContent = r.desc;
   } catch (e) {
-    SLOTS = ["這一格"];
+    if (seq !== slotSeq) return;
+    SLOTS = [];
     if (F("cmWireInfo")) F("cmWireInfo").textContent = e.message;
   }
+  bench?.refresh();
 }
 
 // ---------------------------------------------------------------- 載入
@@ -110,7 +116,7 @@ function fillStatic() {
   F("cmLayouts").replaceChildren(
     ...META.layouts.map((l) => el("button", { type: "button", class: "cm-lay", "data-id": l.id, title: l.name,
       onclick: () => setLayout(l.id) }, svgThumb(l.id), el("span", {}, l.id))),
-    el("button", { type: "button", class: "cm-lay", "data-id": "custom", title: "自己排：列數、每列幾格、高度和寬度都可以調",
+    el("button", { type: "button", class: "cm-lay", "data-id": "custom", title: "自己排：切格、拉大小、疊小格、斜切、破格，也可以用說的請 AI 排",
       onclick: () => setLayout("custom") }, svgThumb("CUSTOM"), el("span", {}, "自訂")));
   F("cmExample").append(...EXAMPLES.map((x, i) => el("option", { value: String(i) }, x.name)));
   const dl = el("datalist", { id: "cmSfxList" }, ...SFX.map((s) => el("option", { value: s })));
@@ -194,8 +200,9 @@ function ensurePanels() {
 
 async function setLayout(id) {
   if (running || id === P.layout) return;
+  // 第一次切到自訂：從剛剛的版型開始改（格子內容照順序對得上）；以前排過的自訂版面照舊留著
+  if (id === "custom" && !CL.isFree(P.custom) && !P.custom?.rows?.length) P.custom = CL.presetCustom(P.layout) || CL.blank();
   P.layout = id;
-  if (id === "custom" && !P.custom?.rows?.length) P.custom = blankCustom();
   await refreshSlots();
   // 格數變了：留著前面寫好的，不夠的補空白；多出來的先藏起來（換回來還在）
   ensurePanels();
@@ -205,7 +212,8 @@ async function setLayout(id) {
   changed();
 }
 
-// ---------------------------------------------------------------- 自訂版面：示意圖＋列／格控制
+// ---------------------------------------------------------------- 自訂版面：示意圖＋排版工作台＋用說的排
+let bench = null;   // 開著的排版工作台
 function renderWire() {
   const box = F("cmWire");
   const ctl = F("cmWireCtl");
@@ -215,111 +223,59 @@ function renderWire() {
     ctl.replaceChildren();
     return;
   }
-  const rows = customRows();
-  const W = 150, H = 225, PAD = 2;
-  const totalH = rows.reduce((a, r) => a + (r.h || 1), 0) || 1;
-  // 編號照閱讀順序：上面先、同一列右邊先
-  let readNo = 1;
-  const order = rows.map((r, ri) => {
-    const idx = [];
-    for (let k = r.cells.length - 1; k >= 0; k--) idx[k] = readNo++;
-    return idx;
-  });
-  const parts = [];
-  let y = 0;
-  rows.forEach((r, ri) => {
-    const rh = ((r.h || 1) / totalH) * H;
-    const totalW = r.cells.reduce((a, w) => a + (w || 1), 0) || 1;
-    let x = 0;
-    r.cells.forEach((w, ci) => {
-      const cw = ((w || 1) / totalW) * W;
-      parts.push(`<rect data-i="${order[ri][ci] - 1}" x="${(x + PAD).toFixed(1)}" y="${(y + PAD).toFixed(1)}" width="${Math.max(cw - PAD * 2, 5).toFixed(1)}" height="${Math.max(rh - PAD * 2, 5).toFixed(1)}" rx="3"/>`);
-      parts.push(`<text x="${(x + cw / 2).toFixed(1)}" y="${(y + rh / 2).toFixed(1)}">${order[ri][ci]}</text>`);
-      x += cw;
-    });
-    y += rh;
-  });
+  const custom = freeCustom();
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label", "這一頁的版面示意圖");
-  svg.innerHTML = parts.join("");
+  const g = CL.draw(svg, custom);
+  // 點一格跳到那一格的內容；點空白處打開工作台
   svg.addEventListener("click", (e) => {
-    const r = e.target.closest("rect");
-    if (!r) return;
-    F("cmPanels").querySelectorAll(".cm-panel")[+r.dataset.i]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    const id = e.target.closest?.("[data-id]")?.dataset.id;
+    const i = id ? g.cells.findIndex((c) => c.id === id) : -1;
+    if (i < 0) return openBench();
+    F("cmPanels").querySelectorAll(".cm-panel")[i]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   });
-  const btn = (label, title, fn) => el("button", { type: "button", class: "minikey", title, disabled: running, onclick: fn }, label);
-  const rowCtl = rows.map((r, ri) =>
-    el("div", { class: "cm-wire-row" },
-      el("span", { class: "vfd amb" }, String(ri + 1).padStart(2, "0")),
-      el("span", { class: "cm-wire-hint" }, `${r.cells.length} 格`),
-      btn("＋格", "這一列多一格", () => addCell(ri)),
-      btn("－格", "這一列少一格", () => delCell(ri)),
-      btn("高＋", "這一列高一點", () => bumpH(ri, 1)),
-      btn("高－", "這一列矮一點", () => bumpH(ri, -1)),
-      btn("寬度", "換這一列的寬度分配", () => cycleWidth(ri))));
   box.replaceChildren(svg);
   ctl.replaceChildren(
     el("div", { class: "row gap wrap" },
-      btn("＋列", "整頁多一列", addRow),
-      btn("－列", "拿掉最後一列", delRow),
-      el("span", { class: "muted sm" }, `${rows.length} 列・${rows.reduce((a, r) => a + r.cells.length, 0)} 格`)),
-    el("div", { class: "cm-wire-rows" }, ...rowCtl));
+      el("button", { type: "button", class: "akey sm go", disabled: running, onclick: () => openBench() }, "打開排版工作台"),
+      el("span", { class: "muted sm" }, `${g.cells.length}／${CL.MAX_PANELS} 格`)),
+    CL.aiBox(benchHost(), (c) => commitCustom(c, { byOrder: true })));
+  if (running) ctl.querySelectorAll("input, select, button").forEach((x) => (x.disabled = true));
+}
+
+/** 套上新版面。byOrder＝格子內容照順序（換版型、AI 排的）；不然照格子 id 搬（切、併、疊小格時寫好的內容跟著格子走） */
+function commitCustom(next, { byOrder = false } = {}) {
+  if (!P || running) return;
+  if (!byOrder) P.panels = CL.remap(CL.readingIds(freeCustom()), CL.readingIds(next), P.panels, blankPanel);
+  P.custom = next;
+  wireChanged();
 }
 
 function wireChanged() {
+  ensurePanels();
   renderWire();
-  refreshSlots().then(() => {
-    ensurePanels();
-    renderPanels();
-    changed();
-  });
+  renderPanels();
+  changed();
+  refreshSlots().then(() => { renderPanels(); renderWire(); });
 }
-function addRow() {
-  if (customRows().length >= 6) return toast("最多 6 列", "err");
-  P.custom.rows.push({ h: 1, cells: [1] });
-  wireChanged();
+
+function benchHost() {
+  return {
+    get: () => ({ custom: freeCustom(), panels: P.panels }),
+    commit: commitCustom,
+    restore: (s) => { if (!P || running) return; P.custom = s.custom; P.panels = s.panels; wireChanged(); },
+    names: () => SLOTS,
+    ai: async (ask, brain) => (await api("/api/comic/layout/ai", { json: { project: payload(), ask, brain }, timeout: 0 })).custom,
+    locked: () => running,
+    layouts: META?.layouts || [],
+    onClose: () => { bench = null; },
+  };
 }
-function delRow() {
-  const rows = customRows();
-  if (rows.length <= 1) return toast("至少要有一列", "err");
-  rows.pop();
-  wireChanged();
-}
-function addCell(ri) {
-  const rows = customRows();
-  if (rows[ri].cells.length >= 4) return toast("一列最多 4 格", "err");
-  if (rows.reduce((a, r) => a + r.cells.length, 0) >= 8) return toast("一頁最多 8 格", "err");
-  rows[ri].cells.push(1);
-  wireChanged();
-}
-function delCell(ri) {
-  const rows = customRows();
-  if (rows[ri].cells.length <= 1) return toast("一列至少要有一格", "err");
-  rows[ri].cells.pop();
-  wireChanged();
-}
-function bumpH(ri, d) {
-  const rows = customRows();
-  rows[ri].h = Math.min(4, Math.max(1, (rows[ri].h || 1) + d));
-  wireChanged();
-}
-/** 寬度輪流：等分 → 右邊寬 → 左邊寬（三格以上先換最右、再換最左） */
-function cycleWidth(ri) {
-  const rows = customRows();
-  const cells = rows[ri].cells;
-  if (cells.length < 2) return toast("這一列只有一格，沒有寬度可以調", "err");
-  const flat = cells.every((w) => w === 1);
-  if (flat) {
-    cells[cells.length - 1] = 2;
-  } else if (cells[cells.length - 1] === 2) {
-    cells[cells.length - 1] = 1;
-    cells[0] = 2;
-  } else {
-    cells.fill(1);
-  }
-  wireChanged();
+
+function openBench() {
+  if (!P || P.layout !== "custom") return;
+  bench = CL.openWorkbench(benchHost());
 }
 
 function renderPanels() {
@@ -431,6 +387,7 @@ function setRunning(on) {
   for (const id of ["cmTrigger", "cmCast", "cmLight", "cmMood", "cmScript", "cmScriptGo", "cmCount"]) F(id).disabled = on;
   for (const box of ["cmPanels", "cmLayouts"]) F(box).querySelectorAll("input, textarea, select, button").forEach((x) => (x.disabled = on));
   if (P?.layout === "custom") renderWire();
+  bench?.refresh();
   if (!on && F("cmStatus").classList.contains("amb")) status("待機");
   renderRuns();
 }

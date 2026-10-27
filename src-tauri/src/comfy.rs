@@ -6,7 +6,7 @@ use crate::hub::Hub;
 use crate::py::dumps;
 use futures_util::StreamExt;
 use serde_json::{json, Value};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 use tokio_tungstenite::tungstenite::Message;
 
@@ -39,6 +39,7 @@ pub struct Comfy {
     db: Arc<Db>,
     hub: Hub,
     live: Mutex<Live>,
+    diagnostics: OnceLock<Arc<crate::diagnostics::Store>>,
 }
 
 impl Comfy {
@@ -63,6 +64,7 @@ impl Comfy {
             db,
             hub,
             live: Mutex::new(Live::default()),
+            diagnostics: OnceLock::new(),
         })
     }
 
@@ -71,6 +73,8 @@ impl Comfy {
         let me = self.clone();
         tokio::spawn(async move { me.ws_loop().await });
     }
+
+    pub fn attach_diagnostics(&self, store: Arc<crate::diagnostics::Store>) { let _ = self.diagnostics.set(store); }
 
     pub fn live(&self) -> Live {
         self.live.lock().unwrap_or_else(|e| e.into_inner()).clone()
@@ -125,6 +129,8 @@ impl Comfy {
 
     /// POST → (成功與否, 回應)。/prompt 驗證失敗時要看回應裡的 node_errors
     async fn post_raw(&self, path: &str, payload: &Value) -> Result<(bool, Value), ComfyError> {
+        if path == "/prompt" { crate::diagnostics::snapshot("comfy_request", payload); }
+        else if path == "/free" { crate::diagnostics::event("unload_requested", payload.clone()); }
         let r = self
             .http
             .post(format!("{}{path}", self.url))
@@ -135,22 +141,43 @@ impl Comfy {
         let status = r.status();
         let body = r.text().await.map_err(conn_err)?;
         let data: Value = serde_json::from_str(&body).unwrap_or_else(|_| json!({"raw": body}));
+        if matches!(path, "/prompt" | "/free") { crate::diagnostics::event("comfy_http_response", json!({"path":path,"status":status.as_u16(),"data":data})); }
         Ok((status.as_u16() < 400, data))
     }
 
     pub async fn submit(&self, nodes: &Value, extra_pnginfo: &Value) -> Result<String, ComfyError> {
+        if let Some(run) = crate::diagnostics::current() {
+            let result = self.submit_recorded(nodes, extra_pnginfo).await;
+            if let Err(e) = &result { run.fail(&e.0); }
+            return result;
+        }
+        let fallback = self.diagnostics.get().and_then(|store| store.begin("/comfy/submit", extra_pnginfo));
+        if let Some(run) = fallback {
+            let result = crate::diagnostics::scope(run.clone(), self.submit_recorded(nodes, extra_pnginfo)).await;
+            run.http_finished(if result.is_ok() {200} else {500});
+            if let Err(e) = &result { run.fail(&e.0); }
+            result
+        } else { self.submit_recorded(nodes, extra_pnginfo).await }
+    }
+
+    async fn submit_recorded(&self, nodes: &Value, extra_pnginfo: &Value) -> Result<String, ComfyError> {
+        crate::diagnostics::snapshot("workflow_requested", nodes);
+        crate::diagnostics::snapshot("generation_parameters", extra_pnginfo);
         // 預設的文字編碼器／VAE 檔名換成這台 ComfyUI 手上有的同家版本（別人的電腦檔名常常不一樣）
         let mut nodes = nodes.clone();
         fix_loaders(self, &mut nodes).await?;
+        crate::diagnostics::snapshot("workflow_api", &nodes);
         let payload = |n: &Value| json!({"prompt": n, "client_id": CLIENT_ID, "extra_data": {"extra_pnginfo": extra_pnginfo}});
         let (mut ok, mut r) = self.post_raw("/prompt", &payload(&nodes)).await?;
         // 模型檔名只差在斜線方向、子資料夾（別台電腦的工作流）：照 ComfyUI 附的清單換成同一個檔，再送一次
         if !ok && fix_listed_names(&mut nodes, &r) {
+            crate::diagnostics::snapshot("workflow_retry_resolved_names", &nodes);
             (ok, r) = self.post_raw("/prompt", &payload(&nodes)).await?;
         }
         match r.get("prompt_id").and_then(Value::as_str) {
             // 有 prompt_id＝已經排進佇列：node_errors 只是某些輸出節點跑不了（其他的照跑），記下來就好
             Some(id) if ok => {
+                if let Some(run) = crate::diagnostics::current() { run.store.bind_job(&run.id, id); }
                 if crate::py::truthy(r.get("node_errors")) {
                     eprintln!("ComfyUI 收下了，但有些節點跑不了：{}", explain(&json!({"node_errors": r["node_errors"]})));
                 }
@@ -223,6 +250,7 @@ impl Comfy {
             }
             if self.with_live(|l| std::mem::replace(&mut l.online, false)) {
                 self.hub.send(json!({"type": "comfy", "online": false}));
+                if let Some(store) = self.diagnostics.get() { store.disconnected(); }
             }
             tokio::time::sleep(Duration::from_secs(3)).await;
         }
@@ -256,6 +284,9 @@ impl Comfy {
             .get("prompt_id")
             .and_then(Value::as_str)
             .map(str::to_owned);
+        if let Some(store) = self.diagnostics.get() {
+            if let Some(job) = pid.as_deref() { store.job_event(job, t, d); }
+        }
         match t {
             "status" => {
                 let n = d["status"]["exec_info"]["queue_remaining"]
@@ -365,7 +396,7 @@ impl Comfy {
             }
         });
         self.hub
-            .send(json!({"type": "finish", "job": pid, "status": status, "error": error}));
+            .send(json!({"type": "finish", "job": pid, "status": status, "error": error, "diagnostic_id": pid.and_then(|p|self.diagnostics.get().and_then(|s|s.job_id(p)))}));
     }
 
     /// 重新連上時，補收斷線期間完成的任務
@@ -398,6 +429,14 @@ impl Comfy {
         if !has {
             for out in entry["outputs"].as_object().into_iter().flat_map(|o| o.values()) {
                 self.store(Some(pid), out);
+            }
+        }
+        if let Some(store) = self.diagnostics.get() {
+            store.job_event(pid, "history_snapshot", &json!({"status":entry["status"],"outputs":entry["outputs"]}));
+            if entry["status"]["status_str"] == "success" {
+                store.job_event(pid, "execution_success", &entry["status"]);
+            } else if entry["status"]["completed"] == true || entry["status"]["status_str"] == "error" {
+                store.job_event(pid, "execution_error", &entry["status"]);
             }
         }
         let ok = entry["status"]["status_str"].as_str() == Some("success");

@@ -73,6 +73,12 @@ pub async fn state(State(app): State<Shared>) -> ApiResult {
             if let Some(Value::Object(x)) = meta.get(n) {
                 m.extend(x.clone());
             }
+            if !m.get("preview").and_then(Value::as_str).is_some_and(|name| app.paths.previews.join(super::basename(name)).is_file()) {
+                m.remove("preview");
+                if super::api_misc::local_lora_preview(&lora_roots, n).is_some() {
+                    m.insert("local_preview".into(), json!(true));
+                }
+            }
             m.insert("family".into(), json!(lfam[n.as_str()]));
             // 影片（LTX）LoRA：家族是 other，「動起來」的 LoRA 下拉只列這種
             if lfam[n.as_str()] == families::OTHER && families::is_ltx_of(&lora_roots, n) {
@@ -251,6 +257,12 @@ pub async fn set_settings(State(app): State<Shared>, Body(body): Body) -> ApiRes
             return Err(bad("通用模型只能是 auto／35b／9b"));
         }
         s.insert("pe_general".into(), m.clone());
+    }
+    if let Some(m) = body.get("pe_engine") {
+        if !matches!(m.as_str(), Some("general" | "official")) {
+            return Err(bad("改寫模型只能是 general／official"));
+        }
+        s.insert("pe_engine".into(), m.clone());
     }
     if let Some(v) = body.get("pe_partial_layers") {
         s.insert(

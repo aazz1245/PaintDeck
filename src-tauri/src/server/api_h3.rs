@@ -404,13 +404,15 @@ fn mode_of(p: &Value) -> String {
     }
 }
 
-/// {params, count, where: "cloud"|"local"} → {task}；背景跑，進度：{"type":"h3","task","state":"queued|running|done|queued_local|error|stopped","msg", "ids"?/"jobs"?}
+/// {params, count, where: "cloud"|"local"|"runninghub"} → {task}；背景跑，進度：{"type":"h3","task","state":"queued|running|done|queued_local|error|stopped","msg", "ids"?/"jobs"?}
 pub async fn generate(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let Some(Value::Object(mut p)) = b.get("params").cloned() else {
         return Err(bad("送來的資料格式不對：缺少 params"));
     };
     let count = b.get("count").and_then(crate::py::int).unwrap_or(1).clamp(1, MAX_COUNT);
-    let cloud = b["where"] != "local";
+    // RunningHub：整份節點圖丟上去跑（api_runninghub），不用開雲端機器
+    let rhub = b["where"] == "runninghub";
+    let cloud = b["where"] != "local" && !rhub;
     if p.get("seed").and_then(crate::py::int).is_none_or(|s| s < 0) {
         p.insert("seed".into(), json!(super::api_director::random_seed()));
     }
@@ -423,6 +425,7 @@ pub async fn generate(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     if let Some(n) = names.iter().find(|n| !media_name_ok(n)) {
         return Err(bad(format!("素材名稱不對：{n}（素材要從格子放，不能手填路徑）")));
     }
+    let refmods = crate::refmod::names_of(&p).map_err(bad)?;
     // 先組一次：參數錯了直接回錯誤，不用等背景
     {
         let (pp, input) = (p.clone(), app.paths.input.clone());
@@ -433,7 +436,13 @@ pub async fn generate(State(app): State<Shared>, Body(b): Body) -> ApiResult {
             return Err(bad(format!("素材 {n} 不見了：重新放一次")));
         }
     }
-    if cloud {
+    let refmod_files = super::api_refmod::asset_files(&app, &refmods).map_err(bad)?;
+    if rhub {
+        super::api_runninghub::ready(&app).map_err(bad)?;
+        if !refmods.is_empty() {
+            return Err(bad("RunningHub 上沒有生圖站的 RefMod 檔：取消「用 RefMod 鎖臉」再送，或改用雲端顯卡"));
+        }
+    } else if cloud {
         let packs = app.agent.cloud.live_packs().ok_or_else(|| bad("雲端還沒開好：按「開雲端」，等燈號變綠"))?;
         if !packs.h3 {
             return Err(bad("雲端這台沒裝 H3 影片包：關機後到雲端設定勾「H3 影片」再開"));
@@ -449,6 +458,7 @@ pub async fn generate(State(app): State<Shared>, Body(b): Body) -> ApiResult {
         if !ok_nodes {
             return Err(bad("本機的 ComfyUI 沒有 MiniMax H3 節點：更新 ComfyUI，或改用雲端"));
         }
+        super::api_refmod::ensure_local(&app, &refmods).await.map_err(bad)?;
     }
     let task = format!("h3-{:x}", super::api_director::random_seed());
     let token = CancellationToken::new();
@@ -457,13 +467,19 @@ pub async fn generate(State(app): State<Shared>, Body(b): Body) -> ApiResult {
         app.agent.cloud.touch();
     }
     app.h3.put(&task, token.clone());
-    emit(&app, &task, "queued", if cloud { "準備上傳素材…" } else { "送到本機 ComfyUI…" }, json!({"count": count, "mode": mode}));
+    emit(&app, &task, "queued", if cloud || rhub { "準備上傳素材…" } else { "送到本機 ComfyUI…" }, json!({"count": count, "mode": mode}));
     let (a, t) = (app.clone(), task.clone());
-    tokio::spawn(async move {
-        let r = if cloud { run_cloud(&a, &t, &p, count, &names, &token).await } else { run_local(&a, &p, count).await };
+    crate::diagnostics::spawn(async move {
+        let r = if rhub {
+            run_rh(&a, &t, &p, count, &token).await
+        } else if cloud {
+            run_cloud(&a, &t, &p, count, &names, &refmod_files, &token).await
+        } else {
+            run_local(&a, &p, count).await
+        };
         a.h3.take(&t);
         match r {
-            Ok(extra) if cloud => emit(&a, &t, "done", "完成", extra),
+            Ok(extra) if cloud || rhub => emit(&a, &t, "done", "完成", extra),
             // 本機只是排進 ComfyUI 的佇列：進度、停止都在右上角的任務面板（網頁顯示「已排入」、不給停止鍵）
             Ok(extra) => emit(&a, &t, "queued_local", "已排進本機 ComfyUI：進度和停止在右上角的任務面板", extra),
             Err(e) if token.is_cancelled() => emit(&a, &t, "stopped", e, json!({})),
@@ -479,7 +495,7 @@ fn one(p: &Value, i: i64) -> Value {
     pp
 }
 
-async fn run_cloud(app: &Shared, task: &str, p: &Value, count: i64, names: &[String], token: &CancellationToken) -> Result<Value, String> {
+async fn run_cloud(app: &Shared, task: &str, p: &Value, count: i64, names: &[String], refmods: &[(String, std::path::PathBuf)], token: &CancellationToken) -> Result<Value, String> {
     for (k, n) in names.iter().enumerate() {
         if token.is_cancelled() {
             return Err("已停止".into());
@@ -487,6 +503,7 @@ async fn run_cloud(app: &Shared, task: &str, p: &Value, count: i64, names: &[Str
         emit(app, task, "running", format!("上傳素材 {}／{}…", k + 1, names.len()), json!({}));
         super::api_cloud::upload_input(app, &app.paths.input.join(n)).await?;
     }
+    super::api_cloud::upload_refmods(app, refmods, &|m| emit(app, task, "running", m, json!({}))).await?;
     let mut ids: Vec<i64> = vec![];
     for i in 0..count {
         let pp = one(p, i);
@@ -499,6 +516,28 @@ async fn run_cloud(app: &Shared, task: &str, p: &Value, count: i64, names: &[Str
         let (a, t) = (app.clone(), task.to_string());
         let status = move |m: String| emit(&a, &t, "running", format!("{label}{m}"), json!({}));
         let (_, got) = super::api_cloud::run_graph(app, nodes, &params, &info, token, &status).await?;
+        ids.extend(got);
+        emit(app, task, "running", format!("已完成 {}／{count} 支", i + 1), json!({"ids": ids}));
+    }
+    Ok(json!({"ids": ids}))
+}
+
+/// RunningHub：每支各自一個任務（素材每支都重傳，RunningHub 的上傳不保證留著）
+async fn run_rh(app: &Shared, task: &str, p: &Value, count: i64, token: &CancellationToken) -> Result<Value, String> {
+    let mut ids: Vec<i64> = vec![];
+    for i in 0..count {
+        let mut pp = one(p, i);
+        crate::runninghub::h3_defaults(&mut pp);
+        let (q, input) = (pp.clone(), app.paths.input.clone());
+        let (nodes, info) = blocking(move || h3::build(&q, &input, i)).await.map_err(|e| e.0)?;
+        let mut params = pp.clone();
+        params["seed"] = info["seed"].clone();
+        params["prompt_resolved"] = info["prompt"].clone();
+        params["runninghub"] = json!(true);
+        let label = if count > 1 { format!("第 {}／{count} 支：", i + 1) } else { String::new() };
+        let (a, t) = (app.clone(), task.to_string());
+        let status = move |m: String| emit(&a, &t, "running", format!("{label}{m}"), json!({}));
+        let (_, got) = super::api_runninghub::run_graph(app, nodes, &params, &info, token, &status).await?;
         ids.extend(got);
         emit(app, task, "running", format!("已完成 {}／{count} 支", i + 1), json!({"ids": ids}));
     }
@@ -649,7 +688,7 @@ pub async fn write(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let msgs = json!([{"role": "system", "content": system}, {"role": "user", "content": parts}]);
     let (brain, remote) = brain_of(&app, &b)?;
     let rid = format!("h3w-{:x}", super::api_director::random_seed());
-    let (content, _) = app.pe.agent_chat(&rid, &msgs, 6144, 0.6, false, &brain, remote.as_ref()).await.map_err(bad)?;
+    let (content, _) = app.pe.agent_chat(&rid, &msgs, 6144, 0.6, None, &brain, remote.as_ref()).await.map_err(bad)?;
     if mode == "board" {
         if let Some(plan) = board_plan_of(&content) {
             return ok(json!({"plan": plan}));

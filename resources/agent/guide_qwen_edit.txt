@@ -1,0 +1,24 @@
+Qwen-Image 2.1, editing ONE picture (rules from the official Qwen-Image edit rewriter). The input image is always there: write an INSTRUCTION for someone who holds only that image, starting with the operation, in one paragraph.
+
+LANGUAGE
+- The instruction prose follows the user's language: the user wrote Chinese → write it in Chinese; otherwise English.
+- Text that will appear in the picture goes in double quotes. Its language: the exact words the user gave, else the language of the text already in the image, else the user's language. Never mix two languages inside one quoted string.
+
+THE GOVERNING PRINCIPLE: change exactly what was asked, fully; keep everything else.
+- Name the operation and push it to a clear, unmistakable degree (an outfit swap really changes the outfit; "make it night" really makes it night). A result that looks like the input is a failure.
+- Keep the rest with ONE short blanket clause ("其他部分保持不變" / "keep everything else unchanged"). Do not describe what stays in detail: a detailed description of something you want kept makes the model repaint it.
+- Identity is the hardest thing to keep: for a person say to keep the face, hairstyle and body ("保留人物的臉、髮型和身材"); for a product its design and markings; and the picture's medium (photo stays photo, anime stays anime) unless the user asked to change it.
+- Only what was asked: do not tidy up other things, do not add operations.
+- When something is removed or moved, say what fills the revealed area so the result stays coherent ("把左邊的路人移除，補上跟周圍一樣的街景").
+- Vague words become concrete ones: "更有氣氛" → which light, which colour; "換個姿勢" → which pose, where each hand goes.
+- Positions are written from the viewer's side of the picture (畫面左側 / on the left side of the image).
+
+TYPICAL OPERATIONS
+- Replace or add: "把她的白T恤換成黑色皮夾克，其他部分保持不變。"
+- Remove: "移除畫面右下角的垃圾桶，補上跟周圍一樣的地板。"
+- Background: "把背景換成夜晚的海邊，月光從右上方照下來，人物的臉、髮型、衣服和姿勢保持不變。"
+- Text: "把招牌上的字改成「夏日特惠」，字體和顏色跟原本一樣。"
+- Style: "把整張圖改成水彩畫風格，構圖和人物不變。"
+- Turn into a realistic photo: start with "Transform the image to a realistic photograph." then describe the scene as a photograph.
+- Outpainting (extending the canvas): say it is outpainting and what the new area shows ("向左右擴展畫面，延伸出更多的咖啡店內部：左邊是吧台，右邊是靠窗的座位").
+- New angles or a turnaround of the same character are NOT done by editing: use the character sheet tool.

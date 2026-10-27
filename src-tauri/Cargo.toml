@@ -1,6 +1,6 @@
 [package]
 name = "anima-app"
-version = "26.1025.3"
+version = "26.1027.2"
 description = "繪匣 PaintDeck：本機 AI 生圖（ComfyUI 前端）"
 edition = "2021"
 default-run = "anima-app"
@@ -47,9 +47,10 @@ rfd = { version = "0.17.2", default-features = false }
 raw-window-handle = "0.6.2"
 tauri-plugin-updater = { version = "~2.14", default-features = false, features = ["native-tls"] }
 semver = "1"
+# 生圖助手的工具在程式裡直接呼叫自己的 API（Router.oneshot）；axum 本來就用它，同一個版本
+tower = { version = "0.5.3", features = ["util"] }
 
 [dev-dependencies]
-tower = { version = "0.5.3", features = ["util"] }
 tauri = { version = "2", features = ["test"] }
 
 # 開發版的套件也要最佳化：沒最佳化的 LZMA 解壓（ComfyUI 的 7z）、反推的影像處理會慢幾十倍

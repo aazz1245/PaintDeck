@@ -22,7 +22,7 @@ use tokio_util::sync::CancellationToken;
 pub struct Director {
     pub store: Store,
     /// 專案檔「讀 → 改 → 寫」排隊
-    lock: tokio::sync::Mutex<()>,
+    pub(super) lock: tokio::sync::Mutex<()>,
     /// 正在跑背景工作的專案 → 停止用
     runs: Mutex<HashMap<String, CancellationToken>>,
 }
@@ -38,7 +38,7 @@ impl Director {
             runs: Mutex::new(HashMap::new()),
         }
     }
-    fn running(&self, id: &str) -> bool {
+    pub(super) fn running(&self, id: &str) -> bool {
         self.runs.lock().unwrap_or_else(|e| e.into_inner()).contains_key(id)
     }
 }
@@ -362,34 +362,127 @@ pub async fn project_new(State(app): State<Shared>, Body(b): Body) -> ApiResult 
     ok(p)
 }
 
+/// 拍攝單套用為 LTX／自訂工作流專案；不改使用者的全域影片模型設定。
+pub async fn from_sheet(State(app): State<Shared>, Body(b): Body) -> ApiResult {
+    let engine = tx(&b["engine"]);
+    if engine.is_empty() || engine == crate::video_wf::H3 { return Err(bad("請選 LTX 或已匯入的影片工作流")); }
+    let needs_frame = engine_needs_frame(&app, &engine).map_err(bad)?;
+    let prompts: Vec<String> = b["prompts"].as_array().ok_or_else(|| bad("缺少分鏡提示詞"))?.iter().map(|v| {
+        v.as_str().map(str::to_string).or_else(|| v["prompt"].as_str().map(str::to_string)).unwrap_or_default()
+    }).collect();
+    let mut p = crate::shot_spec::director_project(&b["sheet"], &prompts, &engine).map_err(bad)?;
+    if !needs_frame {
+        for seg in p["segments"].as_array_mut().into_iter().flatten() { seg["continue"] = json!(false); }
+    }
+    if p["segments"].as_array().is_none_or(|a| a.is_empty() || a.len() != prompts.len() || prompts.iter().any(|p| p.trim().is_empty())) {
+        return Err(bad("每一鏡都要有對應的影片提示詞"));
+    }
+    // 只複製生成設定；金鑰與全域使用偏好不進專案。
+    if let Some(image) = b.get("image").filter(|v| v.is_object()) { p["settings"]["image"] = image.clone(); }
+    let _g = app.director.lock.lock().await;
+    app.director.store.save_project(&mut p).map_err(internal)?;
+    ok(p)
+}
+
 /// 存網頁改過的專案（標題、劇情、參數、段落的提示詞）。執行中不能存：段落的結果正在被背景工作寫
 pub async fn project_save(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let id = tx(&b["id"]);
+    let _g = app.director.lock.lock().await;
     if app.director.running(&id) {
         return Err(bad("這個專案正在執行，先按「停止」再修改"));
     }
-    let p = update(&app, &id, |p| {
+    let mut p = load(&app, &id)?;
+    {
         for k in ["title", "story", "settings"] {
             if let Some(v) = b.get(k) {
                 p[k] = v.clone();
             }
         }
         if let Some(Value::Array(segs)) = b.get("segments") {
-            p["segments"] = json!(segs);
+            let old = p["segments"].as_array().cloned().unwrap_or_default();
+            if old.len() != segs.len() { return Err(bad("段落數已變更，請重新開啟專案再修改")); }
+            let mut merged = old;
+            for (i, incoming) in segs.iter().enumerate() {
+                for key in ["title", "summary", "characters", "continue", "scene", "frame", "frame_zh", "video", "video_zh", "layout", "frame_lock", "engine", "seconds", "shot_spec", "entry", "exit", "inherit_entry", "media_slots", "wf_overrides", "video_loras", "video_params"] {
+                    if let Some(v) = incoming.get(key) { merged[i][key] = v.clone(); }
+                }
+                // 取消指定第一格是明確的編輯動作，其餘結果欄位一律以伺服器存檔為準。
+                if incoming.get("frame_lock").is_none() { merged[i].as_object_mut().map(|m| m.remove("frame_lock")); }
+            }
+            p["segments"] = json!(merged);
         }
-    })
-    .await?;
+    }
+    app.director.store.save_project(&mut p).map_err(internal)?;
     ok(p)
 }
 
 pub async fn project_delete(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let id = tx(&b["id"]);
+    let _g = app.director.lock.lock().await;
     if app.director.running(&id) {
         return Err(bad("這個專案正在執行，先按「停止」"));
     }
-    let _g = app.director.lock.lock().await;
     app.director.store.trash_project(&id, &app.paths.root.join("待刪除")).map_err(internal)?;
     ok(json!({"ok": true}))
+}
+
+/// POST {id,index,take_id}：只採用已拍好的版本，不提交任何生成任務。
+pub async fn take_select(State(app): State<Shared>, Body(b): Body) -> ApiResult {
+    let id = tx(&b["id"]);
+    let index = b["index"].as_u64().and_then(|i| usize::try_from(i).ok()).ok_or_else(|| bad("鏡頭編號不對"))?;
+    let take_id = tx(&b["take_id"]);
+    let _g = app.director.lock.lock().await;
+    if app.director.running(&id) { return Err(bad("這個專案正在執行，先停止再採用版本")); }
+    let mut p = load(&app, &id)?;
+    freeze_legacy(&app, &mut p).map_err(bad)?;
+    let seg = p["segments"].get(index).ok_or_else(|| bad("沒有這一鏡"))?;
+    let take = seg["takes"].as_array().and_then(|a| a.iter().find(|t| t["id"] == take_id)).ok_or_else(|| bad("找不到這個拍攝版本"))?;
+    let vid = take["result"]["video_id"].as_i64().ok_or_else(|| bad("這個版本沒有影片"))?;
+    let row = app.db.image(vid)?.filter(|r| !truthy(r.get("deleted"))).ok_or_else(|| bad("這個版本的影片已不在圖庫，請選別版或重拍"))?;
+    if !file_of(&app.paths, &row).is_file() { return Err(bad("這個版本的影片檔不見了，請選別版或重拍")); }
+    if index > 0 && truthy(seg.get("continue")) && !take["source_take"].is_null() && take["source_take"] != p["segments"][index - 1]["selected_take"] {
+        return Err(bad("這版接續的是上一鏡的另一個版本；請先採用相容的上一鏡，或重拍這一鏡"));
+    }
+    let changed = crate::film_takes::select(&mut p["segments"][index], &take_id, d::RESULT_KEYS).map_err(bad)?;
+    d::adopt_take_recipe(&mut p["segments"][index], &take_id);
+    if changed { d::invalidate_dependents(&mut p, index); }
+    app.director.store.save_project(&mut p).map_err(internal)?;
+    ok(p)
+}
+
+/// 舊版首末幀曾使用固定 input 檔名；第一次重拍前複製成各版獨立的檔案。
+fn freeze_legacy(app: &Shared, p: &mut Value) -> Step {
+    let project = tx(&p["id"]);
+    for (i, seg) in p["segments"].as_array_mut().into_iter().flatten().enumerate() {
+        crate::film_takes::ensure_legacy(seg, d::RESULT_KEYS);
+        let selected = tx(&seg["selected_take"]);
+        if let Some(takes) = seg["takes"].as_array_mut() {
+            for take in takes {
+                if truthy(take.get("media_frozen")) { continue; }
+                let tid = tx(&take["id"]);
+                if !d::valid_id(&tid) { return Err("拍攝版本編號不對".into()); }
+                for (key, suffix) in [("frame_image", "first"), ("last_frame", "last")] {
+                    let name = tx(&take["result"][key]);
+                    if name.is_empty() { continue; }
+                    if super::basename(&name) != name { return Err("版本的首末幀檔名不對".into()); }
+                    let src = app.paths.input.join(&name);
+                    if src.is_file() {
+                        let frozen = format!("{INPUT_PREFIX}{project}_{i:02}_{tid}_{suffix}.png");
+                        let dest = app.paths.input.join(&frozen);
+                        if !dest.exists() { std::fs::copy(src, dest).map_err(|e| e.to_string())?; }
+                        take["result"][key] = json!(frozen);
+                    }
+                }
+                take["media_frozen"] = json!(true);
+            }
+        }
+        if !selected.is_empty() {
+            // 保留待審狀態；凍結只更新檔案索引。
+            let result = seg["takes"].as_array().and_then(|a| a.iter().find(|t| t["id"] == selected)).map(|t| t["result"].clone());
+            if let Some(result) = result { for key in ["frame_image", "last_frame"] { seg[key] = result[key].clone(); } }
+        }
+    }
+    Ok(())
 }
 
 // ================================================================ 背景工作
@@ -412,11 +505,14 @@ type Step = Result<(), String>;
 
 fn spawn(app: &Shared, id: &str, token: CancellationToken, work: impl std::future::Future<Output = Step> + Send + 'static) {
     let (app, id) = (app.clone(), id.to_string());
-    tokio::spawn(async move {
+    crate::diagnostics::spawn(async move {
         let r = work.await;
         end(&app, &id);
         match r {
-            Ok(()) => emit(&app, &id, None, "end", "完成"),
+            Ok(()) => {
+                let review = app.director.store.project(&id).is_some_and(|p| p["segments"].as_array().is_some_and(|a| a.iter().any(|s| !s["pending_take"].is_null())));
+                emit(&app, &id, None, "end", if review { "這一鏡拍好了，請先審片採用，再繼續下一鏡" } else { "完成" });
+            }
             Err(_) if token.is_cancelled() => emit(&app, &id, None, "end", "已停止"),
             Err(e) => {
                 eprintln!("導演台 {id}：{e}");
@@ -458,16 +554,30 @@ fn image_family(app: &Shared, p: &Value) -> &'static str {
 
 /// 這段要拿哪些角色的設定圖當參考圖（只有 Qwen 2.1 能用多圖參考；最多 3 張）
 fn seg_refs(app: &Shared, p: &Value, chars: &[Value], seg: &Value) -> Vec<(String, String)> {
-    if image_family(app, p) != families::QWEN21 {
+    frame_reference_list(image_family(app, p), p, chars, seg)
+}
+
+fn frame_reference_list(family: &str, p: &Value, chars: &[Value], seg: &Value) -> Vec<(String, String)> {
+    if family != families::QWEN21 {
         return vec![];
     }
     let present: Vec<String> = seg["characters"].as_array().into_iter().flatten().map(tx).collect();
-    chars
+    let sheet = enabled_sheet_refs(p, seg);
+    let mut refs: Vec<(String, String)> = sheet.iter().map(|r| {
+        let who = tx(&r["who"]);
+        let name = p["sheet"]["cast"].as_array().and_then(|a| a.iter().find(|c| c["speaker"] == who)).map(|c| tx(&c["name"]))
+            .filter(|n| !n.is_empty()).unwrap_or_else(|| if who.is_empty() { "場景參考".into() } else { who });
+        (name, tx(&r["file"]))
+    }).collect();
+    let legacy = chars
         .iter()
         .filter(|c| present.contains(&tx(&c["name"])))
-        .filter_map(|c| Some((tx(&c["name"]), c["sheet_in"].as_str().or(c["src_in"].as_str())?.to_string())))
-        .take(3)
-        .collect()
+        .filter_map(|c| Some((tx(&c["name"]), c["sheet_in"].as_str().or(c["src_in"].as_str())?.to_string())));
+    for item in legacy {
+        if !refs.iter().any(|r| r.1 == item.1) { refs.push(item); }
+    }
+    let mut seen = std::collections::HashSet::new();
+    refs.into_iter().filter(|r| seen.insert(r.1.clone())).take(3).collect()
 }
 
 /// 叫通用模型；JSON 讀不出來就再試一次
@@ -524,8 +634,9 @@ async fn write_shot(app: &Shared, id: &str, i: usize, token: &CancellationToken)
 /// {id, what: "plan"（重新分段＋寫全部提示詞）| "shots"（只寫還沒有提示詞的段）| "shot"（重寫第 index 段）, index?}
 pub async fn write(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let id = tx(&b["id"]);
-    let p = load(&app, &id)?;
     migrated(&app).await?;
+    let edit_guard = app.director.lock.lock().await;
+    let p = load(&app, &id)?;
     let what = tx(&b["what"]);
     if what == "plan" && tx(&p["story"]).trim().is_empty() {
         return Err(bad("先寫劇情"));
@@ -539,6 +650,7 @@ pub async fn write(State(app): State<Shared>, Body(b): Body) -> ApiResult {
         return Err(bad("what 只能是 plan／shots／shot"));
     }
     let token = begin(&app, &id)?;
+    drop(edit_guard);
     let (a, id2, t2) = (app.clone(), id.clone(), token.clone());
     spawn(&app, &id, token, async move {
         let (app, id, token) = (a, id2, t2);
@@ -634,7 +746,88 @@ pub(super) fn random_seed() -> i64 {
 const FRAME_W: i64 = 1344;
 const FRAME_H: i64 = 768;
 
-async fn make_frame(app: &Shared, id: &str, i: usize, p: &Value, token: &CancellationToken) -> Result<(String, Value), String> {
+/// 關閉參考圖會保留草稿 items，但它們不應進入任何生成請求。
+fn enabled_sheet_refs(p: &Value, seg: &Value) -> Vec<Value> {
+    if !truthy(p["sheet"]["refs"].get("on")) { return vec![]; }
+    let present = seg["characters"].as_array();
+    p["sheet"]["refs"]["items"].as_array().into_iter().flatten().filter(|r| {
+        if tx(&r["file"]).trim().is_empty() { return false; }
+        let who = tx(&r["who"]);
+        if who.is_empty() { return true; }
+        // 若本鏡有明確出場名單，只取該角色的圖；無對應角色的通用參考仍保留。
+        let character = p["sheet"]["cast"].as_array().and_then(|a| a.iter().find(|c| c["speaker"] == who));
+        character.is_none_or(|c| present.is_none_or(|a| a.contains(&c["name"])))
+    }).cloned().collect()
+}
+
+/// 每鏡明確保存的槽位是一份完整選擇；空物件能確實清除專案其他版本的預設槽位。
+fn shot_slots(p: &Value, seg: &Value) -> Map<String, Value> {
+    seg["media_slots"].as_object().or_else(|| p["settings"]["media_slots"].as_object()).cloned().unwrap_or_default()
+}
+
+/// 先決定真正的首幀，再決定是否需要生圖。接續鏡頭以採用的上游尾幀為唯一來源。
+fn frame_source(p: &Value, index: usize, mapping: &crate::video_wf::Mapping) -> Result<Option<String>, String> {
+    let seg = &p["segments"][index];
+    if index > 0 && truthy(seg.get("continue")) {
+        let previous = tx(&p["segments"][index - 1]["last_frame"]);
+        return if previous.is_empty() { Err("上一鏡還沒有可用的採用尾幀，請先審片採用上一鏡或取消「接上一段」".into()) } else { Ok(Some(previous)) };
+    }
+    let slots = shot_slots(p, seg);
+    let mut named = None;
+    for slot in mapping.media_slots.iter().filter(|s| s.role == "first" && s.kind == "image") {
+        let Some(file) = slots.get(&slot.key).and_then(Value::as_str).filter(|s| !s.trim().is_empty()) else { continue; };
+        crate::video_wf::media_basename(file, "image")?;
+        if named.as_deref().is_some_and(|old| old != file) { return Err("同一鏡的首幀槽指定了不同圖片，請選同一張首幀".into()); }
+        named = Some(file.to_string());
+    }
+    if named.is_some() { return Ok(named); }
+    Ok(seg["frame_lock"].as_str().filter(|s| !s.is_empty()).map(str::to_string))
+}
+
+/// 最終槽位綁定：首幀全部使用已決定且凍結的 frame，其餘槽位才採用本鏡選圖或啟用的參考。
+fn bind_video_slots(p: &Value, seg: &Value, mapping: &crate::video_wf::Mapping, frame: &str) -> Map<String, Value> {
+    let mut slots = shot_slots(p, seg);
+    let mut next_ref = 0usize;
+    let refs = enabled_sheet_refs(p, seg);
+    for slot in &mapping.media_slots {
+        if slot.role == "first" && slot.kind == "image" && !frame.is_empty() {
+            slots.insert(slot.key.clone(), json!(frame));
+            continue;
+        }
+        if slots.get(&slot.key).is_some_and(|v| v.as_str().is_some_and(|s| !s.is_empty())) { continue; }
+        if slot.kind == "image" && matches!(slot.role.as_str(), "character" | "reference") {
+            let r = if let Some(who) = &slot.who { refs.iter().find(|r| tx(&r["who"]) == *who) }
+                else { let r = refs.get(next_ref); next_ref += 1; r };
+            if let Some(file) = r.and_then(|r| r["file"].as_str()) { slots.insert(slot.key.clone(), json!(file)); }
+        }
+    }
+    // 空字串是 UI 的「沿用」，不傳給工作流當成無效檔名。
+    slots.retain(|_, v| !v.as_str().is_some_and(str::is_empty));
+    slots
+}
+
+fn applied_video_slots(workflow: &Value, mapping: &crate::video_wf::Mapping, slots: &Map<String, Value>) -> Value {
+    Value::Object(mapping.media_slots.iter().filter_map(|slot| {
+        let file = slots.get(&slot.key).cloned().unwrap_or_else(|| workflow["graph"][&slot.node]["inputs"][&slot.input].clone());
+        if file.is_null() { None } else { Some((slot.key.clone(), json!({"file":file,"kind":slot.kind,"role":slot.role,"who":slot.who}))) }
+    }).collect())
+}
+
+fn shot_engine(app: &Shared, p: &Value, seg: &Value) -> String {
+    seg["engine"].as_str().filter(|e| !e.is_empty()).or_else(|| p["settings"]["video_engine"].as_str().filter(|e| !e.is_empty())).map(str::to_string)
+        .unwrap_or_else(|| crate::settings::load(&app.paths.settings).get("video_engine").and_then(Value::as_str).unwrap_or(crate::video_wf::BUILTIN).to_string())
+}
+
+fn engine_needs_frame(app: &Shared, engine: &str) -> Result<bool, String> {
+    if engine == crate::video_wf::BUILTIN { return Ok(true); }
+    if engine == crate::video_wf::H3 { return Err("H3 請使用拍攝單的 H3 短片／長片拍攝流程".into()); }
+    let wf = crate::video_wf::load(&crate::video_wf::dir(&app.paths.data), engine)?;
+    let mapping = crate::video_wf::Mapping::from_value(&wf["map"]);
+    let analysis = crate::video_wf::analyze_with(&wf["graph"], &mapping)?;
+    Ok(analysis.image.is_some() || mapping.media_slots.iter().any(|s| s.kind == "image" && s.role == "first"))
+}
+
+async fn make_frame(app: &Shared, id: &str, i: usize, p: &Value, tag: &str, token: &CancellationToken) -> Result<(String, Value), String> {
     let seg = &p["segments"][i];
     let Value::Object(base) = p["settings"]["image"].clone() else {
         return Err("還沒選生第一格用的模型（導演台左邊「第一格的畫法」按「用生成頁目前的設定」）".into());
@@ -689,24 +882,50 @@ async fn make_frame(app: &Shared, id: &str, i: usize, p: &Value, token: &Cancell
     wait_job(app, &pid, token).await?;
     let row = job_image(app, &pid)?;
     let src = file_of(&app.paths, &row);
-    let name = to_input(app, &src, &format!("{INPUT_PREFIX}{id}_{i:02}_first.png"))?;
+    let name = to_input(app, &src, &format!("{INPUT_PREFIX}{id}_{i:02}_{tag}_first.png"))?;
     Ok((name, row["id"].clone()))
 }
 
-async fn make_video(app: &Shared, id: &str, i: usize, p: &Value, frame: &str, token: &CancellationToken) -> Step {
+async fn make_video(app: &Shared, id: &str, i: usize, p: &Value, frame: &str, take_context: (bool, &Value), token: &CancellationToken) -> Step {
+    let (review, previous) = take_context;
     let seg = &p["segments"][i];
     let s = &p["settings"];
-    let q: Map<String, Value> = json!({
+    let engine = shot_engine(app, p, seg);
+    if engine == crate::video_wf::H3 { return Err("H3 請使用拍攝單的 H3 短片／長片拍攝流程".into()); }
+    let workflow = if engine == crate::video_wf::BUILTIN { Value::Null } else {
+        crate::video_wf::load(&crate::video_wf::dir(&app.paths.data), &engine)?
+    };
+    let mut q = s["video_params"].as_object().cloned().unwrap_or_default();
+    if let Some(own) = seg["video_params"].as_object() { q.extend(own.clone()); }
+    q.extend(json!({
         "mode": "video", "prompt": d::strip_refs(&tx(&seg["video"])), "init_image": frame, "seed": random_seed(),
-        "video_seconds": s["seconds"].as_f64().unwrap_or(5.0), "video_res": tx(&s["res"]),
+        "video_engine": engine,
+        "video_seconds": seg["seconds"].as_f64().or_else(|| s["seconds"].as_f64()).unwrap_or(5.0), "video_res": tx(&s["res"]),
         "save_last": true, "director": {"id": id, "seg": i, "kind": "video"},
     })
     .as_object()
     .cloned()
-    .unwrap_or_default();
+    .unwrap_or_default());
+    for key in ["video_loras", "wf_overrides"] {
+        if let Some(v) = seg.get(key).or_else(|| s.get(key)).or_else(|| s["image"].get(key)) { q.insert(key.into(), v.clone()); }
+    }
+    let mapping = crate::video_wf::Mapping::from_value(&workflow["map"]);
+    if frame.is_empty() || (engine != crate::video_wf::BUILTIN && crate::video_wf::analyze_with(&workflow["graph"], &mapping)?.image.is_none()) { q.remove("init_image"); }
+    let slots = bind_video_slots(p, seg, &mapping, frame);
+    let applied_slots = applied_video_slots(&workflow, &mapping, &slots);
+    // 即使本鏡明確清空槽位，也要覆蓋 video_params 裡另一版留下的舊值。
+    q.insert("media_slots".into(), json!(slots));
+    let requested = json!(q.clone());
+    let source_take = if i > 0 && truthy(seg.get("continue")) { p["segments"][i - 1]["selected_take"].as_str().map(str::to_string) } else { None };
     emit(app, id, Some(i), "video", format!("第 {} 段：生影片…（720p 5 秒約 4～5 分鐘）", i + 1));
     let jobs = submit_jobs(app, q, 1).await.map_err(|e| e.1)?;
     let pid = tx(&jobs[0]["job"]);
+    let actual = app.db.job(&pid).map_err(|e| e.to_string())?.map(|j| j["params"].clone()).unwrap_or_else(|| requested.clone());
+    let frame_recipe = seg["frame_job"].as_str().and_then(|j| app.db.job(j).ok().flatten()).map(|j| j["params"].clone()).unwrap_or(Value::Null);
+    let references = json!({"first_frame":frame,"frame_refs":frame_recipe["refs"],"video_slots":applied_slots});
+    let recipe = json!({"engine":engine, "params":actual, "requested_params":requested, "workflow":workflow,
+        "frame_params":frame_recipe, "image_settings":s["image"], "first_frame":frame, "shot_spec":seg["shot_spec"],
+        "entry":seg["entry"], "exit":seg["exit"], "characters":seg["characters"], "references":references});
     update_seg(app, id, i, |s| {
         s.insert("video_job".into(), json!(pid));
     })
@@ -726,16 +945,21 @@ async fn make_video(app: &Shared, id: &str, i: usize, p: &Value, frame: &str, to
         .filter(|f| f.file_name().and_then(|n| n.to_str()).is_some_and(|n| !poster.is_empty() && n.starts_with(&format!("{poster}-last")) && n.ends_with(".png")))
         .min();
     let last_in = match last {
-        Some(f) => Some(to_input(app, &f, &format!("{INPUT_PREFIX}{id}_{i:02}_last.png"))?),
+        Some(f) => Some(to_input(app, &f, &format!("{INPUT_PREFIX}{id}_{i:02}_{poster}_last.png"))?),
         None => None,
     };
     let vfile = format!("{}/{}", tx(&row["subfolder"]), tx(&row["filename"]));
-    update_seg(app, id, i, |s| {
-        s.insert("video_id".into(), row["id"].clone());
-        s.insert("video_file".into(), json!(vfile));
-        s.insert("last_frame".into(), json!(last_in));
-        s.insert("status".into(), json!("done"));
-        s.insert("error".into(), json!(""));
+    update(app, id, |p| {
+        let result = json!({"video_id":row["id"], "video_file":vfile, "last_frame":last_in, "video_job":pid,
+            "frame_image":if frame.is_empty() { Value::Null } else { json!(frame) }, "frame_id":seg["frame_id"], "frame_job":seg["frame_job"], "references":references,"status":"done", "error":""});
+        for key in d::RESULT_KEYS { p["segments"][i][*key] = previous.get(*key).cloned().unwrap_or(Value::Null); }
+        let take = crate::film_takes::record(&mut p["segments"][i], recipe, result, source_take.as_deref());
+        if review {
+            p["segments"][i]["status"] = json!("review");
+        } else {
+            let _ = crate::film_takes::select(&mut p["segments"][i], &take, d::RESULT_KEYS);
+            d::invalidate_dependents(p, i);
+        }
     })
     .await
     .map_err(|e| e.1)?;
@@ -743,9 +967,10 @@ async fn make_video(app: &Shared, id: &str, i: usize, p: &Value, frame: &str, to
 }
 
 /// 跑一段：第一格（鎖定的圖 → 接上一段最後一格 → 畫一張）→ 影片
-async fn run_seg(app: &Shared, id: &str, i: usize, token: &CancellationToken) -> Step {
+async fn run_seg(app: &Shared, id: &str, i: usize, review: bool, token: &CancellationToken) -> Step {
     let p = load(app, id).map_err(|e| e.1)?;
     let seg = p["segments"][i].clone();
+    let previous = crate::film_takes::result_of(&seg, d::RESULT_KEYS);
     if tx(&seg["video"]).trim().is_empty() {
         return Err(format!("第 {} 段還沒有影片提示詞，先按「寫提示詞」", i + 1));
     }
@@ -755,19 +980,25 @@ async fn run_seg(app: &Shared, id: &str, i: usize, token: &CancellationToken) ->
     })
     .await
     .map_err(|e| e.1)?;
-    let exists = |n: &str| !n.is_empty() && app.paths.input.join(super::basename(n)).exists();
-    let locked = tx(&seg["frame_lock"]);
-    let prev_last = if i > 0 { tx(&p["segments"][i - 1]["last_frame"]) } else { String::new() };
-    let frame = if exists(&locked) {
-        locked
-    } else if truthy(seg.get("continue")) && exists(&prev_last) {
-        emit(app, id, Some(i), "frame", format!("第 {} 段：接上一段的最後一格", i + 1));
-        prev_last
+    let engine = shot_engine(app, &p, &seg);
+    if !engine_needs_frame(app, &engine)? {
+        if i > 0 && truthy(seg.get("continue")) { return Err("這個文生影片工作流沒有首幀輸入；請取消「接上一段」，或換成支援首幀的工作流".into()); }
+        update_seg(app, id, i, |s| { s.insert("frame_id".into(), Value::Null); s.insert("frame_image".into(), Value::Null); s.insert("frame_job".into(), Value::Null); }).await.map_err(|e| e.1)?;
+        let p = load(app, id).map_err(|e| e.1)?;
+        return make_video(app, id, i, &p, "", (review, &previous), token).await;
+    }
+    let mapping = if engine == crate::video_wf::BUILTIN { crate::video_wf::Mapping::default() } else {
+        let wf = crate::video_wf::load(&crate::video_wf::dir(&app.paths.data), &engine)?;
+        crate::video_wf::Mapping::from_value(&wf["map"])
+    };
+    let frame = if let Some(file) = frame_source(&p, i, &mapping)? {
+        crate::video_wf::media_basename(&file, "image")?;
+        if !app.paths.input.join(&file).is_file() { return Err("指定或接續的第一格找不到，請重新選圖或先採用上一鏡".into()); }
+        if i > 0 && truthy(seg.get("continue")) { emit(app, id, Some(i), "frame", format!("第 {} 段：接上一段採用版本的最後一格", i + 1)); }
+        update_seg(app, id, i, |s| { s.insert("frame_id".into(), Value::Null); s.insert("frame_job".into(), Value::Null); }).await.map_err(|e| e.1)?;
+        file
     } else {
-        if truthy(seg.get("continue")) && i > 0 {
-            emit(app, id, Some(i), "frame", format!("第 {} 段：上一段還沒有最後一格，改成畫一張第一格", i + 1));
-        }
-        let (name, fid) = make_frame(app, id, i, &p, token).await?;
+        let (name, fid) = make_frame(app, id, i, &p, &d::new_id(), token).await?;
         update_seg(app, id, i, |s| {
             s.insert("frame_id".into(), fid);
         })
@@ -775,13 +1006,15 @@ async fn run_seg(app: &Shared, id: &str, i: usize, token: &CancellationToken) ->
         .map_err(|e| e.1)?;
         name
     };
+    // 指定圖與接續尾幀也凍結成這一次拍攝的獨立檔名，避免日後換圖影響舊版配方。
+    let frame = to_input(app, &app.paths.input.join(&frame), &format!("{INPUT_PREFIX}{id}_{i:02}_{}_input.png", d::new_id()))?;
     update_seg(app, id, i, |s| {
         s.insert("frame_image".into(), json!(frame));
     })
     .await
     .map_err(|e| e.1)?;
     let p = load(app, id).map_err(|e| e.1)?;
-    make_video(app, id, i, &p, &frame, token).await
+    make_video(app, id, i, &p, &frame, (review, &previous), token).await
 }
 
 /// 全部段落的影片照順序接成一支（ComfyUI 的 ConcatenateVideo，不重新編碼），存進圖庫
@@ -791,23 +1024,46 @@ async fn concat(app: &Shared, id: &str, token: &CancellationToken) -> Step {
     if segs.is_empty() {
         return Err("沒有段落".into());
     }
+    for (i, seg) in segs.iter().enumerate() {
+        if !d::ready_for_concat(seg) { return Err(format!("第 {} 鏡尚未採用完成的版本，請先審片", i + 1)); }
+    }
     // 段落影片都沒換、長片也還在圖庫：沿用（ComfyUI 對一模一樣的工作流會走快取、不產生新檔）
     let vids: Vec<Value> = segs.iter().map(|s| s["video_id"].clone()).collect();
+    let trims: Vec<Value> = segs.iter().map(|s| s["trim_out"].clone()).collect();
+    let selected: Vec<Value> = segs.iter().map(|s| s["selected_take"].clone()).collect();
     let fin = &p["final"];
     let old_ok = fin["id"].as_i64().and_then(|f| app.db.image(f).ok().flatten()).is_some_and(|r| file_of(&app.paths, &r).exists());
-    if old_ok && fin["videos"].as_array() == Some(&vids) {
+    if old_ok && fin["videos"].as_array() == Some(&vids) && fin["trims"].as_array() == Some(&trims) && fin["takes"].as_array() == Some(&selected) {
         emit(app, id, None, "concat", "段落沒有變，沿用已經接好的長片".to_string());
         return Ok(());
     }
     let mut files = vec![];
     for (i, s) in segs.iter().enumerate() {
+        if !d::ready_for_concat(s) { return Err(format!("第 {} 鏡尚未採用完成的版本，請先審片", i + 1)); }
         let vid = s["video_id"].as_i64().ok_or_else(|| format!("第 {} 段還沒有影片", i + 1))?;
         let row = app.db.image(vid).map_err(|e| e.to_string())?.ok_or_else(|| format!("第 {} 段的影片不在圖庫了", i + 1))?;
         let src = file_of(&app.paths, &row);
         if !src.exists() {
             return Err(format!("第 {} 段的影片檔不見了", i + 1));
         }
-        files.push(to_input(app, &src, &format!("{INPUT_PREFIX}{id}_{i:02}.mp4"))?);
+        if let Some(out) = s["trim_out"].as_f64() {
+            if !out.is_finite() || out <= 0.0 { return Err(format!("第 {} 鏡的裁切出點不正確", i + 1)); }
+            let name = format!("{INPUT_PREFIX}{id}_{i:02}_v{vid}_trim{}.mp4", (out * 1_000_000.0).round() as u64);
+            let dest = app.paths.input.join(&name);
+            if !dest.is_file() {
+                let tools = crate::studio::tools(&app.paths.data);
+                blocking(move || -> Step {
+                    let part = dest.with_extension("part.mp4");
+                    if let Err(e) = crate::video_review::trim(&tools, &src, &part, out) { let _ = std::fs::remove_file(&part); return Err(e); }
+                    std::fs::rename(part, dest).map_err(|e| e.to_string())
+                }).await?;
+            }
+            files.push(name);
+        } else if !s["trim_out"].is_null() {
+            return Err(format!("第 {} 鏡的裁切出點不正確", i + 1));
+        } else {
+            files.push(to_input(app, &src, &format!("{INPUT_PREFIX}{id}_{i:02}_v{vid}.mp4"))?);
+        }
     }
     emit(app, id, None, "concat", format!("把 {} 段接成一支…", files.len()));
     let mut nodes = Map::new();
@@ -830,7 +1086,7 @@ async fn concat(app: &Shared, id: &str, token: &CancellationToken) -> Step {
     let summary: Vec<String> = segs.iter().enumerate().map(|(i, s)| format!("{}. {}", i + 1, tx(&s["title"]))).collect();
     let params = json!({"mode": "video", "model": "導演台", "prompt": format!("導演台：{title}"), "poster": poster,
                         "director": {"id": id, "kind": "final"}, "idea": summary.join(" / ")});
-    let secs = p["settings"]["seconds"].as_f64().unwrap_or(5.0) * segs.len() as f64;
+    let secs: f64 = segs.iter().map(|s| s["trim_out"].as_f64().or_else(|| s["seconds"].as_f64()).or_else(|| p["settings"]["seconds"].as_f64()).unwrap_or(5.0)).sum();
     let info = json!({"prompt": format!("導演台：{title}（{} 段，約 {secs:.0} 秒）\n{}", segs.len(), summary.join("\n")),
                       "negative": "", "seed": 0, "width": w, "height": h, "mode": "video", "idea": summary.join(" / ")});
     let pid = app
@@ -843,15 +1099,10 @@ async fn concat(app: &Shared, id: &str, token: &CancellationToken) -> Step {
     wait_job(app, &pid, token).await?;
     let row = match job_image(app, &pid) {
         Ok(r) => r,
-        // 舊專案的長片沒記 videos：工作流沒變時 ComfyUI 走快取不出檔，原本那支就是結果
-        Err(_) if old_ok => {
-            emit(app, id, None, "concat", "段落沒有變，沿用已經接好的長片".to_string());
-            return Ok(());
-        }
         Err(e) => return Err(e),
     };
     update(app, id, |p| {
-        p["final"] = json!({"id": row["id"], "at": now(), "segments": files.len(), "videos": vids});
+        p["final"] = json!({"id": row["id"], "at": now(), "segments": files.len(), "videos": vids, "trims":trims, "takes":selected});
     })
     .await
     .map_err(|e| e.1)?;
@@ -861,19 +1112,23 @@ async fn concat(app: &Shared, id: &str, token: &CancellationToken) -> Step {
 /// {id, from?: 從第幾段開始（預設 0）, only?: 只跑這一段, concat?: 跑完要不要接成長片（預設要）, skip_done?: 已經有影片的段跳過（預設要）}
 pub async fn run(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let id = tx(&b["id"]);
-    let p = load(&app, &id)?;
     migrated(&app).await?;
+    let edit_guard = app.director.lock.lock().await;
+    let mut p = load(&app, &id)?;
+    if app.director.running(&id) { return Err(bad("這個專案已經在執行了")); }
+    freeze_legacy(&app, &mut p).map_err(bad)?;
     let n = p["segments"].as_array().map(|a| a.len()).unwrap_or(0);
     if n == 0 {
         return Err(bad("還沒有段落：先按「AI 分段」"));
-    }
-    if !p["settings"]["image"].is_object() {
-        return Err(bad("還沒選生第一格用的模型：在「第一格的畫法」按「用生成頁目前的設定」"));
     }
     if !app.comfy.live().online {
         return Err(bad("ComfyUI 沒有連線"));
     }
     let only = b.get("only").and_then(crate::py::int).map(|i| i as usize);
+    let review = b.get("review").and_then(Value::as_bool).or_else(|| p["settings"]["review"].as_bool()).unwrap_or(false);
+    if only.is_none() && p["segments"].as_array().is_some_and(|a| a.iter().any(|s| !s["pending_take"].is_null())) {
+        return Err(bad("有鏡頭還沒審片，請先採用其中一版再繼續"));
+    }
     let from = b.get("from").and_then(crate::py::int).unwrap_or(0).max(0) as usize;
     let do_concat = only.is_none() && b.get("concat").map(|v| truthy(Some(v))).unwrap_or(true);
     let skip_done = b.get("skip_done").map(|v| truthy(Some(v))).unwrap_or(true);
@@ -883,6 +1138,8 @@ pub async fn run(State(app): State<Shared>, Body(b): Body) -> ApiResult {
         None => (from.min(n)..n).collect(),
     };
     let token = begin(&app, &id)?;
+    if let Err(e) = app.director.store.save_project(&mut p) { end(&app, &id); return Err(internal(e)); }
+    drop(edit_guard);
     let (a, id2, t2) = (app.clone(), id.clone(), token.clone());
     spawn(&app, &id, token, async move {
         let (app, id, token) = (a, id2, t2);
@@ -895,9 +1152,14 @@ pub async fn run(State(app): State<Shared>, Body(b): Body) -> ApiResult {
             if skip_done && only.is_none() && seg["video_id"].as_i64().is_some() && tx(&seg["status"]) == "done" {
                 continue;
             }
-            if let Err(e) = run_seg(&app, &id, i, &token).await {
+            if i > 0 && truthy(seg.get("continue")) && !d::ready_for_concat(&p["segments"][i - 1]) {
+                return Err(format!("第 {} 鏡尚未採用，不能接著拍第 {} 鏡", i, i + 1));
+            }
+            let previous = crate::film_takes::result_of(seg, d::RESULT_KEYS);
+            if let Err(e) = run_seg(&app, &id, i, review, &token).await {
                 let msg = if token.is_cancelled() { "已停止".to_string() } else { e.clone() };
                 let _ = update_seg(&app, &id, i, |s| {
+                    for key in d::RESULT_KEYS { s.insert((*key).into(), previous.get(*key).cloned().unwrap_or(Value::Null)); }
                     s.insert("status".into(), json!(if token.is_cancelled() { "stopped" } else { "error" }));
                     s.insert("error".into(), json!(msg));
                 })
@@ -905,6 +1167,7 @@ pub async fn run(State(app): State<Shared>, Body(b): Body) -> ApiResult {
                 return Err(format!("第 {} 段：{e}", i + 1));
             }
             emit(&app, &id, Some(i), "seg", format!("第 {} 段完成", i + 1));
+            if review { return Ok(()); }
         }
         if do_concat {
             concat(&app, &id, &token).await?;
@@ -917,9 +1180,81 @@ pub async fn run(State(app): State<Shared>, Body(b): Body) -> ApiResult {
 /// 只把現有的影片接起來
 pub async fn concat_api(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let id = tx(&b["id"]);
+    let edit_guard = app.director.lock.lock().await;
     load(&app, &id)?;
     let token = begin(&app, &id)?;
+    drop(edit_guard);
     let (a, id2, t2) = (app.clone(), id.clone(), token.clone());
     spawn(&app, &id, token, async move { concat(&a, &id2, &t2).await });
     ok(json!({"ok": true}))
+}
+
+#[cfg(test)]
+mod take_integration_tests {
+    use super::*;
+
+    fn mapping() -> crate::video_wf::Mapping {
+        crate::video_wf::Mapping::from_value(&json!({"media_slots":[
+            {"key":"first","label":"首幀","kind":"image","role":"first","node":"1","input":"image"},
+            {"key":"actor","label":"角色","kind":"image","role":"character","node":"2","input":"image","who":"S1"}
+        ]}))
+    }
+
+    fn project() -> Value {
+        json!({"settings":{"characters":[]},"sheet":{"cast":[{"speaker":"S1","name":"Ada"},{"speaker":"S2","name":"Ben"}],
+            "refs":{"on":true,"items":[{"who":"S1","file":"ada.png"},{"who":"S2","file":"ben.png"}]}},
+            "segments":[{"characters":["Ada"],"frame_lock":"locked.png","media_slots":{"first":"chosen.png"}},
+                {"characters":["Ada"],"continue":true,"frame_lock":"wrong_lock.png","media_slots":{"first":"wrong_slot.png"}}]})
+    }
+
+    #[test]
+    fn explicit_first_slot_skips_an_unnecessary_generated_frame() {
+        let p = project();
+        assert_eq!(frame_source(&p, 0, &mapping()).unwrap(), Some("chosen.png".into()));
+        let bound = bind_video_slots(&p, &p["segments"][0], &mapping(), "frozen_chosen.png");
+        assert_eq!(bound["first"], "frozen_chosen.png");
+        let applied = applied_video_slots(&Value::Null, &mapping(), &bound);
+        assert_eq!(applied["first"]["file"], "frozen_chosen.png");
+    }
+
+    #[test]
+    fn continuation_first_always_matches_the_selected_predecessor() {
+        let mut p = project();
+        p["segments"][0]["last_frame"] = json!("adopted_tail.png");
+        assert_eq!(frame_source(&p, 1, &mapping()).unwrap(), Some("adopted_tail.png".into()));
+        let bound = bind_video_slots(&p, &p["segments"][1], &mapping(), "frozen_adopted_tail.png");
+        assert_eq!(bound["first"], "frozen_adopted_tail.png", "槽位不得再換回另選的首幀");
+        p["segments"][0]["last_frame"] = Value::Null;
+        assert!(frame_source(&p, 1, &mapping()).is_err(), "尾幀遺失不能偷用指定圖破壞接續");
+    }
+
+    #[test]
+    fn disabled_sheet_references_do_not_leak_into_the_video_or_qwen_frame() {
+        let mut p = project();
+        p["sheet"]["refs"]["on"] = json!(false);
+        assert!(enabled_sheet_refs(&p, &p["segments"][0]).is_empty());
+        let bound = bind_video_slots(&p, &p["segments"][0], &mapping(), "first.png");
+        assert!(!bound.contains_key("actor"));
+        assert!(frame_reference_list(families::QWEN21, &p, &[], &p["segments"][0]).is_empty());
+    }
+
+    #[test]
+    fn sheet_character_references_reach_qwen_without_legacy_character_ids() {
+        let p = project();
+        let refs = frame_reference_list(families::QWEN21, &p, &[], &p["segments"][0]);
+        assert_eq!(refs, vec![("Ada".into(), "ada.png".into())]);
+        assert!(frame_reference_list(families::ANIMA, &p, &[], &p["segments"][0]).is_empty());
+        let bound = bind_video_slots(&p, &p["segments"][0], &mapping(), "first.png");
+        assert_eq!(bound["actor"], "ada.png");
+    }
+
+    #[test]
+    fn empty_per_shot_slots_clear_other_version_project_defaults() {
+        let mut p = project();
+        p["settings"]["media_slots"] = json!({"first":"old_version.png"});
+        p["segments"][0]["media_slots"] = json!({});
+        p["segments"][0]["frame_lock"] = Value::Null;
+        assert!(shot_slots(&p, &p["segments"][0]).is_empty());
+        assert_eq!(frame_source(&p, 0, &mapping()).unwrap(), None);
+    }
 }

@@ -1,1 +1,18 @@
-MOSS-Image. Write ONE paragraph of natural English (not tags; weights like (word:1.2) do nothing), 80 to 200 words: subject and look first (for people, say they are adults and give the age, e.g. a woman in her mid twenties), then pose and expression, outfit, setting, lighting and colors, camera angle and shot size, then style or medium (realistic photo, anime illustration, watercolor...). Any text that should appear in the picture goes in quotes, written exactly as it should look (Traditional Chinese and English both render well). Be concrete and visual.
+MOSS-Image (official MOSS-Image prompt enhancer and user guide, plus what worked in tests here). Write cohesive natural English prose (no tag list, weights like (word:1.2) do nothing), usually one paragraph of 120 to 300 words. MOSS reads long prompts well and draws text in English and Chinese very well.
+
+WHAT TO DESCRIBE, IN THIS ORDER
+1. One opening sentence: medium and style plus the subject ("A realistic photograph of a young woman in her early twenties …", "An anime illustration of …", "A flat vector poster of …"). For people always give an adult age.
+2. The face, feature by feature when a person is the subject: face shape, eyes (shape, colour, lashes), eyebrows, nose, lips, jawline. Then skin and makeup (natural, light makeup; heavy eye makeup makes people look years older). Then hair: texture, colour, length, bangs and side locks.
+3. Body and clothing: build, then every garment with its material and colour (black satin, white lace, ribbed cotton knit).
+4. Pose and action, limb by limb from big to small: arms, which hand holds what and where, torso, head, gaze. Say the visible result of a direction ("her face turned toward her left shoulder so her profile shows"), not just the verb.
+5. Setting in layers: foreground, middle ground, background, each thing with its place in the frame.
+6. Light: direction first, then what it does (rim light on the hair, shadows stretching to the right).
+7. Camera: point of view, lens and framing ("85mm portrait lens, three-quarter view from slightly above, waist-up").
+8. Style last: for photos "high-end beauty photography" or "candid smartphone photo"; for illustrations the medium and line style.
+
+RULES
+- Concrete physical states, not mood adjectives or metaphors ("thumb as thick as …", "heels lifted off the floor", not "sultry", "chaotic").
+- Never mention a thing in order to forbid it: the model has no "no". Put unwanted things in the negative prompt instead (MOSS runs at CFG 3, so the negative works; official suggestion: worst quality, bad anatomy, watermark, jpeg artifact).
+- Visible text: write it in double quotes exactly as it should look, in its own language, and say where it is, its size, colour and style. Use real line breaks only when the user wants specific line breaks.
+- Two people: fix each person's place in the frame and which hand of whom touches what. For sex scenes say exactly where the man is ("stands at the left edge; only his hip, thigh and one hand are visible") and that there is a single penis, where it grows from and where it points; otherwise MOSS draws floating or doubled parts.
+- Several panels (a comic page or storyboard): say the layout first ("a manga page with four panels: a wide panel across the top, two side by side in the middle, one tall at the bottom"), then each panel by its position, with its dialogue in quotes and the bubble's place.

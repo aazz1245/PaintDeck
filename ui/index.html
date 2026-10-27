@@ -24,6 +24,8 @@
       <div class="vents" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <div class="prog" id="topProg" role="progressbar" aria-label="目前這張的進度"><div></div></div>
       <span class="grow" data-tauri-drag-region></span>
+      <button class="assist-btn" id="assistBtn" type="button" title="生圖助手：開一個獨立視窗，用中文說想要什麼，它自己寫提示詞、畫、看圖、改到滿意"><span class="spark" aria-hidden="true">✦</span>助手</button>
+      <span class="grow" data-tauri-drag-region></span>
       <button class="chip-status" id="peChip" type="button" hidden></button>
       <div class="rocker-w"><span class="lbl">外觀</span>
         <div class="rocker" role="radiogroup" aria-label="外觀" id="rocker"><span class="cap"></span>
@@ -52,7 +54,7 @@
       <button class="pkey" data-page="civitai" data-ic="dish" type="button"><span class="n">05</span><span class="led"></span>下載</button>
       <button class="pkey" data-page="director" data-ic="clap" type="button" title="導演台：長劇情分段 → 每段第一格＋影片 → 接成長片"><span class="n">06</span><span class="led"></span>導演</button>
       <button class="pkey" data-page="comic" data-ic="comic" type="button" title="漫畫台：選版型、每格寫內容和台詞 → 一張圖畫出整頁分格漫畫，自動填字和狀聲詞"><span class="n">07</span><span class="led"></span>漫畫</button>
-      <button class="pkey" data-page="agent" data-ic="bubble" type="button" title="生圖助手：用中文說想要什麼，它自己寫提示詞、畫、看圖、改到滿意"><span class="n">08</span><span class="led"></span>助手</button>
+      <button class="pkey" data-page="agent" data-ic="bubble" type="button" hidden title="生圖助手：用中文說想要什麼，它自己寫提示詞、畫、看圖、改到滿意"><span class="n">08</span><span class="led"></span>助手</button>
       <button class="pkey" data-page="train" data-ic="punch" type="button" disabled title="訓練之後的版本才有"><span class="n">09</span><span class="led"></span>訓練</button>
       <span class="sp"></span>
       <button class="pkey" id="queueInfo" data-ic="tape" type="button" title="任務面板（Q）" aria-haspopup="dialog"><span class="n">10</span><span class="led"></span><span class="cnt" id="qcnt">0</span>任務</button>
@@ -62,7 +64,8 @@
     <div class="pages">
 <!-- ======================= 生成 ======================= -->
 <main id="page-gen" class="page on">
-  <aside class="panel ctrl screws" id="genPanel" aria-label="生成參數">
+  <!-- 停靠式版面（dock.js）：每個 data-dock 是一塊面板，可以搬到左／右／下區；main.js 的 mountDock 組起來 -->
+  <div class="dock-grp" data-dock="source">
     <div class="piano" id="modeSeg" role="tablist" aria-label="模式">
       <button data-mode="txt2img" class="on" data-ic="t2i" type="button">文生圖</button>
       <button data-mode="img2img" data-ic="i2i" type="button">圖生圖</button>
@@ -73,7 +76,6 @@
       <button data-mode="sheet" data-ic="multi" type="button" title="角色四視圖（設定稿）一次改：換衣服、改顏色，每個視角同步改（Qwen 2.1，不用切模型）">四視圖</button>
     </div>
 
-    <div class="ctl-scroll">
     <section class="group" id="modelBox">
       <span class="lbl" data-silk="ENGINE">模型</span>
       <div class="cart-slot"><div class="cart-well" id="modelWell"><span class="cart-reels" aria-hidden="true"><i></i><i></i></span><select id="model" aria-label="模型"></select></div></div>
@@ -128,7 +130,9 @@
         </select>
       </div>
     </section>
+  </div>
 
+  <div class="dock-grp" data-dock="prompt">
     <section class="group" id="promptBox">
       <div class="lbl" data-silk="PROMPT"><label for="prompt">提示詞</label>
         <span class="tools">
@@ -139,6 +143,7 @@
         </span>
       </div>
       <div id="genAssets" class="adr-slot"></div>
+      <div id="lkRow" class="row wrap lk-row" hidden></div>
       <div class="scr prompt-scr">
         <div class="ac-wrap hl-wrap"><div class="hl" id="promptHl" aria-hidden="true" translate="no"></div><textarea id="prompt" rows="6" spellcheck="false" placeholder="masterpiece, best quality, safe, 1girl, ...（可輸入中文找 tag；{紅|藍} 每張隨機挑一個）"></textarea><div class="ac" id="acPrompt"></div></div>
         <div class="foot"><span id="promptStats"></span><span class="hint-keys" title="游標放在某個 tag 上（或選取文字）再按">CTRL+↑↓ 權重</span></div>
@@ -207,13 +212,17 @@
         <div class="ac-wrap"><textarea id="negative" rows="3" spellcheck="false"></textarea><div class="ac" id="acNeg"></div></div>
       </details>
     </section>
+  </div>
 
+  <div class="dock-grp" data-dock="lora">
     <section class="group">
       <div class="lbl" data-silk="CART">LoRA 卡匣<button class="act" id="addLora" type="button">＋插入</button></div>
       <div id="loraStack" class="lora-stack"><div class="muted sm">沒有使用 LoRA</div></div>
       <div class="trig-chips" id="trigChips" hidden><span class="sub">觸發詞（點一下加入／移除提示詞；亮的＝已經在提示詞裡）</span><div class="chips" id="trigList"></div></div>
     </section>
+  </div>
 
+  <div class="dock-grp" data-dock="params">
     <section class="group" id="sizeBox">
       <div class="lbl" data-silk="FRAME">尺寸 <span class="vfd g sm" id="sizeInfo"></span></div>
       <div class="chips" id="sizeChips"></div>
@@ -291,7 +300,9 @@
       <div class="muted sm">要改哪件衣服要點名，例如「紅色西裝外套」；只寫「上衣」常常整張沒改。</div>
       <div class="muted sm">照「Qwen21 四視圖編輯」工作流：你寫的要求外面會自動包一段「保持人物、姿勢、四視圖排版不變，各視角同步修改」。不用切模型，自動用 Qwen 2.1 官方 Turbo；生成頁選 Qwen 時改用那個模型和它的 LoRA。輸出約 160 萬像素、比例跟原圖一樣。</div>
     </section>
+  </div>
 
+  <div class="dock-grp" data-dock="extra">
     <section class="group" id="addons">
       <span class="lbl" data-silk="EXTRA">附加</span>
       <details class="fold sw" id="hiresBox">
@@ -326,7 +337,9 @@
         <button class="akey sm" id="sketchOpen" data-ic="inpaint" type="button" title="自己畫草圖：Anima 當構圖控制，其他模型當圖生圖底圖">塗鴉畫布</button>
       </div>
     </section>
+  </div>
 
+  <div class="dock-grp" data-dock="sampler">
     <section class="group" id="advBox">
       <span class="lbl" data-silk="SAMPLER">取樣</span>
       <div class="knobs">
@@ -359,14 +372,7 @@
         <button class="akey sm" id="presetLib" type="button" data-ic="tape" title="打開提示詞庫：整套設定、片段、資料夾、標籤都在這裡">提示詞庫</button>
       </div>
     </section>
-    </div>
-
-    <div class="genrow">
-      <button class="bigkey" id="genBtn" type="button"><span class="led"></span>生成<small>CTRL + ENTER</small></button>
-      <div class="stepper"><span class="lbl">尺寸</span><span class="vfd g" id="sizeVfd">—</span><span class="lbl" id="sizeAspect"></span>
-        <div class="row"><button class="minikey txt" id="stopBtn" type="button" title="停止目前這張">停</button><button class="minikey red txt" id="clearBtn" type="button" title="清空佇列並停止">全停</button></div></div>
-    </div>
-  </aside>
+  </div>
 
   <section class="panel monitor stage screws" aria-label="畫面">
     <div class="readout" aria-live="polite"><span id="osdl">● READY</span><span class="sep"></span><span id="osdm">—</span><span class="grow"></span><span class="a" id="osdr"></span></div>
@@ -422,7 +428,13 @@
     </div>
   </section>
 
-  <aside class="panel mag screws" aria-label="最近畫的圖">
+  <div class="genrow" id="genRow">
+    <button class="bigkey" id="genBtn" type="button"><span class="led"></span>生成<small>CTRL + ENTER</small></button>
+    <div class="stepper"><span class="lbl">尺寸</span><span class="vfd g" id="sizeVfd">—</span><span class="lbl" id="sizeAspect"></span>
+      <div class="row"><button class="minikey txt" id="stopBtn" type="button" title="停止目前這張">停</button><button class="minikey red txt" id="clearBtn" type="button" title="清空佇列並停止">全停</button></div></div>
+  </div>
+
+  <aside class="mag" data-dock="recent" aria-label="最近畫的圖">
     <div class="cassette" id="cassette"><div class="win2"><span class="reel" id="reelL"></span><span class="reel" id="reelR"></span></div>
       <div class="lab">TASK・C-60</div><div class="pct"><span class="vfd" id="pct">--%</span></div></div>
     <span class="lbl center-lbl">幻燈片匣</span>
@@ -519,7 +531,7 @@
           <select id="asRole" aria-label="新圖片的用途"></select>
           <button class="akey sm" id="asImgUp" type="button">＋ 從電腦</button>
           <button class="akey sm" id="asImgGal" type="button">＋ 從圖庫</button>
-          <button class="akey sm go" id="asSheetGo" type="button" title="角色設定圖工坊：照這個角色的原圖畫轉身圖、臉部特寫，存回這個角色">做設定圖</button>
+          <button class="akey sm go" id="asSheetGo" type="button" title="角色卡工坊：照這個角色的原圖畫轉身圖、臉部特寫、正面特寫，填設定表，存回這個角色（已有的不用重做）">角色卡工坊</button>
         </div>
 
         <div class="grid2">
@@ -530,6 +542,8 @@
         <div class="as-unver" id="asUnver" hidden></div>
 
         <div id="asCharBox" hidden>
+          <span class="sub">角色卡（多視圖＋正面特寫＋鎖定的設定表＋RefMod；缺的按上面「角色卡工坊」補做）</span>
+          <div class="as-charcard" id="asCard"></div>
           <div class="grid2">
             <label><span class="sub">聲音</span><input type="text" id="asVoice" placeholder="例：slightly low, soft young female voice"></label>
             <label><span class="sub">說話語言</span><select id="asLang"><option value="">不指定</option><option value="ja">日文</option><option value="zh">中文</option><option value="en">英文</option><option value="ko">韓文</option></select></label>
@@ -558,11 +572,17 @@
   <section class="panel lib screws">
   <div class="toolbar">
     <div class="scr search-scr"><span data-ic="search" class="sic"></span><input type="search" id="loraQ" placeholder="搜尋已安裝的 LoRA…" aria-label="搜尋 LoRA"></div>
+    <select id="loraFamily" aria-label="模型家族"><option value="">全部模型</option></select>
+    <select id="loraCategory" aria-label="用途分類"><option value="">全部分類</option></select>
+    <select id="loraTag" aria-label="標籤"><option value="">常用標籤</option></select>
+    <label class="check inline"><input type="checkbox" id="loraFav"> 只看收藏</label>
     <span class="vfd g" id="loraTotal"></span>
     <span class="grow"></span>
+    <button class="akey sm" id="loraLearn" type="button" data-ic="chip">讓助手認識 LoRA</button>
     <button class="akey sm" id="loraRefresh" type="button" data-ic="loop">重新整理清單</button>
   </div>
-  <div class="lib-scroll"><div class="cards" id="loraGrid"></div></div>
+  <div class="muted sm pad lora-library-note">用途會依「讓助手認識 LoRA」的結果、Civitai 標籤與檔名自動分類；卡片可自行改分類與標籤。搜尋框也能找所有標籤；大量清單會分批顯示。</div>
+  <div class="lib-scroll"><div class="cards" id="loraGrid"></div><div class="center"><button class="akey" id="loraMore" type="button" hidden>載入更多</button></div></div>
   </section>
 </main>
 
@@ -570,14 +590,14 @@
 <main id="page-civitai" class="page">
   <section class="panel lib screws">
   <div class="toolbar">
-    <select id="cvBase" title="LoRA 要給哪個模型用"><option value="Anima">Anima（動漫）</option><option value="Qwen 2.1">Qwen 2.1（編輯）</option><option value="MOSS Image">MOSS-Image（文生圖繪圖）</option></select>
+    <input id="cvBase" list="cvBaseList" value="Anima" title="LoRA 要給哪個基底模型用；可輸入 Civitai 上其他模型名稱" aria-label="基底模型" autocomplete="off" spellcheck="false"><datalist id="cvBaseList"><option value="Anima"></option><option value="Qwen 2.1"></option><option value="MOSS Image"></option><option value="Krea 2"></option><option value="Krea 2 Turbo"></option></datalist>
     <div class="scr search-scr"><span data-ic="search" class="sic"></span><input type="search" id="cvQ" placeholder="搜尋 Civitai 上的 LoRA（英文關鍵字較準）" aria-label="搜尋 Civitai"></div>
     <select id="cvSort"><option>Most Downloaded</option><option>Highest Rated</option><option>Newest</option></select>
     <select id="cvPeriod"><option value="AllTime">全部時間</option><option value="Year">今年</option><option value="Month">本月</option><option value="Week">本週</option></select>
     <label class="check inline"><input type="checkbox" id="cvNsfw" checked> 含成人內容</label>
     <button class="akey go" id="cvGo" type="button" data-ic="search">搜尋</button>
   </div>
-  <div class="muted sm pad" id="cvNote">只列出有 Anima 版本的 LoRA。下載完成後自動出現在 LoRA 清單，觸發詞也會一起存好。</div>
+  <div class="muted sm pad" id="cvNote">只列出有 Anima 版本的 LoRA。可輸入其他 Civitai 基底模型；下載後會依基底模型分開存放，觸發詞也會一起存好。</div>
   <div class="lib-scroll">
     <div class="cards" id="cvGrid"></div>
     <div class="center"><button class="akey" id="cvMore" type="button" hidden>載入更多</button></div>
@@ -655,7 +675,7 @@
           <button class="akey go" id="dirPlan" type="button">AI 分段＋寫提示詞</button>
           <button class="akey sm" id="dirShots" type="button">補寫缺的提示詞</button>
         </div>
-        <div class="muted sm">用 AI 改寫的通用模型（設定頁「成人（體位）用的通用模型」，有 35B 就用 35B）。重新分段會清掉現有段落。</div>
+        <div class="muted sm">用 AI 改寫的通用模型（設定頁「通用模型」，有 35B 就用 35B）。重新分段會清掉現有段落。</div>
       </section>
     </div>
     <div class="dir-right lib-scroll">
@@ -756,7 +776,7 @@
     <details id="shFold" open>
       <summary class="toolbar">
         <b>拍攝單</b>
-        <span class="muted sm">填角色、首幀、場景、每段的時間軸，程式組成 H3 提示詞</span>
+        <span class="muted sm">填角色、首幀、場景、每段的時間軸，程式依影片引擎組提示詞</span>
         <span class="grow"></span>
         <span class="piano row" id="videoSub" role="tablist" aria-label="下面用哪一種">
           <button data-sub="short" type="button" role="tab" title="一段的 H3 影片（素材板、玩法）">短片</button>
@@ -852,6 +872,7 @@
           <div class="piano row" id="h3Where" role="tablist" aria-label="在哪跑">
             <button data-w="cloud" type="button" role="tab">雲端顯卡</button>
             <button data-w="local" type="button" role="tab">這台電腦</button>
+            <button data-w="runninghub" type="button" role="tab" title="整份節點圖丟上 RunningHub 跑：不用開機器，照秒扣 RH 幣">RunningHub</button>
           </div>
           <div id="h3Cloud">
             <div class="ag-cloud-st"><span class="ag-dot" id="h3CloudDot"></span><span id="h3CloudMsg">沒開</span></div>
@@ -873,6 +894,21 @@
             </div>
           </div>
           <div class="muted sm" id="h3Local" hidden></div>
+          <div id="h3Rh" hidden>
+            <div class="ag-cloud-st"><span class="ag-dot" id="h3RhDot"></span><span id="h3RhMsg">還沒填 API Key</span></div>
+            <div class="muted sm" id="h3RhMeta"></div>
+            <div class="row gap wrap">
+              <input id="h3RhKey" type="password" class="sm" autocomplete="off" placeholder="貼上 API Key（存起來會加密）" aria-label="RunningHub API Key">
+              <select id="h3RhSite" class="sm" aria-label="RunningHub 站台"><option value="ai">國際版 runninghub.ai</option><option value="cn">中國版 runninghub.cn</option></select>
+              <select id="h3RhInst" class="sm" aria-label="RunningHub 機器"><option value="plus">48GB（plus）</option><option value="ultra">84GB（ultra）</option><option value="default">24GB（default）</option></select>
+            </div>
+            <details class="fold" id="h3RhMap">
+              <summary class="sm">模型對照（RunningHub 上的檔名跟這邊不一樣時填）</summary>
+              <textarea id="h3RhModels" rows="3" class="sm" placeholder="一行一個：這邊的檔名 => RunningHub 上的檔名" aria-label="模型對照"></textarea>
+            </details>
+            <div class="row gap wrap"><button class="akey sm" id="h3RhSave" type="button">存設定</button><button class="akey sm" id="h3RhTest" type="button" title="用金鑰問 RunningHub 帳號餘額（不花錢）">測試並看餘額</button></div>
+            <div class="muted sm">一支一個任務，照秒扣 RH 幣（官方價目：48GB 每秒 0.4 幣、24GB 每秒 0.2 幣；免費帳號一次跑一個）。長片要接上一段的 latent，只能用雲端顯卡；RefMod 也只能用雲端顯卡。</div>
+          </div>
         </section>
         <section class="box">
           <details class="fold" id="h3Adv">
@@ -934,6 +970,7 @@
           <div class="grid2">
             <div><span class="sub">比例</span><select id="hcAspect" autocomplete="off"><option value="9:16">9:16 直</option><option value="16:9">16:9 橫</option><option value="1:1">1:1 方</option><option value="4:3">4:3</option><option value="3:4">3:4</option><option value="21:9">21:9 寬銀幕</option></select></div>
             <div><span class="sub">畫質</span><select id="hcQuality" autocomplete="off"><option value="fast">快</option><option value="std">標準</option><option value="high">高</option></select></div>
+            <div><span class="sub">在哪拍</span><select id="hcWhere" autocomplete="off" title="雲端顯卡：直接接上一段的 latent，接縫最順，要先開機。RunningHub：一段一個任務，上一段最後約 0.9 秒的畫面和聲音當下一段的開頭，不用開機、照秒扣 RH 幣"><option value="runpod">雲端顯卡（接 latent）</option><option value="runninghub">RunningHub（接著上一支拍）</option></select></div>
           </div>
           <div class="muted sm" id="hcSizeNote"></div>
         </section>
@@ -989,7 +1026,7 @@
       </section>
       <section class="box" id="cmCustomBox" hidden>
         <label>自訂版面</label>
-        <div class="muted sm">示意圖就是這一頁的分格。編號是閱讀順序（上面先、同一列右邊先）；點編號跳到那一格。</div>
+        <div class="muted sm">示意圖就是這一頁的分格，編號是閱讀順序（上面先、右邊先）；點格子跳到那一格的內容。要切格、拉大小、疊小格、斜切、破格，打開排版工作台；也可以直接用說的請 AI 排。</div>
         <div class="cm-wire" id="cmWire"></div>
         <div id="cmWireCtl"></div>
         <div class="muted sm" id="cmWireInfo"></div>
@@ -1061,6 +1098,9 @@
     <select id="agSess" aria-label="對話" style="max-width:300px"></select>
     <button class="akey sm" id="agNew" type="button">新對話</button>
     <button class="akey sm warn" id="agDel" type="button" data-ic="eject">移到待刪除</button>
+    <div class="rocker ag-mode" role="radiogroup" aria-label="助手做什麼" id="agKind" title="動手做＝助手自己畫、看圖、修，也能放大、改圖、做影片；只寫詞＝只照官方寫法寫提示詞給你，不碰繪圖模型"><span class="cap"></span><button type="button" role="radio" data-k="tools" aria-checked="true">動手做</button><button type="button" role="radio" data-k="prompt" aria-checked="false">只寫詞</button></div>
+    <select id="agTarget" class="ag-target" hidden title="只寫詞要照哪一份寫法寫；自動＝看生成頁的模型、你附幾張圖、有沒有講影片"><option value="auto">自動挑寫法</option><option value="anima">Anima</option><option value="qwen">Qwen 2.1 文生圖</option><option value="qwen_edit">Qwen 2.1 改圖</option><option value="qwen_multiref">Qwen 2.1 多圖參考</option><option value="moss">MOSS-Image</option><option value="other">SDXL 系</option><option value="ltx_video">LTX-2.3 影片</option><option value="h3_video">H3 影片</option></select>
+    <div class="rocker ag-mode" role="radiogroup" aria-label="助手怎麼做" id="agMode" title="讓我看＝主視窗切到助手正在用的那一頁、填好欄位、框起來給你看；後台做＝主視窗不動，做好的圖照樣進圖庫"><span class="cap"></span><button type="button" role="radio" data-v="show" aria-checked="true">讓我看</button><button type="button" role="radio" data-v="bg" aria-checked="false">後台做</button></div>
     <span class="grow"></span>
     <span class="vfd g ag-status" id="agStatus" role="status" aria-live="polite">待機</span>
   </div>
@@ -1093,13 +1133,14 @@
         </div>
         <div class="knob" data-for="agRounds" data-label="最多幾輪"></div>
         <div class="knob" data-for="agCount" data-label="每輪張數"></div>
+        <div class="knob" data-for="agThink" data-label="思考"></div>
         <div class="hidden-inputs" aria-hidden="true">
           <select id="agRounds" tabindex="-1"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
           <select id="agCount" tabindex="-1"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+          <select id="agThink" tabindex="-1" title="OFF＝不思考，最快；LOW＝先想一下（思考上限 1024 token）；HIGH＝多想（上限 3072 token），要數東西、分左右手、排版時開"><option value="off" selected>OFF</option><option value="low">LOW</option><option value="high">HIGH</option></select>
         </div>
         <div class="ag-flags">
           <label class="check"><input type="checkbox" id="agAuto" checked><span>自動重畫<small>自己看圖、挑毛病、再畫下一輪；關掉＝畫一輪就停，等你說</small></span></label>
-          <label class="check"><input type="checkbox" id="agThink"><span>先想再答<small>比較準也比較慢；要數東西、分左右手時開</small></span></label>
           <label class="check"><input type="checkbox" id="agLoras" checked><span>讓它自己挑 LoRA<small>照每個 LoRA 的用途說明決定掛不掛、掛多強</small></span></label>
         </div>
       </div>
@@ -1162,6 +1203,11 @@
       <select id="setLang" translate="no"><option value="zh-TW">繁體中文</option><option value="zh-CN">简体中文</option><option value="en">English</option></select>
       <div class="muted sm">只換介面上的字，切換時頁面會重新整理一下。你寫的提示詞、圖庫和對話內容不會被改；教學手冊維持繁體中文。</div>
     </section>
+    <section class="box" id="dockBox">
+      <label>版面</label>
+      <div class="muted sm">每塊面板都能抓標題列拖：放到看圖區旁邊會吸附（看圖區自動讓位）、放到最邊緣會藏成一條小標籤（滑過去才出來）、放其他地方就浮著，四邊四角能拉大小。看圖區右上角的圖釘：釘著的時候浮動面板蓋不到它。版面會自動記住；拖亂了按這裡全部恢復（各面板標題列按右鍵也有）。</div>
+      <div class="row gap"><button class="akey" id="dockReset" type="button">恢復全部版面</button></div>
+    </section>
     <section class="box">
       <label for="setKey">Civitai API key</label>
       <div class="muted sm">部分模型需要登入 Civitai 才能下載。到 civitai.com → 帳號設定 → API Keys 建立一組，貼在這裡（只存在你這台電腦）。</div>
@@ -1183,13 +1229,16 @@
     </section>
     <section class="box" id="setPe">
       <label>AI 改寫提示詞</label>
-      <div class="muted sm">用 Qwen-Image 2.1 PE Heretic（社群無審查版，Qwen Research License，<b>不可商用</b>）。8GB 顯卡放不下改寫模型和生圖模型，所以改寫前會先叫 ComfyUI 卸載模型、按下生成前會先關掉改寫模型。</div>
+      <div class="muted sm">預設用通用模型（Qwen3.5-9B 或 Qwen3.6-35B，跟生圖助手同一顆）照各模型的官方寫法改寫。也可以改用官方改寫模型 Qwen-Image 2.1 PE Heretic（社群無審查版，Qwen Research License，<b>不可商用</b>，要另外下載；露骨內容會被寫淡）。8GB 顯卡放不下改寫模型和生圖模型，所以改寫前會先叫 ComfyUI 卸載模型、按下生成前會先關掉改寫模型。</div>
       <div class="grid2">
+        <div><span class="sub">改寫用的模型</span><select id="setPeEngine">
+          <option value="general">通用模型 9B／35B（預設）</option>
+          <option value="official">官方 PE（非商用授權，要另外下載）</option></select></div>
         <div><span class="sub">執行方式</span><select id="setPeMode">
           <option value="gpu">GPU（最快，約 6～8 秒，占 5.5GB 顯存）</option>
           <option value="partial">部分放顯卡（較慢）</option>
           <option value="cpu">CPU（不占顯存，很慢）</option></select></div>
-        <div><span class="sub">成人（體位）用的通用模型</span><select id="setPeGeneral">
+        <div><span class="sub">通用模型（改寫、助手、成人體位）</span><select id="setPeGeneral">
           <option value="auto">自動（有 35B 就用 35B）</option>
           <option value="35b">Qwen3.6-35B-A3B（較聰明，GPU 約 43 字／秒，占 7.5GB 顯存）</option>
           <option value="9b">Qwen3.5-9B（較快、較穩）</option></select></div>
@@ -1322,6 +1371,20 @@
       <div id="cacheGroups"></div>
       <div class="muted sm" id="cacheResult" aria-live="polite"></div>
     </section>
+    <section class="box" id="diagnosticsBox">
+      <label>診斷紀錄與錯誤回報</label>
+      <div class="muted sm">生成與助手操作會自動記錄提示詞、參數、工作流、模型載入及錯誤。預設成功保留 1 天，失敗、未確認與手動回報保留 3 天；總容量 500 MiB，單次最多 100 MiB。啟動、每 30 分鐘及任務結束時清理，空間不足會提早移除已結束的舊紀錄。</div>
+      <div class="row gap wrap diag-policy">
+        <label for="diagSuccess">成功保留天數<input id="diagSuccess" type="number" min="1" max="30" value="1"></label>
+        <label for="diagError">異常保留天數<input id="diagError" type="number" min="1" max="30" value="3"></label>
+        <label for="diagCap">容量上限（MiB）<input id="diagCap" type="number" min="50" max="2048" value="500"></label>
+        <button class="akey sm" type="button" id="diagSave">儲存保留設定</button>
+      </div>
+      <div class="row gap wrap"><button class="akey sm" type="button" id="diagScan">重新讀取紀錄</button><button class="akey sm" type="button" id="diagClean">清理到期紀錄</button><button class="akey sm warn" type="button" id="diagClear">清空已結束的紀錄</button></div>
+      <div class="muted sm" id="diagSummary" aria-live="polite"></div>
+      <div class="muted sm">診斷包含提示詞與文字回覆，已遮蔽已知金鑰與網址，預設不附原圖、成品或模型。不會自動上傳；分享前請檢查內容。正在執行或下載的紀錄會受到保護；額度用完時會停止增加診斷資料並標示不完整。瀏覽器已下載的 ZIP 需自行管理。</div>
+      <div id="diagRecords" class="diag-records"></div>
+    </section>
     <section class="box danger-zone" id="resetBox">
       <label>恢復原廠（清空重來）</label>
       <div class="muted sm">勾選要清掉的部分。舊的東西<b>不會真的刪掉</b>：整包搬到 <code>待刪除\恢復原廠_日期時間</code>，下面的清單可以一鍵救回。Civitai API key 一定保留。</div>
@@ -1357,6 +1420,15 @@
 </div>
 
 <!-- ======================= 浮層 ======================= -->
+<aside id="diagNotice" class="diag-notice row gap wrap" role="status" hidden></aside>
+<div class="modal" id="diagReportModal" hidden><div class="dialog wide">
+  <div class="row between"><b>結果不符回報</b><button class="minikey" type="button" data-close aria-label="關閉">×</button></div>
+  <div id="diagReportId" class="muted sm"></div>
+  <label for="diagExpected">原本想要的結果</label><textarea id="diagExpected" rows="3" maxlength="10000" placeholder="例如：正面、側面、背面的三視圖"></textarea>
+  <label for="diagActual">實際遇到的情況</label><textarea id="diagActual" rows="3" maxlength="10000" placeholder="例如：只生成與原圖相似的一張圖"></textarea>
+  <div class="muted sm">這段描述會存入本機診斷包，不會自動寄送。</div>
+  <button class="akey sm" type="button" id="diagReportSave">保存回報</button>
+</div></div>
 <div class="modal" id="lightbox" hidden>
   <div class="lb-body">
     <div class="lb-img"><img id="lbImg" alt=""><video id="lbVid" controls loop playsinline hidden></video><button class="nav prev" id="lbPrev" type="button" aria-label="上一張">‹</button><button class="nav next" id="lbNext" type="button" aria-label="下一張">›</button></div>
@@ -1556,7 +1628,7 @@
 
 <div class="modal" id="csModal" hidden>
   <div class="dialog wide cs-box">
-    <div class="row between"><b>角色設定圖工坊</b><span class="muted sm grow">做出全身轉身圖＋臉部特寫表，存成資產庫的角色，之後生圖、拍片都能拿</span><button class="minikey red" data-close data-ic="power" type="button" aria-label="關閉"></button></div>
+    <div class="row between"><b>角色設定圖工坊</b><span class="muted sm grow">做出角色卡：轉身圖、臉部特寫表、正面特寫、鎖定的設定表，存成資產庫的角色，之後生圖、拍片都能拿</span><button class="minikey red" data-close data-ic="power" type="button" aria-label="關閉"></button></div>
     <section class="cs-step">
       <span class="sub">① 定稿：一張全身、正面站好的角色圖</span>
       <div class="row gap wrap"><input type="text" id="csName" placeholder="角色名字（存資產用）"><select id="csSex" aria-label="性別"><option value="f">女</option><option value="m">男</option></select></div>
@@ -1583,13 +1655,25 @@
       </div>
     </section>
     <section class="cs-step">
-      <span class="sub">③ 裸體版（選填）：拿選好的轉身圖，走四視圖編輯的「全裸」</span>
+      <span class="sub">③ 正面特寫：單人正臉、肩膀以上、素背景（生圖、拍片時跟轉身圖一起當固定參考圖鎖臉）</span>
+      <div class="row gap wrap"><button class="akey go" id="csPortGo" type="button">畫正面特寫</button><span class="muted sm">Qwen 2.1 照定稿畫 2 張，點一張選定</span></div>
+      <div class="dir-pic" id="csPort"></div>
+      <div class="dir-cands" id="csPortCands" hidden></div>
+    </section>
+    <section class="cs-step">
+      <span class="sub">④ 裸體版（選填）：拿選好的轉身圖，走四視圖編輯的「全裸」</span>
       <div class="row gap wrap"><button class="akey" id="csNudeGo" type="button">做裸體版</button><span class="muted sm">男性的句子還沒實測過</span></div>
       <div class="dir-pic" id="csNude"></div>
       <div class="dir-cands" id="csNudeCands" hidden></div>
     </section>
     <section class="cs-step">
-      <span class="sub">④ 存進資產庫</span>
+      <span class="sub">⑤ 角色設定表：客觀特徵寫死，鎖定後任何 AI 都改不到，用的時候原封不動放在提示詞最前面</span>
+      <div class="row gap wrap"><button class="akey sm" id="csSpecGo" type="button">AI 看圖填</button><select id="csSpecBrain" aria-label="用哪顆語言模型" title="9B 快；35B 比較細"><option value="9b">9B</option><option value="35b">35B</option></select><span class="grow"></span><span class="muted sm" id="csSpecState"></span><button class="akey sm" id="csSpecLock" type="button">鎖定</button></div>
+      <div class="cs-spec" id="csSpec"></div>
+      <div class="as-unver" id="csSpecUnver" hidden></div>
+    </section>
+    <section class="cs-step">
+      <span class="sub">⑥ 存進資產庫</span>
       <div class="row gap wrap"><span class="sub">外觀描述（英文，拿去用時會帶進提示詞）</span><span class="grow"></span><button class="akey sm" id="csDescGo" type="button">AI 看圖寫</button></div>
       <textarea id="csDesc" rows="3" spellcheck="false"></textarea>
       <textarea id="csDescZh" rows="2" spellcheck="false" placeholder="中文對照（給自己看）"></textarea>

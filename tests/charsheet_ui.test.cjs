@@ -11,7 +11,7 @@ function load() {
   const source = fs.readFileSync(path.join(__dirname, '../ui/js/charsheet.js'), 'utf8')
     .replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '');
   const context = vm.createContext({ console, SHEET_PRESETS: { nude: NUDE_F } });
-  vm.runInContext(source + '\nglobalThis.subject = {qwenModel, qwenParams, nudeReq, rolesToSave, startRound, takeImage};', context, { filename: 'charsheet.js' });
+  vm.runInContext(source + '\nglobalThis.subject = {qwenModel, qwenParams, nudeReq, rolesToSave, startRound, takeImage, emptySpec, specOf, specFilled, SPEC_FIELDS};', context, { filename: 'charsheet.js' });
   return context.subject;
 }
 const plain = (v) => JSON.parse(JSON.stringify(v));
@@ -58,6 +58,23 @@ test('rolesToSave：定稿＋轉身圖＋臉部；定稿本來就在資產裡就
   assert.deepEqual(plain(rolesToSave(fromGallery)), [{ role: 'src', gallery_id: 5 }, { role: 'sheet_nude', gallery_id: 13 }]);
   const fromAsset = { start: { input: 'aw_asset_1_1.png', from_asset: true }, pick: { turnaround: { gallery_id: 11 } } };
   assert.deepEqual(plain(rolesToSave(fromAsset)), [{ role: 'sheet', gallery_id: 11 }]);
+  // 角色卡：正面特寫存成 portrait；資產裡本來就有的圖（補做時帶進來的）不再存
+  const card = { start: { input: 'a.png', from_asset: true }, pick: { turnaround: { file: '1_2.png', from_asset: true }, portrait: { gallery_id: 21 } } };
+  assert.deepEqual(plain(rolesToSave(card)), [{ role: 'portrait', gallery_id: 21 }]);
+});
+
+test('設定表：欄位順序跟後端一樣、缺欄位補齊、全空不能鎖', () => {
+  const { emptySpec, specOf, specFilled, SPEC_FIELDS } = load();
+  assert.deepEqual(plain(SPEC_FIELDS.map((f) => f[0])), ['sex', 'age', 'hair_style', 'hair_color', 'face', 'eyes', 'skin', 'body', 'marks', 'outfit']);
+  assert.equal(specFilled(emptySpec()), false);
+  const sp = plain(specOf({ locked: true, fields: { hair_color: { zh: '橘髮', tags: ['orange hair'] } }, block_en: 'orange hair.' }));
+  assert.equal(Object.keys(sp.fields).length, 10);
+  assert.deepEqual(sp.fields.hair_color, { zh: '橘髮', en: '', tags: ['orange hair'] });
+  assert.equal(sp.locked, true);
+  assert.equal(sp.block_en, 'orange hair.');
+  assert.equal(specFilled(sp), true);
+  assert.equal(plain(specOf(null)).locked, false);
+  assert.equal(plain(specOf({ fields: { sex: { zh: 3, tags: 'x' } } })).fields.sex.zh, '3');
 });
 
 test('晚到的候選圖：換新一輪之後，上一輪的 job 不收', () => {

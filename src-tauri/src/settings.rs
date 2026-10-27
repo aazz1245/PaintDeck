@@ -93,7 +93,9 @@ pub const DEFAULT_NEGATIVE: &str = "worst quality, low quality, score_1, score_2
 /// AI 改寫的預設值（舊版 pe.py 的 DEFAULTS）
 pub fn pe_defaults() -> Map<String, Value> {
     let v = json!({"pe_mode": "gpu", "pe_partial_layers": 16, "pe_idle": 120, "pe_close_after": false,
-                   "pe_temperature": 1.0, "pe_think": false, "pe_zh": false, "pe_general": "auto"});
+                   "pe_temperature": 1.0, "pe_think": false, "pe_zh": false, "pe_general": "auto",
+                   // AI 改寫用哪種模型：general＝通用模型 9B／35B（預設）、official＝官方 PE（非商用授權，要另外下載）
+                   "pe_engine": "general"});
     v.as_object().cloned().unwrap_or_default()
 }
 

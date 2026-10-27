@@ -36,6 +36,12 @@ const GUIDE_QWEN: &str = include_str!("../../resources/agent/guide_qwen21.txt");
 const GUIDE_MOSS: &str = include_str!("../../resources/agent/guide_moss.txt");
 const GUIDE_ANIMA: &str = include_str!("../../resources/agent/guide_anima.txt");
 const GUIDE_OTHER: &str = include_str!("../../resources/agent/guide_other.txt");
+/// 寫法庫（2026-10-27）：使用者原話「把 每個模型的官方寫提示詞skill都分類整理教一教給他。讓他真的會寫。嚴謹分類。」
+const GUIDE_QWEN_EDIT: &str = include_str!("../../resources/agent/guide_qwen_edit.txt");
+const GUIDE_QWEN_MULTI: &str = include_str!("../../resources/agent/guide_qwen_multiref.txt");
+const GUIDE_LTX: &str = include_str!("../../resources/agent/guide_ltx.txt");
+/// 「只寫詞」模式的工作說明：不碰繪圖模型，只回提示詞卡（{target}／{guide}／{sizes} 由程式填）
+const PROMPT_SYSTEM: &str = include_str!("../../resources/agent/prompt_mode.txt");
 /// H3 影片台「AI 幫我寫」：T2VA／I2VA／FL2VA 用 base，Ref2VA（多素材、換角色、特效…）用 ref
 const H3_BASE: &str = include_str!("../../resources/agent/h3_base.txt");
 const H3_REF: &str = include_str!("../../resources/agent/h3_ref.txt");
@@ -43,13 +49,17 @@ const H3_BOARD: &str = include_str!("../../resources/agent/h3_board.txt");
 /// 影片台拍攝單「AI 潤飾」（2026-10-24）
 const H3_SHEET: &str = include_str!("../../resources/agent/h3_sheet.txt");
 
-/// 設定頁可以改的九份：(編號, 預設文字)
-pub const EDITABLE_TEXTS: [(&str, &str); 9] = [
+/// 設定頁可以改的十三份：(編號, 預設文字)
+pub const EDITABLE_TEXTS: [(&str, &str); 13] = [
     ("agent", DEFAULT_SYSTEM),
+    ("agent_prompt", PROMPT_SYSTEM),
     ("agent_qwen21", GUIDE_QWEN),
+    ("agent_qwen_edit", GUIDE_QWEN_EDIT),
+    ("agent_qwen_multiref", GUIDE_QWEN_MULTI),
     ("agent_moss", GUIDE_MOSS),
     ("agent_anima", GUIDE_ANIMA),
     ("agent_other", GUIDE_OTHER),
+    ("agent_ltx", GUIDE_LTX),
     ("agent_h3_base", H3_BASE),
     ("agent_h3_ref", H3_REF),
     ("agent_h3_board", H3_BOARD),
@@ -71,6 +81,92 @@ pub fn guide_id(family: &str) -> &'static str {
     }
 }
 
+/// 寫法庫：(名稱, 設定頁編號, 中文名, 什麼時候用)。名稱給模型用（guide 工具、只寫詞模式的目標）
+pub const GUIDES: &[(&str, &str, &str, &str)] = &[
+    ("anima", "agent_anima", "Anima", "Anima: Danbooru tags plus English sentences (text to image and image to image)"),
+    ("qwen", "agent_qwen21", "Qwen 2.1 文生圖", "Qwen-Image 2.1 text to image: one long observer paragraph"),
+    ("qwen_edit", "agent_qwen_edit", "Qwen 2.1 改圖", "Qwen-Image 2.1 editing one picture (the edit tool, or generate with one ref)"),
+    ("qwen_multiref", "agent_qwen_multiref", "Qwen 2.1 多圖參考", "Qwen-Image 2.1 with two or more reference pictures named <image1>, <image2>…"),
+    ("moss", "agent_moss", "MOSS-Image", "MOSS-Image: detailed prose, text in the picture, comic pages"),
+    ("other", "agent_other", "SDXL 系", "SDXL-family models (Illustrious, NoobAI, Pony)"),
+    ("ltx_video", "agent_ltx", "LTX-2.3 影片", "LTX-2.3 video (the video tool): text to video and image to video"),
+    ("h3_video", "agent_h3_base", "H3 影片", "MiniMax H3 video (the H3 video page)"),
+];
+
+/// 寫法名稱 → 設定頁編號（認不得就 None）
+pub fn guide_text_id(name: &str) -> Option<&'static str> {
+    let n = name.trim().to_lowercase().replace(['-', ' '], "_");
+    GUIDES.iter().find(|g| g.0 == n || g.1 == n).map(|g| g.1)
+}
+
+/// 寫法名稱 → 中文名
+pub fn guide_zh(name: &str) -> &'static str {
+    GUIDES.iter().find(|g| g.0 == name).map(|g| g.2).unwrap_or("寫法")
+}
+
+/// 寫法目錄（一行一份，給模型看）
+pub fn guides_list() -> String {
+    GUIDES.iter().map(|g| format!("{} = {}", g.0, g.3)).collect::<Vec<_>>().join("; ")
+}
+
+/// 家族的文生圖寫法名稱
+pub fn family_guide(family: &str) -> &'static str {
+    match family {
+        QWEN21 => "qwen",
+        MOSS => "moss",
+        ANIMA => "anima",
+        _ => "other",
+    }
+}
+
+/// 明確指定寫法時，尺寸與校正也跟著目標家族，不沿用生成頁的另一個模型。
+pub fn prompt_family<'a>(target: &str, fallback: &'a str) -> &'a str {
+    match target {
+        "anima" => ANIMA,
+        "qwen" | "qwen_edit" | "qwen_multiref" => QWEN21,
+        "moss" => MOSS,
+        "other" => "other",
+        _ => fallback,
+    }
+}
+
+static H3_ASK: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)\bh3\b|minimax").unwrap());
+static VIDEO_ASK: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)影片|視頻|视频|動起來|动起来|動畫|运镜|運鏡|\bvideo\b|\bclip\b|\banimate\b").unwrap());
+
+/// 「只寫詞」自動挑寫法：講到影片 → 影片（有講 H3 就是 H3，不然是本機 LTX）；Qwen 附一張圖 → 改圖、兩張以上 → 多圖參考；其他照家族
+pub fn pick_guide(family: &str, images: usize, ask: &str) -> &'static str {
+    if VIDEO_ASK.is_match(ask) || H3_ASK.is_match(ask) {
+        return if H3_ASK.is_match(ask) { "h3_video" } else { "ltx_video" };
+    }
+    match (family, images) {
+        (QWEN21, 1) => "qwen_edit",
+        (QWEN21, n) if n >= 2 => "qwen_multiref",
+        _ => family_guide(family),
+    }
+}
+
+/// 動手做模式：這個動作要照哪份寫法寫（改圖、影片、Qwen 用附圖畫）
+pub fn needed_guide(action: &Map<String, Value>, family: &str, refs_mode: &str) -> Option<&'static str> {
+    match tx(action.get("action").unwrap_or(&Value::Null)).as_str() {
+        "call" => match tx(action.get("tool").unwrap_or(&Value::Null)).as_str() {
+            "edit" => Some("qwen_edit"),
+            "video" => Some("ltx_video"),
+            _ => None,
+        },
+        "generate" if family == QWEN21 && refs_mode == "multi" => match action.get("refs").and_then(Value::as_array).map(Vec::len).unwrap_or(0) {
+            0 => None,
+            1 => Some("qwen_edit"),
+            _ => Some("qwen_multiref"),
+        },
+        _ => None,
+    }
+}
+
+/// 這段對話讀過這份寫法沒（guide 工具成功過）
+pub fn guide_read(events: &[Value], name: &str) -> bool {
+    events.iter().any(|e| ev_kind(e) == "tool" && e["tool"] == "guide" && e["ok"] != false && e["args"]["name"] == name)
+}
+
 /// 寫提示詞說明裡的片語：出現在提示詞裡就是抄了說明（小寫、空白已正規化）
 const GUIDE_ECHO: &[&str] = &[
     "subject and look first",
@@ -80,8 +176,17 @@ const GUIDE_ECHO: &[&str] = &[
     "one paragraph of natural english",
     "then the people count",
     "real danbooru tags in lowercase",
+    "real danbooru spellings only",
     "subject and look,",
     "mature and revealing",
+    "work in this order",
+    "positional phrases",
+    "the medium noun",
+    "what to describe, in this order",
+    "fit the action to the length",
+    "the governing principle",
+    "about 20 to 35",
+    "every tag once",
 ];
 
 const SIZES_QWEN: &str = "portrait 832x1248 or 1024x1536, square 1024x1024, landscape 1248x832 or 1536x1024";
@@ -213,10 +318,74 @@ fn fmt_num(x: f64) -> String {
     s.trim_end_matches('0').trim_end_matches('.').to_string()
 }
 
-/// 整份工作說明：system＝工作說明、guide＝這個家族的寫法（都可能是使用者改過的）
+/// 整份工作說明：system＝工作說明、guide＝這個家族的寫法（都可能是使用者改過的）。工具段落填進 {tools}，沒有就接在最後
 pub fn system_prompt(system: &str, guide: &str, family: &str, loras: &str) -> String {
     let sizes = if family == QWEN21 { SIZES_QWEN } else { SIZES_ANIMA };
-    system.replace("{model_guide}", guide).replace("{sizes}", sizes).replace("{loras}", loras)
+    crate::agent_tools::with_tools(&system.replace("{model_guide}", guide).replace("{sizes}", sizes).replace("{loras}", loras))
+}
+
+/// 只寫詞模式的工作說明：{target}＝寫法的名稱和用途、{guide}＝那份寫法全文、{sizes}＝尺寸
+pub fn prompt_system(system: &str, guide: &str, guide_name: &str, family: &str) -> String {
+    let sizes = if family == QWEN21 { SIZES_QWEN } else { SIZES_ANIMA };
+    let target = GUIDES.iter().find(|g| g.0 == guide_name).map(|g| g.3).unwrap_or("the image model");
+    system.replace("{target}", target).replace("{guide}", guide).replace("{sizes}", sizes)
+}
+
+/// 只寫詞模式：讀回 {"action":"prompt",…} 或 {"action":"reply",…}；不合格回傳要退回的英文說明。
+/// guide_name 決定檢查：Qwen 改圖／多圖可以寫中文，Anima 修 tag，圖片才有尺寸
+pub fn parse_prompt_action(raw: &str, family: &str, guide_name: &str) -> Result<Map<String, Value>, String> {
+    let Some(m) = json_in(raw) else {
+        return Err("Your reply was not a JSON object. Reply with exactly ONE JSON object, nothing else.".into());
+    };
+    let action = tx(m.get("action").unwrap_or(&Value::Null)).trim().to_lowercase();
+    let is_reply = action == "reply" || (action.is_empty() && !m.contains_key("prompt"));
+    if is_reply {
+        let msg = tx(m.get("message").or(m.get("say")).or(m.get("note")).unwrap_or(&Value::Null)).trim().to_string();
+        if msg.is_empty() {
+            return Err("\"message\" is empty. Write your reply to the user in Traditional Chinese.".into());
+        }
+        return Ok(Map::from_iter([("action".into(), json!("reply")), ("message".into(), json!(msg))]));
+    }
+    if !matches!(action.as_str(), "prompt" | "generate" | "") {
+        return Err(format!("Unknown action \"{action}\". Use prompt or reply."));
+    }
+    let mut prompt = tx(m.get("prompt").unwrap_or(&Value::Null)).trim().to_string();
+    if prompt.chars().count() < 15 {
+        return Err("\"prompt\" is missing or too short. Write the complete prompt.".into());
+    }
+    let edit = matches!(guide_name, "qwen_edit" | "qwen_multiref");
+    if !edit && has_cjk_outside_quotes(&prompt) {
+        return Err("The prompt must be written in English (only text that must appear inside the picture may stay in quotes). Reply again.".into());
+    }
+    let low = norm(&prompt);
+    if let Some(p) = GUIDE_ECHO.iter().find(|p| low.contains(*p)) {
+        return Err(format!("Your prompt copied the writing instructions (\"{p}\"). Follow them instead: describe the actual picture."));
+    }
+    let video = guide_name.ends_with("_video");
+    if !video {
+        prompt = crate::director::safe_text(&prompt, guide_name == "anima");
+    }
+    match guide_name {
+        "anima" => prompt = crate::pe::fix_anima_tags(&prompt),
+        "qwen" | "moss" => prompt = crate::pe::strip_ratio(&prompt),
+        _ => {}
+    }
+    let mut out = Map::from_iter([
+        ("action".into(), json!("prompt")),
+        ("prompt".into(), json!(prompt)),
+        ("negative".into(), json!(tx(m.get("negative").or(m.get("negative_prompt")).unwrap_or(&Value::Null)).trim())),
+        ("note".into(), json!(tx(m.get("note").or(m.get("message")).or(m.get("say")).unwrap_or(&Value::Null)).trim())),
+        ("guide".into(), json!(guide_name)),
+    ]);
+    if !video && !edit {
+        let (dw, dh) = default_size(family);
+        let w = m.get("width").and_then(int_of).unwrap_or(dw);
+        let h = m.get("height").and_then(int_of).unwrap_or(dh);
+        let (w, h) = snap_size(w, h);
+        out.insert("width".into(), json!(w));
+        out.insert("height".into(), json!(h));
+    }
+    Ok(out)
 }
 
 /// 使用者附圖時的說明（依能不能把圖餵給生圖模型分三種）。工作說明裡有 {images} 就填在那裡，沒有（舊的自訂說明）就接在最後
@@ -237,7 +406,7 @@ describe the new version in the prompt (the new hair, the new background…) and
 Changing the background needs at least 0.7; changing a hair or clothing color needs at least 0.85; turning the person into a zombie or monster, or adding heavy wounds and gore, needs 0.9. \
 Remove from the prompt the words for what is being replaced (new background on a beach → no cafe, window or coffee machine words). \
 If your result kept too much of the original (old color, old background), raise denoise by 0.1 instead of only repeating words. \
-The prompt still describes the whole picture you want. Leave refs out to draw from text only; when the user wants a similar character or style, describe it in the prompt instead.",
+The prompt still describes the whole picture you want. Leave refs out to draw from text only; when the user wants a similar character or style, describe it in the prompt instead. Redrawing keeps the angle and pose: for a turnaround, a back or side view or other angles of the user's character, call the character_sheet tool with \"ref\":N instead.",
         _ => "You can look at user images but cannot feed them to the image model: describe in the prompt everything you need from them.",
     };
     format!("{head}\n{how}")
@@ -273,7 +442,9 @@ pub fn user_images(events: &[Value]) -> Vec<Value> {
 /// 事件種類（存檔裡的 kind）：
 ///   user   {text, mid?}                     使用者說的話（mid＝助手跑到一半插話）
 ///   act    {action:{...}, round?, secs?}     助手的一個動作（檢查過、正規化過的 JSON）
-///   result {round, ids, secs, errors}       一輪生成的結果（圖庫編號）
+///   result {round, ids, secs, errors, tool?} 一輪生成的結果（圖庫編號）；tool＝工具做出來的（look＝只是拿來看）
+///   tool   {tool, ok, text, zh}             工具的結果（text 給模型、zh 給使用者）
+///   confirm {call:{tool,args}, why, state}  要使用者准的工具（state：wait／yes／no）
 ///   note / error {text}                     只顯示在畫面上（自動補觸發詞、出錯）
 pub fn ev_kind(e: &Value) -> &str {
     e["kind"].as_str().unwrap_or("")
@@ -290,6 +461,25 @@ pub fn rounds_used(events: &[Value]) -> i64 {
         .iter()
         .filter(|e| ev_kind(e) == "act" && e["action"]["action"] == "generate")
         .count() as i64
+}
+
+/// 這個請求叫了幾次工具
+pub fn calls_used(events: &[Value]) -> i64 {
+    let start = events
+        .iter()
+        .rposition(|e| ev_kind(e) == "user" && !truthy(e.get("mid")))
+        .map(|i| i + 1)
+        .unwrap_or(0);
+    events[start..]
+        .iter()
+        .filter(|e| ev_kind(e) == "act" && e["action"]["action"] == "call")
+        .count() as i64
+}
+
+/// 這個請求使用者說的話（最後一句不是插話的，加上之後的插話）
+pub fn request_text(events: &[Value]) -> String {
+    let start = events.iter().rposition(|e| ev_kind(e) == "user" && !truthy(e.get("mid"))).unwrap_or(0);
+    events[start..].iter().filter(|e| ev_kind(e) == "user").map(|e| tx(&e["text"])).collect::<Vec<_>>().join("\n")
 }
 
 /// 這個請求還剩幾輪。auto 關掉＝只畫一輪；用完了但使用者在最後一輪之後插話，多給一輪照他的話改
@@ -355,6 +545,15 @@ pub fn build_messages(system: &str, events: &[Value], look: &[(i64, Value)], rou
 
 /// 同上，再加使用者附的圖：uimgs＝(第幾張, image_url 物件)，只有在這裡面的才真的給它看，其他留一行文字
 pub fn build_messages_with(system: &str, events: &[Value], look: &[(i64, Value)], uimgs: &[(i64, Value)], rounds_left: i64, count: i64) -> Value {
+    build_messages_ending(system, events, look, uimgs, rounds_left, count, None)
+}
+
+/// 只寫詞模式：沒有輪數、不看自己的圖，最後一句換成「給提示詞」
+pub fn build_prompt_messages(system: &str, events: &[Value], uimgs: &[(i64, Value)]) -> Value {
+    build_messages_ending(system, events, &[], uimgs, 0, 0, Some("Reply with ONE JSON object: the prompt action (or reply only if you truly cannot start)."))
+}
+
+fn build_messages_ending(system: &str, events: &[Value], look: &[(i64, Value)], uimgs: &[(i64, Value)], rounds_left: i64, count: i64, ending: Option<&str>) -> Value {
     let mut msgs = vec![json!({"role": "system", "content": system})];
     let mut buf: Vec<Value> = vec![];
     let text = |t: String| json!({"type": "text", "text": t});
@@ -365,7 +564,7 @@ pub fn build_messages_with(system: &str, events: &[Value], look: &[(i64, Value)]
         let asks: Vec<String> = events[..cut].iter().filter(|e| ev_kind(e) == "user").map(|e| short(&tx(&e["text"]), 200)).collect();
         let prompts: Vec<String> = events[..cut]
             .iter()
-            .filter(|e| ev_kind(e) == "act" && e["action"]["action"] == "generate")
+            .filter(|e| ev_kind(e) == "act" && matches!(e["action"]["action"].as_str(), Some("generate" | "prompt")))
             .map(|e| short(&tx(&e["action"]["prompt"]), 160))
             .collect();
         buf.push(text(format!(
@@ -417,7 +616,16 @@ pub fn build_messages_with(system: &str, events: &[Value], look: &[(i64, Value)]
                 let ids: Vec<i64> = e["ids"].as_array().into_iter().flatten().filter_map(Value::as_i64).collect();
                 let errs: Vec<String> = e["errors"].as_array().into_iter().flatten().map(tx).filter(|s| !s.is_empty()).collect();
                 let err = if errs.is_empty() { String::new() } else { format!(" Errors: {}", errs.join("; ")) };
-                if Some(round) == latest_round && !look.is_empty() {
+                let seen = e["tool"] == "look";
+                if Some(round) == latest_round && !look.is_empty() && seen {
+                    buf.push(text(format!("The images you asked to look at ({} images):", look.len())));
+                    for (id, part) in look {
+                        buf.push(text(format!("Image id {id}:")));
+                        buf.push(part.clone());
+                    }
+                } else if seen {
+                    buf.push(text(format!("You looked at images {ids:?} (no longer shown).")));
+                } else if Some(round) == latest_round && !look.is_empty() {
                     buf.push(text(format!("Round {round} results ({} images).{err} Look carefully at each image:", look.len())));
                     for (id, part) in look {
                         buf.push(text(format!("Image id {id}:")));
@@ -429,11 +637,15 @@ pub fn build_messages_with(system: &str, events: &[Value], look: &[(i64, Value)]
                     buf.push(text(format!("Round {round} results: image ids {ids:?} (no longer shown; rely on your check notes).{err}")));
                 }
             }
+            "tool" => buf.push(text(format!("Tool {} {}: {}", tx(&e["tool"]), if e["ok"] == false { "failed" } else { "result" }, tx(&e["text"])))),
             _ => {}
         }
     }
-    // 剛看完圖：只給「重畫或交卷」兩條路（9B 看到 reply 就會停下來問人）
+    // 剛看完圖：只給「重畫或交卷」兩條路（9B 看到 reply 就會停下來問人）；用 look 看的圖不是它畫的，照請求繼續
+    let looked = latest_result(events).is_some_and(|e| e["tool"] == "look");
     buf.push(text(match (rounds_left > 0, look.is_empty()) {
+        _ if ending.is_some() => ending.unwrap_or_default().to_string(),
+        (_, false) if looked => "Use what you see to carry on with the user's request. ONE JSON object.".to_string(),
         (true, true) => format!("Rounds left for this request: {rounds_left} ({count} images per round). Reply with ONE JSON object."),
         (true, false) => format!(
             "Rounds left for this request: {rounds_left} ({count} images per round). Fill check from what you see, then generate a fix or finish. ONE JSON object."
@@ -467,6 +679,10 @@ pub struct Check<'a> {
     pub request_user_images: &'a [i64],
     /// 能不能把使用者的圖餵給生圖模型：multi／one／""（見 images_text）
     pub refs_mode: &'a str,
+    /// 這個請求使用者說的話（判斷「要新角度」之類）
+    pub ask: &'a str,
+    /// 這個請求還能叫幾次工具（agent_tools::MAX_CALLS）
+    pub calls_left: i64,
 }
 
 static QUOTED: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#""[^"]*"|“[^”]*”|「[^」]*」|『[^』]*』"#).unwrap());
@@ -476,6 +692,9 @@ static IMAGE_TAG: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"<image(\d+)>")
 static FIELD_IN_PROMPT: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(?i)"?\b(refs?|denoise)"?\s*[:=]\s*(\[[^\]]*\]|[0-9]+(?:\.[0-9]+)?)"#).unwrap());
 // 單獨一項的尺寸：832x1216、1216、832（三位數 200 以上才算，年齡的 20 不動），還有抄進來的 loras:[]
 static SIZE_ITEM: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)^(?:\d{3,4}\s*[x×]\s*\d{3,4}|[2-9]\d{2}|\d{4}|loras?\s*[:=].*)$").unwrap());
+// 要角色的新角度：三視圖、轉身、背面、側面、多視角…
+static NEW_VIEW: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)三視圖|三视图|四視圖|四视图|多視角|多视角|轉身|转身|背面|背影|側面|侧面|設定圖|设定图|turn-?around|back view|side view|character sheet|other angles?").unwrap());
 static NO_ITEM: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)[:：]\s*(?:no\b|not\b|missing|wrong|✗|❌|否|沒有|不對)").unwrap());
 
 /// 引號外面有中日韓文字（要畫進圖裡的字可以放引號裡）
@@ -595,6 +814,10 @@ pub fn parse_action(raw: &str, c: &Check) -> Result<Map<String, Value>, String> 
         return Err("Your reply was not a JSON object. Reply with exactly ONE JSON object, nothing else.".into());
     };
     let mut action = tx(m.get("action").unwrap_or(&Value::Null)).trim().to_lowercase();
+    // 9B 會把工具名直接寫在 action（{"action":"upscale","id":5}），或只寫 tool
+    if crate::agent_tools::find(&action).is_some() || (action.is_empty() && m.contains_key("tool")) {
+        return parse_call(&m, if action.is_empty() { None } else { Some(action.as_str()) }, c);
+    }
     if action.is_empty() {
         action = if m.contains_key("prompt") {
             "generate"
@@ -608,6 +831,7 @@ pub fn parse_action(raw: &str, c: &Check) -> Result<Map<String, Value>, String> 
     let check = str_list(m.get("check"));
     match action.as_str() {
         "generate" => parse_generate(&m, check, c),
+        "call" | "tool" | "use" => parse_call(&m, None, c),
         "finish" => {
             let mut best: Vec<i64> = m.get("best").and_then(Value::as_array).into_iter().flatten().filter_map(int_of).collect();
             if best.is_empty() {
@@ -654,8 +878,36 @@ pub fn parse_action(raw: &str, c: &Check) -> Result<Map<String, Value>, String> 
             }
             Ok(Map::from_iter([("action".into(), json!("reply")), ("message".into(), json!(msg))]))
         }
-        other => Err(format!("Unknown action \"{other}\". Use generate, finish or reply.")),
+        other => Err(format!("Unknown action \"{other}\". Use generate, call, finish or reply.")),
     }
+}
+
+/// {"action":"call","tool":…,"args":{…},"say":…}；args 寫在最外層也收（9B 常這樣）。named＝工具名寫在 action 的情況
+fn parse_call(m: &Map<String, Value>, named: Option<&str>, c: &Check) -> Result<Map<String, Value>, String> {
+    if c.calls_left <= 0 {
+        return Err(format!("You already used {} tool calls for this request. Finish (or reply) now.", crate::agent_tools::MAX_CALLS));
+    }
+    let tool = named.map(str::to_string).unwrap_or_else(|| tx(m.get("tool").or(m.get("name")).unwrap_or(&Value::Null)).trim().to_string());
+    if tool.is_empty() {
+        return Err("A call needs \"tool\": {\"action\":\"call\",\"tool\":\"name\",\"args\":{...}}.".into());
+    }
+    let args = match m.get("args").or(m.get("arguments")).or(m.get("params")) {
+        Some(Value::String(s)) => serde_json::from_str(s).unwrap_or(json!({})),
+        Some(v) => v.clone(),
+        None => Value::Object(m.iter().filter(|(k, _)| !["action", "tool", "name", "say", "check"].contains(&k.as_str())).map(|(k, v)| (k.clone(), v.clone())).collect()),
+    };
+    let (args, level, why) = crate::agent_tools::check_call(&tool, &args)?;
+    let name = crate::agent_tools::find(&tool).map(|t| t.name).unwrap_or_default();
+    let mut out = Map::from_iter([
+        ("action".into(), json!("call")),
+        ("tool".into(), json!(name)),
+        ("args".into(), args),
+        ("say".into(), json!(tx(m.get("say").unwrap_or(&Value::Null)).trim())),
+    ]);
+    if level == crate::agent_tools::Level::Confirm {
+        out.insert("confirm".into(), json!(why));
+    }
+    Ok(out)
 }
 
 /// 提示詞裡混進的 refs／denoise 撈出來當欄位，連同單獨一項的「832x1216」從提示詞拿掉
@@ -694,7 +946,9 @@ fn parse_generate(m: &Map<String, Value>, check: Vec<String>, c: &Check) -> Resu
     if prompt.chars().count() < 15 {
         return Err("\"prompt\" is missing or too short. Write the complete prompt.".into());
     }
-    if has_cjk_outside_quotes(&prompt) {
+    // Qwen 用附圖改圖／合成：官方寫法是「使用者寫中文就用中文下指令」
+    let qwen_refs = c.family == QWEN21 && c.refs_mode == "multi" && ["refs", "ref", "references", "reference_images", "user_images", "images"].iter().any(|k| m.get(*k).is_some_and(|v| ref_num(v).is_some() || v.as_array().is_some_and(|a| !a.is_empty())));
+    if !qwen_refs && has_cjk_outside_quotes(&prompt) {
         return Err("The prompt must be written in English: translate and expand the request into English (only text that must appear inside the picture may stay in quotes). Reply again.".into());
     }
     // 9B 偶爾把「怎麼寫提示詞」的說明整句抄進提示詞
@@ -799,6 +1053,13 @@ put the field in the JSON itself, for example {}. If you only take ideas from it
         if c.refs_mode == "one" {
             if refs.len() > 1 {
                 return Err("This image model can redraw only ONE user image at a time: \"refs\":[N] with a single number.".into());
+            }
+            // 圖生圖只是在原圖上重畫，角度和姿勢都會留著：三視圖、背面、側面要用 character_sheet（2026-10-26 朋友回報「三視圖畫出原圖」）
+            if NEW_VIEW.is_match(c.ask) {
+                return Err(format!(
+                    "Redrawing with refs keeps the original angle and pose, so it cannot make a turnaround or new views of the character. Use the tool instead: {{\"action\":\"call\",\"tool\":\"character_sheet\",\"args\":{{\"ref\":{},\"kind\":\"turnaround\"}}}}",
+                    refs[0]
+                ));
             }
             let d = m.get("denoise").and_then(crate::py::float).unwrap_or(0.7).clamp(0.2, 0.95);
             denoise = json!((d * 100.0).round() / 100.0);
@@ -1034,13 +1295,53 @@ impl Store {
 }
 
 /// 對話設定的預設值與檢查：brain 9b／35b／cloud，rounds 1～5，count 1～4，auto（關＝畫一輪就交卷），think，loras（讓它自己挑）
+/// 思考檔位：先做了五段（off/low/mid/high/max），使用者看過實測後改成三段
+/// （2026-10-27：「off(關閉思考)/Low(現在的一般)/high(現在的多想)」）。不限預算的那段拿掉：9B 會想到沒字可答
+pub const THINK_LEVELS: [&str; 3] = ["off", "low", "high"];
+
+/// 設定裡的思考檔位；舊存檔是 true／false（true 以前是不限，改當 high），五段時期的 mid→low、max→high
+pub fn think_level(v: &Value) -> &'static str {
+    match v {
+        Value::String(s) => match s.as_str() {
+            "mid" => "low",
+            "max" => "high",
+            s => THINK_LEVELS.iter().find(|l| **l == s).copied().unwrap_or("off"),
+        },
+        Value::Bool(true) => "high",
+        _ => "off",
+    }
+}
+
+/// 檔位 → 思考預算（tokens）：None＝不想（交給 pe::with_think_budget）
+pub fn think_budget(level: &str) -> Option<i64> {
+    match level {
+        "low" => Some(1024),
+        "high" => Some(3072),
+        _ => None,
+    }
+}
+
+/// 這個檔位一次最多寫幾個 token（思考＋回答）
+pub fn think_max_tokens(level: &str) -> i64 {
+    think_budget(level).map_or(2048, |n| n + 2048)
+}
+
 pub fn clean_settings(v: &Value) -> Value {
     let brain = v["brain"].as_str().filter(|b| matches!(*b, "9b" | "35b" | "cloud")).unwrap_or("9b");
     let int = |k: &str, d: i64, lo: i64, hi: i64| v.get(k).and_then(crate::py::int).unwrap_or(d).clamp(lo, hi);
     let flag = |k: &str, d: bool| v.get(k).map(|x| truthy(Some(x))).unwrap_or(d);
+    let think = match v.get("think") {
+        Some(t) => think_level(t),
+        None if brain == "cloud" => "high",
+        None => "off",
+    };
+    // mode：tools＝動手做（畫圖、用工具）、prompt＝只寫詞（不碰繪圖模型）；target：auto 或寫法名稱
+    let mode = if v["mode"] == "prompt" { "prompt" } else { "tools" };
+    let target = v["target"].as_str().filter(|t| GUIDES.iter().any(|g| g.0 == *t)).unwrap_or("auto");
     json!({
         "brain": brain, "rounds": int("rounds", 3, 1, 5), "count": int("count", 2, 1, 4),
-        "auto": flag("auto", true), "think": flag("think", brain == "cloud"), "loras": flag("loras", true),
+        "auto": flag("auto", true), "think": think, "loras": flag("loras", true), "show": flag("show", true),
+        "mode": mode, "target": target,
         "base": if v["base"].is_object() { v["base"].clone() } else { Value::Null },
     })
 }
@@ -1068,7 +1369,7 @@ mod tests {
     }
 
     fn check<'a>(cat: &'a [LoraInfo], last: Option<&'a Value>, imgs: &'a [i64], saw: bool, left: i64) -> Check<'a> {
-        Check { family: QWEN21, rounds_left: left, last, saw_images: saw, images: imgs, catalog: cat, fixed: &[], allow_loras: true, nudged: false, user_images: &[1, 2], request_user_images: &[], refs_mode: "multi" }
+        Check { family: QWEN21, rounds_left: left, last, saw_images: saw, images: imgs, catalog: cat, fixed: &[], allow_loras: true, nudged: false, user_images: &[1, 2], request_user_images: &[], refs_mode: "multi", ask: "", calls_left: 12 }
     }
 
     #[test]
@@ -1259,7 +1560,7 @@ mod tests {
         assert!(!t.contains("Age_Slider") && t.contains("glow"));
         let p = r#"{"action":"generate","prompt":"A 25-year-old woman reading in a cafe by the window","loras":[{"name":"PornMaster_QI2.1_Age_Slider_V1","strength":-2}]}"#;
         let cat = [age];
-        let c = Check { family: QWEN21, rounds_left: 3, last: None, saw_images: false, images: &[], catalog: &cat, fixed: &[], allow_loras: true, nudged: false, user_images: &[], request_user_images: &[], refs_mode: "" };
+        let c = Check { family: QWEN21, rounds_left: 3, last: None, saw_images: false, images: &[], catalog: &cat, fixed: &[], allow_loras: true, nudged: false, user_images: &[], request_user_images: &[], refs_mode: "", ask: "", calls_left: 12 };
         assert!(parse_action(p, &c).unwrap_err().contains("Unknown LoRA"));
     }
 
@@ -1283,11 +1584,12 @@ mod tests {
         }
         let sys = default_text("agent").unwrap();
         assert!(sys.starts_with("You are a commissioned artist") && !sys.ends_with('\n'));
-        for k in ["{model_guide}", "{sizes}", "{loras}"] {
+        for k in ["{model_guide}", "{sizes}", "{loras}", "{tools}"] {
             assert!(sys.contains(k), "{k}");
         }
         let full = system_prompt(sys, default_text(guide_id(ANIMA)).unwrap(), ANIMA, "(none)");
         assert!(full.contains("masterpiece, best quality") && full.contains("832x1216") && !full.contains("{model_guide}"));
+        assert!(full.contains("- character_sheet ") && !full.contains("{tools}") && full.matches("Besides drawing").count() == 1, "工具段落填在 {{tools}}，不重複接");
         assert_eq!(guide_id(QWEN21), "agent_qwen21");
         assert_eq!(guide_id(MOSS), "agent_moss");
         assert!(default_text("agent_moss").unwrap().contains("MOSS"));
@@ -1302,10 +1604,72 @@ mod tests {
         let s = clean_settings(&json!({"brain": "cloud", "rounds": 9, "count": 0}));
         assert_eq!(s["rounds"], json!(5));
         assert_eq!(s["count"], json!(1));
-        assert_eq!(s["think"], json!(true));
+        assert_eq!(s["think"], json!("high"));
+        assert_eq!(s["show"], json!(true));
         assert_eq!(clean_settings(&json!({"brain": "x"}))["brain"], json!("9b"));
         let b = blank_session(&json!({}));
         assert!(valid_id(&tx(&b["id"])));
+    }
+
+    #[test]
+    fn think_levels_map_to_budgets() {
+        let lv = |t: Value| clean_settings(&json!({"think": t}))["think"].clone();
+        assert_eq!((lv(json!(true)), lv(json!(false)), lv(json!("hyper"))), (json!("high"), json!("off"), json!("off")));
+        // 五段時期存下來的
+        assert_eq!((lv(json!("low")), lv(json!("mid")), lv(json!("high")), lv(json!("max"))), (json!("low"), json!("low"), json!("high"), json!("high")));
+        assert_eq!(clean_settings(&json!({}))["think"], json!("off"));
+        assert_eq!(clean_settings(&json!({"brain": "cloud"}))["think"], json!("high"));
+        assert_eq!((think_budget("off"), think_budget("low"), think_budget("high")), (None, Some(1024), Some(3072)));
+        assert_eq!((think_max_tokens("off"), think_max_tokens("low"), think_max_tokens("high")), (2048, 3072, 5120));
+    }
+
+    #[test]
+    fn parse_action_accepts_call() {
+        let cat: Vec<LoraInfo> = vec![];
+        let mut c = check(&cat, None, &[], false, 3);
+        let a = parse_action(r#"{"action":"call","tool":"upscale","args":{"id":5},"say":"放大"}"#, &c).unwrap();
+        assert_eq!((a["tool"].clone(), a["args"]["id"].clone(), a["args"]["scale"].clone()), (json!("upscale"), json!(5), json!(2.0)));
+        // 工具名寫在 action、參數寫在外層
+        let a = parse_action(r#"{"action":"remove_bg","id":7}"#, &c).unwrap();
+        assert_eq!((a["action"].clone(), a["tool"].clone(), a["args"]["id"].clone()), (json!("call"), json!("remove_bg"), json!(7)));
+        let a = parse_action(r#"{"action":"call","tool":"trash","args":{"ids":[1]}}"#, &c).unwrap();
+        assert!(a["confirm"].as_str().unwrap().contains("回收區"));
+        assert!(parse_action(r#"{"action":"call","tool":"api","args":{"method":"POST","path":"/api/trash/empty"}}"#, &c).unwrap_err().starts_with("Not allowed"));
+        c.calls_left = 0;
+        assert!(parse_action(r#"{"action":"call","tool":"gallery","args":{}}"#, &c).unwrap_err().contains("tool calls"));
+    }
+
+    #[test]
+    fn img2img_cannot_turn_the_character() {
+        let cat: Vec<LoraInfo> = vec![];
+        let ck = |ask: &'static str| Check {
+            family: ANIMA, rounds_left: 3, last: None, saw_images: false, images: &[], catalog: &cat, fixed: &[],
+            allow_loras: true, nudged: false, user_images: &[1], request_user_images: &[1], refs_mode: "one", ask, calls_left: 12,
+        };
+        let g = r#"{"action":"generate","prompt":"masterpiece, best quality, 1girl, turnaround, front view, side view, back view","refs":[1],"denoise":0.8}"#;
+        let e = parse_action(g, &ck("幫我畫這個角色的三視圖")).unwrap_err();
+        assert!(e.contains("character_sheet") && e.contains("\"ref\":1"), "{e}");
+        assert!(parse_action(g, &ck("頭髮改成紅色")).is_ok());
+    }
+
+    #[test]
+    fn tool_events_reach_the_model() {
+        let ev = vec![
+            json!({"kind": "user", "text": "放大最後一張"}),
+            json!({"kind": "act", "action": {"action": "call", "tool": "gallery", "args": {}}}),
+            json!({"kind": "tool", "tool": "gallery", "ok": true, "text": "[{\"id\":9}]"}),
+            json!({"kind": "act", "action": {"action": "call", "tool": "look", "args": {"ids": [9]}}}),
+            json!({"kind": "tool", "tool": "look", "ok": true, "text": "shown below"}),
+            json!({"kind": "result", "round": 1, "ids": [9], "tool": "look"}),
+        ];
+        assert_eq!(calls_used(&ev), 2);
+        assert_eq!(rounds_used(&ev), 0);
+        let look = vec![(9, json!({"type": "image_url", "image_url": {"url": "data:x"}}))];
+        let m = build_messages_with("SYS", &ev, &look, &[], 3, 2);
+        let all = serde_json::to_string(&m).unwrap();
+        assert!(all.contains("Tool gallery result: [{\\\"id\\\":9}]"), "{all}");
+        assert!(all.contains("The images you asked to look at") && all.contains("carry on with the user's request"));
+        assert_eq!(request_text(&ev), "放大最後一張");
     }
 
     #[test]
@@ -1313,7 +1677,7 @@ mod tests {
         let cat: Vec<LoraInfo> = vec![];
         let ck = |mode: &'static str| Check {
             family: QWEN21, rounds_left: 3, last: None, saw_images: false, images: &[], catalog: &cat, fixed: &[],
-            allow_loras: true, nudged: false, user_images: &[1, 2], request_user_images: &[], refs_mode: mode,
+            allow_loras: true, nudged: false, user_images: &[1, 2], request_user_images: &[], refs_mode: mode, ask: "", calls_left: 12,
         };
         let gen = |extra: &str| format!(r#"{{"action":"generate","prompt":"The woman from <image1> wearing the dress from <image2> on a beach","width":832,"height":1248{extra}}}"#);
         // Qwen：兩張合成，提示詞用 <image1>／<image2>
@@ -1402,5 +1766,94 @@ mod tests {
         assert!(parse_action(r#"{"action":"generate","prompt":"1girl, long golden hair, sunset beach","refs":[1],"denoise":0.85}"#, &c2).is_ok());
         assert!(parse_action(r#"{"action":"generate","prompt":"1girl, long golden hair, sunset beach","refs":[1],"denoise":0.75}"#, &c2).is_err());
         assert!(with_images("A", "").ends_with("cannot feed them to the image model: describe in the prompt everything you need from them."));
+    }
+
+    #[test]
+    fn guides_are_picked_by_model_images_and_video() {
+        assert_eq!(pick_guide(ANIMA, 0, "畫一個女孩"), "anima");
+        assert_eq!(pick_guide(QWEN21, 0, "畫一個女孩"), "qwen");
+        assert_eq!(pick_guide(QWEN21, 1, "把背景換成海邊"), "qwen_edit");
+        assert_eq!(pick_guide(QWEN21, 3, "三個人合照"), "qwen_multiref");
+        assert_eq!(pick_guide(ANIMA, 1, "照這張重畫"), "anima", "Anima 圖生圖照一般寫法");
+        assert_eq!(pick_guide(MOSS, 0, "寫一段影片：她轉頭微笑"), "ltx_video");
+        assert_eq!(pick_guide(MOSS, 0, "幫我寫 H3 的提示詞"), "h3_video");
+        assert_eq!(pick_guide("other", 0, "1girl"), "other");
+        // 每一份寫法都有預設文字
+        for g in GUIDES {
+            assert!(default_text(g.1).is_some_and(|t| t.len() > 200), "{} 沒有寫法", g.0);
+            assert_eq!(guide_text_id(g.0), Some(g.1));
+        }
+        assert_eq!(guide_text_id("Qwen-Edit"), Some("agent_qwen_edit"));
+        assert_eq!(guide_text_id("nope"), None);
+    }
+
+    #[test]
+    fn edits_and_videos_wait_for_their_guide() {
+        let call = |tool: &str| json!({"action": "call", "tool": tool, "args": {}}).as_object().cloned().unwrap();
+        assert_eq!(needed_guide(&call("edit"), ANIMA, "one"), Some("qwen_edit"));
+        assert_eq!(needed_guide(&call("video"), ANIMA, "one"), Some("ltx_video"));
+        assert_eq!(needed_guide(&call("upscale"), ANIMA, "one"), None);
+        let gen = |refs: Value| json!({"action": "generate", "prompt": "x", "refs": refs}).as_object().cloned().unwrap();
+        assert_eq!(needed_guide(&gen(json!([])), QWEN21, "multi"), None);
+        assert_eq!(needed_guide(&gen(json!([1])), QWEN21, "multi"), Some("qwen_edit"));
+        assert_eq!(needed_guide(&gen(json!([1, 2])), QWEN21, "multi"), Some("qwen_multiref"));
+        assert_eq!(needed_guide(&gen(json!([1])), ANIMA, "one"), None);
+        let ev = vec![json!({"kind": "tool", "tool": "guide", "ok": true, "args": {"name": "qwen_edit"}})];
+        assert!(guide_read(&ev, "qwen_edit"));
+        assert!(!guide_read(&ev, "ltx_video"));
+        let failed = vec![json!({"kind": "tool", "tool": "guide", "ok": false, "args": {"name": "qwen_edit"}})];
+        assert!(!guide_read(&failed, "qwen_edit"));
+    }
+
+    #[test]
+    fn qwen_refs_may_be_written_in_chinese() {
+        let c = check(&[], None, &[], false, 3);
+        assert!(parse_action(r#"{"action":"generate","prompt":"把她的白T恤換成黑色皮夾克，其他部分保持不變","refs":[1]}"#, &c).is_ok());
+        assert!(parse_action(r#"{"action":"generate","prompt":"一個女孩坐在海邊的木棧道上看夕陽"}"#, &c).unwrap_err().contains("English"));
+    }
+
+    #[test]
+    fn prompt_mode_reads_cards() {
+        let a = parse_prompt_action(r#"{"action":"prompt","prompt":"The image is a vertical anime-style illustration of a girl at a desk.","negative":"","width":800,"height":1250,"note":"沒指定背景，我放在傍晚的教室"}"#, QWEN21, "qwen").unwrap();
+        assert_eq!((a["action"].clone(), a["guide"].clone(), a["width"].clone(), a["height"].clone()), (json!("prompt"), json!("qwen"), json!(800), json!(1248)));
+        assert_eq!(a["note"], "沒指定背景，我放在傍晚的教室");
+        // 改圖：中文指令可以、沒有尺寸
+        let e = parse_prompt_action(r#"{"prompt":"把背景換成夜晚的海邊，人物的臉、髮型、衣服和姿勢保持不變。"}"#, QWEN21, "qwen_edit").unwrap();
+        assert!(e.get("width").is_none());
+        // 文生圖寫中文、抄寫法、太短：退回
+        assert!(parse_prompt_action(r#"{"action":"prompt","prompt":"一個女孩坐在書桌前，桌上疊著三本書"}"#, QWEN21, "qwen").unwrap_err().contains("English"));
+        assert!(parse_prompt_action(r#"{"action":"prompt","prompt":"Work in this order: the opening sentence first, then the rest."}"#, QWEN21, "qwen").unwrap_err().contains("copied"));
+        assert!(parse_prompt_action(r#"{"action":"prompt","prompt":"a cat"}"#, QWEN21, "qwen").is_err());
+        // Anima 修 tag
+        let an = parse_prompt_action(r#"{"action":"prompt","prompt":"masterpiece, best quality, score_7, 1girl, solo, long hair, holding cup, She smiles."}"#, ANIMA, "anima").unwrap();
+        assert!(tx(&an["prompt"]).starts_with("masterpiece, best quality, score_7"), "{}", an["prompt"]);
+        // 只回話
+        let r = parse_prompt_action(r#"{"action":"reply","message":"你想要直的還是橫的？"}"#, QWEN21, "qwen").unwrap();
+        assert_eq!(r["action"], "reply");
+        assert!(parse_prompt_action(r#"{"action":"generate_image"}"#, QWEN21, "qwen").is_err());
+        let sys = prompt_system(default_text("agent_prompt").unwrap(), "GUIDE TEXT", "qwen_edit", QWEN21);
+        assert!(sys.contains("GUIDE TEXT") && sys.contains("editing one picture") && sys.contains("832x1248"));
+        assert!(!sys.contains("{guide}") && !sys.contains("{target}") && !sys.contains("{sizes}"));
+    }
+
+    #[test]
+    fn settings_keep_mode_and_target() {
+        let s = clean_settings(&json!({"mode": "prompt", "target": "qwen_edit"}));
+        assert_eq!((s["mode"].clone(), s["target"].clone()), (json!("prompt"), json!("qwen_edit")));
+        let s = clean_settings(&json!({"mode": "weird", "target": "../x"}));
+        assert_eq!((s["mode"].clone(), s["target"].clone()), (json!("tools"), json!("auto")));
+    }
+
+    #[test]
+    fn explicit_prompt_target_uses_its_own_family() {
+        assert_eq!(prompt_family("qwen", ANIMA), QWEN21);
+        assert_eq!(prompt_family("qwen_edit", ANIMA), QWEN21);
+        assert_eq!(prompt_family("anima", QWEN21), ANIMA);
+        assert_eq!(prompt_family("auto", MOSS), MOSS);
+        let family = prompt_family("qwen", ANIMA);
+        let system = prompt_system(default_text("agent_prompt").unwrap(), "GUIDE", "qwen", family);
+        assert!(system.contains("832x1248"));
+        let a = parse_prompt_action(r#"{"prompt":"An orange cat sleeping on a wooden chair."}"#, family, "qwen").unwrap();
+        assert_eq!((a["width"].as_i64(), a["height"].as_i64()), (Some(832), Some(1248)));
     }
 }

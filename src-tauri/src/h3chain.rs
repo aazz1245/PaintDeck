@@ -21,7 +21,9 @@ pub const SECS_PER_SEC: f64 = 25.0;
 const STEPS: i64 = 8;
 const ASPECTS: &[&str] = &["16:9", "9:16", "1:1", "4:3", "3:4", "21:9"];
 const QUALITIES: &[&str] = &["fast", "std", "high"];
-const STATUSES: &[&str] = &["todo", "running", "done", "error", "stopped"];
+const STATUSES: &[&str] = &["todo", "running", "done", "error", "stopped", "review"];
+/// 在哪拍：runpod＝雲端顯卡（接上一段的 latent，最順）；runninghub＝一段一個任務，用 H3「接著上一支拍」（上一段最後約 0.9 秒畫面＋聲音當開頭引導）
+const WHERES: &[&str] = &["runpod", "runninghub"];
 /// 每段拍完才有的欄位（網頁存檔不能改，重拍時清掉）
 /// 拍攝單的多張參考圖：最多 8 張（第 1 段首幀佔 <Picture 1>，合起來不超過 qwen_reference 的 9 張）
 pub const MAX_REFS: usize = 8;
@@ -81,6 +83,20 @@ pub fn normalize(v: &Value) -> Result<Value, String> {
             seg[*k] = g.get(*k).cloned().unwrap_or(Value::Null);
         }
         seg["status"] = json!(pick(&g["status"], STATUSES, "todo"));
+        // 這段自己挑的參考圖（拍攝單關掉幾張時才有）；沒有＝用整條的
+        if let Some(a) = g["refs"].as_array() {
+            let mut list = vec![];
+            for (k, r) in a.iter().take(MAX_REFS).enumerate() {
+                let f = opt_file(r, &format!("第 {} 段第 {} 張參考圖", i + 1, k + 1))?;
+                if !f.is_null() {
+                    list.push(f);
+                }
+            }
+            seg["refs"] = json!(list);
+        }
+        for k in ["takes", "selected_take", "pending_take", "draft", "entry", "exit", "inherit_entry"] {
+            if let Some(value) = g.get(k) { seg[k] = value.clone(); }
+        }
         segs.push(seg);
     }
     if segs.is_empty() {
@@ -105,19 +121,35 @@ pub fn normalize(v: &Value) -> Result<Value, String> {
         "aspect": pick(&v["aspect"], ASPECTS, "9:16"), "quality": pick(&v["quality"], QUALITIES, "std"), "size": size,
         "look": s("look"), "scene": s("scene"), "style": s("style"), "voice": s("voice"), "sound": s("sound"),
         "ref": opt_file(&v["ref"], "角色參考圖")?, "first": opt_file(&v["first"], "第 1 段首幀")?,
-        "refs": refs, "sheet": sheet,
+        "refs": refs, "sheet": sheet, "review": v["review"].as_bool().unwrap_or(false), "where": pick(&v["where"], WHERES, "runpod"),
         "segments": segs, "final": v.get("final").cloned().unwrap_or(Value::Null),
     }))
 }
 
-fn any_done(c: &Value) -> bool {
-    c["segments"].as_array().into_iter().flatten().any(|s| s["status"] == "done")
+pub fn size_locked(c: &Value) -> bool {
+    c["size"].is_array() || c["segments"].as_array().into_iter().flatten().any(|s| {
+        s["status"] == "done" || s["selected_take"].is_string() || s["pending_take"].is_string()
+            || s["takes"].as_array().is_some_and(|takes| !takes.is_empty())
+    })
 }
 
 /// 已經有拍好的段時不能改比例、畫質（latent 的尺寸會對不上）
 pub fn check_edit(old: &Value, new: &Value) -> Result<(), String> {
-    if any_done(old) && (old["aspect"] != new["aspect"] || old["quality"] != new["quality"]) {
-        return Err("已經拍好的段是舊的比例和畫質；要改，先按「從第 1 段重拍」".into());
+    let old_segs = old["segments"].as_array().cloned().unwrap_or_default();
+    let new_segs = new["segments"].as_array().cloned().unwrap_or_default();
+    if old_segs.len() != new_segs.len() {
+        for (i, seg) in old_segs.iter().enumerate() {
+            let protected = seg["takes"].as_array().is_some_and(|a| !a.is_empty()) || seg["status"] == "done" || seg["pending_take"].is_string();
+            if protected && (new_segs.get(i).is_none() || ["secs", "text", "lines", "last", "refs"].iter().any(|k| seg[*k] != new_segs[i][*k])) {
+                return Err("已有拍攝版本的段落不能移位或刪除，請另存新的長片".into());
+            }
+        }
+    }
+    if size_locked(old) && (old["aspect"] != new["aspect"] || old["quality"] != new["quality"]) {
+        return Err("長片已有畫面尺寸或拍攝版本；要改比例或畫質，請另存新的長片".into());
+    }
+    if size_locked(old) && old["where"].as_str().unwrap_or("runpod") != new["where"].as_str().unwrap_or("runpod") {
+        return Err("長片已經有拍好的段：兩種拍法接不起來，要換地方拍請另存新的長片".into());
     }
     Ok(())
 }
@@ -126,10 +158,8 @@ pub fn check_edit(old: &Value, new: &Value) -> Result<(), String> {
 pub fn reset_from(c: &mut Value, n: usize) {
     if let Some(segs) = c["segments"].as_array_mut() {
         for s in segs.iter_mut().skip(n) {
-            for k in RESULT_KEYS {
-                s[*k] = Value::Null;
-            }
-            s["status"] = json!("todo");
+            crate::film_takes::ensure_legacy(s, RESULT_KEYS);
+            crate::film_takes::clear_current(s, RESULT_KEYS);
         }
     }
     c["final"] = Value::Null;
@@ -174,6 +204,40 @@ pub fn seg_prompt(c: &Value, i: usize) -> String {
     parts.join(" ")
 }
 
+pub fn on_runninghub(c: &Value) -> bool {
+    c["where"] == "runninghub"
+}
+
+/// RunningHub 版第 i 段送給 h3::build 的參數（素材板模式）：
+/// 第 1 段＝參考圖（＋首幀釘在第 0 秒）；第 2 段起＝上一段的影片當「接著拍」（帶聲音）＋參考圖。
+/// 開頭那 CONTINUE_FRAMES 格是上一段尾巴的重疊，秒數先加回去，拍完再切掉
+pub fn rh_params(c: &Value, i: usize, prev: Option<&str>, seed: i64) -> Value {
+    let seg = &c["segments"][i];
+    let mut items: Vec<Value> = seg_refs(c, i).into_iter().filter_map(|r| r.as_str()).map(|n| json!({"kind": "image", "name": n, "use": "ref"})).collect();
+    let mut secs = seg["secs"].as_f64().unwrap_or(DEFAULT_SECS);
+    match prev {
+        Some(v) if i > 0 => {
+            items.insert(0, json!({"kind": "video", "name": v, "use": "continue", "audio": true}));
+            secs += h3::CONTINUE_FRAMES as f64 / h3::FPS as f64;
+        }
+        _ => {
+            if let Some(f) = c["first"].as_str() {
+                items.push(json!({"kind": "image", "name": f, "use": "anchor", "secs": 0.0}));
+            }
+        }
+    }
+    // 這段釘了尾幀：釘在最後一格（-1）
+    if let Some(l) = seg["last"].as_str() {
+        items.push(json!({"kind": "image", "name": l, "use": "anchor", "secs": -1.0}));
+    }
+    let mut p = json!({"h3_mode": "board", "items": items, "prompt": seg_prompt(c, i), "seconds": secs,
+        "aspect": c["aspect"], "quality": c["quality"], "steps": STEPS, "sampler": "res_multistep", "scheduler": "simple", "seed": seed});
+    if let Some(sz) = c["size"].as_array() {
+        p["src_wh"] = json!(sz);
+    }
+    p
+}
+
 /// 畫面尺寸：第一段拍了就固定（存在 size），還沒拍照比例、畫質算
 pub fn size_of(c: &Value) -> (i64, i64) {
     match c["size"].as_array().map(|a| (a[0].as_i64(), a[1].as_i64())) {
@@ -184,14 +248,21 @@ pub fn size_of(c: &Value) -> (i64, i64) {
 
 /// 第 i 段（0 起算）的節點圖。照 2026-10-23 實驗（D:\AI\小克工作區\研究\h3_chain_src\spike_chain.py）：
 /// 第 1 段 Start，第 2 段起 LoadLatent（上一段的 latent）→ Continue；存 latent、cut／end 兩支影片、交棒資訊（PreviewAny）
-/// 第 i 段節點圖要載的素材檔（input 裡的檔名）：參考圖（多張或舊的一張）、第 1 段的首幀、這段的尾幀
-pub fn inputs_of(c: &Value, i: usize) -> Vec<String> {
-    let refs: Vec<&Value> = match c["refs"].as_array().filter(|a| !a.is_empty()) {
+/// 第 i 段送的參考圖：這段自己挑過就用這段的（空陣列＝這段一張都不送），不然用整條的；都沒有照舊用一張 ref
+pub fn seg_refs(c: &Value, i: usize) -> Vec<&Value> {
+    if let Some(a) = c["segments"][i]["refs"].as_array() {
+        return a.iter().collect();
+    }
+    match c["refs"].as_array().filter(|a| !a.is_empty()) {
         Some(a) => a.iter().collect(),
         None => vec![&c["ref"]],
-    };
+    }
+}
+
+/// 第 i 段節點圖要載的素材檔（input 裡的檔名）：參考圖（多張或舊的一張）、第 1 段的首幀、這段的尾幀
+pub fn inputs_of(c: &Value, i: usize) -> Vec<String> {
     let first = if i == 0 { &c["first"] } else { &Value::Null };
-    refs.into_iter().chain([first, &c["segments"][i]["last"]]).filter_map(|v| v.as_str().map(str::to_string)).collect()
+    seg_refs(c, i).into_iter().chain([first, &c["segments"][i]["last"]]).filter_map(|v| v.as_str().map(str::to_string)).collect()
 }
 
 pub fn seg_graph(c: &Value, i: usize, seed: i64) -> Result<Map<String, Value>, String> {
@@ -220,14 +291,9 @@ pub fn seg_graph(c: &Value, i: usize, seed: i64) -> Result<Map<String, Value>, S
             cond_in[k] = json!([li, 0]);
         }
     };
-    // 拍攝單的多張參考圖每段都接；沒有就照舊用一張 ref
-    match c["refs"].as_array().filter(|a| !a.is_empty()) {
-        Some(refs) => {
-            for (k, r) in refs.iter().enumerate() {
-                img(&format!("qwen_reference_{}", k + 1), r);
-            }
-        }
-        None => img("qwen_reference_1", &c["ref"]),
+    // 拍攝單的多張參考圖每段都接（這段挑過就用這段的）；沒有就照舊用一張 ref
+    for (k, r) in seg_refs(c, i).into_iter().enumerate() {
+        img(&format!("qwen_reference_{}", k + 1), r);
     }
     img("last_frame", &seg["last"]);
     let (cond, head) = if i == 0 {
@@ -249,7 +315,15 @@ pub fn seg_graph(c: &Value, i: usize, seed: i64) -> Result<Map<String, Value>, S
         add("PreviewAny", json!({"source": [cont, 4]}));
         (cont.clone(), Some(json!([cont, 2])))
     };
-    let guider = add("BasicGuider", json!({"model": [unet, 0], "conditioning": [cond, 0]}));
+    // 拍攝單勾了「用 RefMod 鎖臉」：條件先接 RefMod（refmod.rs）再進 guider
+    let refmods = crate::refmod::names_of(c)?;
+    let positive = if refmods.is_empty() {
+        json!([cond, 0])
+    } else {
+        let mods = add("MiniMaxH3RefModsLoader", crate::refmod::loader_inputs(&refmods));
+        json!([add("MiniMaxH3RefModApply", crate::refmod::apply_inputs(json!([cond, 0]), json!([mods, 0]))), 0])
+    };
+    let guider = add("BasicGuider", json!({"model": [unet, 0], "conditioning": positive}));
     let sampler = add("KSamplerSelect", json!({"sampler_name": "res_multistep"}));
     let sig = add("BasicScheduler", json!({"model": [unet, 0], "scheduler": "simple", "steps": STEPS, "denoise": 1.0}));
     let noise = add("RandomNoise", json!({"noise_seed": seed}));
@@ -357,6 +431,21 @@ mod tests {
         g.values().filter(|n| n["class_type"] == c).cloned().collect()
     }
 
+    #[test]
+    fn sheet_refmods_feed_every_segment_guider() {
+        let sheet = json!({"refmod": true, "cast": [{"name": "甲", "locked": true, "refmod": "paintdeck/pd_char_7"}]});
+        let c = normalize(&json!({"id": "abc", "sheet": sheet, "segments": [{"text": "a"}, {"text": "b"}]})).unwrap();
+        for i in 0..2 {
+            let g = seg_graph(&c, i, 1).unwrap();
+            let guider = &classes(&g, "BasicGuider")[0];
+            let apply = &g[guider["inputs"]["conditioning"][0].as_str().unwrap()];
+            assert_eq!(apply["class_type"], "MiniMaxH3RefModApply", "第 {i} 段");
+            let src = &g[apply["inputs"]["conditioning"][0].as_str().unwrap()]["class_type"];
+            assert_eq!(src, if i == 0 { "H3ContinuousStartV14" } else { "H3ContinuousContinueV14" });
+            assert_eq!(classes(&g, "MiniMaxH3RefModsLoader")[0]["inputs"]["mod_1"], "paintdeck/pd_char_7");
+        }
+    }
+
     /// 舊長片（沒有 refs、sheet）的節點圖，存在 tests\golden\chain_graph_v1.json；ANIMA_UPDATE_GOLDEN=1 時重寫
     #[test]
     fn old_chain_graph_unchanged() {
@@ -394,6 +483,60 @@ mod tests {
         let g = seg_graph(&normalize(&v).unwrap(), 1, 1).unwrap();
         let loads: Vec<Value> = classes(&g, "LoadImage").iter().map(|n| n["inputs"]["image"].clone()).collect();
         assert!(loads.contains(&json!("old.png")), "沒有 refs 就照舊用 ref");
+    }
+
+    #[test]
+    fn runninghub_params_continue_from_previous_video() {
+        let c = normalize(&json!({"id": "abc", "where": "runninghub", "first": "f.png", "refs": ["a.png", "b.png"], "size": [608, 1056],
+            "segments": [{"secs": 8, "text": "她轉身"}, {"secs": 8, "text": "她揮手", "refs": ["b.png"]}]})).unwrap();
+        assert!(on_runninghub(&c));
+        let p0 = rh_params(&c, 0, None, 7);
+        assert_eq!(p0["h3_mode"], "board");
+        assert_eq!(p0["items"], json!([{"kind": "image", "name": "a.png", "use": "ref"}, {"kind": "image", "name": "b.png", "use": "ref"},
+            {"kind": "image", "name": "f.png", "use": "anchor", "secs": 0.0}]));
+        assert_eq!(p0["seconds"], 8.0);
+        assert_eq!(p0["src_wh"], json!([608, 1056]));
+        let p1 = rh_params(&c, 1, Some("h3_prev.mp4"), 7);
+        assert_eq!(p1["items"][0], json!({"kind": "video", "name": "h3_prev.mp4", "use": "continue", "audio": true}));
+        assert_eq!(p1["items"].as_array().unwrap().len(), 2, "這段只送自己挑的參考圖、不再釘首幀");
+        assert!((p1["seconds"].as_f64().unwrap() - (8.0 + 22.0 / 24.0)).abs() < 1e-9, "重疊的格數先加回去");
+        assert!(p1["prompt"].as_str().unwrap().contains("她揮手"));
+        // 真的組得出節點圖（接續的影片走 AddGuide）
+        let input = std::env::temp_dir();
+        let (g, _) = crate::h3::build(&p1, &input, 0).unwrap();
+        assert!(g.values().any(|n| n["class_type"] == "LoadVideo" && n["inputs"]["file"] == "h3_prev.mp4"));
+        assert!(g.values().any(|n| n["class_type"] == "MiniMaxH3AddGuide"));
+        assert_eq!(normalize(&json!({"where": "nope"})).unwrap()["where"], "runpod");
+        let mut c2 = c.clone();
+        c2["segments"][1]["last"] = json!("l.png");
+        let p2 = rh_params(&c2, 1, Some("h3_prev.mp4"), 7);
+        assert_eq!(p2["items"].as_array().unwrap().last().unwrap(), &json!({"kind": "image", "name": "l.png", "use": "anchor", "secs": -1.0}));
+    }
+
+    #[test]
+    fn cannot_switch_where_after_a_segment_is_shot() {
+        let old = normalize(&json!({"where": "runpod", "segments": [{"status": "done"}]})).unwrap();
+        let new = normalize(&json!({"where": "runninghub", "segments": [{"status": "done"}]})).unwrap();
+        assert!(check_edit(&old, &new).unwrap_err().contains("另存"));
+        let fresh = normalize(&json!({"where": "runpod", "segments": [{}]})).unwrap();
+        assert!(check_edit(&fresh, &normalize(&json!({"where": "runninghub", "segments": [{}]})).unwrap()).is_ok());
+    }
+
+    #[test]
+    fn segment_refs_override_the_chain_refs() {
+        let c = normalize(&json!({"id": "abc", "first": "f.png", "refs": ["a.png", "b.png"], "segments": [{}, {"refs": ["b.png"]}, {"refs": []}]})).unwrap();
+        let loads = |i: usize| -> Vec<String> {
+            classes(&seg_graph(&c, i, 1).unwrap(), "LoadImage").iter().map(|n| n["inputs"]["image"].as_str().unwrap().to_string()).collect()
+        };
+        assert!(loads(0).contains(&"a.png".into()) && loads(0).contains(&"b.png".into()));
+        let g1 = seg_graph(&c, 1, 1).unwrap();
+        let cont = &classes(&g1, "H3ContinuousContinueV14")[0]["inputs"];
+        assert!(cont["qwen_reference_1"].is_array() && cont.get("qwen_reference_2").is_none(), "{cont}");
+        assert_eq!(loads(1), ["b.png"]);
+        assert!(loads(2).is_empty(), "空陣列＝這段一張都不送");
+        assert_eq!(inputs_of(&c, 1), ["b.png"]);
+        assert!(c["segments"][0].get("refs").is_none(), "沒挑過的段不存 refs，照用整條的");
+        assert!(normalize(&json!({"segments": [{"refs": ["..\\a.png"]}]})).is_err());
     }
 
     #[test]
@@ -507,10 +650,28 @@ mod tests {
         new["aspect"] = json!("16:9");
         assert!(check_edit(&old, &new).is_ok(), "還沒拍：可以改");
         old["segments"][0]["status"] = json!("done");
-        assert!(check_edit(&old, &new).unwrap_err().contains("從第 1 段重拍"));
+        assert!(check_edit(&old, &new).unwrap_err().contains("另存新的長片"));
         let mut same = old.clone();
         same["segments"][1]["text"] = json!("changed");
         assert!(check_edit(&old, &same).is_ok(), "只改文字：可以");
+    }
+
+    #[test]
+    fn pending_review_and_recorded_dimensions_lock_shape_without_completed_shots() {
+        for state in [json!({"status":"review", "pending_take":"candidate"}),
+            json!({"status":"todo", "takes":[{"id":"old"}]}), json!({"status":"todo", "selected_take":"old"})] {
+            let mut old = chain(json!([{"text":"a"}]));
+            old["segments"][0] = state;
+            let mut changed = old.clone(); changed["aspect"] = json!("1:1");
+            assert!(size_locked(&old));
+            assert!(check_edit(&old, &changed).unwrap_err().contains("另存新的長片"));
+            assert!(check_edit(&old, &old).is_ok());
+        }
+        let mut old = chain(json!([{"text":"a", "status":"error"}]));
+        old["size"] = json!([640, 960]);
+        let mut changed = old.clone(); changed["quality"] = json!("high");
+        assert!(check_edit(&old, &changed).is_err(), "failed generation still owns its recorded canvas");
+        assert_eq!(old["size"], json!([640, 960]));
     }
 
     #[test]

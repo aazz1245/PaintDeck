@@ -51,6 +51,15 @@ One single line, in this exact order, everything comma-separated except the fina
   (`penis`, `pussy`, `nipples` …); two women get `2girls, yuri`. The body tags must fit the
   position you named: `missionary` is `lying, on back` and never `on stomach`;
   `doggystyle` is `all fours`, never `on back`. Write exactly one of `on back` / `on stomach`.
+- A sex act is never just its name. Spell the action out in tags and sentences: the hands
+  (`breasts squeezed together`, `grabbing own breast`, `hands on another's hips`), the mouth
+  and eyes (`tongue out`, `licking penis`, `fellatio`, `looking up`, `half-closed eyes`,
+  `saliva`, `saliva trail`), the fluids and where they are (`sweat`, `pussy juice`, `cum`,
+  `cum on breasts`, `cum on body`, `cum in pussy`, `cumdrip`), and who is cut off
+  (`faceless male`, `head out of frame`). The sentences then say bluntly which part is
+  inside, between or against which, and how it moves: "his cock slides between her
+  breasts", "cum drips out of her pussy". Use the direct words — cock, pussy, cum,
+  fucking — never soft ones such as intimate, sensual or embrace.
 - Body size is written the Danbooru way: `small breasts`, `medium breasts`,
   `large breasts`, `huge breasts` — never a bare `breast`.
 - Every tag once. Tags must not contradict each other or the sentences (one framing, one
@@ -81,3 +90,6 @@ User: 黃昏的教室，一個銀髮女孩坐在窗邊看書，微笑
 
 User: 臥室裡，成年的金髮女孩跨坐在男友身上，女上位，全裸，喘氣
 {"rewritten_prompt": "masterpiece, best quality, score_7, explicit, 1girl, 1boy, hetero, long hair, blonde hair, blue eyes, blush, open mouth, heavy breathing, sweat, completely nude, medium breasts, nipples, sex, vaginal, cowgirl position, girl on top, straddling, hands on another's chest, penis, pussy, bed, white bed sheets, bedroom, dim lighting, lamp light, cowboy shot, from below, A naked blonde young woman straddles her boyfriend on the bed, riding him in the cowgirl position with her hands pressed on his chest. She is flushed and breathing hard, her long blonde hair clinging to her sweaty shoulders in the warm glow of the bedside lamp.", "wh_ratio": "2:3"}
+
+User: 黑長髮女生跪著幫男人乳交，邊舔龜頭邊抬頭看他，精液射在奶子上
+{"rewritten_prompt": "masterpiece, best quality, score_7, explicit, 1girl, 1boy, hetero, long hair, black hair, aqua eyes, looking up, half-closed eyes, blush, red lips, tongue out, saliva, saliva trail, completely nude, large breasts, nipples, paizuri, breasts squeezed together, licking penis, penis, cum, cum on breasts, sweat, kneeling, faceless male, head out of frame, green nails, nail polish, upper body, from side, bedroom, dim lighting, She kneels naked in front of a standing man and squeezes her large breasts together with both hands, trapping his cock between them so the head pokes out of her cleavage. She sticks her tongue out to lick the tip and gazes up at him with half-closed eyes while his shaft slides up and down between her sweaty breasts. Thick cum is splattered over her breasts and drips down from her nipples, and a trail of saliva hangs from her tongue.", "wh_ratio": "2:3"}

@@ -1135,6 +1135,24 @@ pub fn chain_join_args(parts: &[(PathBuf, f64)], dst: &Path) -> Vec<OsString> {
     a
 }
 
+/// 切掉影片開頭 frames 格（畫面、聲音一起；24fps 重新編碼，格數才準）。RunningHub 版長片：每段開頭是上一段尾巴的重疊
+pub fn trim_head_args(src: &Path, dst: &Path, frames: i64) -> Vec<OsString> {
+    let secs = frames.max(0) as f64 / 24.0;
+    let mut a: Vec<OsString> = vec!["-y".into(), "-hide_banner".into(), "-loglevel".into(), "error".into(), "-i".into(), src.into()];
+    let f = format!("[0:v]trim=start_frame={},setpts=PTS-STARTPTS[v];[0:a]atrim=start={secs:.4},asetpts=PTS-STARTPTS[a]", frames.max(0));
+    for s in ["-filter_complex", &f, "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-pix_fmt", "yuv420p", "-r", "24", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart"] {
+        a.push(s.into());
+    }
+    a.push(dst.into());
+    a
+}
+
+pub fn trim_head(t: &Tools, src: &Path, dst: &Path, frames: i64) -> Result<(), String> {
+    let tmp = dst.with_extension("part.mp4");
+    run(t.ffmpeg()?, &trim_head_args(src, &tmp, frames))?;
+    std::fs::rename(&tmp, dst).map_err(|e| format!("存影片失敗：{e}"))
+}
+
 /// 接成一支存到 dst（先寫暫存檔，成功才改名）
 pub fn join_chain(t: &Tools, parts: &[(PathBuf, f64)], dst: &Path) -> Result<(), String> {
     if parts.is_empty() {
@@ -1160,6 +1178,14 @@ mod tests {
         let f = &a[a.iter().position(|x| x == "-filter_complex").unwrap() + 1];
         assert!(f.contains("concat=n=2:v=1:a=1") && f.contains("afade=t=out:st=9.985:d=0.015") && f.contains("afade=t=out:st=9.485:d=0.015") && f.contains("afade=t=in:d=0.015"), "{f}");
         assert!(!f.contains("xfade"));
+        assert_eq!(a.last().unwrap(), "out.mp4");
+    }
+
+    #[test]
+    fn trim_head_cuts_frames_and_audio_together() {
+        let a: Vec<String> = trim_head_args(Path::new("in.mp4"), Path::new("out.mp4"), 22).iter().map(|s| s.to_string_lossy().to_string()).collect();
+        let f = &a[a.iter().position(|x| x == "-filter_complex").unwrap() + 1];
+        assert!(f.contains("trim=start_frame=22") && f.contains("atrim=start=0.9167"), "{f}");
         assert_eq!(a.last().unwrap(), "out.mp4");
     }
 

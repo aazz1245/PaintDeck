@@ -31,6 +31,9 @@ export async function api(path, opts = {}) {
   const timer = ac && setTimeout(() => ac.abort(), timeout);
   try {
     const r = await fetch(path, o);
+    const diagnosticId = r.headers?.get?.("x-anima-diagnostic-id");
+    const unavailable = r.headers?.get?.("x-anima-diagnostic") === "unavailable";
+    if ((diagnosticId || unavailable) && typeof CustomEvent !== "undefined") document.dispatchEvent(new CustomEvent("anima-diagnostic",{detail:{id:diagnosticId,failed:!r.ok,unavailable}}));
     let data = null;
     try { data = await r.json(); } catch { /* 非 JSON */ }
     if (ac?.signal.aborted) throw new Error("timeout");
@@ -66,13 +69,15 @@ document.addEventListener("click", (e) => {
 export async function uploadFile(file, kind = "image") {
   const fd = new FormData();
   fd.append("image", file, file.name || `${kind}.png`);
-  return api(`/api/upload?kind=${kind}`, { method: "POST", body: fd });
+  const endpoint = kind === "video" || kind === "audio" ? "/api/video/media/upload" : "/api/upload";
+  return api(`${endpoint}?kind=${encodeURIComponent(kind)}`, { method: "POST", body: fd });
 }
 
-export function pickFile() {
+export function pickFile(accept = "image/*") {
   return new Promise((res) => {
     const inp = $("#filePick");
     inp.value = "";
+    inp.accept = accept;
     inp.onchange = () => res(inp.files[0] || null);
     inp.click();
   });

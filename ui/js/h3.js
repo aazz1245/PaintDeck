@@ -137,6 +137,7 @@ export async function show() {
     loading = load().catch((e) => { loading = null; F("h3Desc").textContent = `讀不到 H3 影片台的資料：${e.message}`; });
     await loading;
     refreshCloud();
+    refreshRh();
     return;
   }
   await loading;
@@ -893,6 +894,58 @@ function paintWhere() {
   $$("#h3Where button").forEach((b) => { const on = b.dataset.w === where; b.classList.toggle("on", on); b.setAttribute("aria-selected", String(on)); });
   F("h3Cloud").hidden = where !== "cloud";
   F("h3Local").hidden = where !== "local";
+  F("h3Rh").hidden = where !== "runninghub";
+}
+
+// ---------------------------------------------------------------- RunningHub
+let rhub = null;     // GET /api/runninghub
+let rhCoins = null;  // 測試回來的餘額
+
+async function refreshRh() {
+  try { rhub = await api("/api/runninghub"); } catch { rhub = null; }
+  paintRh();
+}
+
+function paintRh() {
+  if (!rhub) return;
+  F("h3RhDot").className = "ag-dot" + (rhub.has_key ? (rhCoins != null ? " on" : "") : " err");
+  F("h3RhMsg").textContent = rhub.has_key ? (rhCoins != null ? `連上了：剩 ${rhCoins} RH 幣` : "金鑰存好了（按「測試」看能不能用）") : "還沒填 API Key";
+  F("h3RhKey").placeholder = rhub.has_key ? "已存（要換才貼新的）" : "貼上 API Key（存起來會加密）";
+  F("h3RhSite").value = rhub.site;
+  F("h3RhInst").value = rhub.instance;
+  F("h3RhModels").value = Object.entries(rhub.models || {}).map(([a, b]) => `${a} => ${b}`).join("\n");
+  const rate = (rhub.rates || []).find((r) => r.instance === rhub.instance);
+  F("h3RhMeta").textContent = rate ? `${rhub.instance}：每秒約 ${rate.coins_per_sec} RH 幣，10 秒的影片大約要算幾分鐘` : "";
+}
+
+/** 「這邊 => 那邊」一行一個 → {這邊: 那邊} */
+function rhModels() {
+  const out = {};
+  for (const line of F("h3RhModels").value.split("\n")) {
+    const [a, b] = line.split("=>").map((x) => (x || "").trim());
+    if (a && b) out[a] = b;
+  }
+  return out;
+}
+
+async function saveRh() {
+  const body = { site: F("h3RhSite").value, instance: F("h3RhInst").value, models: rhModels() };
+  if (F("h3RhKey").value.trim()) body.key = F("h3RhKey").value.trim();
+  try {
+    rhub = await api("/api/runninghub/config", { json: body });
+    F("h3RhKey").value = "";
+    toast("RunningHub 設定存好了", "ok");
+  } catch (e) { toast(e.message, "err"); }
+  paintRh();
+}
+
+async function testRh() {
+  try {
+    const r = await api("/api/runninghub/test", { json: {}, timeout: 60000 });
+    rhCoins = r.coins ?? "?";
+    toast(`RunningHub 連上了：剩 ${rhCoins} RH 幣${r.running != null ? `，正在跑 ${r.running} 個任務` : ""}`, "ok");
+  } catch (e) { rhCoins = null; toast(e.message, "err"); }
+  paintRh();
 }
 
 const priceRange = (g) => agent.priceRange(g);
@@ -973,21 +1026,21 @@ function paintLocal() {
 function paintModels() {
   if (!info) return;
   const d = info.defaults;
-  const pool = where === "cloud" ? info.cloud_models : info.local?.models;
+  const pool = where === "local" ? info.local?.models : info.cloud_models;
   const names = [...new Set([d.model, d.official_ref2va, ...(pool || [])])];
   const sel = F("h3Model");
   const cur = sel.value;
   sel.replaceChildren(el("option", { value: "" }, "預設：10Eros-Max（無審核、8 步）"),
     ...names.filter((n) => n !== d.model).map((n) => el("option", { value: n }, n === d.official_ref2va ? "官方 H3 ref2va（會自動加 8 步 Turbo LoRA）" : n)));
   sel.value = [...sel.options].some((o) => o.value === cur) ? cur : "";
-  const sl = where === "cloud" ? info.cloud_selflift : info.local?.selflift;
+  const sl = where === "local" ? info.local?.selflift : info.cloud_selflift;
   F("h3SelfLift").disabled = !sl;
   F("h3SelfLiftNote").textContent = sl ? "" : where === "cloud" ? "（雲端開好才知道有沒有裝）" : "（這台電腦的 ComfyUI 沒裝 SelfLiftH3Sampler 節點）";
   paintLoras();
 }
 
 function allLoras() {
-  return (where === "cloud" ? info?.cloud_loras : info?.local?.loras) || [];
+  return (where === "local" ? info?.local?.loras : info?.cloud_loras) || [];
 }
 
 function loraPool() {
@@ -1060,6 +1113,11 @@ function params() {
   const seed = F("h3Seed").value.trim();
   p.seed = seed === "" ? -1 : +seed;
   p.loras = loras.filter((l) => l.name).map((l) => ({ name: l.name, strength: +l.strength || 1 }));
+  // 拍攝單勾了「用 RefMod 鎖臉」：鎖定、做過 RefMod 的角色（後端 refmod.rs 檢查名字）
+  if (fromSheet?.refmod) {
+    const mods = (fromSheet.cast || []).filter((c) => c.locked && c.refmod).map((c) => c.refmod);
+    if (mods.length) p.refmods = mods;
+  }
   return p;
 }
 
@@ -1314,6 +1372,8 @@ export function init() {
     catch (e) { toast(kind === "runpod" ? `停止失敗：${e.message}（請到 RunPod 網站確認機器有沒有刪掉）` : `停止失敗：${e.message}`, "err"); }
   };
   F("h3CloudCfg").onclick = () => agent.openCloudSettings();
+  F("h3RhSave").onclick = saveRh;
+  F("h3RhTest").onclick = testRh;
   // 雲端設定視窗存檔後（勾了 H3 包）重讀
   document.addEventListener("aw-cloud-cfg", () => { refreshCloud(); if (info) load().catch(() => {}); });
   F("h3LoraAdd").onclick = () => { loras.push({ name: "", strength: 1 }); paintLoras(); };

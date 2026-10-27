@@ -520,7 +520,8 @@ function liteNote(packs, basic, cpu) {
 }
 
 $$("#packQuick [data-set]").forEach((b) => (b.onclick = () => {
-  const ids = chk.packs.map((p) => p.id);
+  // 選配包（官方 PE）「完整版」也不勾，要自己勾
+  const ids = chk.packs.filter((p) => !p.optional).map((p) => p.id);
   const s = b.dataset.set;
   pick.packs = new Set(s === "full" ? ids : s === "basic" ? chk.basic_packs : s === "anima" ? ["anima"] : []);
   renderModels();

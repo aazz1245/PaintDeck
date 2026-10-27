@@ -97,7 +97,8 @@ pub fn normalize(v: &Value) -> Result<Value, String> {
         .map(|(i, c)| {
             json!({"asset_id": id_field(&c["asset_id"]), "speaker": format!("S{}", i + 1), "name": txt(&c["name"], 40),
                    "look_zh": txt(&c["look_zh"], 2000), "look_en": txt(&c["look_en"], 2000),
-                   "voice": txt(&c["voice"], 200), "lang": txt(&c["lang"], 30)})
+                   "voice": txt(&c["voice"], 200), "lang": txt(&c["lang"], 30), "locked": c["locked"].as_bool().unwrap_or(false),
+                   "refmod": Some(txt(&c["refmod"], 120)).filter(|n| crate::refmod::valid_name(n)).unwrap_or_default()})
         })
         .collect();
     let first = json!({"file": file_field(&v["first"]["file"], "首幀")?,
@@ -129,20 +130,26 @@ pub fn normalize(v: &Value) -> Result<Value, String> {
                            "who": txt(&b["who"], 4), "lang": txt(&b["lang"], 30), "line": txt(&b["line"], 500), "sfx": txt(&b["sfx"], 300)})
                 })
                 .collect();
+            // 這段不送的參考圖（記檔名；換了圖就回到「要送」）
+            let ref_off: Vec<Value> = s["ref_off"].as_array().map(|a| a.as_slice()).unwrap_or_default().iter()
+                .filter_map(|f| file_field(f, "參考圖").ok().filter(Value::is_string)).take(MAX_REFS).collect();
             json!({"secs": secs, "beats": beats, "prompt": txt(&s["prompt"], 20000), "mirror": txt(&s["mirror"], 20000),
-                   "manual": s["manual"].as_bool().unwrap_or(false)})
+                   "manual": s["manual"].as_bool().unwrap_or(false), "ref_off": ref_off,
+                   "entry": crate::shot_spec::normalize_state(&s["entry"]), "exit": crate::shot_spec::normalize_state(&s["exit"]),
+                   "inherit_entry": s["inherit_entry"].as_bool().unwrap_or(true)})
         })
         .collect();
     if segments.is_empty() {
-        segments.push(json!({"secs": 10.0, "beats": [], "prompt": "", "mirror": "", "manual": false}));
+        segments.push(json!({"secs": 10.0, "beats": [], "prompt": "", "mirror": "", "manual": false,
+            "entry":crate::shot_spec::normalize_state(&Value::Null),"exit":crate::shot_spec::normalize_state(&Value::Null),"inherit_entry":true}));
     }
     Ok(json!({
-        "v": 1, "title": txt(&v["title"], 100), "lang": if v["lang"] == "en" { "en" } else { "zh" },
+        "v": 1, "engine":crate::shot_spec::normalize_engine(&v["engine"]), "title": txt(&v["title"], 100), "lang": if v["lang"] == "en" { "en" } else { "zh" },
         "cast": cast, "first": first, "refs": {"on": v["refs"]["on"].as_bool().unwrap_or(false), "items": items},
         "scene": {"text": txt(&v["scene"]["text"], 2000), "layout": layout},
         "style": txt(&v["style"], 1000), "camera": txt(&v["camera"], 1000),
         "sound": {"ambient": txt(&v["sound"]["ambient"], 1000), "music": txt(&v["sound"]["music"], 1000)},
-        "early": v["early"].as_bool().unwrap_or(true), "segments": segments,
+        "early": v["early"].as_bool().unwrap_or(true), "segments": segments, "refmod": v["refmod"].as_bool().unwrap_or(false),
     }))
 }
 
@@ -160,7 +167,7 @@ pub fn template_of(sheet: &Value) -> Value {
     }
     if let Some(segs) = t.get_mut("segments").and_then(Value::as_array_mut) {
         for o in segs.iter_mut().filter_map(Value::as_object_mut) {
-            for k in ["prompt", "mirror", "manual"] {
+            for k in ["prompt", "mirror", "manual", "ref_off"] {
                 o.remove(k);
             }
         }
@@ -175,6 +182,7 @@ fn seg_count(sheet: &Value) -> usize {
 /// 第 i 段能安排新動作的範圍：第 2 段起扣掉開頭的重疊，後面還有段就扣掉交棒區
 pub fn region(sheet: &Value, i: usize) -> (f64, f64) {
     let secs = num(&sheet["segments"][i]["secs"]);
+    if sheet["engine"].as_str().is_some_and(|e| !e.is_empty() && e != "h3") { return (0.0, secs); }
     let lo = if i > 0 { TAIL_SECS } else { 0.0 };
     let hi = if i + 1 < seg_count(sheet) { secs - HANDOVER_SECS } else { secs };
     (lo, r3(hi))
@@ -189,7 +197,8 @@ pub fn ts(t: f64) -> String {
 /// 這一拍實際寫進提示詞的時間：「提早」就往前挪，再夾在能安排的範圍內
 pub fn beat_time(sheet: &Value, i: usize, beat: &Value) -> (f64, f64) {
     let (lo, hi) = region(sheet, i);
-    let shift = if sheet["early"].as_bool().unwrap_or(true) { EARLY_SECS } else { 0.0 };
+    let h3 = sheet["engine"].as_str().is_none_or(|e| e.is_empty() || e == "h3");
+    let shift = if h3 && sheet["early"].as_bool().unwrap_or(true) { EARLY_SECS } else { 0.0 };
     let clamp = |t: f64| r3((t - shift).clamp(lo, hi));
     (clamp(num(&beat["from"])), clamp(num(&beat["to"])))
 }
@@ -197,6 +206,12 @@ pub fn beat_time(sheet: &Value, i: usize, beat: &Value) -> (f64, f64) {
 /// 真的有圖的參考圖（範本讀回來、還沒放圖的不算）
 pub fn ref_items(sheet: &Value) -> Vec<&Value> {
     sheet["refs"]["items"].as_array().map(|a| a.iter().filter(|x| !s(&x["file"]).is_empty()).collect()).unwrap_or_default()
+}
+
+/// 第 i 段實際送的參考圖：拿掉這段關掉的（`ref_off`），圖號照剩下的順序排
+pub fn seg_ref_items(sheet: &Value, i: usize) -> Vec<&Value> {
+    let off = sheet["segments"][i]["ref_off"].as_array();
+    ref_items(sheet).into_iter().filter(|x| !off.is_some_and(|a| a.contains(&x["file"]))).collect()
 }
 
 fn cast_of<'a>(sheet: &'a Value, speaker: &str) -> Option<&'a Value> {
@@ -232,6 +247,85 @@ fn s(v: &Value) -> &str {
     v.as_str().unwrap_or("")
 }
 
+fn cast_of_kind(sheet: &Value, locked: bool) -> impl Iterator<Item = &Value> {
+    sheet["cast"].as_array().map(|a| a.as_slice()).unwrap_or_default().iter().filter(move |c| c["locked"].as_bool().unwrap_or(false) == locked)
+}
+
+/// 角色外觀那一句：「S1（小克）：…。」／「小克 (S1): ….」；沒寫外觀回 None
+fn cast_line(c: &Value, zh: bool) -> Option<String> {
+    let (own, other) = if zh { ("look_zh", "look_en") } else { ("look_en", "look_zh") };
+    let look = Some(s(&c[own])).filter(|x| !x.is_empty()).unwrap_or(s(&c[other]));
+    if look.is_empty() {
+        return None;
+    }
+    let (name, sp) = (s(&c["name"]), s(&c["speaker"]));
+    Some(match (name.is_empty(), zh) {
+        (true, true) => end(&format!("{sp}：{look}"), zh),
+        (true, false) => end(&format!("{sp}: {look}"), zh),
+        (false, true) => end(&format!("{sp}（{name}）：{look}"), zh),
+        (false, false) => end(&format!("{name} ({sp}): {look}"), zh),
+    })
+}
+
+/// 鎖定角色（資產庫鎖住的設定表）那幾句，照角色順序接起來。每段描述最前面原封不動放上；AI 潤飾前拿掉、潤完接回
+pub fn locked_head(sheet: &Value, zh: bool) -> String {
+    cast_of_kind(sheet, true).filter_map(|c| cast_line(c, zh)).collect::<Vec<_>>().join(if zh { "" } else { " " })
+}
+
+/// 第 i 段沒出場的角色（S1、S2…）：有綁參考圖、而且綁的圖這段全部關掉了。
+/// 只關圖、外觀那句還在的話，H3 照樣把人畫出來（2026-10-27 雲端實測：第 1 段開頭冒出關掉的那個人），所以圖和外觀一起拿掉
+pub fn absent(sheet: &Value, i: usize) -> Vec<String> {
+    if !sheet["refs"]["on"].as_bool().unwrap_or(false) {
+        return vec![];
+    }
+    let used = seg_ref_items(sheet, i);
+    let all = ref_items(sheet);
+    sheet["cast"].as_array().map(|a| a.as_slice()).unwrap_or_default().iter()
+        .map(|c| s(&c["speaker"]))
+        .filter(|sp| !sp.is_empty() && all.iter().any(|r| s(&r["who"]) == *sp) && !used.iter().any(|r| s(&r["who"]) == *sp))
+        .map(str::to_string)
+        .collect()
+}
+
+/// 第 i 段的鎖定段落：只放這段有出場的鎖定角色
+pub fn locked_head_at(sheet: &Value, i: usize, zh: bool) -> String {
+    let gone = absent(sheet, i);
+    cast_of_kind(sheet, true).filter(|c| !gone.iter().any(|g| g == s(&c["speaker"]))).filter_map(|c| cast_line(c, zh)).collect::<Vec<_>>().join(if zh { "" } else { " " })
+}
+
+const DESC_KEY: &str = "integrated_multimodal_description:";
+
+/// 拿掉提示詞裡的鎖定段落（第一次出現的那份）
+pub fn strip_locked(prompt: &str, head: &str) -> String {
+    if head.is_empty() {
+        return prompt.to_string();
+    }
+    match prompt.find(head) {
+        Some(p) => {
+            let rest = &prompt[p + head.len()..];
+            let rest = if prompt[..p].ends_with(' ') || prompt[..p].is_empty() { rest.trim_start_matches([' ', '\n']) } else { rest };
+            format!("{}{rest}", &prompt[..p])
+        }
+        None => prompt.to_string(),
+    }
+}
+
+/// 把鎖定段落放回去：H3 放在 integrated_multimodal_description 後面第一句，其他引擎放第一行；已經有就不重複
+pub fn put_locked(prompt: &str, head: &str, zh: bool) -> String {
+    if head.is_empty() {
+        return prompt.to_string();
+    }
+    let body = strip_locked(prompt, head);
+    if let Some(p) = body.find(DESC_KEY) {
+        let after = p + DESC_KEY.len();
+        let rest = body[after..].trim_start_matches(' ');
+        let sep = if rest.is_empty() || zh { "" } else { " " };
+        return format!("{}{DESC_KEY} {head}{sep}{rest}", &body[..p]);
+    }
+    let rest = body.trim_start();
+    if rest.is_empty() { head.to_string() } else { format!("{head}\n{rest}") }
+}
+
 /// 第 i 段的 H3 提示詞（lang = "en" 寫英文，其他寫中文）
 pub fn compose(sheet: &Value, i: usize, lang: &str) -> String {
     let zh = lang != "en";
@@ -248,6 +342,13 @@ pub fn compose(sheet: &Value, i: usize, lang: &str) -> String {
         });
     }
     let mut body: Vec<String> = Vec::new();
+    let head = locked_head_at(sheet, i, zh);
+    if !head.is_empty() {
+        body.push(head);
+    }
+    let gone = absent(sheet, i);
+    let entry = crate::shot_spec::state_lines(&crate::shot_spec::effective_entry(sheet, i), lang);
+    if !entry.is_empty() { body.push(format!("{}: {entry}", if zh { "開始狀態" } else { "Entry state" })); }
     if i > 0 {
         body.push(if zh { CONT_ZH } else { CONT_EN }.into());
     }
@@ -259,20 +360,7 @@ pub fn compose(sheet: &Value, i: usize, lang: &str) -> String {
     if !camera.is_empty() {
         body.push(if zh { end(&format!("鏡位與運鏡：{camera}"), zh) } else { end(&format!("Camera: {camera}"), zh) });
     }
-    for c in sheet["cast"].as_array().map(|a| a.as_slice()).unwrap_or_default() {
-        let (own, other) = if zh { ("look_zh", "look_en") } else { ("look_en", "look_zh") };
-        let look = Some(s(&c[own])).filter(|x| !x.is_empty()).unwrap_or(s(&c[other]));
-        if look.is_empty() {
-            continue;
-        }
-        let (name, sp) = (s(&c["name"]), s(&c["speaker"]));
-        body.push(match (name.is_empty(), zh) {
-            (true, true) => end(&format!("{sp}：{look}"), zh),
-            (true, false) => end(&format!("{sp}: {look}"), zh),
-            (false, true) => end(&format!("{sp}（{name}）：{look}"), zh),
-            (false, false) => end(&format!("{name} ({sp}): {look}"), zh),
-        });
-    }
+    body.extend(cast_of_kind(sheet, false).filter(|c| !gone.iter().any(|g| g == s(&c["speaker"]))).filter_map(|c| cast_line(c, zh)));
     let scene = s(&sheet["scene"]["text"]);
     if !scene.is_empty() {
         body.push(if zh { end(&format!("場景：{scene}"), zh) } else { end(&format!("Scene: {scene}"), zh) });
@@ -283,7 +371,7 @@ pub fn compose(sheet: &Value, i: usize, lang: &str) -> String {
     }
     if sheet["refs"]["on"].as_bool().unwrap_or(false) {
         let base = if has_first { 2 } else { 1 };
-        for (k, it) in ref_items(sheet).into_iter().enumerate() {
+        for (k, it) in seg_ref_items(sheet, i).into_iter().enumerate() {
             let who = who_label(sheet, s(&it["who"]), zh);
             let p = base + k;
             body.push(if zh {
@@ -337,6 +425,8 @@ pub fn compose(sheet: &Value, i: usize, lang: &str) -> String {
         let h = ts(secs - HANDOVER_SECS);
         body.push(if zh { format!("從 {h} 到結尾，動作繼續。") } else { format!("From {h} to the end, the action continues.") });
     }
+    let exit = crate::shot_spec::state_lines(&seg["exit"], lang);
+    if !exit.is_empty() { body.push(format!("{}: {exit}", if zh { "結束狀態" } else { "Exit state" })); }
     out.push_str("integrated_multimodal_description: ");
     out.push_str(&body.join(if zh { "" } else { " " }));
     let ambient = s(&sheet["sound"]["ambient"]);
@@ -441,13 +531,13 @@ pub fn check(sheet: &Value, prompts: &[String], r: &Rules) -> Vec<Value> {
     let mut out: Vec<Value> = Vec::new();
     let n = seg_count(sheet);
     let refs_on = sheet["refs"]["on"].as_bool().unwrap_or(false);
-    let ref_count = ref_items(sheet).len();
+    let h3 = sheet["engine"].as_str().is_none_or(|e| e.is_empty() || e == "h3");
     for i in 0..n {
         let seg = &sheet["segments"][i];
         let secs = num(&seg["secs"]);
         let prompt = prompts.get(i).map(String::as_str).unwrap_or("");
         let low = prompt.to_lowercase();
-        for w in hits(&low, &r.mood) {
+        for w in if h3 { hits(&low, &r.mood) } else { vec![] } {
             out.push(json!({"seg": i, "rule": 1, "level": "warn", "word": w, "msg": "情緒形容詞 H3 演不出來，換成看得到的動作或表情"}));
         }
         let mut plain = dialogue_re().replace_all(&low, " ").into_owned();
@@ -463,7 +553,8 @@ pub fn check(sheet: &Value, prompts: &[String], r: &Rules) -> Vec<Value> {
         for w in hits(&low, &r.danger) {
             out.push(json!({"seg": i, "rule": 3, "level": "warn", "word": w, "msg": "這個字容易讓畫面多出不想要的東西（危險字清單）"}));
         }
-        if refs_on && ref_count > 0 && !prompt.is_empty() {
+        let ref_count = seg_ref_items(sheet, i).len();
+        if h3 && refs_on && ref_count > 0 && !prompt.is_empty() {
             let base = if i == 0 && !s(&sheet["first"]["file"]).is_empty() { 2 } else { 1 };
             if let Some(p) = (base..base + ref_count).find(|p| !prompt.contains(&format!("<Picture {p}>"))) {
                 out.push(json!({"seg": i, "rule": 7, "level": "warn", "word": format!("<Picture {p}>"), "msg": "有勾參考圖，但提示詞裡找不到對應的圖號（手改時刪掉了？）"}));
@@ -482,7 +573,7 @@ pub fn check(sheet: &Value, prompts: &[String], r: &Rules) -> Vec<Value> {
             let action = s(&b["action"]).to_lowercase();
             if !action.is_empty() {
                 let anchored = |t: &str| !hits(t, &r.body).is_empty() || !hits(t, &r.position).is_empty();
-                if !anchored(&action) {
+                if h3 && !anchored(&action) {
                     out.push(json!({"seg": i, "rule": 5, "level": "warn", "word": s(&b["action"]), "msg": "動作沒寫是哪個部位、往哪裡，H3 容易亂演"}));
                 }
                 let dir = r.direction.iter().filter_map(|w| find_word(&action, w).map(|p| (w, p))).min_by_key(|(_, p)| *p);
@@ -503,7 +594,7 @@ pub fn check(sheet: &Value, prompts: &[String], r: &Rules) -> Vec<Value> {
             } else {
                 match prev_to {
                     Some(p) if from < p - 0.001 => Some(json!({"msg": "這截跟前一截的時間重疊"})),
-                    Some(p) if from - p > 0.1 + 0.001 => Some(json!({"msg": "這截跟前一截中間空了一段，那段 H3 會自己亂演"})),
+                    Some(p) if h3 && from - p > 0.1 + 0.001 => Some(json!({"msg": "這截跟前一截中間空了一段，那段 H3 會自己亂演"})),
                     _ => None,
                 }
             };
@@ -626,6 +717,94 @@ mod tests {
         // 沒勾就不送、也不寫
         let s = normalize(&json!({"cast": cast3(), "refs": {"on": false, "items": [{"file": "r1.png"}]}})).unwrap();
         assert!(!compose(&s, 0, "zh").contains("<Picture"));
+    }
+
+    #[test]
+    fn segment_can_turn_refs_off_and_numbers_close_up() {
+        let refs = json!({"on": true, "items": [{"file": "r1.png", "who": "S1"}, {"file": "r2.png", "who": "S2"}]});
+        let s = normalize(&json!({"cast": cast3(), "first": {"file": "f.png"}, "refs": refs,
+            "segments": [{"ref_off": ["r1.png", "..\\x.png", 3]}, {"ref_off": ["r2.png"]}, {"ref_off": ["r1.png", "r2.png"]}]})).unwrap();
+        assert_eq!(s["segments"][0]["ref_off"], json!(["r1.png"]), "壞檔名、不是字串的丟掉");
+        let p0 = compose(&s, 0, "zh");
+        assert!(p0.contains("<Picture 2> 只用來參考 乙（S2）") && !p0.contains("<Picture 3>") && !p0.contains("甲（S1）的長相"), "{p0}");
+        let p1 = compose(&s, 1, "zh");
+        assert!(p1.contains("<Picture 1> 只用來參考 甲（S1）") && !p1.contains("<Picture 2>"), "{p1}");
+        assert!(!compose(&s, 2, "zh").contains("只用來參考"), "全關＝這段不送也不寫");
+        assert_eq!(seg_ref_items(&s, 1).len(), 1);
+        // 健檢照這段實際送的張數算，不會叫使用者補關掉的圖號
+        let prompts: Vec<String> = (0..3).map(|i| compose(&s, i, "zh")).collect();
+        let issues = check(&s, &prompts, &rules(&[]));
+        assert!(!issues.iter().any(|x| x["rule"] == 7), "{issues:?}");
+        // 存範本不帶這次才有的檔名
+        assert!(template_of(&s)["segments"][0].get("ref_off").is_none());
+    }
+
+    #[test]
+    fn turning_off_all_of_a_characters_refs_drops_them_from_the_segment() {
+        let refs = json!({"on": true, "items": [{"file": "r1.png", "who": "S1"}, {"file": "r2.png", "who": "S2"}]});
+        let cast = json!([{"name": "甲", "look_zh": "黑髮"}, {"name": "乙", "look_zh": "橘髮", "locked": true}, {"name": "丙", "look_zh": "金髮"}]);
+        let s = normalize(&json!({"cast": cast, "refs": refs, "segments": [{"ref_off": ["r2.png"]}, {}]})).unwrap();
+        assert_eq!(absent(&s, 0), ["S2"]);
+        assert!(absent(&s, 1).is_empty());
+        let p0 = compose(&s, 0, "zh");
+        let p1 = compose(&s, 1, "zh");
+        assert!(!p0.contains("乙") && p0.contains("甲"), "沒出場的鎖定角色、外觀、圖號都不寫：{p0}");
+        assert!(p1.contains("S2（乙）") && p1.contains("<Picture 2>"), "{p1}");
+        assert!(locked_head_at(&s, 0, true).is_empty() && !locked_head_at(&s, 1, true).is_empty());
+        // 沒綁圖的角色（丙）不受影響；沒勾送參考圖時誰都不算缺席
+        assert!(p0.contains("丙"), "{p0}");
+        let off = normalize(&json!({"cast": cast, "refs": {"on": false, "items": [{"file": "r2.png", "who": "S2"}]}, "segments": [{"ref_off": ["r2.png"]}]})).unwrap();
+        assert!(absent(&off, 0).is_empty());
+    }
+
+    #[test]
+    fn locked_cast_goes_first_verbatim_and_keeps_order() {
+        let sheet = json!({
+            "cast": [
+                {"name": "甲", "locked": true, "look_zh": "女性，二十出頭，橘色長髮；專屬標誌：右眼下方一顆淚痣。", "look_en": "female, early 20s, long orange hair; distinctive marks: a mole under the right eye."},
+                {"name": "乙", "look_zh": "戴眼鏡的男性", "look_en": "a man with glasses"},
+                {"name": "丙", "locked": true, "look_zh": "男性，黑短髮。", "look_en": "male, short black hair."}],
+            "first": {"file": "f.png"}, "style": "日系動畫",
+            "segments": [{"secs": 10, "beats": []}, {"secs": 10, "beats": []}]
+        });
+        let s = normalize(&sheet).unwrap();
+        assert_eq!(s["cast"][0]["locked"], true);
+        assert_eq!(s["cast"][1]["locked"], false);
+        let r = normalize(&json!({"refmod": true, "cast": [{"name": "甲", "refmod": "paintdeck/pd_char_7"}, {"name": "乙", "refmod": "../x"}]})).unwrap();
+        assert_eq!((r["refmod"].as_bool(), r["cast"][0]["refmod"].as_str(), r["cast"][1]["refmod"].as_str()), (Some(true), Some("paintdeck/pd_char_7"), Some("")));
+        let head = "S1（甲）：女性，二十出頭，橘色長髮；專屬標誌：右眼下方一顆淚痣。S3（丙）：男性，黑短髮。";
+        assert_eq!(locked_head(&s, true), head);
+        let zh = compose(&s, 0, "zh");
+        assert!(zh.starts_with(&format!("目標影片的第 0.00 秒完全參考 <Picture 1>（[Shot 1]）。\n\nintegrated_multimodal_description: {head}畫風：日系動畫。")), "{zh}");
+        assert_eq!(zh.matches("S1（甲）").count(), 1, "鎖定的人不再出現第二次：{zh}");
+        assert!(zh.contains("S2（乙）：戴眼鏡的男性。"), "{zh}");
+        let second = compose(&s, 1, "zh");
+        assert!(second.starts_with(&format!("integrated_multimodal_description: {head}目標影片從上一段")), "{second}");
+        let en = compose(&s, 0, "en");
+        let head_en = "甲 (S1): female, early 20s, long orange hair; distinctive marks: a mole under the right eye. 丙 (S3): male, short black hair.";
+        assert_eq!(locked_head(&s, false), head_en);
+        assert!(en.contains(&format!("integrated_multimodal_description: {head_en} Style: 日系動畫.")), "{en}");
+        // 沒有鎖定的人：開頭照舊
+        let plain = normalize(&json!({"cast": [{"name": "乙", "look_zh": "戴眼鏡的男性"}]})).unwrap();
+        assert_eq!(locked_head(&plain, true), "");
+    }
+
+    #[test]
+    fn put_locked_reinserts_once_after_ai_rewrite() {
+        let head = "S1（甲）：女性，橘色長髮。";
+        // AI 潤完的稿子：沒有鎖定段落
+        let ai = "目標影片的第 0.00 秒完全參考 <Picture 1>（[Shot 1]）。\n\nintegrated_multimodal_description: 畫風：日系動畫。她轉身。\n\noverall_soundscape: 雨聲。\n\nnon_diegetic_music: N/A";
+        let fixed = put_locked(ai, head, true);
+        assert!(fixed.contains(&format!("integrated_multimodal_description: {head}畫風：日系動畫。她轉身。")), "{fixed}");
+        assert_eq!(put_locked(&fixed, head, true), fixed, "接過一次不重複");
+        assert_eq!(strip_locked(&fixed, head), ai);
+        // 英文用空白接
+        let en = put_locked("integrated_multimodal_description: Style: anime.", "Ko (S1): female.", false);
+        assert_eq!(en, "integrated_multimodal_description: Ko (S1): female. Style: anime.");
+        // 沒有 H3 欄位名（LTX 等引擎）：放在最前面一行
+        assert_eq!(put_locked("Style: anime.\nShe turns.", "S1 Ko: female.", false), "S1 Ko: female.\nStyle: anime.\nShe turns.");
+        assert_eq!(put_locked("", "S1 Ko: female.", false), "S1 Ko: female.");
+        assert_eq!(put_locked("anything", "", true), "anything");
     }
 
     #[test]

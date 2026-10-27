@@ -21,6 +21,7 @@
 //! 有好幾個 Load Image、好幾個提示詞框的工作流（群組裡流通的 H3 大流程）也能先匯入，再到這裡指定
 use crate::graphs::{self, GraphError};
 use crate::py::{now, truthy};
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::path::{Path, PathBuf};
 
@@ -56,6 +57,131 @@ pub struct Mapping {
     pub image: Option<String>,
     pub values: Map<String, Value>,
     pub pins: Vec<(String, String)>,
+    pub media_slots: Vec<MediaSlot>,
+    media_slots_error: Option<String>,
+}
+
+/// A named, literal ComfyUI file input. The role describes intent, not a new graph connection.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MediaSlot {
+    pub key: String,
+    pub label: String,
+    pub kind: String,
+    pub role: String,
+    pub node: String,
+    pub input: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub who: Option<String>,
+}
+
+const MAX_MEDIA_SLOTS: usize = 24;
+const MEDIA_ROLES: &[&str] = &[
+    "first",
+    "last",
+    "character",
+    "scene",
+    "motion",
+    "voice",
+    "reference",
+];
+
+pub fn media_extension(kind: &str, ext: &str) -> bool {
+    match kind {
+        "image" => matches!(
+            ext,
+            "png" | "jpg" | "jpeg" | "webp" | "gif" | "bmp" | "tif" | "tiff" | "avif"
+        ),
+        "video" => matches!(ext, "mp4" | "m4v" | "mov" | "webm" | "mkv" | "avi"),
+        "audio" => matches!(ext, "wav" | "mp3" | "flac" | "ogg" | "opus" | "m4a" | "aac"),
+        _ => false,
+    }
+}
+
+/// Only already uploaded ComfyUI input basenames cross the generation boundary.
+pub fn media_basename(name: &str, kind: &str) -> R<()> {
+    if name.is_empty()
+        || name.len() > 240
+        || name.trim() != name
+        || name.starts_with('.')
+        || name.contains("..")
+        || name.chars().any(|c| {
+            c.is_control() || matches!(c, '/' | '\\' | ':' | '<' | '>' | '"' | '|' | '?' | '*')
+        })
+    {
+        return Err("素材要是已上傳的檔名，不能填路徑或網址".into());
+    }
+    let ext = Path::new(name)
+        .extension()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    if !media_extension(kind, &ext) {
+        return Err(format!("素材檔案類型不符：{name}（需要 {kind}）"));
+    }
+    Ok(())
+}
+
+fn media_input_path(input_dir: &Path, name: &str, kind: &str) -> R<PathBuf> {
+    media_basename(name, kind)?;
+    let root = input_dir
+        .canonicalize()
+        .map_err(|_| "找不到 ComfyUI input 資料夾".to_string())?;
+    let path = input_dir
+        .join(name)
+        .canonicalize()
+        .map_err(|_| format!("找不到已上傳素材：{name}，請重新選檔上傳"))?;
+    if !path.starts_with(root) || !path.is_file() {
+        return Err(format!("素材不在 ComfyUI input 資料夾：{name}"));
+    }
+    Ok(path)
+}
+
+/// Recognize only literal file inputs; a link, model filename or prompt is never a media slot.
+fn media_input_kind(n: &Value, key: &str, value: &Value) -> Option<&'static str> {
+    let value = value.as_str()?;
+    let key = key.to_ascii_lowercase();
+    let cls = class(Some(n)).to_ascii_lowercase();
+    if matches!(
+        key.as_str(),
+        "image"
+            | "mask"
+            | "image_path"
+            | "image_file"
+            | "first_frame"
+            | "last_frame"
+            | "reference_image"
+    ) || key.starts_with("image_")
+    {
+        return Some("image");
+    }
+    if matches!(
+        key.as_str(),
+        "video" | "video_path" | "video_file" | "video_filename"
+    ) {
+        return Some("video");
+    }
+    if matches!(
+        key.as_str(),
+        "audio" | "audio_path" | "audio_file" | "audio_filename"
+    ) {
+        return Some("audio");
+    }
+    if matches!(key.as_str(), "file" | "filename" | "path" | "file_path") && cls.contains("load") {
+        if cls.contains("video") {
+            return Some("video");
+        }
+        if cls.contains("audio") {
+            return Some("audio");
+        }
+        if cls.contains("image") {
+            return Some("image");
+        }
+    }
+    let ext = Path::new(value).extension()?.to_str()?.to_ascii_lowercase();
+    ["image", "video", "audio"]
+        .into_iter()
+        .find(|kind| media_extension(kind, &ext))
 }
 
 /// 釘到「動起來」的欄位最多幾個、名字最長幾個字
@@ -64,17 +190,36 @@ const MAX_LABEL: usize = 30;
 
 impl Mapping {
     pub fn from_value(v: &Value) -> Mapping {
-        let pair = |x: &Value| Some((x.get(0)?.as_str()?.to_string(), x.get(1)?.as_str()?.to_string()));
+        let pair = |x: &Value| {
+            Some((
+                x.get(0)?.as_str()?.to_string(),
+                x.get(1)?.as_str()?.to_string(),
+            ))
+        };
+        let media = match v.get("media_slots") {
+            None => Ok(vec![]),
+            Some(value) => serde_json::from_value::<Vec<MediaSlot>>(value.clone())
+                .map_err(|_| "素材槽格式不對：要填名稱、類型、用途、節點與欄位".to_string()),
+        };
         Mapping {
-            prompt: v["prompt"].as_array().map(|a| a.iter().filter_map(pair).collect()),
+            prompt: v["prompt"]
+                .as_array()
+                .map(|a| a.iter().filter_map(pair).collect()),
             image: v["image"].as_str().map(str::to_string),
             values: v["values"].as_object().cloned().unwrap_or_default(),
             pins: v["pins"]
                 .as_array()
                 .into_iter()
                 .flatten()
-                .filter_map(|p| Some((p["key"].as_str()?.to_string(), p["label"].as_str().unwrap_or("").trim().to_string())))
+                .filter_map(|p| {
+                    Some((
+                        p["key"].as_str()?.to_string(),
+                        p["label"].as_str().unwrap_or("").trim().to_string(),
+                    ))
+                })
                 .collect(),
+            media_slots: media.as_ref().cloned().unwrap_or_default(),
+            media_slots_error: media.err(),
         }
     }
 
@@ -86,16 +231,26 @@ impl Mapping {
         if let Some(i) = &self.image {
             v["image"] = json!(i);
         }
+        if !self.media_slots.is_empty() {
+            v["media_slots"] = json!(self.media_slots);
+        }
         v
     }
 
     /// 指到的欄位都要存在、不是連線（改值要型別對得上）
     fn check(&self, m: &Map<String, Value>) -> R<()> {
+        if let Some(error) = &self.media_slots_error {
+            return Err(error.clone());
+        }
         let literal = |key: &str| -> R<(String, String)> {
-            let (id, k) = key.split_once('.').ok_or_else(|| format!("欄位寫法不對：{key}（要「節點編號.欄位」）"))?;
+            let (id, k) = key
+                .split_once('.')
+                .ok_or_else(|| format!("欄位寫法不對：{key}（要「節點編號.欄位」）"))?;
             match input(m, id, k) {
                 None => Err(format!("工作流裡沒有 {key} 這個欄位（工作流換過了？）")),
-                Some(v) if is_link(v) || v.is_array() || v.is_object() => Err(format!("{key} 是節點連線，不能改：選上游放實際值的那個欄位")),
+                Some(v) if is_link(v) || v.is_array() || v.is_object() => Err(format!(
+                    "{key} 是節點連線，不能改：選上游放實際值的那個欄位"
+                )),
                 Some(_) => Ok((id.to_string(), k.to_string())),
             }
         };
@@ -119,6 +274,63 @@ impl Mapping {
             literal(key)?;
             if l.chars().count() > MAX_LABEL {
                 return Err(format!("欄位名稱最多 {MAX_LABEL} 個字：{l}"));
+            }
+        }
+        if self.media_slots.len() > MAX_MEDIA_SLOTS {
+            return Err(format!("素材槽最多 {MAX_MEDIA_SLOTS} 個"));
+        }
+        if self.media_slots.iter().filter(|s| s.role == "first").count() > 1 {
+            return Err("一個工作流只能指定一個首幀素材槽".into());
+        }
+        let mut keys = std::collections::HashSet::new();
+        let mut targets = std::collections::HashSet::new();
+        for slot in &self.media_slots {
+            if slot.key.is_empty()
+                || slot.key.len() > 64
+                || !slot
+                    .key
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || matches!(c, '_' | '-'))
+                || !keys.insert(slot.key.clone())
+            {
+                return Err(format!(
+                    "素材槽代號不能重複，只能用英數、-、_：{}",
+                    slot.key
+                ));
+            }
+            if slot.label.trim().is_empty()
+                || slot.label.chars().count() > 60
+                || slot
+                    .who
+                    .as_ref()
+                    .is_some_and(|s| s.chars().count() > 100 || s.chars().any(char::is_control))
+                || !MEDIA_ROLES.contains(&slot.role.as_str())
+                || (slot.role == "first" && slot.kind != "image")
+            {
+                return Err(format!("素材槽名稱、用途或角色不正確：{}", slot.key));
+            }
+            let key = format!("{}.{}", slot.node, slot.input);
+            literal(&key)?;
+            if !targets.insert(key.clone()) {
+                return Err(format!("同一個素材欄位只能對應一次：{key}"));
+            }
+            if self.values.contains_key(&key)
+                || self.pins.iter().any(|(k, _)| k == &key)
+                || self
+                    .prompt
+                    .iter()
+                    .flatten()
+                    .any(|(n, k)| *n == slot.node && *k == slot.input)
+            {
+                return Err(format!("{key} 已作為素材槽，不能同時對應提示詞或一般參數"));
+            }
+            if media_input_kind(
+                &m[&slot.node],
+                &slot.input,
+                input(m, &slot.node, &slot.input).unwrap(),
+            ) != Some(slot.kind.as_str())
+            {
+                return Err(format!("{key} 不是 {} 的檔名欄位", slot.kind));
             }
         }
         Ok(())
@@ -153,7 +365,11 @@ pub(crate) fn nodes(graph: &Value) -> R<&Map<String, Value>> {
     if m.contains_key("nodes") && m.contains_key("links") {
         return Err("這是 ComfyUI 一般存檔的格式：請在 ComfyUI 用「匯出（API）」（Export (API)）另存一份再匯入".into());
     }
-    if m.is_empty() || !m.values().all(|n| n["class_type"].is_string() && n["inputs"].is_object()) {
+    if m.is_empty()
+        || !m
+            .values()
+            .all(|n| n["class_type"].is_string() && n["inputs"].is_object())
+    {
         return Err("看不懂這個檔：要是 ComfyUI「匯出（API）」存的工作流 JSON".into());
     }
     Ok(m)
@@ -174,7 +390,9 @@ pub(crate) fn title(n: Option<&Value>) -> &str {
 
 /// 給人看的節點名稱：標題，沒有就用 class_type
 pub(crate) fn label(n: Option<&Value>) -> &str {
-    Some(title(n)).filter(|t| !t.is_empty()).unwrap_or_else(|| class(n))
+    Some(title(n))
+        .filter(|t| !t.is_empty())
+        .unwrap_or_else(|| class(n))
 }
 
 pub(crate) fn input<'a>(m: &'a Map<String, Value>, id: &str, k: &str) -> Option<&'a Value> {
@@ -182,7 +400,11 @@ pub(crate) fn input<'a>(m: &'a Map<String, Value>, id: &str, k: &str) -> Option<
 }
 
 pub(crate) fn set(m: &mut Map<String, Value>, id: &str, k: &str, v: Value) {
-    if let Some(inp) = m.get_mut(id).and_then(|n| n.get_mut("inputs")).and_then(Value::as_object_mut) {
+    if let Some(inp) = m
+        .get_mut(id)
+        .and_then(|n| n.get_mut("inputs"))
+        .and_then(Value::as_object_mut)
+    {
         inp.insert(k.into(), v);
     }
 }
@@ -201,7 +423,9 @@ pub(crate) type Slots = Vec<(String, String)>;
 const TEXT_KEYS: [&str; 2] = ["text", "prompt"];
 /// 有好幾格文字的節點，有哪格換哪格：CLIPTextEncodeSDXL（text_g、text_l）、CLIPTextEncodeFlux（clip_l、t5xxl）、
 /// CLIPTextEncodeSD3（clip_l、clip_g、t5xxl）、HunyuanDiT（bert、mt5xl）
-const MULTI_TEXT_KEYS: [&str; 7] = ["text_g", "text_l", "clip_l", "clip_g", "t5xxl", "bert", "mt5xl"];
+const MULTI_TEXT_KEYS: [&str; 7] = [
+    "text_g", "text_l", "clip_l", "clip_g", "t5xxl", "bert", "mt5xl",
+];
 /// 文字框的欄位接到別的節點時，那個「放字串的節點」把字串放在哪個欄位（Primitive String、StringConstant、Text Multiline、CR Text…）
 const STRING_KEYS: [&str; 5] = ["value", "string", "text", "prompt", "String"];
 
@@ -209,7 +433,10 @@ const STRING_KEYS: [&str; 5] = ["value", "string", "text", "prompt", "String"];
 pub(crate) fn text_source(m: &Map<String, Value>, link: &Value) -> Option<(String, String)> {
     let from = link.get(0)?.as_str()?;
     let inp = m.get(from)?.get("inputs")?.as_object()?;
-    STRING_KEYS.iter().find(|k| inp.get(**k).is_some_and(Value::is_string)).map(|k| (from.to_string(), (*k).to_string()))
+    STRING_KEYS
+        .iter()
+        .find(|k| inp.get(**k).is_some_and(Value::is_string))
+        .map(|k| (from.to_string(), (*k).to_string()))
 }
 
 /// 這個節點自己放的提示詞欄位（沒有就空）：text／prompt；SDXL、Flux、SD3 的多格欄位；Efficiency Eff. Loader 的 positive／negative 字串欄位。
@@ -233,7 +460,11 @@ fn text_here(m: &Map<String, Value>, id: &str, inp: &Map<String, Value>, neg: bo
     if !out.is_empty() {
         return out;
     }
-    if let Some(s) = TEXT_KEYS.into_iter().find_map(|k| inp.get(k).filter(|v| is_link(v)).and_then(|v| text_source(m, v))) {
+    if let Some(s) = TEXT_KEYS.into_iter().find_map(|k| {
+        inp.get(k)
+            .filter(|v| is_link(v))
+            .and_then(|v| text_source(m, v))
+    }) {
         return vec![s];
     }
     let own = if neg { "negative" } else { "positive" };
@@ -245,7 +476,12 @@ fn text_here(m: &Map<String, Value>, id: &str, inp: &Map<String, Value>, neg: bo
 
 /// 從某個節點往回找文字框：先走 positive（找負面時先走 negative），再走 conditioning 開頭的輸入。
 /// neg＝找的是負面提示詞（Eff. Loader 這類把 positive、negative 都放在同一個節點的，要看是哪一邊）
-pub(crate) fn walk_text(m: &Map<String, Value>, id: &str, depth: usize, neg: bool) -> Option<Slots> {
+pub(crate) fn walk_text(
+    m: &Map<String, Value>,
+    id: &str,
+    depth: usize,
+    neg: bool,
+) -> Option<Slots> {
     let inp = m.get(id)?.get("inputs")?.as_object()?;
     let here = text_here(m, id, inp, neg);
     if !here.is_empty() {
@@ -259,7 +495,12 @@ pub(crate) fn walk_text(m: &Map<String, Value>, id: &str, depth: usize, neg: boo
         .then(|| link("negative"))
         .flatten()
         .or_else(|| link("positive"))
-        .or_else(|| inp.iter().filter(|(k, v)| k.starts_with("conditioning") && is_link(v)).map(|(_, v)| v).next())?;
+        .or_else(|| {
+            inp.iter()
+                .filter(|(k, v)| k.starts_with("conditioning") && is_link(v))
+                .map(|(_, v)| v)
+                .next()
+        })?;
     walk_text(m, next[0].as_str()?, depth + 1, neg)
 }
 
@@ -273,25 +514,43 @@ pub(crate) struct Cand {
 
 /// 每個有 positive（neg＝negative）連線的節點，往回找到的文字欄位；同一組欄位合併成一筆。
 /// guiders＝Flux 這類取樣節點沒有 positive 輸入，要從 BasicGuider 之類 Guider 節點的 conditioning 找
-pub(crate) fn text_candidates(m: &Map<String, Value>, ids: &[String], neg: bool, guiders: bool) -> Vec<Cand> {
+pub(crate) fn text_candidates(
+    m: &Map<String, Value>,
+    ids: &[String],
+    neg: bool,
+    guiders: bool,
+) -> Vec<Cand> {
     let key = if neg { "negative" } else { "positive" };
     let mut out: Vec<Cand> = vec![];
     for id in ids {
         let inp = &m[id]["inputs"];
         let link = inp.get(key).filter(|v| is_link(v)).or_else(|| {
             let guider = guiders && !neg && class(m.get(id)).contains("Guider");
-            guider.then(|| inp.get("conditioning").filter(|v| is_link(v))).flatten()
+            guider
+                .then(|| inp.get("conditioning").filter(|v| is_link(v)))
+                .flatten()
         });
-        let Some(slots) = link.and_then(|l| l[0].as_str()).and_then(|from| walk_text(m, from, 0, neg)) else { continue };
+        let Some(slots) = link
+            .and_then(|l| l[0].as_str())
+            .and_then(|from| walk_text(m, from, 0, neg))
+        else {
+            continue;
+        };
         match out.iter_mut().find(|c| c.slots == slots) {
             Some(c) => c.owners.push(id.clone()),
-            None => out.push(Cand { slots, owners: vec![id.clone()] }),
+            None => out.push(Cand {
+                slots,
+                owners: vec![id.clone()],
+            }),
         }
     }
     out
 }
 
-pub(crate) fn find_prompt(m: &Map<String, Value>, ids: &[String]) -> R<(Vec<(String, String)>, bool)> {
+pub(crate) fn find_prompt(
+    m: &Map<String, Value>,
+    ids: &[String],
+) -> R<(Vec<(String, String)>, bool)> {
     let mut hits = vec![];
     for id in ids {
         for (k, v) in m[id]["inputs"].as_object().into_iter().flatten() {
@@ -318,8 +577,15 @@ pub fn analyze(graph: &Value) -> R<Analysis> {
 
 /// 首格圖的自動判斷：標了 {{image}} 的 Load Image → 唯一的 Load Image → 沒有（只能文生影片）
 fn auto_image(m: &Map<String, Value>, ids: &[String]) -> R<Option<String>> {
-    let loads: Vec<&String> = ids.iter().filter(|id| class(m.get(*id)) == "LoadImage").collect();
-    let marked: Vec<&String> = loads.iter().copied().filter(|id| title(m.get(*id)).contains(IMAGE)).collect();
+    let loads: Vec<&String> = ids
+        .iter()
+        .filter(|id| class(m.get(*id)) == "LoadImage")
+        .collect();
+    let marked: Vec<&String> = loads
+        .iter()
+        .copied()
+        .filter(|id| title(m.get(*id)).contains(IMAGE))
+        .collect();
     match (marked.len(), loads.len()) {
         (1, _) => Ok(Some(marked[0].clone())),
         (0, 0) => Ok(None),
@@ -333,7 +599,8 @@ fn auto_image(m: &Map<String, Value>, ids: &[String]) -> R<Option<String>> {
 
 /// 存影片的節點（匯入時至少要有一個）
 fn has_output(m: &Map<String, Value>) -> bool {
-    m.values().any(|n| OUTPUTS.iter().any(|(c, ..)| *c == class(Some(n))))
+    m.values()
+        .any(|n| OUTPUTS.iter().any(|(c, ..)| *c == class(Some(n))))
 }
 
 /// 照使用者的對應設定看懂工作流：指定了提示詞、首格圖的就用指定的，其他照自動判斷
@@ -366,18 +633,49 @@ pub fn analyze_with(graph: &Value, map: &Mapping) -> R<Analysis> {
         a.fps = fps.filter(|f| *f > 0.0);
     }
     if a.outputs.is_empty() {
-        return Err("找不到存影片的節點：工作流的最後要有 Save Video、Save WEBM 或 Video Combine（VHS）".into());
+        return Err(
+            "找不到存影片的節點：工作流的最後要有 Save Video、Save WEBM 或 Video Combine（VHS）"
+                .into(),
+        );
     }
     (a.prompt, a.placeholder) = match map.prompt.as_ref().filter(|p| !p.is_empty()) {
-        Some(p) => (p.clone(), p.iter().all(|(id, k)| input(m, id, k).and_then(Value::as_str).is_some_and(|s| s.contains(PROMPT)))),
+        Some(p) => (
+            p.clone(),
+            p.iter().all(|(id, k)| {
+                input(m, id, k)
+                    .and_then(Value::as_str)
+                    .is_some_and(|s| s.contains(PROMPT))
+            }),
+        ),
         None => find_prompt(m, &ids)?,
     };
 
     a.image = match map.image.as_deref() {
         Some("") => None,
         Some(id) => Some(id.to_string()),
-        None => auto_image(m, &ids)?,
+        None => match map
+            .media_slots
+            .iter()
+            .find(|s| s.kind == "image" && s.role == "first")
+        {
+            Some(slot) => (slot.input == "image").then(|| slot.node.clone()),
+            None => auto_image(m, &ids)?,
+        },
     };
+    for slot in &map.media_slots {
+        if slot.role == "first" && a.image.as_deref().is_some_and(|id| id != slot.node.as_str() || slot.input != "image") {
+            return Err("首幀素材槽與舊的首格圖對應不同：請將「首格圖放哪」改回自動，或對應同一個欄位".into());
+        }
+        if a.image.as_deref() == Some(slot.node.as_str())
+            && slot.input == "image"
+            && slot.role != "first"
+        {
+            return Err(format!(
+                "素材槽「{}」與首格圖用了同一個欄位：請將用途設為首幀，或改選其他節點",
+                slot.label
+            ));
+        }
+    }
 
     let num = |id: &str, k: &str| input(m, id, k).is_some_and(Value::is_number);
     a.h3 = ids.iter().any(|id| {
@@ -427,7 +725,12 @@ impl Analysis {
 }
 
 /// 自訂工作流的節點圖。wf 是存檔的內容（{"name", "graph"}）；回傳 (nodes, info)，跟 graphs::build 一樣
-pub fn build(p: &Value, wf: &Value, input_dir: &Path, seed_offset: i64) -> Result<(Map<String, Value>, Value), GraphError> {
+pub fn build(
+    p: &Value,
+    wf: &Value,
+    input_dir: &Path,
+    seed_offset: i64,
+) -> Result<(Map<String, Value>, Value), GraphError> {
     let graph = &wf["graph"];
     let map = Mapping::from_value(&wf["map"]);
     let a = analyze_with(graph, &map).map_err(GraphError)?;
@@ -437,29 +740,75 @@ pub fn build(p: &Value, wf: &Value, input_dir: &Path, seed_offset: i64) -> Resul
         return Err(GraphError("影片要寫提示詞：描述畫面裡的動作和聲音".into()));
     }
     if truthy(p.get("video_preview")) {
-        return Err(GraphError("自訂的影片工作流沒有預覽模式：把「先出預覽」取消勾選".into()));
+        return Err(GraphError(
+            "自訂的影片工作流沒有預覽模式：把「先出預覽」取消勾選".into(),
+        ));
     }
     let seed = p["seed"].as_i64().unwrap_or(0) + seed_offset;
+    let supplied = match p.get("media_slots") {
+        None => Map::new(),
+        Some(Value::Object(values)) => values.clone(),
+        Some(_) => {
+            return Err(GraphError(
+                "media_slots 要是素材槽代號對應已上傳檔名的物件".into(),
+            ))
+        }
+    };
+    for (key, value) in &supplied {
+        let slot = map
+            .media_slots
+            .iter()
+            .find(|s| s.key == *key)
+            .ok_or_else(|| GraphError(format!("這個工作流沒有素材槽：{key}")))?;
+        let name = value
+            .as_str()
+            .ok_or_else(|| GraphError(format!("素材槽「{}」要填已上傳的檔名", slot.label)))?;
+        media_input_path(input_dir, name, &slot.kind).map_err(GraphError)?;
+    }
+    if let Some(slot) = p.get("wf_overrides").and_then(Value::as_object).and_then(|ov| {
+        map.media_slots.iter().find(|s| ov.contains_key(&format!("{}.{}", s.node, s.input)))
+    }) {
+        return Err(GraphError(format!("「{}」是素材槽，請透過選檔指定，不能同時當一般參數覆寫", slot.label)));
+    }
 
     for (id, k) in &a.prompt {
         let v = if a.placeholder {
-            json!(input(&g, id, k).and_then(Value::as_str).unwrap_or("").replace(PROMPT, &prompt))
+            json!(input(&g, id, k)
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .replace(PROMPT, &prompt))
         } else {
             json!(prompt)
         };
         set(&mut g, id, k, v);
     }
-    let init = p.get("init_image").and_then(Value::as_str).filter(|s| !s.is_empty());
-    let size = match (init, &a.image) {
-        (Some(name), Some(id)) => {
+    let named_first = map.media_slots.iter().find(|s| s.role == "first" && s.kind == "image");
+    let explicit_first = named_first.and_then(|s| supplied.get(&s.key)).and_then(Value::as_str);
+    let init = explicit_first.or_else(|| {
+        p.get("init_image")
+            .and_then(Value::as_str)
+            .filter(|s| !s.is_empty())
+    });
+    let size = match (init, &a.image, named_first) {
+        (Some(name), Some(id), _) => {
             set(&mut g, id, "image", json!(name));
             Some(graphs::image_size(&input_dir.join(name))?)
         }
-        (Some(_), None) => {
-            return Err(GraphError("這個影片工作流沒有 Load Image，只能文生影片：到「設定 → 影片模型」換一個能圖生影片的".into()))
+        (Some(name), None, Some(slot)) => {
+            media_input_path(input_dir, name, "image").map_err(GraphError)?;
+            set(&mut g, &slot.node, &slot.input, json!(name));
+            Some(graphs::image_size(&input_dir.join(name))?)
         }
-        (None, Some(_)) => return Err(GraphError("這個影片工作流要一張首格圖：從圖片按「動起來」".into())),
-        (None, None) => None,
+        (Some(_), None, None) => return Err(GraphError(
+            "這個影片工作流沒有 Load Image，只能文生影片：到「設定 → 影片模型」換一個能圖生影片的"
+                .into(),
+        )),
+        (None, Some(_), _) => {
+            return Err(GraphError(
+                "這個影片工作流要一張首格圖：從圖片按「動起來」".into(),
+            ))
+        }
+        (None, None, _) => None,
     };
     for (id, k) in &a.seeds {
         set(&mut g, id, k, json!(seed));
@@ -468,6 +817,11 @@ pub fn build(p: &Value, wf: &Value, input_dir: &Path, seed_offset: i64) -> Resul
     crate::image_wf::apply_overrides(&mut g, &Value::Object(map.values.clone()));
     if let Some(ov) = p.get("wf_overrides").filter(|v| v.is_object()) {
         crate::image_wf::apply_overrides(&mut g, ov);
+    }
+    for slot in &map.media_slots {
+        if let Some(name) = supplied.get(&slot.key) {
+            set(&mut g, &slot.node, &slot.input, name.clone());
+        }
     }
 
     // 長寬照首格圖的比例（像素數不變，對齊 32）；回報的尺寸取最大的那個節點
@@ -489,9 +843,21 @@ pub fn build(p: &Value, wf: &Value, input_dir: &Path, seed_offset: i64) -> Resul
     }
 
     // 長度：8n+1 格（LTX 要 8n+1，Wan、Hunyuan 要 4n+1，兩種都符合）；MiniMax H3 要 17k+5、最長 15 秒
-    let mut frames = a.sizes.first().and_then(|id| input(&g, id, "length")).and_then(Value::as_i64);
-    if let (true, Some(fps), Some(secs)) = (a.seconds(), a.fps, p.get("video_seconds").and_then(Value::as_f64)) {
-        let n = if a.h3 { crate::h3::frames(secs * fps / crate::h3::FPS as f64) } else { (secs.clamp(1.0, 10.0) * fps) as i64 / 8 * 8 + 1 };
+    let mut frames = a
+        .sizes
+        .first()
+        .and_then(|id| input(&g, id, "length"))
+        .and_then(Value::as_i64);
+    if let (true, Some(fps), Some(secs)) = (
+        a.seconds(),
+        a.fps,
+        p.get("video_seconds").and_then(Value::as_f64),
+    ) {
+        let n = if a.h3 {
+            crate::h3::frames(secs * fps / crate::h3::FPS as f64)
+        } else {
+            (secs.clamp(1.0, 10.0) * fps) as i64 / 8 * 8 + 1
+        };
         for id in &a.sizes {
             set(&mut g, id, "length", json!(n));
         }
@@ -510,9 +876,14 @@ pub fn build(p: &Value, wf: &Value, input_dir: &Path, seed_offset: i64) -> Resul
     if let Some(poster) = p.get("poster").and_then(Value::as_str) {
         let out = &a.outputs[0];
         let video = class(g.get(out)) == "SaveVideo";
-        let src = input(&g, out, if video { "video" } else { "images" }).cloned().unwrap_or(Value::Null);
+        let src = input(&g, out, if video { "video" } else { "images" })
+            .cloned()
+            .unwrap_or(Value::Null);
         let images = if video {
-            g.insert(format!("{ADDED}frames"), json!({"class_type": "GetVideoComponents", "inputs": {"video": src}}));
+            g.insert(
+                format!("{ADDED}frames"),
+                json!({"class_type": "GetVideoComponents", "inputs": {"video": src}}),
+            );
             json!([format!("{ADDED}frames"), 0])
         } else {
             src
@@ -534,7 +905,8 @@ pub fn build(p: &Value, wf: &Value, input_dir: &Path, seed_offset: i64) -> Resul
         }
     }
     let info = json!({"prompt": prompt, "negative": "", "seed": seed, "width": wh.0, "height": wh.1, "mode": "video",
-                      "family": "custom", "workflow": wf["name"], "frames": frames, "fps": a.fps, "preview": false});
+                      "family": "custom", "workflow": wf["name"], "frames": frames, "fps": a.fps, "preview": false,
+                      "media_slots": map.media_slots.iter().map(|slot| { let mut v = json!(slot); v["file"] = input(&g, &slot.node, &slot.input).cloned().unwrap_or(Value::Null); v }).collect::<Vec<_>>()});
     Ok((g, info))
 }
 
@@ -548,14 +920,22 @@ pub fn id_of(name: &str) -> String {
     let s: String = name
         .trim()
         .chars()
-        .map(|c| if c.is_alphanumeric() || matches!(c, '-' | '_' | ' ') { c } else { '_' })
+        .map(|c| {
+            if c.is_alphanumeric() || matches!(c, '-' | '_' | ' ') {
+                c
+            } else {
+                '_'
+            }
+        })
         .take(60)
         .collect();
     let s = s.trim().to_string();
     // Windows 不能當檔名的 CON、NUL、COM1…
     let up = s.to_ascii_uppercase();
     let reserved = ["CON", "PRN", "AUX", "NUL"].contains(&up.as_str())
-        || (up.len() == 4 && (up.starts_with("COM") || up.starts_with("LPT")) && up.as_bytes()[3].is_ascii_digit());
+        || (up.len() == 4
+            && (up.starts_with("COM") || up.starts_with("LPT"))
+            && up.as_bytes()[3].is_ascii_digit());
     if s.is_empty() {
         "workflow".into()
     } else if s == BUILTIN || s == H3 || reserved {
@@ -577,22 +957,43 @@ pub fn load(dir: &Path, id: &str) -> R<Value> {
     let path = path_of(dir, id)?;
     let text = std::fs::read_to_string(&path)
         .map_err(|_| format!("找不到影片工作流「{id}」：到「設定 → 影片模型」重新選一個"))?;
-    serde_json::from_str(&text).map_err(|_| format!("影片工作流「{id}」的檔案壞了：到「設定 → 影片模型」重新匯入"))
+    serde_json::from_str(&text)
+        .map_err(|_| format!("影片工作流「{id}」的檔案壞了：到「設定 → 影片模型」重新匯入"))
 }
 
 fn entry(id: &str, wf: &Value) -> Value {
     let map = Mapping::from_value(&wf["map"]);
-    let mut e = json!({"id": id, "name": wf["name"], "added": wf["added"], "pins": pins_of(wf, &map), "mapped": !wf["map"].is_null()});
+    let media = media_slots_of(wf, &map);
+    let mut e = json!({"id": id, "name": wf["name"], "added": wf["added"], "pins": pins_of(wf, &map), "media_slots": media, "mapped": !wf["map"].is_null()});
     match analyze_with(&wf["graph"], &map) {
-        Ok(a) => e["info"] = a.summary(&wf["graph"]),
+        Ok(a) => {
+            e["info"] = a.summary(&wf["graph"]);
+            e["info"]["media_slots"] = json!(media_slots_of(wf, &map));
+            if let Some(slot) = map.media_slots.iter().find(|s| s.kind == "image" && s.role == "first") {
+                e["info"]["image"] = json!({"node": slot.node, "input": slot.input, "class": wf["graph"][&slot.node]["class_type"], "title": slot.label});
+            }
+        }
         Err(msg) => e["error"] = json!(msg),
     }
     e
 }
 
+fn media_slots_of(wf: &Value, map: &Mapping) -> Vec<Value> {
+    map.media_slots
+        .iter()
+        .map(|slot| {
+            let mut v = json!(slot);
+            v["value"] = wf["graph"][&slot.node]["inputs"][&slot.input].clone();
+            v
+        })
+        .collect()
+}
+
 /// 釘到「動起來」的欄位：[{key, label, value（對應設定改過的值，沒改就是工作流原本的）}]；欄位不見了就略過
 fn pins_of(wf: &Value, map: &Mapping) -> Vec<Value> {
-    let Ok(m) = nodes(&wf["graph"]) else { return vec![] };
+    let Ok(m) = nodes(&wf["graph"]) else {
+        return vec![];
+    };
     map.pins
         .iter()
         .filter_map(|(key, l)| {
@@ -612,9 +1013,17 @@ pub fn detail(dir: &Path, id: &str, object_info: &Value) -> R<Value> {
     let ids = sorted_ids(m);
     let used = analyze_with(graph, &map);
     let node = |id: &str| json!({"node": id, "class": class(m.get(id)), "title": label(m.get(id))});
-    let auto_prompt = find_prompt(m, &ids).map(|(p, _)| p.iter().map(|(n, k)| format!("{n}.{k}")).collect::<Vec<_>>());
+    let auto_prompt = find_prompt(m, &ids).map(|(p, _)| {
+        p.iter()
+            .map(|(n, k)| format!("{n}.{k}"))
+            .collect::<Vec<_>>()
+    });
     let auto_img = auto_image(m, &ids);
-    let loads: Vec<Value> = ids.iter().filter(|id| input(m, id, "image").is_some_and(Value::is_string)).map(|id| node(id)).collect();
+    let loads: Vec<Value> = ids
+        .iter()
+        .filter(|id| input(m, id, "image").is_some_and(Value::is_string))
+        .map(|id| node(id))
+        .collect();
     // 生圖站自己會填的欄位（照現在的設定）：不給在參數裡改
     let mut auto_set = std::collections::HashSet::new();
     if let Ok(a) = &used {
@@ -628,12 +1037,22 @@ pub fn detail(dir: &Path, id: &str, object_info: &Value) -> R<Value> {
             auto_set.insert((id.clone(), "filename_prefix".to_string()));
         }
     }
+    for slot in &map.media_slots {
+        auto_set.insert((slot.node.clone(), slot.input.clone()));
+    }
     let common = |_: &str, _: &str| false;
     let fields = crate::image_wf::field_rows(m, &auto_set, &[], &common, object_info);
+    let media_inputs: Vec<Value> = ids.iter().flat_map(|id| {
+        m[id]["inputs"].as_object().into_iter().flatten().filter_map(move |(key, value)| {
+            let kind = media_input_kind(&m[id], key, value)?;
+            Some(json!({"key": format!("{id}.{key}"), "node": id, "input": key, "class": class(m.get(id)), "title": label(m.get(id)), "kind": kind, "value": value}))
+        })
+    }).collect();
     // 放得了提示詞的：文字型的欄位（下拉選單、Load Image 的圖、存檔名、看起來像檔名的不算）
     let texts: Vec<Value> = fields
         .iter()
         .filter(|f| f["type"] == "STRING" && !matches!(f["input"].as_str(), Some("image" | "filename_prefix")))
+        .filter(|f| !media_inputs.iter().any(|slot| slot["key"] == f["key"]))
         .filter(|f| !OUTPUTS.iter().any(|(c, ..)| f["class"] == *c))
         .filter(|f| !f["value"].as_str().is_some_and(|s| s.ends_with(".safetensors") || s.ends_with(".gguf") || s.ends_with(".ckpt")))
         .map(|f| {
@@ -647,7 +1066,7 @@ pub fn detail(dir: &Path, id: &str, object_info: &Value) -> R<Value> {
         "auto": {"prompt": auto_prompt.as_ref().ok(), "prompt_error": auto_prompt.as_ref().err(),
                  "image": auto_img.as_ref().ok().cloned().flatten(), "image_error": auto_img.as_ref().err()},
         "used": used.as_ref().map(slots).unwrap_or(Value::Null), "error": used.err(),
-        "texts": texts, "loads": loads, "fields": fields,
+        "texts": texts, "loads": loads, "fields": fields, "media_inputs": media_inputs,
     }))
 }
 
@@ -692,7 +1111,10 @@ pub fn list(dir: &Path) -> Vec<Value> {
 pub fn save(dir: &Path, name: &str, graph: &Value) -> R<Value> {
     let m = nodes(graph)?;
     if !has_output(m) {
-        return Err("找不到存影片的節點：工作流的最後要有 Save Video、Save WEBM 或 Video Combine（VHS）".into());
+        return Err(
+            "找不到存影片的節點：工作流的最後要有 Save Video、Save WEBM 或 Video Combine（VHS）"
+                .into(),
+        );
     }
     let name: String = name.trim().chars().take(60).collect();
     let id = id_of(&name);
@@ -743,7 +1165,9 @@ mod tests {
         DIR.get_or_init(|| {
             let d = std::env::temp_dir().join("anima_video_wf_test");
             std::fs::create_dir_all(&d).unwrap();
-            image::RgbImage::new(600, 900).save(d.join("tall.png")).unwrap();
+            image::RgbImage::new(600, 900)
+                .save(d.join("tall.png"))
+                .unwrap();
             d
         })
         .clone()
@@ -753,13 +1177,169 @@ mod tests {
     fn busy() -> Value {
         let mut g = wan();
         let m = g.as_object_mut().unwrap();
-        m.insert("53".into(), json!({"class_type": "LoadImage", "inputs": {"image": "ref.png"}}));
+        m.insert(
+            "53".into(),
+            json!({"class_type": "LoadImage", "inputs": {"image": "ref.png"}}),
+        );
         m.insert("9".into(), json!({"class_type": "CLIPTextEncode", "inputs": {"text": "style words", "clip": ["38", 0]}}));
         m.insert("60".into(), json!({"class_type": "LoraLoaderModelOnly", "inputs": {"model": ["61", 0], "lora_name": "Combat.safetensors", "strength_model": 0.65}}));
         m.insert("51".into(), json!({"class_type": "ConditioningCombine", "inputs": {"conditioning_1": ["6", 0], "conditioning_2": ["9", 0]}}));
         m["50"]["inputs"]["positive"] = json!(["51", 0]);
         m["3"]["inputs"]["steps"] = json!(8);
         g
+    }
+
+    fn media_workflow() -> Value {
+        let mut graph = busy();
+        graph["70"] = json!({"class_type": "VHS_LoadVideo", "inputs": {"video": "motion.mp4"}});
+        graph["71"] = json!({"class_type": "LoadAudio", "inputs": {"audio": "voice.wav"}});
+        let map = json!({"prompt": [["6", "text"]], "image": "52", "media_slots": [
+            {"key":"opening", "label":"首幀", "kind":"image", "role":"first", "node":"52", "input":"image"},
+            {"key":"hero", "label":"角色定稿", "kind":"image", "role":"character", "node":"53", "input":"image", "who":"主角"},
+            {"key":"motion", "label":"動作", "kind":"video", "role":"motion", "node":"70", "input":"video"},
+            {"key":"voice", "label":"聲音", "kind":"audio", "role":"voice", "node":"71", "input":"audio", "who":"主角"}
+        ]});
+        json!({"name":"media test", "graph":graph, "map":map})
+    }
+
+    #[test]
+    fn media_slots_bind_independent_files_and_preserve_links() {
+        let wf = media_workflow();
+        let d = input_dir();
+        std::fs::write(d.join("motion.mp4"), b"video fixture").unwrap();
+        std::fs::write(d.join("voice.wav"), b"audio fixture").unwrap();
+        image::RgbImage::new(900, 600)
+            .save(d.join("media_wide.png"))
+            .unwrap();
+        let params = json!({"prompt":"wave", "init_image":"tall.png", "media_slots": {
+            "opening":"media_wide.png", "hero":"tall.png", "motion":"motion.mp4", "voice":"voice.wav"
+        }});
+        let (out, info) = build(&params, &wf, &d, 0).unwrap();
+        assert_eq!(out["52"]["inputs"]["image"], "media_wide.png");
+        assert_eq!(out["53"]["inputs"]["image"], "tall.png");
+        assert_eq!(out["70"]["inputs"]["video"], "motion.mp4");
+        assert_eq!(out["71"]["inputs"]["audio"], "voice.wav");
+        assert_eq!(out["50"]["inputs"]["start_image"], json!(["52", 0]));
+        assert!(
+            info["width"].as_i64().unwrap() > info["height"].as_i64().unwrap(),
+            "explicit first frame owns the output ratio"
+        );
+        assert_eq!(info["media_slots"][1]["who"], "主角");
+        assert_eq!(info["media_slots"][1]["file"], "tall.png");
+        // Leaving named slots out preserves the legacy init_image and the untouched workflow files.
+        let (legacy, _) = build(
+            &json!({"prompt":"wave", "init_image":"tall.png"}),
+            &wf,
+            &d,
+            0,
+        )
+        .unwrap();
+        assert_eq!(legacy["52"]["inputs"]["image"], "tall.png");
+        assert_eq!(legacy["53"]["inputs"]["image"], "ref.png");
+    }
+
+    #[test]
+    fn media_slots_reject_paths_unknown_slots_wrong_types_and_override_collisions() {
+        let wf = media_workflow();
+        for supplied in [
+            json!({"hero":"../tall.png"}),
+            json!({"hero":"C:\\secret.png"}),
+            json!({"hero":"https://example.com/a.png"}),
+            json!({"hero":"voice.wav"}),
+            json!({"hero":3}),
+            json!({"unknown":"tall.png"}),
+            json!(["tall.png"]),
+            json!({"hero":"missing-file.png"}),
+        ] {
+            let params = json!({"prompt":"wave", "init_image":"tall.png", "media_slots":supplied});
+            assert!(build(&params, &wf, &input_dir(), 0).is_err(), "{params}");
+        }
+        let params = json!({"prompt":"wave", "init_image":"tall.png", "wf_overrides":{"53.image":"tall.png"}});
+        assert!(build(&params, &wf, &input_dir(), 0)
+            .unwrap_err()
+            .0
+            .contains("素材槽"));
+        assert!(media_basename("reference.webm", "video").is_ok());
+        assert!(media_basename("reference.webm", "audio").is_err());
+    }
+
+    #[test]
+    fn media_mapping_rejects_duplicate_targets_links_and_non_media_literals() {
+        let wf = media_workflow();
+        for change in 0..6 {
+            let mut map = wf["map"].clone();
+            match change {
+                0 => map["media_slots"][1]["key"] = json!("opening"),
+                1 => {
+                    map["media_slots"][1]["node"] = json!("52");
+                }
+                2 => {
+                    map["media_slots"][1]["node"] = json!("50");
+                    map["media_slots"][1]["input"] = json!("start_image");
+                }
+                3 => {
+                    map["media_slots"][1]["node"] = json!("6");
+                    map["media_slots"][1]["input"] = json!("text");
+                }
+                4 => map["values"] = json!({"53.image":"ref.png"}),
+                _ => map["media_slots"] = json!([{"key":"broken"}]),
+            }
+            assert!(
+                analyze_with(&wf["graph"], & Mapping::from_value(&map)).is_err(),
+                "{map}"
+            );
+        }
+        let mut automatic = wf["map"].clone();
+        automatic.as_object_mut().unwrap().remove("image");
+        assert_eq!(
+            analyze_with(&wf["graph"], &Mapping::from_value(&automatic))
+                .unwrap()
+                .image
+                .as_deref(),
+            Some("52")
+        );
+    }
+
+    #[test]
+    fn named_first_frame_can_target_a_custom_literal_input() {
+        let mut wf = media_workflow();
+        wf["graph"]["72"] = json!({"class_type":"CustomImageLoader", "inputs":{"first_frame":"original.png"}});
+        wf["map"].as_object_mut().unwrap().remove("image");
+        wf["map"]["media_slots"][0]["node"] = json!("72");
+        wf["map"]["media_slots"][0]["input"] = json!("first_frame");
+        let (graph, _) = build(&json!({"prompt":"wave", "init_image":"tall.png"}), &wf, &input_dir(), 0).unwrap();
+        assert_eq!(graph["72"]["inputs"]["first_frame"], "tall.png");
+        assert_eq!(graph["52"]["inputs"]["image"], "example.png", "a named first frame does not overwrite another image loader");
+        wf["map"]["image"] = json!("52");
+        assert!(analyze_with(&wf["graph"], &Mapping::from_value(&wf["map"])).is_err());
+    }
+
+    #[test]
+    fn media_slots_detail_and_storage_keep_role_identity_and_literal_candidates() {
+        let wf = media_workflow();
+        let d = std::env::temp_dir().join(format!("anima_media_slots_{}", rand::random::<u64>()));
+        save(&d, "media", &wf["graph"]).unwrap();
+        let entry = save_map(&d, "media", &wf["map"]).unwrap();
+        assert_eq!(entry["media_slots"][1]["who"], "主角");
+        assert_eq!(entry["info"]["media_slots"][2]["kind"], "video");
+        let detail = detail(&d, "media", &Value::Null).unwrap();
+        let candidates = detail["media_inputs"].as_array().unwrap();
+        assert!(candidates
+            .iter()
+            .any(|c| c["key"] == "71.audio" && c["kind"] == "audio"));
+        assert!(candidates
+            .iter()
+            .any(|c| c["key"] == "70.video" && c["kind"] == "video"));
+        assert!(!candidates
+            .iter()
+            .any(|c| c["key"] == "50.start_image" || c["key"] == "60.lora_name"));
+        assert!(!detail["texts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|t| t["key"] == "71.audio"));
+        assert_eq!(Mapping::from_value(&wf["map"]).to_value(), detail["map"]);
+        let _ = std::fs::remove_dir_all(d);
     }
 
     #[test]
@@ -774,7 +1354,8 @@ mod tests {
         assert_eq!(Mapping::from_value(&map.to_value()), map);
         // 指到連線、不存在的欄位、不是 Load Image、不是文字：擋
         for bad in [json!({"values": {"50.positive": 1}}), json!({"values": {"99.x": 1}}), json!({"image": "6"}),
-                    json!({"prompt": [["3", "seed"]]}), json!({"pins": [{"key": "nodot"}]})] {
+                    json!({"prompt": [["3", "seed"]]}), json!({"pins": [{"key": "nodot"}]}),
+        ] {
             assert!(analyze_with(&busy(), &Mapping::from_value(&bad)).is_err(), "{bad}");
         }
         // 「沒有首格圖」＝只能文生影片
@@ -851,7 +1432,8 @@ mod tests {
         assert_eq!(g["52"]["inputs"]["image"], "tall.png");
         assert_eq!(g["3"]["inputs"]["seed"], 43);
         // 600×900 的直圖：像素數維持 832×480 左右，比例變直的
-        let (w, h) = (g["50"]["inputs"]["width"].as_i64().unwrap(), g["50"]["inputs"]["height"].as_i64().unwrap());
+        let (w, h) = (g["50"]["inputs"]["width"].as_i64().unwrap(), g["50"]["inputs"]["height"].as_i64().unwrap(),
+        );
         assert!(h > w && w % 32 == 0 && h % 32 == 0, "{w}×{h}");
         assert!(((w * h) as f64 / (832.0 * 480.0) - 1.0).abs() < 0.1, "{w}×{h}");
         assert_eq!(g["50"]["inputs"]["length"], 81, "5 秒 × 16 格 → 8n+1");
@@ -952,7 +1534,8 @@ mod tests {
         let a = analyze(&wf["graph"]).unwrap();
         assert!(a.h3 && a.seconds());
         for (secs, n) in [(10.0, 243), (15.0, 362), (20.0, 362), (5.0, 124)] {
-            let (g, info) = build(&json!({"prompt": "hi", "video_seconds": secs}), &wf, &input_dir(), 0).unwrap();
+            let (g, info) = build(&json!({"prompt": "hi", "video_seconds": secs}), &wf, &input_dir(), 0,
+            ).unwrap();
             assert_eq!(g["2"]["inputs"]["length"], n, "{secs} 秒");
             assert_eq!(info["frames"], n);
         }

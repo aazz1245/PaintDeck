@@ -14,6 +14,7 @@ use std::time::Duration;
 
 pub struct ComfyProc {
     child: Arc<Mutex<Option<Child>>>,
+    diagnostics: Arc<Mutex<Option<std::sync::Weak<crate::diagnostics::Store>>>>,
 }
 
 /// ComfyUI 沒開起來、或中途自己關掉的原因（/api/state 在離線時顯示）。生圖站是視窗程式，eprintln 使用者看不到
@@ -98,21 +99,24 @@ fn failure_text(log_tail: &str, gpu: &str) -> (String, String) {
 
 /// 盯著自己開的 ComfyUI：還沒開好就結束、或開好之後自己關掉（不是生圖站關的），把原因記到 NOTE。
 /// backend＝gpu::comfy_backend（PyTorch 是 NVIDIA 版、AMD 版、Intel 版還是 ZLUDA，驅動提示才講得對）
-fn watch(child: Arc<Mutex<Option<Child>>>, log: PathBuf, backend: Option<&'static str>) {
+fn watch(child: Arc<Mutex<Option<Child>>>, log: PathBuf, backend: Option<&'static str>, diagnostics: Arc<Mutex<Option<std::sync::Weak<crate::diagnostics::Store>>>>) {
     std::thread::spawn(move || loop {
         std::thread::sleep(Duration::from_secs(3));
-        let code = {
+        let (pid,code) = {
             let mut g = child.lock().unwrap_or_else(|e| e.into_inner());
             match g.as_mut().map(Child::try_wait) {
                 None => return, // 生圖站自己關的（stop 把它拿走了）
                 Some(Ok(None)) => continue,
-                Some(Ok(Some(st))) => st.code(),
-                Some(Err(_)) => None,
+                Some(Ok(Some(st))) => (g.as_ref().map(|c|c.id()).unwrap_or(0),st.code()),
+                Some(Err(_)) => return,
             }
         };
-        let tail = std::fs::read(&log)
-            .map(|b| String::from_utf8_lossy(&b[b.len().saturating_sub(64 * 1024)..]).into_owned())
-            .unwrap_or_default();
+        let tail = (||->std::io::Result<String> {
+            use std::io::{Read,Seek,SeekFrom};
+            let mut f=File::open(&log)?; let len=f.metadata()?.len();f.seek(SeekFrom::Start(len.saturating_sub(64*1024)))?;
+            let mut bytes=vec![];f.take(64*1024).read_to_end(&mut bytes)?;Ok(String::from_utf8_lossy(&bytes).into_owned())
+        })().unwrap_or_default();
+        if let Some(store)=diagnostics.lock().unwrap_or_else(|e|e.into_inner()).as_ref().and_then(std::sync::Weak::upgrade) {store.process_exit(pid,code,&tail);}
         let gpu = driver_hint(backend, || {
             let (gpus, ok) = crate::gpu::detect(false);
             crate::gpu::auto_plan(&gpus, ok).variant
@@ -450,10 +454,14 @@ impl ComfyProc {
         eprintln!("ComfyUI 啟動中（pid {}）", child.id());
         set_note(None);
         let child = Arc::new(Mutex::new(Some(child)));
-        watch(child.clone(), log_dir.join("comfyui.log"), backend);
-        Ok(Some(ComfyProc { child }))
+        let diagnostics=Arc::new(Mutex::new(None));
+        watch(child.clone(), log_dir.join("comfyui.log"), backend,diagnostics.clone());
+        Ok(Some(ComfyProc { child,diagnostics }))
     }
 
+    pub fn attach_diagnostics(&self,store:Arc<crate::diagnostics::Store>) {
+        *self.diagnostics.lock().unwrap_or_else(|e|e.into_inner())=Some(Arc::downgrade(&store));
+    }
     /// 還在跑嗎（啟動失敗、被關掉都算沒在跑）
     pub fn alive(&self) -> bool {
         let mut g = self.child.lock().unwrap_or_else(|e| e.into_inner());

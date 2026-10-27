@@ -6,6 +6,8 @@ import * as gen from "./gen.js";
 import { layoutEditor } from "./layout.js";
 import { mmprojFix } from "./pe.js";
 import * as drawer from "./assetdrawer.js";
+import { renderTakePanel } from "./film-takes.js";
+import { mediaSlotsControl } from "./video-slots.js";
 
 const F = (id) => document.getElementById(id);
 const CAMERA = [
@@ -23,15 +25,12 @@ let P = null;        // 目前的專案
 let chars = [];      // 角色卡
 let running = false; // 目前專案有背景工作在跑
 let shown = false;
+let videoChoices = [], defaultVideoEngine = "ltx23";
+const slotControls = new Map();
 
 // ---------------------------------------------------------------- 載入
 export async function show() {
   shown = true;
-  gen.videoEngine().then((v) => {
-    if (v.h3) return (F("dirVidEngine").textContent = `影片模型：${v.name}・分鏡還不能用 H3：到「設定」換回 LTX 或匯入的工作流，H3 請用「H3 影片」分頁`);
-    const own = v.builtin ? "" : `（自訂工作流：解析度${v.info?.seconds ? "" : "和每段長度"}照工作流）`;
-    F("dirVidEngine").textContent = `影片模型：${v.name}${own}・到「設定」可以換`;
-  }).catch(() => (F("dirVidEngine").textContent = ""));
   await loadChars();
   await loadProjects(store.get("dirProject", null));
 }
@@ -58,15 +57,25 @@ async function loadProjects(want) {
 
 // 換專案、重讀都可能晚回：舊請求的回應不能蓋掉現在選的專案（不然存檔會存到別的專案）
 let openSeq = 0, reloadSeq = 0;
-async function openProject(id) {
+export async function openProject(id) {
   const seq = ++openSeq;
   ++reloadSeq; // 換專案：還在路上的重讀一律作廢
-  const p = await api(`/api/director/project/${id}`);
+  const [p, catalog] = await Promise.all([api(`/api/director/project/${id}`), api("/api/video/workflows").catch(() => null)]);
   if (seq !== openSeq) return;
   P = p;
+  if (catalog) {
+    defaultVideoEngine = catalog.engine || "ltx23";
+    videoChoices = [catalog.builtin || { id: "ltx23", name: "LTX-2.3（內建）" }, ...(catalog.workflows || [])];
+  }
+  const selector = F("dirProj");
+  if (![...(selector.options || [])].some((o) => o.value === id)) selector.append(el("option", { value: id }, p.title || "未命名"));
+  selector.value = id;
   running = !!P.running;
   store.set("dirProject", id);
   fillForm();
+  const engine = P.settings?.video_engine || defaultVideoEngine;
+  const choice = videoChoices.find((v) => v.id === engine);
+  F("dirVidEngine").textContent = `本專案影片模型：${choice?.name || engine}・可在每鏡選模型與秒數`;
   renderSegs();
   setRunning(running);
 }
@@ -88,11 +97,14 @@ function fillForm() {
   const s = P.settings || {};
   F("dirStory").value = P.story || "";
   F("dirSegN").value = String(s.segments || 0);
-  F("dirSecs").value = String(s.seconds || 5);
+  const seconds = String(s.seconds || 5);
+  if (![...(F("dirSecs").options || [])].some((o) => o.value === seconds)) F("dirSecs").append(el("option", { value: seconds }, `${seconds} 秒`));
+  F("dirSecs").value = seconds;
   F("dirRes").value = s.res || "720p";
   F("dirStyle").value = s.style || "anime";
   F("dirVisual").value = s.visual || "";
   F("dirExtra").value = s.extra || "";
+  if (F("dirReview")) F("dirReview").checked = s.review !== false;
   renderChips("dirCamera", CAMERA, s.camera || []);
   renderChips("dirLight", LIGHT, s.light || []);
   renderCharChips();
@@ -146,22 +158,24 @@ function readForm() {
   P.story = F("dirStory").value;
   P.settings = { ...(P.settings || {}),
     segments: +F("dirSegN").value, seconds: +F("dirSecs").value, res: F("dirRes").value, style: F("dirStyle").value,
-    visual: F("dirVisual").value, extra: F("dirExtra").value, camera: picked("dirCamera"), light: picked("dirLight"), characters: picked("dirChars") };
+    visual: F("dirVisual").value, extra: F("dirExtra").value, camera: picked("dirCamera"), light: picked("dirLight"), characters: picked("dirChars"), review: F("dirReview")?.checked !== false };
   storyCount();
   saveSoon();
 }
 
 const saveSoon = debounce(() => save(), 600);
 async function save() {
-  if (!P || running) return;
+  if (!P || running) return false;
+  const project = P, id = project.id;
   try {
-    const r = await api("/api/director/project", { json: { id: P.id, title: P.title, story: P.story, settings: P.settings, segments: P.segments } });
-    P.updated = r.updated;
-  } catch (e) { toast("專案存檔失敗：" + e.message, "err"); }
+    const r = await api("/api/director/project", { json: { id, title: project.title, story: project.story, settings: project.settings, segments: project.segments } });
+    if (P?.id === id) P.updated = r.updated;
+    return true;
+  } catch (e) { toast("專案存檔失敗：" + e.message, "err"); return false; }
 }
 
 // ---------------------------------------------------------------- 右邊：段落
-const STATUS = { running: ["生成中", "amb"], done: ["完成", "g"], error: ["失敗", "r"], stopped: ["已停止", "amb"] };
+const STATUS = { running: ["生成中", "amb"], done: ["已採用", "g"], review: ["待審片", "amb"], todo: ["待生成", ""], error: ["失敗", "r"], stopped: ["已停止", "amb"] };
 
 function thumbOf(seg) {
   if (seg.frame_id) return `/thumb/${seg.frame_id}`;
@@ -199,6 +213,19 @@ function segCard(seg, i) {
 
   const btn = (label, fn, cls = "akey sm", tip = "") => el("button", { type: "button", class: cls, title: tip, disabled: running, onclick: fn }, label);
   const chips = (seg.characters || []).map((n) => el("span", { class: "badge-s" }, n));
+  const engine = seg.engine || P.settings?.video_engine || defaultVideoEngine;
+  const enginePick = el("select", { disabled: running, "aria-label": `第 ${i + 1} 鏡影片模型` },
+    el("option", { value: "" }, "沿用專案影片模型"), ...videoChoices.map((v) => el("option", { value: v.id }, v.name || v.id)));
+  if (seg.engine && !videoChoices.some((v) => v.id === seg.engine)) enginePick.append(el("option", { value: seg.engine }, seg.engine));
+  enginePick.value = seg.engine || "";
+  enginePick.onchange = () => { seg.engine = enginePick.value; saveSoon(); renderSegs(); };
+  const seconds = el("input", { type: "number", min: "0.1", max: "120", step: "0.1", value: seg.seconds ?? P.settings?.seconds ?? 5, disabled: running, "aria-label": `第 ${i + 1} 鏡秒數`, style: "width:90px" });
+  seconds.onchange = () => { const n = Number(seconds.value); if (n > 0 && Number.isFinite(n)) { seg.seconds = n; saveSoon(); } };
+  const slots = mediaSlotsControl({ engine: videoChoices.find((v) => v.id === engine), values: seg.media_slots || {},
+    isCurrent: () => !running && P?.segments?.[i] === seg && (seg.engine || P.settings?.video_engine || defaultVideoEngine) === engine,
+    onchange: (values) => { seg.media_slots = values; saveSoon(); } });
+  slotControls.set(i, slots);
+  const slotBox = el("fieldset", { disabled: running, style: "border:0;padding:0;margin:0" }, slots.element);
   const card = el("article", { class: `dir-seg${seg.continue && i > 0 ? " cont" : ""}`, "data-i": i },
     el("div", { class: "dir-seg-hd" },
       el("span", { class: "vfd amb dir-no" }, String(i + 1).padStart(2, "0")), title,
@@ -207,7 +234,13 @@ function segCard(seg, i) {
     summary,
     seg.error ? el("div", { class: "pe-status err" }, seg.error) : null,
     el("div", { class: "row gap wrap" }, ...chips, seg.scene ? el("span", { class: "muted sm" }, seg.scene) : null),
+    el("div", { class: "row gap wrap" }, el("label", {}, "影片模型 ", enginePick), el("label", {}, " 秒數 ", seconds)),
+    slotBox,
     el("div", { class: "dir-media" }, frameBox, vidBox),
+    renderTakePanel({ seg, disabled: running, onSelect: (take) => selectTake(i, take) }),
+    seg.draft ? el("details", { class: "dir-pr" }, el("summary", {}, "切版前保留的未拍草稿"),
+      el("pre", { style: "white-space:pre-wrap;max-height:200px;overflow:auto" }, seg.draft.video || JSON.stringify(seg.draft, null, 2)),
+      btn("套回這份草稿", () => { Object.assign(seg, seg.draft); save().then(renderSegs); }, "akey sm", "只還原待重拍的文字與規格，已採用的影片維持原版")) : null,
     el("details", { class: "dir-pr", open: !seg.video },
       el("summary", {}, "提示詞（可以直接改）"),
       el("span", { class: "sub" }, seg.continue && i > 0 ? "第一格（接上一段時不會用到）" : "第一格的畫面"), ta("frame", 3, "AI 寫好會出現在這裡"),
@@ -220,8 +253,31 @@ function segCard(seg, i) {
       btn("只生這段", () => run({ only: i }), "akey sm go"),
       btn("從這段開始", () => run({ from: i, skip_done: false }), "akey sm", "從這段開始往後全部重做，最後接成長片"),
       btn(seg.frame_lock ? "換第一格…" : "指定第一格…", () => lockFrame(i), "akey sm", "從圖庫挑一張當這段的第一格（不讓 AI 畫）"),
+      seg.video_id && seg.selected_take ? btn("選接續畫面", () => pickTail(i)) : null,
       seg.frame_lock ? btn("取消指定", () => { delete seg.frame_lock; save().then(renderSegs); }) : null));
   return card;
+}
+
+async function pickTail(index) {
+  if (!P || running) return;
+  const id = P.id, seq = openSeq;
+  const review = await import("./video-review.js");
+  if (P?.id !== id || openSeq !== seq) return;
+  return review.pickTail({ id, seg: index, onDone: (p) => {
+    if (P?.id !== id || openSeq !== seq) return;
+    P = p; renderSegs();
+  } });
+}
+
+async function selectTake(index, take_id) {
+  if (!P || running || !(await save())) return;
+  const id = P.id, seq = openSeq;
+  try {
+    const p = await api("/api/director/take/select", { json: { id, index, take_id } });
+    if (P?.id !== id || openSeq !== seq) return;
+    P = p; running = false; renderSegs();
+    status("已採用，可以接著拍下一鏡");
+  } catch (e) { toast(e.message, "err"); }
 }
 
 // 版面框（MOSS 專用）：拉框指定第一格裡誰、什麼放在哪裡。框跟著段落存（seg.layout），
@@ -245,11 +301,16 @@ function layBox(seg, i) {
 function renderSegs() {
   const box = F("dirSegs");
   box.innerHTML = "";
+  slotControls.clear();
   const segs = P?.segments || [];
   const done = segs.filter((s) => s.status === "done").length;
-  F("dirCount").textContent = segs.length ? `${segs.length} 段・完成 ${done}・約 ${segs.length * (P.settings?.seconds || 5)} 秒` : "";
+  const total = segs.reduce((n, s) => n + Number(s.seconds ?? P.settings?.seconds ?? 5), 0);
+  F("dirCount").textContent = segs.length ? `${segs.length} 段・完成 ${done}・約 ${Math.round(total * 10) / 10} 秒` : "";
   if (!segs.length) box.append(el("div", { class: "muted pad" }, "還沒有段落。左邊寫好劇情，按「AI 分段＋寫提示詞」。"));
   segs.forEach((s, i) => box.append(segCard(s, i)));
+  const needsReview = segs.some((s) => !!s.pending_take);
+  F("dirConcat").disabled = running || needsReview || segs.some((s) => !s.video_id || s.stale || s.status !== "done");
+  F("dirRun").disabled = running || needsReview;
   const fin = F("dirFinal");
   fin.hidden = !P?.final?.id;
   fin.innerHTML = "";
@@ -279,7 +340,12 @@ function setRunning(on) {
   running = on;
   F("dirStop").hidden = !on;
   for (const id of ["dirRun", "dirConcat", "dirPlan", "dirShots", "dirImgUse", "dirNew", "dirDel", "dirRename", "dirProj"]) F(id).disabled = on;
-  for (const id of ["dirStory", "dirSegN", "dirSecs", "dirRes", "dirStyle", "dirVisual", "dirExtra"]) F(id).disabled = on;
+  for (const id of ["dirStory", "dirSegN", "dirSecs", "dirRes", "dirStyle", "dirVisual", "dirExtra", "dirReview"]) if (F(id)) F(id).disabled = on;
+  if (!on && P) {
+    const segs = P.segments || [];
+    F("dirRun").disabled = segs.some((s) => !!s.pending_take);
+    F("dirConcat").disabled = !segs.length || segs.some((s) => !!s.pending_take || !s.video_id || s.stale || s.status !== "done");
+  }
   if (!on && F("dirStatus").classList.contains("amb")) status("待機");
 }
 
@@ -292,7 +358,7 @@ function status(msg, cls = "g") {
 async function write(what, index) {
   if (!P) return;
   if (what === "plan" && P.segments?.length && !confirm("重新分段會清掉現有的段落和提示詞（已經生好的影片還在圖庫）。繼續？")) return;
-  await save();
+  if (!(await save())) return;
   try {
     await api("/api/director/write", { json: { id: P.id, what, index } });
     status(what === "plan" ? "AI 分段中…" : "寫提示詞中…", "amb");
@@ -302,8 +368,10 @@ async function write(what, index) {
 
 async function run(opt = {}) {
   if (!P) return;
-  await save();
-  const body = { id: P.id, ...opt };
+  try { for (const [i, control] of slotControls) P.segments[i].media_slots = control.read(); }
+  catch (e) { toast(e.message, "err"); return; }
+  if (!(await save())) return;
+  const body = { id: P.id, review: F("dirReview")?.checked !== false, ...opt };
   if (opt.only === undefined && opt.skip_done === undefined) body.skip_done = !F("dirRedo").checked;
   try {
     await api("/api/director/run", { json: body });
@@ -442,6 +510,11 @@ function initChars() {
 
 // ---------------------------------------------------------------- 初始化
 export function init() {
+  if (!F("dirReview")) {
+    const review = el("input", { type: "checkbox", id: "dirReview", checked: true });
+    review.onchange = readForm;
+    F("dirRun").parentElement.append(el("label", { class: "check inline", title: "每拍完一鏡先預覽並採用；取消勾選會自動採用新版本並連拍" }, review, " 逐鏡審片"));
+  }
   // 導演分鏡：資產的外觀文字接在劇情後面
   drawer.mount(F("dirAssets"), { family: () => "ltx", insert: drawer.appendTo(F("dirStory")) });
   F("dirSegN").append(...Array.from({ length: 29 }, (_, k) => el("option", { value: k + 2 }, `${k + 2} 段`)));

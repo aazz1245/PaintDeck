@@ -37,7 +37,7 @@ fn main() {
 
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![hide_window, quit_app])
+        .invoke_handler(tauri::generate_handler![hide_window, quit_app, open_assistant])
         .setup(move |app| {
             app.manage(Comfy(Mutex::new(None)));
             let web = env_path("ANIMA_WEB")
@@ -161,6 +161,40 @@ fn hide_window(window: tauri::WebviewWindow) {
 #[tauri::command]
 fn quit_app(app: AppHandle) {
     app.exit(0);
+}
+
+/// 頂列的「✦ 助手」：生圖助手開在自己的視窗（同一個內建伺服器的網頁加 ?solo=agent，只顯示助手頁）。
+/// 已經開著就叫到前面，不開第二個。
+/// 一定要 async：Windows 上在同步指令裡建 WebviewWindow 會卡死（2026-10-26 實測新視窗全白、關不掉），Tauri 文件也這樣寫
+#[tauri::command]
+async fn open_assistant(app: AppHandle) -> Result<(), String> {
+    if let Some(w) = app.get_webview_window("assistant") {
+        let _ = w.unminimize();
+        let _ = w.show();
+        return w.set_focus().map_err(|e| e.to_string());
+    }
+    let main = app.get_webview_window("main").ok_or("找不到主視窗")?;
+    let home = main.url().map_err(|e| e.to_string())?;
+    let url = home.join("/?solo=agent#agent").map_err(|e| e.to_string())?;
+    let local = url.clone();
+    WebviewWindowBuilder::new(&app, "assistant", WebviewUrl::External(url))
+        .title(format!("{TITLE}｜助手"))
+        .inner_size(560.0, 860.0)
+        .min_inner_size(420.0, 560.0)
+        .on_navigation(move |u| {
+            let mine = u.origin() == local.origin();
+            if !mine {
+                open_external(u);
+            }
+            mine
+        })
+        .on_new_window(|u, _| {
+            open_external(&u);
+            NewWindowResponse::Deny
+        })
+        .build()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
 }
 
 /// 系統列的「結束」：先用 Windows 的對話框確認一次（容易不小心關掉）。
@@ -317,6 +351,7 @@ async fn start_main(
     let (dir, logs) = (cfg.comfy_dir.clone(), paths.data.join("logs"));
     // 設定頁「重開 ComfyUI」（外部模型資料夾改了要重開才讀得到）：關掉自己開的那個，等 port 放掉再開
     let (h, d, l) = (handle.clone(), dir.clone(), logs.clone());
+    let restart_diagnostics=shared.diagnostics.clone();
     let _ = shared.restart_comfy.set(Box::new(move || {
         let old = h
             .state::<Comfy>()
@@ -331,6 +366,7 @@ async fn start_main(
             None => return Err("這個 ComfyUI 不是生圖站開的（或還沒開好）：請自己把 ComfyUI 關掉再開一次".into()),
         }
         let (h, d, l) = (h.clone(), d.clone(), l.clone());
+        let diagnostics=restart_diagnostics.clone();
         std::thread::spawn(move || {
             for _ in 0..60 {
                 if !anima_app::launcher::port_open(comfy_port) {
@@ -340,6 +376,7 @@ async fn start_main(
             }
             match ComfyProc::start_if_needed(&d, &l, comfy_port) {
                 Ok(Some(p)) => {
+                    p.attach_diagnostics(diagnostics);
                     *h.state::<Comfy>().0.lock().unwrap_or_else(|e| e.into_inner()) = Some(p)
                 }
                 Ok(None) => eprintln!("重開 ComfyUI：已經有別的 ComfyUI 開著"),
@@ -353,6 +390,7 @@ async fn start_main(
     }));
     // 安裝與修復換 A 卡的 PyTorch 時：先關掉生圖站開的 ComfyUI（DLL 不能被占用），裝完再開
     let (h1, h2, d, l) = (handle.clone(), handle.clone(), dir.clone(), logs.clone());
+    let hook_diagnostics=shared.diagnostics.clone();
     wizard.set_comfy_hooks(
         move || {
             if let Some(p) = h1.state::<Comfy>().0.lock().unwrap_or_else(|e| e.into_inner()).take() {
@@ -360,13 +398,14 @@ async fn start_main(
             }
         },
         move || match ComfyProc::start_if_needed(&d, &l, comfy_port) {
-            Ok(Some(p)) => *h2.state::<Comfy>().0.lock().unwrap_or_else(|e| e.into_inner()) = Some(p),
+            Ok(Some(p)) => {p.attach_diagnostics(hook_diagnostics.clone()); *h2.state::<Comfy>().0.lock().unwrap_or_else(|e| e.into_inner()) = Some(p)},
             Ok(None) => {}
             Err(e) => anima_app::launcher::set_note(Some(format!("ComfyUI 沒開起來：{e}"))),
         },
     );
     let setup_router = setup::router(wizard, &web)
         .layer(axum::middleware::from_fn_with_state(shared.clone(), server::update_gate));
+    let diagnostics=shared.diagnostics.clone();
     let router = server::router(shared).merge(setup_router);
     let listener = tokio::net::TcpListener::from_std(listener)
         .unwrap_or_else(|e| fail(&format!("內建伺服器啟動失敗：{e}")));
@@ -378,6 +417,7 @@ async fn start_main(
     std::thread::spawn(
         move || match ComfyProc::start_if_needed(&dir, &logs, comfy_port) {
             Ok(Some(p)) => {
+                p.attach_diagnostics(diagnostics);
                 *handle
                     .state::<Comfy>()
                     .0

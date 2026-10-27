@@ -158,6 +158,11 @@ pub async fn delete_preset(State(app): State<Shared>, UrlPath(id): UrlPath<i64>)
 }
 
 // ---------------------------------------------------------------- LoRA
+pub async fn civitai_bases(State(app): State<Shared>) -> ApiResult {
+    let bases = app.civitai.bases().await.map_err(bad)?;
+    ok(json!({"bases": bases}))
+}
+
 pub async fn lora_meta(State(app): State<Shared>, Body(body): Body) -> ApiResult {
     let name = body
         .get("name")
@@ -171,7 +176,7 @@ pub async fn lora_meta(State(app): State<Shared>, Body(body): Body) -> ApiResult
         .cloned()
         .unwrap_or_default();
     for k in [
-        "triggers", "strength", "note", "category", "fav", "title", "min", "max", "slider", "agent",
+        "triggers", "strength", "note", "category", "tags", "fav", "title", "min", "max", "slider", "agent",
     ] {
         if let Some(v) = body.get(k) {
             meta.insert(k.into(), v.clone());
@@ -193,6 +198,48 @@ fn lora_file(roots: &[PathBuf], name: &str) -> Result<PathBuf, String> {
         .map(|r| r.join(rel))
         .find(|p| p.is_file())
         .ok_or_else(|| format!("找不到這個 LoRA 檔（可能已經搬走了）：{name}。按「重新整理」更新清單"))
+}
+
+/// 匯入或手動放入的 LoRA 常把預覽圖放在模型旁邊；只接受同名圖片，且路徑必須落在 LoRA 根目錄內。
+pub(super) fn local_lora_preview(roots: &[PathBuf], name: &str) -> Option<PathBuf> {
+    let model = lora_file(roots, name).ok()?;
+    let stem = model.file_stem()?.to_str()?;
+    let parent = model.parent()?;
+    for suffix in [".preview.png", ".preview.jpg", ".preview.jpeg", ".preview.webp", ".png", ".jpg", ".jpeg", ".webp"] {
+        let path = parent.join(format!("{stem}{suffix}"));
+        if path.is_file() { return Some(path); }
+    }
+    None
+}
+
+pub async fn lora_local_preview(State(app): State<Shared>, Query(q): Query<HashMap<String, String>>) -> ApiResult {
+    let name = q.get("name").ok_or_else(|| bad("缺少 LoRA 名稱"))?;
+    let path = local_lora_preview(&app.paths.lora_roots(), name).ok_or_else(|| not_found("找不到預覽圖"))?;
+    file_response(path, Some("max-age=86400")).await
+}
+
+#[cfg(test)]
+mod local_preview_tests {
+    use super::local_lora_preview;
+
+    #[test]
+    fn finds_sidecar_only_beside_a_lora_inside_its_root() {
+        let temp = std::env::temp_dir().join(format!("anima_lora_preview_{}", std::process::id()));
+        let root = temp.join("loras");
+        let group = root.join("krea2");
+        std::fs::create_dir_all(&group).unwrap();
+        let model = group.join("sample.safetensors");
+        let image = group.join("sample.preview.png");
+        std::fs::write(&model, b"test").unwrap();
+        std::fs::write(&image, b"png").unwrap();
+        assert_eq!(local_lora_preview(std::slice::from_ref(&root), "krea2\\sample.safetensors"), Some(image.clone()));
+        assert!(local_lora_preview(std::slice::from_ref(&root), "..\\outside.safetensors").is_none());
+        std::fs::remove_file(image).unwrap();
+        std::fs::remove_file(model).unwrap();
+        std::fs::remove_dir(group).unwrap();
+        std::fs::remove_dir(root).unwrap();
+        std::fs::remove_dir(temp).unwrap();
+    }
 }
 
 /// 移到待刪除（不真的刪）：{name} → LoRA 檔和它的預覽圖搬到 <資料>\待刪除\LoRA\<時間>_<檔名>\。

@@ -2,53 +2,102 @@
 import { $, el, api, toast, openModal, closeModal, debounce } from "./util.js";
 import { app } from "./state.js";
 
-let list = [], pickCb = null, pickFam = null, pickAll = false;
+let list = [], pickCb = null, pickFam = null, pickAll = false, shown = 0, pickShown = 0;
+const PAGE = 60;
+const KIND_ZH = { style: "畫風", character: "角色", clothing: "服裝", concept: "概念", pose: "姿勢", detail: "細節", lighting: "光影", other: "其他" };
+const KINDS = Object.entries(KIND_ZH);
 
 export function init() {
-  $("#loraQ").oninput = debounce(renderPage, 150);
-  $("#lpQ").oninput = debounce(renderPicker, 150);
+  $("#loraQ").oninput = debounce(() => renderPage(true), 150);
+  for (const id of ["#loraFamily", "#loraCategory", "#loraTag", "#loraFav"]) $(id).onchange = () => renderPage(true);
+  $("#loraMore").onclick = () => renderPage(false);
+  $("#loraLearn").onclick = () => $("#assistBtn").click();
+  $("#lpQ").oninput = debounce(() => { pickShown = 0; renderPicker(); }, 150);
   $("#loraRefresh").onclick = async () => { await app.refreshState(); toast("已重新整理", "ok"); };
 }
 
 export function onState(st) {
   list = (st.models?.loras || []).slice().sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0) || (a.title || a.name).localeCompare(b.title || b.name));
-  if (app.page === "loras") renderPage();
+  if (app.page === "loras") { fillFilters(); renderPage(true); }
 }
 
-export function showPage() { renderPage(); }
+export function showPage() { fillFilters(); renderPage(true); }
 
 const title = (l) => l.title || l.name.replace(/\.safetensors$/, "");
 const famName = (l) => app.state?.models?.family_names?.[l.family] || "";
 // 卡片右上角的家族小標（Anima 是預設，不標）
 const FAM_BADGE = { qwen21: "Qwen 2.1", moss: "MOSS", sdxl: "SDXL", sd15: "SD1.5", flux: "Flux", sd3: "SD3" };
-const match = (l, q) => !q || (title(l) + " " + famName(l) + " " + l.name + " " + (l.triggers || []).join(" ") + " " + (l.tags || []).join(" ") + " " + (l.note || "") + " " + (l.agent?.desc_zh || "") + " " + (l.agent?.desc || "")).toLowerCase().includes(q.toLowerCase());
+const tagsOf = (l) => Array.isArray(l.tags) ? l.tags.filter((x) => typeof x === "string" && x.trim()) : [];
+const categoryOf = (l) => {
+  if (l.category) return l.category;
+  if (KIND_ZH[l.agent?.kind] && l.agent?.kind !== "other") return l.agent.kind;
+  const words = (tagsOf(l).join(" ") + " " + title(l) + " " + (l.agent?.desc_zh || l.agent?.desc || "")).toLowerCase();
+  const clues = [
+    ["character", /character|人物|角色|chara|cosplay/],
+    ["clothing", /clothing|outfit|costume|fashion|服裝|服饰|衣服/],
+    ["pose", /pose|姿勢|姿势|動作|动作/],
+    ["lighting", /lighting|light effect|光影|燈光|灯光/],
+    ["style", /style|artstyle|畫風|画风|aesthetic|anime style/],
+    ["detail", /detail|texture|細節|细节|材質|材质/],
+    ["concept", /concept|subject|object|背景|場景|场景/],
+  ];
+  return clues.find(([, re]) => re.test(words))?.[0] || l.agent?.kind || "";
+};
+const categoryLabel = (c) => KIND_ZH[c] || c || "未分類";
+const modelLabel = (l) => l.base_model || FAM_BADGE[l.family] || famName(l) || l.family || "其他";
+const match = (l, q) => !q || (title(l) + " " + modelLabel(l) + " " + l.name + " " + (l.triggers || []).join(" ") + " " + tagsOf(l).join(" ") + " " + categoryLabel(categoryOf(l)) + " " + (l.note || "") + " " + (l.agent?.desc_zh || "") + " " + (l.agent?.desc || "")).toLowerCase().includes(q.toLowerCase());
 // 生圖助手對這個 LoRA 的認識（agent.rs 的 parse_lora_desc 寫進 lora_meta.agent）
-const KIND_ZH = { style: "畫風", character: "角色", clothing: "服裝", concept: "概念", pose: "姿勢", detail: "細節", lighting: "光影", other: "其他" };
 function agentDesc(l) {
   const a = l.agent;
   if (!a?.desc) return null;
   return el("div", { class: "agent-desc", title: (a.src === "user" ? "你寫的" : a.src === "probe" ? "助手試畫比較後寫的" : "助手讀線索寫的") + "（給助手挑 LoRA 用）\n" + a.desc },
     el("span", { class: "ag-kind" + (a.sure === false ? " unsure" : "") }, "助手：" + (KIND_ZH[a.kind] || a.kind || "其他") + (a.sure === false ? "？" : "")), a.desc_zh || a.desc);
 }
-const preview = (l) => (l.preview ? `url(/lora_preview/${encodeURIComponent(l.preview)})` : "");
+const preview = (l) => l.preview ? `url(/lora_preview/${encodeURIComponent(l.preview)})` : l.local_preview ? `url(/api/loras/local-preview?name=${encodeURIComponent(l.name)})` : "";
 
-function renderPage() {
-  const q = $("#loraQ").value.trim();
-  const g = $("#loraGrid");
-  g.innerHTML = "";
-  const items = list.filter((l) => match(l, q));
+function fillFilters() {
+  const fill = (id, options) => {
+    const box = $(id), old = box.value;
+    box.replaceChildren(...options.map(([value, label]) => el("option", { value }, label)));
+    box.value = [...box.options].some((o) => o.value === old) ? old : "";
+  };
+  const families = [...new Set(list.map(modelLabel))].sort((a, b) => a.localeCompare(b));
+  const categories = [...new Set(list.map(categoryOf))].filter((c) => c && !KIND_ZH[c]).sort((a, b) => a.localeCompare(b));
+  const counts = new Map();
+  for (const l of list) for (const tag of tagsOf(l)) counts.set(tag, (counts.get(tag) || 0) + 1);
+  const tags = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  fill("#loraFamily", [["", "全部模型"], ...families.map((f) => [f, f])]);
+  fill("#loraCategory", [["", "全部分類"], ["_none", "未分類"], ...KINDS.map(([id, label]) => [id, label]), ...categories.map((c) => [c, c])]);
+  fill("#loraTag", [["", "常用標籤"], ...tags.slice(0, 100).map(([tag, n]) => [tag, `${tag} (${n})`])]);
+}
+
+function filtered() {
+  const q = $("#loraQ").value.trim(), fam = $("#loraFamily").value, category = $("#loraCategory").value, tag = $("#loraTag").value;
+  return list.filter((l) => match(l, q) && (!fam || modelLabel(l) === fam) && (!category || (category === "_none" ? !categoryOf(l) : categoryOf(l) === category)) && (!tag || tagsOf(l).includes(tag)) && (!$("#loraFav").checked || l.fav));
+}
+
+function renderPage(reset = true) {
+  const items = filtered(), g = $("#loraGrid");
+  if (reset) { shown = 0; g.replaceChildren(); }
+  const end = Math.min(items.length, shown + PAGE);
+  for (const l of items.slice(shown, end)) g.append(card(l));
+  shown = end;
+  $("#loraMore").hidden = shown >= items.length;
   $("#loraTotal").textContent = `${items.length} / ${list.length} 個`;
   if (!list.length) g.append(el("div", { class: "muted pad" }, "還沒有 LoRA。到「Civitai」分頁搜尋下載。"));
-  for (const l of items) g.append(card(l));
+  else if (!items.length) g.append(el("div", { class: "muted pad" }, "沒有符合條件的 LoRA。"));
 }
 
 function card(l) {
   const blur = app.state?.settings?.blur_nsfw && l.nsfw;
   return el("div", { class: "card" },
-    el("div", { class: "ph" + (blur ? " blur" : ""), style: l.preview ? `background-image:${preview(l)}` : "" }, l.preview ? "" : "沒有預覽圖"),
+    el("div", { class: "ph" + (blur ? " blur" : ""), style: preview(l) ? `background-image:${preview(l)}` : "" }, preview(l) ? "" : "沒有預覽圖"),
     el("div", { class: "bd" },
-      el("div", { class: "t" }, (l.fav ? "★ " : "") + title(l), FAM_BADGE[l.family] ? el("span", { class: "badge fam" }, FAM_BADGE[l.family]) : null),
+      el("div", { class: "t" }, (l.fav ? "★ " : "") + title(l), modelLabel(l) ? el("span", { class: "badge fam" }, modelLabel(l)) : null),
       el("div", { class: "st" }, l.name),
+      el("div", { class: "lora-card-meta" },
+        el("span", { class: "badge" + (!l.category ? " auto" : ""), title: l.category ? "手動分類" : "依助手認識結果、標籤與名稱自動分類" }, categoryLabel(categoryOf(l))),
+        ...tagsOf(l).slice(0, 8).map((tag) => el("button", { class: "chip", type: "button", title: `只看標籤：${tag}`, onclick: () => { const box = $("#loraTag"); if (![...box.options].some((o) => o.value === tag)) box.append(el("option", { value: tag }, tag)); box.value = tag; renderPage(true); } }, tag))),
       l.triggers?.length ? el("div", { class: "trig", title: "觸發詞" }, "觸發詞：" + l.triggers.join(", ")) : el("div", { class: "st" }, "沒有觸發詞"),
       l.note ? el("div", { class: "st", style: "white-space:pre-wrap" }, l.note) : null,
       agentDesc(l),
@@ -58,6 +107,8 @@ function card(l) {
       el("div", { class: "ft" },
         el("button", { class: "btn sm primary", onclick: () => { import("./gen.js").then((g) => { g.addLora(l, true); app.showPage("gen"); toast(`已加入「${title(l)}」`, "ok"); }); } }, "加到生成"),
         el("button", { class: "btn sm", onclick: () => editTriggers(l) }, "改觸發詞"),
+        el("button", { class: "btn sm", onclick: () => editCategory(l) }, "分類"),
+        el("button", { class: "btn sm", onclick: () => editTags(l) }, "標籤"),
         el("button", { class: "btn sm", title: "生圖助手靠這句話決定什麼時候掛這個 LoRA", onclick: () => editAgentDesc(l) }, "改用途"),
         el("button", { class: "icon", title: "收藏", onclick: () => setMeta(l, { fav: !l.fav }, true) }, l.fav ? "★" : "☆"),
         l.url ? el("a", { class: "icon", href: l.url, target: "_blank", title: "在 Civitai 開啟" }, "↗") : null,
@@ -71,13 +122,29 @@ async function remove(l) {
     const r = await api("/api/loras/delete", { json: { name: l.name } });
     toast(`已移到待刪除：${r.moved_to}`, "ok");
     await app.refreshState();
-    renderPage();
+    fillFilters(); renderPage(true);
   } catch (e) { toast(e.message, "err"); }
 }
 
 async function setMeta(l, patch, rerender) {
   Object.assign(l, await api("/api/loras/meta", { json: { name: l.name, ...patch } }));
-  if (rerender) { await app.refreshState(); renderPage(); }
+  if (rerender) { await app.refreshState(); fillFilters(); renderPage(true); }
+}
+
+async function editCategory(l) {
+  const current = l.category || categoryOf(l);
+  const value = prompt("用途分類（畫風／角色／服裝／概念／姿勢／細節／光影／其他；可自訂）。\n清空＝恢復自動分類。", categoryLabel(current) === "未分類" ? "" : categoryLabel(current));
+  if (value === null) return;
+  const t = value.trim();
+  const known = KINDS.find(([, zh]) => zh === t)?.[0] || (KIND_ZH[t] ? t : t);
+  await setMeta(l, { category: known }, true);
+}
+
+async function editTags(l) {
+  const value = prompt("標籤（用逗號分隔；可搜尋與篩選）：", tagsOf(l).join(", "));
+  if (value === null) return;
+  const tags = [...new Set(value.split(/[,，]/).map((s) => s.trim()).filter(Boolean))].slice(0, 60);
+  await setMeta(l, { tags }, true);
 }
 
 async function editTriggers(l) {
@@ -102,6 +169,7 @@ export function openPicker(cb, fam) {
   pickCb = cb;
   pickFam = fam || null;
   pickAll = false;
+  pickShown = 0;
   $("#lpQ").value = "";
   renderPicker();
   openModal("#loraPicker");
@@ -115,15 +183,18 @@ function renderPicker() {
   const fits = (x) => !pickFam || (typeof pickFam === "function" ? pickFam(x) : (x.family || "anima") === pickFam);
   const usable = pickAll ? list : list.filter(fits);
   if (!usable.length) g.append(el("div", { class: "muted pad" }, "還沒有這個模型能用的 LoRA。到「Civitai」分頁搜尋下載（記得選對基底模型）。"));
-  for (const l of usable.filter((x) => match(x, q))) {
+  const matches = usable.filter((x) => match(x, q));
+  for (const l of matches.slice(0, pickShown + 80)) {
     const blur = app.state?.settings?.blur_nsfw && l.nsfw;
     g.append(el("div", { class: "card pick", onclick: () => { pickCb(l, $("#lpTrig").checked); closeModal("#loraPicker"); } },
-      el("div", { class: "ph" + (blur ? " blur" : ""), style: l.preview ? `background-image:${preview(l)};aspect-ratio:1` : "aspect-ratio:1" }, l.preview ? "" : "無預覽"),
+      el("div", { class: "ph" + (blur ? " blur" : ""), style: preview(l) ? `background-image:${preview(l)};aspect-ratio:1` : "aspect-ratio:1" }, preview(l) ? "" : "無預覽"),
       el("div", { class: "bd" }, el("div", { class: "t" }, title(l)), l.triggers?.length ? el("div", { class: "trig" }, l.triggers.slice(0, 4).join(", ")) : null,
         l.note ? el("div", { class: "pick-note", title: l.note }, l.note) : null)));
   }
+  pickShown = Math.min(matches.length, pickShown + 80);
+  if (pickShown < matches.length) g.append(el("button", { class: "akey sm", type: "button", onclick: () => renderPicker() }, `載入更多（${matches.length - pickShown} 個）`));
   // 匯入的工作流組：不同家族的 LoRA 先藏起來，需要時按「顯示全部」（選了也會在生成時被略過）
   const hidden = typeof pickFam === "function" && !pickAll ? list.filter((x) => !fits(x)).length : 0;
   if (hidden) g.append(el("div", { class: "muted sm pick-more" }, `已藏起 ${hidden} 個其他模型家族的 LoRA（用了也會被略過）。`,
-    el("button", { class: "link", type: "button", onclick: () => { pickAll = true; renderPicker(); } }, "顯示全部")));
+    el("button", { class: "link", type: "button", onclick: () => { pickAll = true; pickShown = 0; renderPicker(); } }, "顯示全部")));
 }

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-open-assistant"
+description = "Enables the open_assistant command without any pre-configured scope."
+commands.allow = ["open_assistant"]
+
+[[permission]]
+identifier = "deny-open-assistant"
+description = "Denies the open_assistant command without any pre-configured scope."
+commands.deny = ["open_assistant"]

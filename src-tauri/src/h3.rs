@@ -401,6 +401,7 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
     }
     let seed = num(p, "seed").map(|x| x as i64).unwrap_or(0) + seed_offset;
     let quality = s(p, "quality");
+    let refmods = crate::refmod::names_of(p).or_else(err)?;
     let refs = &pl.refs;
     if pl.uses_refs {
         refs.check()?;
@@ -590,6 +591,11 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
         "" => "simple",
         x => x,
     };
+    // RefMod（角色卡正面特寫做的，refmod.rs）：接在所有 AddGuide 之後、guider 之前，一般取樣、二采、SelfLift 都吃同一份條件
+    if !refmods.is_empty() {
+        let mods = g.add("MiniMaxH3RefModsLoader", crate::refmod::loader_inputs(&refmods));
+        positive = G::out(&g.add("MiniMaxH3RefModApply", crate::refmod::apply_inputs(positive, G::out(&mods, 0))), 0);
+    }
     let noise = g.add("RandomNoise", json!({"noise_seed": seed}));
     let guider = g.add("BasicGuider", json!({"model": model, "conditioning": positive}));
     let ks = g.add("KSamplerSelect", json!({"sampler_name": sampler}));
@@ -745,6 +751,31 @@ mod tests {
         let (n, _) = build(&json!({"prompt": "x"}), &dir(), 0).unwrap();
         assert!(by_class(&n, "MiniMaxH3ImageToVideo")[0]["inputs"].get("first_frame").is_none());
         assert!(by_class(&n, "LoadImage").is_empty());
+    }
+
+    #[test]
+    fn refmods_feed_the_guider_after_add_guide() {
+        let p = json!({"h3_mode": "ref2v", "prompt": "<Picture 1> waves", "refs": {"images": ["a.png"]}, "pins": [{"image": "b.png", "t": 0}],
+                       "refmods": ["paintdeck/pd_char_7", "paintdeck/pd_char_9"]});
+        let (n, _) = build(&p, &dir(), 0).unwrap();
+        let guider = by_class(&n, "BasicGuider")[0];
+        let apply = node(&n, &guider["inputs"]["conditioning"]);
+        assert_eq!(apply["class_type"], "MiniMaxH3RefModApply");
+        let loader = node(&n, &apply["inputs"]["mods"]);
+        assert_eq!((loader["inputs"]["mod_1"].as_str(), loader["inputs"]["mod_2"].as_str(), loader["inputs"]["mod_3"].as_str()),
+                   (Some("paintdeck/pd_char_7"), Some("paintdeck/pd_char_9"), Some("(none)")));
+        let before = node(&n, &apply["inputs"]["conditioning"])["class_type"].as_str().unwrap();
+        assert!(matches!(before, "MiniMaxH3AddGuide" | "MiniMaxH3ReferenceToVideo"), "{before}");
+        // SelfLift 也吃同一份
+        let mut q = p.clone();
+        q["selflift"] = json!(true);
+        let (n, _) = build(&q, &dir(), 0).unwrap();
+        let sl = &by_class(&n, "SelfLiftH3Sampler")[0]["inputs"];
+        assert_eq!(node(&n, &sl["positive"])["class_type"], "MiniMaxH3RefModApply");
+        // 沒有 RefMod：圖跟以前一樣
+        let (n, _) = build(&json!({"prompt": "x"}), &dir(), 0).unwrap();
+        assert!(by_class(&n, "MiniMaxH3RefModApply").is_empty() && by_class(&n, "MiniMaxH3RefModsLoader").is_empty());
+        assert!(build(&json!({"prompt": "x", "refmods": ["../evil"]}), &dir(), 0).is_err());
     }
 
     #[test]

@@ -1,8 +1,8 @@
-// Civitai 分頁：搜尋 Anima／Qwen 2.1／MOSS 的 LoRA、一鍵下載（含觸發詞與預覽圖）
+// Civitai 分頁：依 Civitai 基底模型搜尋 LoRA、一鍵下載（含觸發詞與預覽圖）
 import { $, el, api, toast, fmtN } from "./util.js";
 import { app } from "./state.js";
 
-let next = null, loaded = false, base = "Anima";
+let next = null, loaded = false, basesLoaded = false, base = "Anima";
 const cards = new Map(); // versionId -> 卡片上的下載區
 
 export function init() {
@@ -12,12 +12,23 @@ export function init() {
   $("#cvMore").onclick = () => search(true);
 }
 
-export function show() { if (!loaded) search(false); }
+export function show() {
+  if (!basesLoaded) {
+    basesLoaded = true;
+    api("/api/civitai/bases").then((r) => {
+      const values = new Set(["Anima", "Qwen 2.1", "MOSS Image", "Krea 2", "Krea 2 Turbo", ...(r.bases || [])]);
+      $("#cvBaseList").replaceChildren(...[...values].map((b) => el("option", { value: b })));
+    }).catch(() => { basesLoaded = false; });
+  }
+  if (!loaded) search(false);
+}
 
 async function search(append) {
   loaded = true;
   if (!append) { $("#cvGrid").innerHTML = ""; next = null; cards.clear(); }
-  if (!append) base = $("#cvBase").value;
+  if (!append) base = $("#cvBase").value.trim();
+  if (!base) { $("#cvGrid").append(el("div", { class: "muted pad" }, "先填基底模型名稱。")); return; }
+  $("#cvNote").textContent = `只列出有 ${base} 版本的 LoRA。下載後會依基底模型分開存放，觸發詞也會一起存好。`;
   const qs = new URLSearchParams({ base, query: $("#cvQ").value.trim(), sort: $("#cvSort").value, period: $("#cvPeriod").value, nsfw: $("#cvNsfw").checked ? 1 : 0 });
   if (append && next) qs.set("cursor", next);
   $("#cvMore").hidden = true;
@@ -51,7 +62,7 @@ function card(it) {
   };
   c.setBtn();
   for (const v of versions) cards.set(String(v.id), c);
-  // 有好幾個 Anima 版本時可以選要下載哪一版（預設最新）
+  // 同一個基底模型有多個版本時，可以挑要下載的版本（預設最新）
   const sel = versions.length > 1
     ? el("select", { class: "sm", title: "選擇版本", onchange: (e) => { c.cur = versions.find((v) => String(v.id) === e.target.value); c.setBtn(); } },
       ...versions.map((v) => el("option", { value: v.id }, `${v.name}${v.published ? "（" + v.published + "）" : ""}${v.installed ? " ✓" : ""}`)))

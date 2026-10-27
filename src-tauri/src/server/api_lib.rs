@@ -15,8 +15,8 @@ use serde_json::{json, Value};
 /// set、snippet 是提示詞庫原本的兩種；其他是資產庫的資產（可以帶圖、聲音）
 pub const KINDS: &[&str] = &["set", "snippet", "char", "scene", "frame", "outfit", "prop", "fx", "sound", "shot"];
 pub const MEDIA_KINDS: &[&str] = &["char", "scene", "frame", "outfit", "prop", "fx", "sound", "shot"];
-/// 資產圖片的用途：原圖、多視圖（穿衣／裸體）、臉部特寫、細節、姿勢、服裝、其他
-pub const ROLES: &[&str] = &["src", "sheet", "face", "sheet_nude", "detail", "pose", "outfit", "other"];
+/// 資產圖片的用途：原圖、正面特寫（2026-10-27 角色卡）、多視圖（穿衣／裸體）、臉部特寫表、細節、姿勢、服裝、其他
+pub const ROLES: &[&str] = &["src", "portrait", "sheet", "face", "sheet_nude", "detail", "pose", "outfit", "other"];
 const LAYOUT_KEYS: &[&str] = &["top", "bottom", "left", "right", "fg", "mid", "bg", "light"];
 /// 縮圖：長邊 320、webp 品質 80（一張約 10～20 KB）
 const THUMB_MAX: u32 = 320;
@@ -113,6 +113,14 @@ pub fn clean_asset(kind: &str, data: &Value) -> Value {
         .collect();
     if !layout.is_empty() {
         out.insert("layout".into(), Value::Object(layout));
+    }
+    // 角色卡：設定表（鎖定規則在存檔時 charspec::merge 決定）、RefMod 檔（只有 /api/assets/{id}/refmod 會改，存檔時照舊）
+    if kind == "char" && data.get("spec").is_some_and(Value::is_object) {
+        out.insert("spec".into(), crate::charspec::clean(&data["spec"]));
+    }
+    let refmod = base_name(data.get("refmod").and_then(|r| r.get("file")));
+    if !refmod.is_empty() {
+        out.insert("refmod".into(), json!({"file": refmod, "name": text(data["refmod"].get("name"), 80)}));
     }
     Value::Object(out)
 }
@@ -218,6 +226,18 @@ pub async fn save(State(app): State<Shared>, Body(body): Body) -> ApiResult {
     if MEDIA_KINDS.contains(&it.kind.as_str()) {
         let old = base.as_ref().filter(|_| MEDIA_KINDS.contains(&base_kind)).and_then(|b| b.get("data"));
         keep_files(&mut it.data, old);
+        if let Some(obj) = it.data.as_object_mut() {
+            // 鎖住的設定表原封不動；沒送就留舊的
+            match crate::charspec::merge(obj.get("spec"), old.and_then(|d| d.get("spec"))) {
+                Some(sp) if it.kind == "char" => obj.insert("spec".into(), sp),
+                _ => obj.remove("spec"),
+            };
+            // RefMod 檔跟圖片一樣以伺服器上的為準
+            match old.and_then(|d| d.get("refmod")).filter(|r| r.is_object()) {
+                Some(r) => obj.insert("refmod".into(), r.clone()),
+                None => obj.remove("refmod"),
+            };
+        }
         // cid 是既有角色的身分，不能因只更新描述而換號。
         if let Some(cid) = old.and_then(|d| d["cid"].as_str()).filter(|s| !s.is_empty()) {
             it.data["cid"] = json!(cid);
@@ -246,9 +266,18 @@ pub async fn save(State(app): State<Shared>, Body(body): Body) -> ApiResult {
         r["thumb_error"] = json!(e);
     }
     // 資產的 Anima tag：tag 索引裡找不到的列出來提醒，但照樣存（使用者自己決定要不要留）
-    if let (Some(ix), Some(tags)) = (app.tags.get(), it.data.get("tags_anima").and_then(Value::as_array)) {
-        let unverified: Vec<&str> = tags.iter().filter_map(Value::as_str).filter(|t| !ix.has(t)).collect();
-        r["unverified"] = json!(unverified);
+    if let Some(ix) = app.tags.get() {
+        // 設定表每一格的 tag 也一起檢查
+        let spec_tags = crate::charspec::FIELDS.iter().flat_map(|(k, _)| it.data["spec"]["fields"][*k]["tags"].as_array().cloned().unwrap_or_default());
+        let mut unverified: Vec<String> = vec![];
+        for t in it.data["tags_anima"].as_array().cloned().unwrap_or_default().into_iter().chain(spec_tags) {
+            if let Some(t) = t.as_str().filter(|t| !ix.has(t) && !unverified.iter().any(|u| u == t)) {
+                unverified.push(t.to_string());
+            }
+        }
+        if it.data.get("tags_anima").is_some() || it.data.get("spec").is_some() {
+            r["unverified"] = json!(unverified);
+        }
     }
     ok(r)
 }
@@ -369,6 +398,37 @@ mod tests {
         assert!(tokio::time::timeout(std::time::Duration::from_millis(50), &mut save).await.is_err());
         drop(guard);
         assert!(tokio::time::timeout(std::time::Duration::from_secs(3), save).await.unwrap().is_ok());
+    }
+
+    async fn body(r: axum::response::Response) -> Value {
+        serde_json::from_slice(&axum::body::to_bytes(r.into_body(), 1 << 20).await.unwrap()).unwrap()
+    }
+
+    #[tokio::test]
+    async fn locked_spec_survives_later_saves_and_refmod_is_server_owned() {
+        let root = std::env::temp_dir().join(format!("anima_spec_lock_{}", crate::director::new_id()));
+        let paths = crate::paths::Paths::new(&root, &root.join("web"), Some(root.join("comfy")));
+        let app = super::super::start(paths, "http://127.0.0.1:9").await.unwrap();
+        let spec = json!({"locked": true, "fields": {"sex": {"zh": "女性", "en": "female"}, "hair_color": {"zh": "橘髮", "en": "orange hair"}}});
+        let r = body(save(State(app.clone()), Body(json!({"kind": "char", "name": "小克", "data": {"spec": spec, "refmod": {"file": "fake.safetensors"}}}))).await.unwrap()).await;
+        let id = r["id"].as_i64().unwrap();
+        assert_eq!(r["data"]["spec"]["block_en"], "female, orange hair.");
+        assert!(r["data"].get("refmod").is_none(), "新存的不能自己塞 RefMod 檔");
+        // 導演台之類只改外觀描述、沒送 spec：設定表留著
+        let r = body(save(State(app.clone()), Body(json!({"id": id, "data": {"look_en": "x"}}))).await.unwrap()).await;
+        assert_eq!(r["data"]["spec"]["block_en"], "female, orange hair.");
+        // 鎖著硬改欄位：不理
+        let bad = json!({"locked": true, "fields": {"sex": {"en": "male"}}, "block_en": "male."});
+        let r = body(save(State(app.clone()), Body(json!({"id": id, "data": {"spec": bad}}))).await.unwrap()).await;
+        assert_eq!(r["data"]["spec"]["block_en"], "female, orange hair.");
+        assert_eq!(r["data"]["spec"]["fields"]["sex"]["en"], "female");
+        // 解鎖才改得動
+        let open = json!({"locked": false, "fields": {"sex": {"en": "male"}}});
+        let r = body(save(State(app.clone()), Body(json!({"id": id, "data": {"spec": open}}))).await.unwrap()).await;
+        assert_eq!((r["data"]["spec"]["locked"].as_bool(), r["data"]["spec"]["fields"]["sex"]["en"].as_str()), (Some(false), Some("male")));
+        // 場景不收設定表
+        let r = body(save(State(app.clone()), Body(json!({"kind": "scene", "name": "教室", "data": {"spec": spec}}))).await.unwrap()).await;
+        assert!(r["data"].get("spec").is_none());
     }
 
     #[test]

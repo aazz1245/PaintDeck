@@ -79,6 +79,38 @@ pub fn image_part(png: &[u8]) -> Value {
     json!({"type": "image_url", "image_url": {"url": format!("data:image/png;base64,{b64}")}})
 }
 
+/// AI 改寫要載入哪一種模型。official＝設定頁選了官方 PE；has＝那種模型檔在不在。
+/// - 看圖寫說明：通用讀圖模型（官方格式要 400～500 字，小模型只寫兩百多字還會洗白，2026-10-11／10-15 實測）
+/// - 有參考圖：通用讀圖模型；選了官方 PE 且有檔才用 PE i2i
+/// - 文字：通用模型；選了官方 PE 且有檔、又不是 Anima／露骨的想法才用 PE t2i（PE 寫 Anima 會接回 Qwen 長段落，露骨的會洗白）
+pub fn rewrite_kind(task: &str, captioning: bool, has_images: bool, official: bool, explicit: bool, has: impl Fn(&str) -> bool) -> &'static str {
+    if captioning && has("adult_vision") {
+        return "adult_vision";
+    }
+    if task == "i2i" || has_images {
+        return if (official && has("i2i")) || !has("adult_vision") { "i2i" } else { "adult_vision" };
+    }
+    let pe_ok = official && task != "anima" && !(task == "t2i" && explicit) && has("t2i");
+    if pe_ok || !has("adult") {
+        "t2i"
+    } else {
+        "adult"
+    }
+}
+
+/// 明確指定畫面文字時逐字保留；一般用引號強調衣服／風格不算文字內容。
+pub fn missing_visible_text(prompt: &str, request: &str) -> Vec<String> {
+    static TEXT: LazyLock<Regex> = LazyLock::new(|| re(r#"(?i)(?:寫(?:著|上|成)?|标[题语]|標[題語]|字樣|字样|副標|副标|招牌|下面|上面|下方|上方|第一行|第二行|reads?|says?|text|caption)\s*[:：]?\s*[「『“\"]([^」』”\"\n]+)[」』”\"]"#));
+    let mut missing = Vec::new();
+    for c in TEXT.captures_iter(request) {
+        let text = c[1].trim();
+        if !text.is_empty() && !prompt.contains(text) && !missing.iter().any(|s| s == text) {
+            missing.push(text.to_string());
+        }
+    }
+    missing
+}
+
 /// 官方模型卡（Qwen/Qwen-Image-2.1-PE-T2I／I2I）的 max_new_tokens：文生圖 16256、改圖 24000（實際會被 -c 的長度擋住）
 pub fn official_max_tokens(kind: &str) -> i64 {
     if kind == "i2i" {
@@ -109,6 +141,15 @@ pub fn payload(
         "chat_template_kwargs": {"enable_thinking": think},
         "timings_per_token": false,
     })
+}
+
+/// 思考預算：llama-server 每次請求的 thinking_budget_tokens（2026-10-27 用 build 11505 實測：64 會截斷、0＝不想、
+/// 不給就想到 max_tokens 用完都可能沒答案）。budget：None＝不想（body 本來就關掉 enable_thinking）、-1＝不限
+pub fn with_think_budget(mut body: Value, budget: Option<i64>) -> Value {
+    if let Some(n) = budget.filter(|n| *n >= 0) {
+        body["thinking_budget_tokens"] = json!(n);
+    }
+    body
 }
 
 /// SSE 一行的種類
@@ -348,9 +389,11 @@ pub fn strip_ratio(p: &str) -> String {
 }
 
 // ================================================================ 純函式：解析輸出
-/// 想法裡寫了性行為或性器官：官方改寫模型會把它洗白（2026-10-11 實測女上位寫成穿內衣接吻），交給通用模型照同一份官方規則寫
+/// 想法裡寫了性行為、性器官或裸露：官方改寫模型會把它洗白（2026-10-11 實測女上位寫成穿內衣接吻），交給通用模型照同一份官方規則寫。
+/// 2026-10-26 補上裸露類與簡體字：朋友回報「全裸」的想法被寫成穿衣服，因為原本只認性行為的字。
+/// 同日補上巨乳類：實測 PE 就算系統提示詞要求保留，10 次只有 2 次寫出 huge breasts，會把大胸藏進衣服描述裡
 static EXPLICIT_IDEA: LazyLock<Regex> = LazyLock::new(|| {
-    re(r"(?i)性交|做愛|做爱|陰莖|阴茎|肉棒|雞雞|陰道|阴道|陰部|阴部|小穴|陰唇|陰蒂|口交|乳交|足交|肛交|手淫|自慰|射精|內射|女上位|騎乘|傳教士|後入|背後位|狗爬式|體位|\b(?:sex|penis|cock|dick|vagina|pussy|vulva|labia|clit\w*|penetrat\w*|fellatio|blowjob|cunnilingus|handjob|footjob|paizuri|cum|cumshot|creampie|orgasm|missionary|cowgirl|doggystyle|masturbat\w*)\b")
+    re(r"(?i)性交|做愛|做爱|陰莖|阴茎|肉棒|雞雞|鸡鸡|陰道|阴道|陰部|阴部|小穴|陰唇|阴唇|陰蒂|阴蒂|口交|乳交|足交|肛交|手淫|自慰|射精|內射|内射|顏射|颜射|口爆|深喉|中出|潮吹|精液|插入|抽插|女上位|騎乘|骑乘|傳教士|传教士|後入|后入|背後位|背后位|狗爬式|體位|体位|全裸|半裸|裸體|裸体|裸露|赤裸|一絲不掛|一丝不挂|露點|露点|乳房|奶子|乳頭|乳头|巨乳|爆乳|大奶|大胸|胸部|下體|下体|私處|私处|生殖器|色情|瑟瑟|\b(?:sex|penis|cock|dick|vagina|pussy|vulva|labia|clit\w*|penetrat\w*|fellatio|blowjob|deepthroat\w*|cunnilingus|handjob|footjob|paizuri|titjob|anal|cum|cumshot|creampie|squirt\w*|orgasm|missionary|cowgirl|doggystyle|masturbat\w*|nude|nudity|naked|topless|bottomless|nipples?|areolae?|breasts?|tits|boobs|genitals?|nsfw|porn\w*|hentai)\b")
 });
 static THINK: LazyLock<Regex> = LazyLock::new(|| re(r"(?s)<think>.*?</think>"));
 static CAPTION_META: LazyLock<Regex> = LazyLock::new(|| {
@@ -933,7 +976,7 @@ impl Core {
             let found = if pref == "9b" { q9.or(moe) } else { moe.or(q9) };
             let model = found.ok_or_else(|| {
                 PeError(format!(
-                    "找不到成人改寫用的模型 Qwen3.6-35B-A3B*.gguf 或 Huihui-Qwen3.5-9B-abliterated*.gguf（放在 {dir}；到「安裝與修復」勾「AI 改寫、生圖助手」會下載 9B）"
+                    "找不到通用模型 Qwen3.6-35B-A3B*.gguf 或 Huihui-Qwen3.5-9B-abliterated*.gguf（放在 {dir}；到「安裝與修復」勾「AI 改寫、生圖助手」會下載 9B）"
                 ))
             })?;
             if kind == "adult" {
@@ -957,12 +1000,12 @@ impl Core {
             if let Some(p) = all.iter().find(|p| file_name(p).eq_ignore_ascii_case(&name)) {
                 let mm = if kind == "i2i" {
                     Some(all.iter().find(|m| file_name(m).eq_ignore_ascii_case("pe_i2i_heretic.mmproj-bf16.gguf"))
-                        .cloned().ok_or_else(|| PeError(format!("找不到讀圖用的 pe_i2i_heretic.mmproj-bf16.gguf（放在 {dir}；到「安裝與修復」勾「AI 改寫、生圖助手」補下載，再重試）")))?)
+                        .cloned().ok_or_else(|| PeError(format!("找不到讀圖用的 pe_i2i_heretic.mmproj-bf16.gguf（放在 {dir}；到「安裝與修復」勾「官方改寫模型（選配）」補下載，或在設定頁把「改寫用的模型」換回通用模型）")))?)
                 } else { None };
                 return Ok((p.clone(), mm));
             }
         }
-        err(format!("找不到 pe_{kind}_heretic-*.gguf（放在 {dir}）。到「安裝與修復」勾「AI 改寫、生圖助手」補下載，再重試；這是提示詞改寫用的語言模型，只有生圖模型還不夠。若已下載，請在「設定 → 外部模型資料夾」加入它的 LLM 資料夾。"))
+        err(format!("找不到 pe_{kind}_heretic-*.gguf（放在 {dir}）。這是選配的官方改寫模型：到「安裝與修復」勾「官方改寫模型（選配）」補下載，或在設定頁把「改寫用的模型」換回通用模型；也要有通用模型（勾「AI 改寫、生圖助手」）。若已下載，請在「設定 → 外部模型資料夾」加入它的 LLM 資料夾。"))
     }
 
     /// 缺讀圖用的 mmproj：講清楚去哪下載、放哪裡、檔名怎麼取。安裝清單裡有這個系列的（9B）就給網址，
@@ -1296,6 +1339,7 @@ impl Core {
 
     fn stop_locked(&self, reason: &str) -> bool {
         let s = self.read_state();
+        crate::diagnostics::event("llm_stop_requested", json!({"reason":reason,"state":s}));
         let mut pids: Vec<i64> = s.get("pid").and_then(py::int).into_iter().collect();
         if let Some(orphan) = win::port_owner(PORT).filter(|o| !pids.contains(o)) {
             pids.push(orphan);
@@ -1313,16 +1357,18 @@ impl Core {
     }
 
     /// 確保 llama-server 跑著對的模型（kind＝t2i／i2i）和對的 GPU 層數。已經在跑就直接用；不對就重開。
-    /// before_start(ngl)：真的要啟動前呼叫（生圖站用來叫 ComfyUI 釋放顯存）。回傳 (是否新啟動, 載入秒數)
+    /// before_start(ngl, 第幾次)：真的要啟動前呼叫（生圖站用來叫 ComfyUI 釋放顯存、等它放完）。
+    /// 第一次因為顯存不夠失敗，會用「第 1 次」再叫一次（等久一點）重試一次。回傳 (是否新啟動, 載入秒數)
     pub fn ensure(
         &self,
         kind: &str,
         ngl: i64,
-        before_start: impl FnOnce(i64),
+        before_start: impl Fn(i64, u32),
         timeout: Duration,
     ) -> Result<(bool, f64), PeError> {
         let (model, mmproj) = self.model_files(kind, None)?;
         let model_name = file_name(&model);
+        crate::diagnostics::snapshot("llm_model_requested", &json!({"kind":kind,"gpu_layers_requested":ngl,"model":model,"mmproj":mmproj,"loaded_confirmed":false}));
         let want = json!({"kind": kind, "ngl": ngl, "model": model_name});
         let _g = win::FileLock::acquire(&self.lock, Duration::from_secs(180))?;
         let mut s = self.read_state();
@@ -1335,6 +1381,7 @@ impl Core {
         if same && health(Duration::from_millis(1500)) {
             s.insert("last_used".into(), json!(now()));
             self.write_state(&s);
+            crate::diagnostics::event("llm_loaded_confirmed", json!({"reused":true,"state":s}));
             return Ok((false, 0.0));
         }
         let was = if s.is_empty() {
@@ -1343,7 +1390,7 @@ impl Core {
             py::repr(&Value::Object(s.clone()))
         };
         self.stop_locked(&format!("重開：要 {}，原本 {was}", py::repr(&want)));
-        before_start(ngl);
+        before_start(ngl, 0);
         let mut args: Vec<String> = vec![
             "-m".into(),
             model.to_string_lossy().into(),
@@ -1399,13 +1446,49 @@ impl Core {
                 }
             }))
             .collect();
-        self.log_line(&format!("start {}", shown.join(" ")));
         if !self.bin.exists() {
+            self.log_line(&format!("start {}", shown.join(" ")));
             return err(format!(
                 "找不到 llama-server.exe（{}）：到「安裝與修復」勾「AI 改寫、生圖助手」安裝",
                 self.bin.display()
             ));
         }
+        // 顯存不夠（通常是 ComfyUI 還沒放完）：再叫一次釋放、等久一點，重試一次
+        let (pid, load) = match self.launch(&args, &shown, kind, timeout) {
+            Err(e) if ngl > 0 && vram_short(&self.log_tail(200)) => {
+                self.log_line("顯存不夠，再叫 ComfyUI 釋放一次、等久一點重試");
+                crate::diagnostics::event("llm_vram_retry", json!({"kind":kind,"model":model_name,"first_error":e.0}));
+                before_start(ngl, 1);
+                self.launch(&args, &shown, kind, timeout).map_err(|e| {
+                    if vram_short(&self.log_tail(200)) {
+                        PeError(format!(
+                            "顯示卡記憶體不夠，載不下 {model_name}（已經叫 ComfyUI 釋放顯存、等過兩次）。\
+                             可以到「設定 → AI 改寫提示詞 → 執行方式」改成「部分放顯卡」或「CPU」，或關掉其他吃顯卡的程式再試。\n{}",
+                            e.0
+                        ))
+                    } else {
+                        e
+                    }
+                })?
+            }
+            r => r?,
+        };
+        let mut st = want.as_object().cloned().unwrap_or_default();
+        st.insert("pid".into(), json!(pid));
+        st.insert("started".into(), json!(now()));
+        st.insert("last_used".into(), json!(now()));
+        st.insert("busy".into(), json!(0));
+        st.insert("load_seconds".into(), json!(py::round(load, 2)));
+        self.write_state(&st);
+        self.log_line(&format!("ready pid={pid} load={load:.1}s"));
+        crate::diagnostics::event("llm_loaded_confirmed", json!({"pid":pid,"model":model_name,"kind":kind,"load_seconds":load}));
+        Ok((true, load))
+    }
+
+    /// 開一次 llama-server、等到 /health 通。回傳 (pid, 載入秒數)；中途結束或逾時是錯誤（log 最後幾行附在訊息裡）
+    fn launch(&self, args: &[String], shown: &[String], kind: &str, timeout: Duration) -> Result<(i64, f64), PeError> {
+        self.log_line(&format!("start {}", shown.join(" ")));
+        crate::diagnostics::snapshot("llm_launch_attempt", &json!({"binary":self.bin,"arguments":args,"kind":kind,"loaded_confirmed":false}));
         let logf = OpenOptions::new()
             .create(true)
             .append(true)
@@ -1416,7 +1499,7 @@ impl Core {
             .map_err(|e| PeError(format!("開不了 log 檔：{e}")))?;
         let t0 = Instant::now();
         let mut cmd = std::process::Command::new(&self.bin);
-        cmd.args(&args)
+        cmd.args(args)
             .stdout(logf)
             .stderr(logf2)
             .stdin(std::process::Stdio::null())
@@ -1426,11 +1509,14 @@ impl Core {
             .spawn()
             .map_err(|e| PeError(format!("llama-server 啟動失敗：{e}")))?;
         let pid = child.id() as i64;
+        crate::diagnostics::event("llm_process_started", json!({"pid":pid}));
         if !win::no_throttle(pid) {
             self.log_line("關閉節能限速失敗");
         }
         loop {
             if let Ok(Some(code)) = child.try_wait() {
+                crate::diagnostics::event("llm_process_exited", json!({"pid":pid,"exit_code":code.code(),"loaded_confirmed":false}));
+                crate::diagnostics::snapshot("llm_startup_error_log", &json!({"scope":"last 64 KiB of shared llama log; may include earlier attempts","text":self.log_tail(2000)}));
                 let code = code
                     .code()
                     .map(|c| c.to_string())
@@ -1445,6 +1531,7 @@ impl Core {
             }
             if t0.elapsed() > timeout {
                 win::kill(pid);
+                crate::diagnostics::snapshot("llm_startup_timeout_log", &json!({"scope":"last 64 KiB of shared llama log","text":self.log_tail(2000)}));
                 return err(format!(
                     "llama-server {} 秒內沒有載入完成，已關閉。log 最後幾行：\n{}",
                     timeout.as_secs(),
@@ -1453,16 +1540,7 @@ impl Core {
             }
             std::thread::sleep(Duration::from_millis(300));
         }
-        let load = t0.elapsed().as_secs_f64();
-        let mut st = want.as_object().cloned().unwrap_or_default();
-        st.insert("pid".into(), json!(pid));
-        st.insert("started".into(), json!(now()));
-        st.insert("last_used".into(), json!(now()));
-        st.insert("busy".into(), json!(0));
-        st.insert("load_seconds".into(), json!(py::round(load, 2)));
-        self.write_state(&st);
-        self.log_line(&format!("ready pid={pid} load={load:.1}s"));
-        Ok((true, load))
+        Ok((pid, t0.elapsed().as_secs_f64()))
     }
 }
 
@@ -1472,6 +1550,65 @@ pub use win::FileLock;
 /// 檔名看起來是 MoE（Qwen3.6-35B-A3B 這類，只有約 3B 參數在算）
 pub fn is_moe(name: &str) -> bool {
     name.to_lowercase().contains("a3b")
+}
+
+/// llama-server 這次啟動（log 裡最後一個「] start 」之後）是不是顯存不夠才失敗的。
+/// Vulkan（A 卡、Intel）是 ErrorOutOfDeviceMemory／unable to allocate，CUDA 是 cudaMalloc failed: out of memory
+pub fn vram_short(log: &str) -> bool {
+    let last = log.rfind("] start ").map_or(log, |i| &log[i..]).to_lowercase();
+    ["erroroutofdevicememory", "out of memory", "unable to allocate", "failed to allocate"]
+        .iter()
+        .any(|k| last.contains(k))
+}
+
+/// 載入這顆模型大概要多少顯存（等 ComfyUI 讓位時「夠了就走」用；估多估少都只影響等多久）
+pub fn vram_need(model_bytes: u64, mmproj_bytes: u64, moe: bool, ngl: i64) -> u64 {
+    const G: u64 = 1 << 30;
+    match (moe, ngl >= 99) {
+        (true, true) => 8 * G,
+        (true, false) => 3 * G + G / 2,
+        (false, _) => model_bytes + mmproj_bytes + G + G / 2,
+    }
+}
+
+/// POST /free 之後等顯存真的放出來。ComfyUI 的 /free 只是設旗標就回 200，卸載在它的背景執行緒做，
+/// 所以要一直看剩下的顯存：夠了（enough）、一段時間都沒再增加（stable：放完了，再等也沒用）、到上限（timeout）就走
+pub struct VramWait {
+    need: u64,
+    max: Duration,
+    settle: Duration,
+    /// (秒, 剩下的顯存)
+    seen: Vec<(f64, u64)>,
+}
+
+impl VramWait {
+    pub fn new(need: u64, max: Duration, settle: Duration) -> VramWait {
+        VramWait { need, max, settle, seen: vec![] }
+    }
+
+    pub fn push(&mut self, t: f64, free: u64) -> Option<&'static str> {
+        self.seen.push((t, free));
+        if free >= self.need {
+            return Some("enough");
+        }
+        if t >= self.max.as_secs_f64() {
+            return Some("timeout");
+        }
+        // 最後一次「明顯增加」（多 64MB 以上）之後過了 settle 秒都沒再增加
+        const STEP: u64 = 64 << 20;
+        let mut since = self.seen[0].0;
+        for w in self.seen.windows(2) {
+            if w[1].1 > w[0].1 + STEP {
+                since = w[1].0;
+            }
+        }
+        (t - since >= self.settle.as_secs_f64()).then_some("stable")
+    }
+}
+
+/// 助手選了 35B，實際找到的卻是別顆（機器上沒有 35B 就會用 9B）
+pub fn brain_fell_back(brain: &str, model: &str) -> bool {
+    brain == "35b" && !is_moe(model)
 }
 
 /// MoE（35B-A3B）照模型卡「不思考」的建議加 presence_penalty 1.5：不加的話偶爾會一直重複同樣的句子寫到上限
@@ -1750,6 +1887,11 @@ struct Emitter {
 
 impl Emitter {
     async fn emit(&self, ev: &str, data: Value) -> Result<(), Fail> {
+        if matches!(ev, "status" | "error" | "cancelled" | "result") {
+            crate::diagnostics::event("llm_sse", json!({"event":ev,"data":data}));
+            if ev == "error" { crate::diagnostics::failure(&data.to_string()); }
+            if ev == "cancelled" { if let Some(run)=crate::diagnostics::current() {run.cancel();} }
+        }
         let msg = format!("event: {ev}\ndata: {}\n\n", dumps(&data));
         if self.tx.send(Bytes::from(msg)).await.is_err() {
             self.cancel.cancel(); // 網頁關掉或按了取消（fetch 被中斷）
@@ -1841,7 +1983,7 @@ impl Service {
 
     // ---------------------------------------------------------------- 自訂系統提示詞（設定頁）
     /// 網頁上列出來可以改的系統提示詞：(編號, 名稱, 說明, 一定要保留的佔位符)
-    const EDITABLE: [(&'static str, &'static str, &'static str, &'static [&'static str]); 20] = [
+    const EDITABLE: [(&'static str, &'static str, &'static str, &'static [&'static str]); 24] = [
         ("t2i", "文生圖改寫（MOSS-Image）", "想法 → Qwen-Image 官方格式的英文長段落（MOSS 也吃這種寫法）。模型要回 JSON：{\"rewritten_prompt\": ..., \"wh_ratio\": ...}，改格式會讀不出來。", &[]),
         ("i2i", "改圖改寫（會讀參考圖）", "改圖、局部重繪、多圖參考用（Qwen 2.1）。一樣要回 JSON（rewritten_prompt、wh_ratio）。", &[]),
         ("anima", "Anima 改寫", "寫成 Danbooru tag＋英文句子。一樣要回 JSON（rewritten_prompt）。", &[]),
@@ -1854,10 +1996,14 @@ impl Service {
         ("adult_anima", "成人（體位）Anima：沒對到姿勢時", "Anima 用。整段交給通用版寫成 tag＋英文句子，直接輸出提示詞文字。小孩樣的 tag 一律會被程式拿掉。", &[]),
         ("adult_pick", "成人（體位）：讓 AI 挑姿勢", "程式會在後面自動接上姿勢目錄（一行一筆 id｜中文｜英文）；模型要回 JSON：{\"id\": \"姿勢編號或 none\"}。", &[]),
         ("agent", "生圖助手：工作說明", "助手的角色、每輪要回的三種 JSON（generate／finish／reply）和規則。{model_guide} 換成下面那份寫法、{sizes} 換成尺寸、{loras} 換成 LoRA 清單，一定要留著；JSON 格式改了程式會讀不出來。改完下一輪就生效。", &["{model_guide}", "{sizes}", "{loras}"]),
-        ("agent_qwen21", "生圖助手：Qwen 2.1 提示詞寫法", "生圖模型是 Qwen 2.1 時，填進工作說明的 {model_guide}。", &[]),
+        ("agent_prompt", "生圖助手：只寫詞模式的工作說明", "助手切到「只寫詞」時用：不畫圖，只回提示詞卡。{target} 換成寫法的用途、{guide} 換成那份寫法、{sizes} 換成尺寸，一定要留著；模型要回 JSON：{\"action\":\"prompt\", …} 或 {\"action\":\"reply\", …}。", &["{target}", "{guide}", "{sizes}"]),
+        ("agent_qwen21", "生圖助手：Qwen 2.1 文生圖寫法", "生圖模型是 Qwen 2.1 時，填進工作說明的 {model_guide}；只寫詞模式寫 Qwen 文生圖也用它。", &[]),
+        ("agent_qwen_edit", "生圖助手：Qwen 2.1 改圖寫法", "改一張圖（改圖工具、Qwen 附一張圖畫）用。助手第一次要寫改圖指令時會先讀它。", &[]),
+        ("agent_qwen_multiref", "生圖助手：Qwen 2.1 多圖參考寫法", "兩張以上參考圖（<image1>、<image2>…）用。", &[]),
         ("agent_moss", "生圖助手：MOSS-Image 提示詞寫法", "生圖模型是 MOSS-Image 時，填進工作說明的 {model_guide}。", &[]),
         ("agent_anima", "生圖助手：Anima 提示詞寫法", "生圖模型是 Anima 時，填進工作說明的 {model_guide}。", &[]),
-        ("agent_other", "生圖助手：其他模型提示詞寫法", "其他生圖模型用的 {model_guide}。", &[]),
+        ("agent_other", "生圖助手：其他模型提示詞寫法", "其他生圖模型（SDXL 系）用的 {model_guide}。", &[]),
+        ("agent_ltx", "生圖助手：LTX-2.3 影片寫法", "做影片工具、只寫詞模式寫影片時用。", &[]),
         ("agent_h3_base", "H3 影片台：AI 幫我寫（文生、圖生、首尾幀）", "H3 影片台按「AI 幫我寫」時用（文生影片、圖生影片、首尾幀、接續）。照 MiniMax H3 官方寫法輸出一段英文提示詞，不要加說明。", &[]),
         ("agent_h3_ref", "H3 影片台：AI 幫我寫（多素材參考）", "H3 影片台按「AI 幫我寫」時用（多素材參考、關鍵幀、換角色、特效、換畫風、動作控制）。素材依序叫 <Picture N>、<Video N>、<Audio N>。", &[]),
         ("agent_h3_board", "H3 影片台：AI 幫我寫滿分鏡（素材板）", "H3 影片台素材板按「AI 幫我寫滿分鏡」時用。照素材板的用途寫，回 JSON 分鏡（每一鏡從第幾秒、鏡頭、畫面、台詞、聲音），網頁再組成官方格式。", &[]),
@@ -1908,6 +2054,12 @@ impl Service {
             .as_ref()
             .and_then(|c| c.override_text(id))
             .unwrap_or_else(|| crate::agent::default_text(id).unwrap_or_default().to_string())
+    }
+
+    /// 生圖助手本機這顆腦袋實際會載入的模型檔名（找不到模型就是 None，之後載入時會報錯）
+    pub fn agent_model(&self, brain: &str) -> Option<String> {
+        let core = self.core.as_ref()?;
+        core.model_files(&agent_kind(brain), None).ok().map(|(m, _)| file_name(&m))
     }
 
     /// 「下載讀圖檔」按鈕：見 Core::mmproj_download。brain＝9b／35b（不給就照設定頁的通用模型）
@@ -2141,6 +2293,10 @@ impl Service {
         em: &Emitter,
         zh: bool,
     ) -> Result<(String, String, Value), Fail> {
+        if let Some(run)=crate::diagnostics::current() {
+            crate::diagnostics::remember_secret(&run.store,key);
+            run.snapshot("llm_request",body);
+        }
         let mut req = self.http.post(format!("{base}/v1/chat/completions")).json(body);
         if let Some(k) = key.filter(|k| !k.is_empty()) {
             req = req.bearer_auth(k);
@@ -2207,6 +2363,7 @@ impl Service {
             }
             finished |= last;
         }
+        crate::diagnostics::snapshot("llm_response", &json!({"content":content,"timings":timings,"visible_reasoning_chars":reasoning.chars().count()}));
         Ok((content, reasoning, timings))
     }
 
@@ -2277,14 +2434,27 @@ impl Service {
             )
             .await?;
         }
-        let (c, kind, comfy, rt) = (
+        // 這顆模型大概要多少顯存：ComfyUI 放出這麼多就不用再等
+        let need = {
+            let (c, k) = (core.clone(), kind.to_string());
+            run_blocking(move || {
+                c.model_files(&k, None).map_or(0, |(m, mm)| {
+                    let size = |p: &Path| std::fs::metadata(p).map_or(0, |x| x.len());
+                    vram_need(size(&m), mm.as_deref().map_or(0, size), is_moe(&file_name(&m)), ngl)
+                })
+            })
+            .await
+        };
+        let (c, kind, comfy, rt, log) = (
             core.clone(),
             kind.to_string(),
             self.comfy.clone(),
             tokio::runtime::Handle::current(),
+            core.clone(),
         );
-        // 在 llama-server 啟動前（背景執行緒）叫 ComfyUI 卸載模型、釋放顯存
-        let free_comfy = move |ngl: i64| {
+        // 在 llama-server 啟動前（背景執行緒）叫 ComfyUI 卸載模型、釋放顯存。/free 只是設旗標就回 200，
+        // 真的卸載在 ComfyUI 的背景執行緒，所以要看 /system_stats 等它放完（2026-10-26 A 卡朋友固定等 1 秒會爆顯存）
+        let free_comfy = move |ngl: i64, attempt: u32| {
             if ngl == 0 {
                 return;
             }
@@ -2293,10 +2463,31 @@ impl Service {
                 Duration::from_secs(15),
                 comfy.post("/free", &body),
             )) {
-                Ok(Ok(_)) => std::thread::sleep(Duration::from_secs(1)),
-                Ok(Err(e)) => eprintln!("ComfyUI /free 失敗：{e}"),
-                Err(_) => eprintln!("ComfyUI /free 失敗：逾時"),
+                Ok(Ok(_)) => {}
+                Ok(Err(e)) => return eprintln!("ComfyUI /free 失敗：{e}"),
+                Err(_) => return eprintln!("ComfyUI /free 失敗：逾時"),
             }
+            let (max, settle) = if attempt == 0 { (20, 4) } else { (45, 8) };
+            let mut w = VramWait::new(need, Duration::from_secs(max), Duration::from_secs(settle));
+            let t0 = Instant::now();
+            let why = loop {
+                let stats = rt.block_on(tokio::time::timeout(Duration::from_secs(3), comfy.get("/system_stats")));
+                // 別的程式也能用的顯存＝vram_free 扣掉 PyTorch 自己快取著的那份
+                let free = stats.ok().and_then(Result::ok).and_then(|s| {
+                    let d = s["devices"].get(0)?;
+                    Some(d["vram_free"].as_u64()?.saturating_sub(d["torch_vram_free"].as_u64().unwrap_or(0)))
+                });
+                let Some(free) = free else {
+                    std::thread::sleep(Duration::from_secs(if attempt == 0 { 1 } else { 3 }));
+                    break "no_stats";
+                };
+                if let Some(why) = w.push(t0.elapsed().as_secs_f64(), free) {
+                    log.log_line(&format!("等 ComfyUI 讓出顯存：{why}，剩 {:.1}GB／要約 {:.1}GB，{:.1} 秒", free as f64 / 1e9, need as f64 / 1e9, t0.elapsed().as_secs_f64()));
+                    break why;
+                }
+                std::thread::sleep(Duration::from_millis(500));
+            };
+            crate::diagnostics::event("comfy_vram_wait", json!({"attempt": attempt, "result": why, "need": need, "seconds": t0.elapsed().as_secs_f64()}));
         };
         let (started, load) =
             run_blocking(move || c.ensure(&kind, ngl, free_comfy, Duration::from_secs(180)))
@@ -2319,6 +2510,7 @@ impl Service {
         seed: i64,
         think: bool,
         kind: &str,
+        request: &str,
         em: &Emitter,
     ) -> Result<(String, String, Value, Option<Parsed>), Fail> {
         let (mut raw, mut reasoning, mut timings, mut parsed) =
@@ -2331,6 +2523,7 @@ impl Service {
         } else {
             String::new()
         };
+        let mut msgs = msgs.clone();
         core.set_busy(1);
         let r: Result<(), Fail> = async {
             for attempt in 0..2 {
@@ -2350,7 +2543,7 @@ impl Service {
                         &tune_for(
                             &model_name,
                             payload(
-                                msgs,
+                                &msgs,
                                 temperature,
                                 seed + attempt,
                                 think,
@@ -2363,6 +2556,17 @@ impl Service {
                     )
                     .await?;
                 parsed = parse_output(&raw, task, prev);
+                if let Some(p) = &parsed {
+                    let missing = missing_visible_text(&p.prompt, request);
+                    if !missing.is_empty() {
+                        if let Some(a) = msgs.as_array_mut() {
+                            a.push(json!({"role":"assistant","content":raw}));
+                            a.push(json!({"role":"user","content":format!("Your rewritten prompt omitted these exact strings to display in the image: {}. Include every string verbatim, in quotes, at its requested position. Return the complete corrected JSON.", dumps(&json!(missing)))}));
+                        }
+                        parsed = None;
+                        continue;
+                    }
+                }
                 // Anima 只給 tag、沒寫英文句子：換種子再寫一次，第二次還是沒有就用這份
                 if task == "anima"
                     && attempt == 0
@@ -2486,22 +2690,12 @@ impl Service {
             &body.get("zh").cloned().unwrap_or_else(|| self.opt("pe_zh")),
         ));
         let ngl = self.ngl();
-        // Anima 的 tag 交給通用模型：改寫模型（Qwen-Image 2.1 PE）只學過 Qwen 的長段落，
-        // 2026-10-11 實測寫 Anima 會在 tag 後面接回一整段 Qwen 式描述（還冒出 "as requested"）
-        let kind = if captioning && core.model_files("adult_vision", None).is_ok() {
-            // 官方格式要 400～500 字：小的改寫模型只寫兩百多字、還會把動作看錯（2026-10-11 實測），交給通用讀圖模型。
-            // 一般的 caption 也一樣：小模型會把成人內容洗白（2026-10-15 實測 24 張成人圖，裸露／性器官／性行為只寫出 10%）
-            "adult_vision"
-        } else if task == "i2i" || !images.is_empty() {
-            "i2i"
-        } else if (task == "anima" || (task == "t2i" && EXPLICIT_IDEA.is_match(&idea)))
-            && core.model_files("adult", None).is_ok()
-        {
-            "adult"
-        } else {
-            "t2i"
-        }
-        .to_string();
+        // 用哪顆模型（2026-10-27 模型精簡）：預設全部交給通用模型 9B／35B（設定頁 pe_engine＝general）。
+        // 使用者原話：「基本上就留助手這兩顆比較通用的 9b跟35b的」；PE 會洗白、授權不能商用，降成選配（pe_engine＝official），
+        // 選了官方 PE 但沒下載就照樣用通用模型。
+        core.set_general(self.opt("pe_general").as_str().unwrap_or("auto"));
+        let official = self.opt("pe_engine").as_str() == Some("official");
+        let kind = rewrite_kind(&task, captioning, !images.is_empty(), official, EXPLICIT_IDEA.is_match(&idea), |k| core.model_files(k, None).is_ok()).to_string();
         let model_name = file_name(&core.model_files(&kind, None)?.0);
         let mut parts = vec![
             ("task", json!(task)),
@@ -2522,7 +2716,8 @@ impl Service {
         let key = core.cache_key(&parts, Some(&images));
         let use_cache = truthy(Some(&body.get("cache").cloned().unwrap_or(json!(true))));
         let t0 = Instant::now();
-        let mut result = match use_cache.then(|| core.cache_get(&key)).flatten() {
+        let mut result = match use_cache.then(|| core.cache_get(&key)).flatten()
+            .filter(|hit| missing_visible_text(hit.get("prompt").and_then(Value::as_str).unwrap_or(""), &idea).is_empty()) {
             Some(mut hit) => {
                 // 舊快取可能是校正規則加入前存的（重複套用結果不變）
                 if task == "anima" {
@@ -2554,6 +2749,7 @@ impl Service {
                             seed,
                             think,
                             &kind,
+                            &idea,
                             em,
                         )
                         .await?,
@@ -3040,6 +3236,7 @@ impl Service {
                 Value::Array(parts)
             };
             let msgs = json!([{"role": "system", "content": system}, {"role": "user", "content": content}]);
+            crate::diagnostics::snapshot("general_chat_request",&json!({"rid":rid,"messages":msgs,"max_tokens":max_tokens,"temperature":temperature,"kind":kind,"model":model_name}));
             let _g = self.acquire(&em).await?;
             self.ensure(&core, kind, self.ngl(), &em).await?;
             em.emit("status", json!({"phase": "generating", "msg": "撰寫中…"})).await?;
@@ -3057,6 +3254,7 @@ impl Service {
 
     /// 生圖助手用：一次多輪對話。messages 已經組好（圖片是 data URL，見 image_url_jpeg）。
     /// brain＝9b／35b：本機用哪一顆（不看設定頁的 pe_general）；remote＝雲端 llama-server 網址（SSH 通道），有給就不碰本機的。
+    /// think＝思考預算（None＝不想、-1＝不限，見 with_think_budget）。
     /// 進度用 hub 送 {"type":"agent_llm", rid, msg}；取消走 cancel(rid)。回傳 (內容, 思考)
     #[allow(clippy::too_many_arguments)]
     pub async fn agent_chat(
@@ -3065,10 +3263,11 @@ impl Service {
         messages: &Value,
         max_tokens: i64,
         temperature: f64,
-        think: bool,
+        think: Option<i64>,
         brain: &str,
         remote: Option<&Remote>,
     ) -> Result<(String, String), String> {
+        crate::diagnostics::snapshot("assistant_request", &json!({"rid":rid,"messages":messages,"max_tokens":max_tokens,"temperature":temperature,"think":think,"brain":brain,"remote":remote.is_some()}));
         let core = self
             .core
             .clone()
@@ -3077,8 +3276,8 @@ impl Service {
         self.hub_chat(&core, rid, "agent_llm", local, |em| async move {
             let core = c;
             let seed = (now() * 1000.0) as i64;
-            let body = |model: &str| tune_for(model, payload(messages, temperature, seed, think, Some(max_tokens), true));
-            let busy = if think { "思考中…" } else { "撰寫中…" };
+            let body = |model: &str| tune_for(model, with_think_budget(payload(messages, temperature, seed, think.is_some(), Some(max_tokens), true), think));
+            let busy = if think.is_some() { "思考中…" } else { "撰寫中…" };
             let out = match remote {
                 Some(r) => {
                     em.emit("status", json!({"phase": "generating", "msg": busy})).await?;
@@ -3090,6 +3289,7 @@ impl Service {
                         if let Some(m) = b.as_object_mut() {
                             m.remove("timings_per_token");
                             m.remove("repeat_penalty");
+                            m.remove("thinking_budget_tokens");
                         }
                     }
                     self.chat_at(&r.base, r.key.as_deref(), &b, &em, false).await
@@ -3207,7 +3407,7 @@ impl Service {
             .insert(rid.clone(), cancel.clone());
         let (tx, rx) = mpsc::channel::<Bytes>(64);
         let me = self.clone();
-        tokio::spawn(async move {
+        crate::diagnostics::spawn(async move {
             let em = Emitter { tx, cancel };
             let r = match &me.core {
                 None => Err(Fail::Error(me.error.clone().unwrap_or_default())),
@@ -3253,13 +3453,72 @@ impl Service {
 
 /// 在背景執行緒跑會卡住的工作（檔案鎖、等 llama-server 載入、關程序）
 async fn run_blocking<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> T {
-    tokio::task::spawn_blocking(f)
-        .await
-        .expect("背景工作意外中止")
+    crate::diagnostics::blocking(f).await
 }
 
 #[cfg(test)]
 mod tests {
+    /// 2026-10-26 朋友（AMD 9070 16GB）回報的 log：只認這次啟動之後的顯存不足，舊的那次不算
+    #[test]
+    fn vram_short_reads_only_the_latest_start() {
+        let amd = "[anima-pe 2026-10-26 10:00:00] start llama-server.exe -m Huihui-Qwen3.5-9B-abliterated.Q4_K_M.gguf\n\
+            ggml_vulkan: Device memory allocation of size 1053204992 failed.\n\
+            ggml_vulkan: vk::Device::allocateMemory: ErrorOutOfDeviceMemory\n\
+            0.03.835.605 E llama_model_load: error loading model: unable to allocate Vulkan0 buffer\n";
+        assert!(vram_short(amd));
+        assert!(vram_short("[anima-pe x] start a\nggml_backend_cuda_buffer_type_alloc_buffer: allocating 5000.00 MiB on device 0: cudaMalloc failed: out of memory\n"));
+        // 上一次爆、這一次是別的錯：不算
+        let later = format!("{amd}[anima-pe 2026-10-26 10:01:00] start llama-server.exe -m x.gguf\nerror: invalid argument: -ncmoe\n");
+        assert!(!vram_short(&later));
+        assert!(!vram_short("[anima-pe x] start a\nerror loading model: file not found\n"));
+    }
+
+    /// 顯存要多少：一般模型＝檔案＋mmproj＋1.5GB；MoE 照實測（GPU 約 7.6GB、部分約 3GB）
+    #[test]
+    fn vram_need_by_model_kind() {
+        const G: u64 = 1 << 30;
+        assert_eq!(vram_need(5 * G, G, false, 99), 7 * G + G / 2);
+        assert_eq!(vram_need(20 * G, G, true, 99), 8 * G);
+        assert_eq!(vram_need(20 * G, G, true, 16), 3 * G + G / 2);
+    }
+
+    /// /free 之後等顯存：夠了就走、到上限就走、一陣子都沒再增加（ComfyUI 放完了）也走；不能一開始還沒動就走
+    #[test]
+    fn vram_wait_stops_when_enough_stable_or_timeout() {
+        const G: u64 = 1 << 30;
+        let mut w = VramWait::new(8 * G, Duration::from_secs(20), Duration::from_secs(4));
+        assert_eq!(w.push(0.0, 2 * G), None);
+        assert_eq!(w.push(1.0, 2 * G), None, "ComfyUI 可能還沒開始卸載");
+        assert_eq!(w.push(2.0, 5 * G), None);
+        assert_eq!(w.push(2.5, 9 * G), Some("enough"));
+
+        let mut w = VramWait::new(8 * G, Duration::from_secs(20), Duration::from_secs(4));
+        for t in [0.0, 1.0, 2.0] {
+            assert_eq!(w.push(t, 3 * G), None);
+        }
+        assert_eq!(w.push(3.0, 6 * G), None);
+        assert_eq!(w.push(5.0, 6 * G), None, "增加後還沒穩定滿 4 秒");
+        assert_eq!(w.push(7.5, 6 * G), Some("stable"));
+
+        let mut w = VramWait::new(8 * G, Duration::from_secs(3), Duration::from_secs(10));
+        let mut t = 0.0;
+        let mut got = None;
+        while got.is_none() && t < 10.0 {
+            got = w.push(t, t as u64 * G / 4);
+            t += 0.5;
+        }
+        assert_eq!(got, Some("timeout"));
+    }
+
+    /// 助手選 35B、機器上只有 9B：要講出來，不能默默換掉
+    #[test]
+    fn brain_fallback_is_reported() {
+        assert!(brain_fell_back("35b", "Huihui-Qwen3.5-9B-abliterated.Q4_K_M.gguf"));
+        assert!(!brain_fell_back("35b", "Qwen3.6-35B-A3B-heretic.Q4_K_M.gguf"));
+        assert!(!brain_fell_back("9b", "Huihui-Qwen3.5-9B-abliterated.Q4_K_M.gguf"));
+        assert!(!brain_fell_back("cloud", "whatever.gguf"));
+    }
+
     #[test]
     fn clearing_rewrite_cache_compacts_and_next_request_can_cache_again() {
         let base = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../待刪除").join(format!("pe-cache-{}-{}", std::process::id(),
@@ -3297,6 +3556,32 @@ mod tests {
         // with_dirs 的獨立環境不會拿其他位置的模型冒充已安裝。
         assert!(Core::with_dirs(&base, &base, &own).model_files("t2i", None).is_err());
         std::fs::remove_dir_all(base).unwrap();
+    }
+
+    /// 裸露、簡體字的成人想法也要交給通用模型（朋友回報「全裸」被官方改寫模型寫成穿衣服）；一般想法不能誤判
+    #[test]
+    fn explicit_idea_catches_nudity_and_simplified() {
+        for idea in [
+            "一位28歲成年女性全裸站在窗邊，正面，看得到乳房和陰部",
+            "裸体的女人躺在床上",
+            "把衣服脱掉，露点",
+            "a naked woman on a beach, topless",
+            "close-up of her nipples",
+            "后入，内射",
+            "顏射之後的特寫",
+            "哥德風女生穿漁網上衣，巨乳",
+            "女生靠著欄杆看夕陽，胸部非常大",
+        ] {
+            assert!(EXPLICIT_IDEA.is_match(idea), "{idea}");
+        }
+        for idea in [
+            "黃昏的海邊小鎮，穿白色洋裝的女性騎腳踏車經過",
+            "咖啡店黑板菜單寫著「今日特調 拿鐵 120元」",
+            "a swimmer doing the breaststroke in a pool",
+            "her facial expression is calm, cumulus clouds overhead",
+        ] {
+            assert!(!EXPLICIT_IDEA.is_match(idea), "{idea}");
+        }
     }
 
     /// 提示詞檔是 CRLF（git 在 Windows checkout）也讀成 \n，跟 Python 版一致（GitHub CI 抓到的）
@@ -3394,5 +3679,48 @@ mod tests {
             payload(&json!([]), 1.0, -3, false, None, true)["seed"],
             json!(2147483645i64)
         );
+    }
+
+    #[test]
+    fn rewrite_goes_to_the_general_model_by_default() {
+        let all = |_: &str| true;
+        let no_pe = |k: &str| !matches!(k, "t2i" | "i2i");
+        let only_pe = |k: &str| matches!(k, "t2i" | "i2i");
+        // 預設（general）：文字 → 通用、有圖 → 通用讀圖
+        assert_eq!(rewrite_kind("t2i", false, false, false, false, all), "adult");
+        assert_eq!(rewrite_kind("zh", false, false, false, false, all), "adult");
+        assert_eq!(rewrite_kind("i2i", false, true, false, false, all), "adult_vision");
+        assert_eq!(rewrite_kind("caption", true, true, false, false, all), "adult_vision");
+        // 選了官方 PE：一般文字、改圖走 PE；Anima、露骨的照樣通用
+        assert_eq!(rewrite_kind("t2i", false, false, true, false, all), "t2i");
+        assert_eq!(rewrite_kind("t2i", false, false, true, true, all), "adult");
+        assert_eq!(rewrite_kind("anima", false, false, true, false, all), "adult");
+        assert_eq!(rewrite_kind("i2i", false, true, true, false, all), "i2i");
+        // 選了官方 PE 卻沒下載：通用；只有 PE（舊安裝沒通用模型）：PE
+        assert_eq!(rewrite_kind("t2i", false, false, true, false, no_pe), "adult");
+        assert_eq!(rewrite_kind("i2i", false, true, true, false, no_pe), "adult_vision");
+        assert_eq!(rewrite_kind("t2i", false, false, false, false, only_pe), "t2i");
+        assert_eq!(rewrite_kind("i2i", false, true, false, false, only_pe), "i2i");
+    }
+
+    #[test]
+    fn payload_sets_thinking_budget() {
+        let b = with_think_budget(payload(&json!([]), 0.7, 1, true, Some(2000), true), Some(256));
+        assert_eq!((b["thinking_budget_tokens"].clone(), b["chat_template_kwargs"]["enable_thinking"].clone()), (json!(256), json!(true)));
+        let unlimited = with_think_budget(payload(&json!([]), 0.7, 1, true, Some(2000), true), Some(-1));
+        assert!(unlimited.get("thinking_budget_tokens").is_none());
+        let off = with_think_budget(payload(&json!([]), 0.7, 1, false, Some(2000), true), None);
+        assert!(off.get("thinking_budget_tokens").is_none() && off["chat_template_kwargs"]["enable_thinking"] == json!(false));
+    }
+
+    #[test]
+    fn visible_text_keeps_exact_strings_without_enforcing_style_quotes() {
+        let ask = "黑板上面清楚寫「今日特調」，下面寫「拿鐵 120」";
+        assert_eq!(missing_visible_text("Chalk lettering reads \"今日特調\".", ask), vec!["拿鐵 120"]);
+        assert!(missing_visible_text("Chalk lettering reads \"今日特調\" and \"拿鐵 120\".", ask).is_empty());
+        assert_eq!(missing_visible_text("Today's special, latte 120", ask), vec!["今日特調", "拿鐵 120"]);
+        assert!(missing_visible_text("A red dress.", "穿「紅色洋裝」的成年女性").is_empty());
+        assert_eq!(missing_visible_text("Autumn books", "海報大標題「秋日書市」，下面「10月27日」"), vec!["秋日書市", "10月27日"]);
+        assert_eq!(missing_visible_text("A sign", "The sign reads \"OPEN\""), vec!["OPEN"]);
     }
 }

@@ -4,6 +4,7 @@
 // 後端：video_wf.rs 的 Mapping／detail／save_map，server\api_video.rs（GET／POST /api/video/workflows/{id}）。
 // 欄位清單跟生圖工作流的參數面板同一套（image_wf::field_rows：型別、範圍、下拉選項從 ComfyUI 的 /object_info 來）
 import { $, el, api, toast, openModal, closeModal } from "./util.js";
+import { MEDIA_ROLES } from "./video-slots.js";
 
 let D = null;      // 後端給的編輯資料
 let M = null;      // 正在改的對應設定 {prompt?, image?, values, pins}
@@ -29,6 +30,7 @@ export async function open(id, done) {
   M = structuredClone(D.map || {});
   M.values ||= {};
   M.pins ||= [];
+  M.media_slots ||= [];
   $("#vmTitle").textContent = `對應與參數：${D.name}`;
   render();
 }
@@ -67,6 +69,47 @@ function imageBox() {
   };
   return el("div", { class: "vm-sec" }, el("b", {}, "首格圖放哪個 Load Image"),
     el("div", { class: "muted sm" }, "「動起來」那張圖會放進這裡；其他 Load Image 照工作流原本的圖"), sel);
+}
+
+// One named slot maps to one literal file input; never replace a node connection.
+function mediaBox() {
+  const inputs = D.media_inputs || [];
+  const box = el("div", { class: "vm-sec" }, el("b", {}, "命名素材槽"),
+    el("div", { class: "muted sm" }, "把角色、場景、尾幀、動作影片或參考聲音對應到各自欄位。「動起來」會逐槽選檔；這裡不改節點連線。"));
+  const choices = () => inputs.map((f) => el("option", { value: f.key, translate: "no" }, `${f.kind} · ${f.title} #${f.node} · ${f.input}`));
+  for (const slot of M.media_slots) {
+    const key = el("input", { type: "text", value: slot.key, maxlength: 64, "aria-label": "素材槽代號", placeholder: "代號（英數、-、_）" });
+    const name = el("input", { type: "text", value: slot.label, maxlength: 60, "aria-label": "素材槽名稱", placeholder: "顯示名稱" });
+    const who = el("input", { type: "text", value: slot.who || "", maxlength: 100, "aria-label": "素材角色", placeholder: "角色／對象（選填）" });
+    const target = el("select", { "aria-label": "素材欄位" }, choices()); target.value = `${slot.node}.${slot.input}`;
+    const role = el("select", { "aria-label": "素材用途" }, ...Object.entries(MEDIA_ROLES).map(([value, text]) => el("option", { value }, text))); role.value = slot.role;
+    key.onchange = () => { slot.key = key.value.trim(); };
+    name.onchange = () => { slot.label = name.value.trim(); };
+    who.onchange = () => { if (who.value.trim()) slot.who = who.value.trim(); else delete slot.who; };
+    role.onchange = () => { slot.role = role.value; };
+    target.onchange = () => {
+      const field = inputs.find((f) => f.key === target.value);
+      if (!field) return;
+      Object.assign(slot, { node: field.node, input: field.input, kind: field.kind });
+      delete M.values[field.key]; M.pins = M.pins.filter((p) => p.key !== field.key);
+      render();
+    };
+    box.append(el("div", { class: "wf-node" }, el("div", { class: "row" }, name, role,
+      el("button", { class: "link", type: "button", onclick: () => { M.media_slots = M.media_slots.filter((s) => s !== slot); render(); } }, "移除")),
+      el("div", { class: "wf-grid" }, el("label", {}, "代號", key), el("label", {}, "角色／對象", who)), target));
+  }
+  const available = inputs.filter((f) => !M.media_slots.some((s) => s.node === f.node && s.input === f.input));
+  const select = el("select", { "aria-label": "新增素材欄位" }, ...available.map((f) => el("option", { value: f.key, translate: "no" }, `${f.kind} · ${f.title} #${f.node} · ${f.input}`)));
+  const add = el("button", { class: "btn sm", type: "button", disabled: !available.length, onclick: () => {
+    const field = inputs.find((f) => f.key === select.value); if (!field) return;
+    let n = 1; while (M.media_slots.some((s) => s.key === `media_${n}`)) n++;
+    const first = field.kind === "image" && field.input === "image" && field.node === (M.image ?? D.used?.image ?? D.auto.image);
+    M.media_slots.push({ key: `media_${n}`, label: first ? "首幀" : field.title || field.input, kind: field.kind, role: first ? "first" : "reference", node: field.node, input: field.input });
+    delete M.values[field.key]; M.pins = M.pins.filter((p) => p.key !== field.key);
+    render();
+  } }, "新增素材槽");
+  box.append(available.length ? el("div", { class: "row" }, select, add) : el("div", { class: "muted sm" }, inputs.length ? "所有素材欄位都已加入" : "這個工作流沒有可對應的圖片、影片或聲音檔名欄位"));
+  return box;
 }
 
 // ---------------------------------------------------------------- 欄位：固定改值、釘到「動起來」
@@ -128,7 +171,7 @@ function fieldRow(f) {
 // 照搜尋字過濾，一個節點一塊
 function nodeBlocks() {
   const q = filter.trim().toLowerCase();
-  const shown = D.fields.filter((f) => !f.auto && (!q || `${f.title} ${f.class} ${f.input} #${f.node}`.toLowerCase().includes(q)));
+  const shown = D.fields.filter((f) => !f.auto && !M.media_slots.some((s) => f.key === `${s.node}.${s.input}`) && (!q || `${f.title} ${f.class} ${f.input} #${f.node}`.toLowerCase().includes(q)));
   if (!shown.length) return [el("div", { class: "muted sm" }, q ? "沒有符合的欄位" : "沒有可以改的欄位")];
   const groups = new Map();
   for (const f of shown) {
@@ -162,7 +205,7 @@ function paintStatus() {
 }
 
 function render() {
-  $("#vmBody").replaceChildren(el("div", { id: "vmStatus" }), promptBox(), imageBox(), fieldsBox());
+  $("#vmBody").replaceChildren(el("div", { id: "vmStatus" }), promptBox(), imageBox(), mediaBox(), fieldsBox());
   paintStatus();
 }
 
@@ -179,7 +222,7 @@ async function post(map, msg) {
 export function init() {
   $("#vmSave").onclick = () => {
     if (!M) return;
-    const map = { values: M.values, pins: M.pins };
+    const map = { values: M.values, pins: M.pins, media_slots: M.media_slots };
     if (M.prompt?.length) map.prompt = M.prompt;
     else if (M.prompt) return toast("提示詞至少要勾一格（或按「改回自動」）", "err");
     if (M.image !== undefined) map.image = M.image;

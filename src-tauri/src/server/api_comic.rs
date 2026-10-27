@@ -62,7 +62,7 @@ pub async fn meta() -> ApiResult {
         .map(|(id, zh, _, slots)| json!({"id": id, "name": zh, "slots": slots.iter().map(|s| s.1).collect::<Vec<_>>()}))
         .collect();
     let pairs = |v: &[(&str, &str)]| v.iter().map(|(en, zh)| json!([en, zh])).collect::<Vec<_>>();
-    ok(json!({"layouts": layouts, "custom": {"id": "custom", "max_rows": 6, "max_cells": 4, "max_panels": 8},
+    ok(json!({"layouts": layouts, "custom": {"id": "custom", "max_rows": 6, "max_cells": 4, "max_panels": c::MAX_PANELS, "max_insets": c::MAX_INSETS},
               "shots": pairs(c::SHOTS), "bubbles": pairs(c::BUBBLES)}))
 }
 
@@ -199,7 +199,7 @@ fn begin(app: &Shared, id: &str) -> Result<CancellationToken, ApiError> {
 
 fn spawn(app: &Shared, id: &str, token: CancellationToken, work: impl std::future::Future<Output = Step> + Send + 'static) {
     let (app, id) = (app.clone(), id.to_string());
-    tokio::spawn(async move {
+    crate::diagnostics::spawn(async move {
         let r = work.await;
         app.comic.runs.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
         match r {
@@ -298,6 +298,32 @@ pub async fn layout_preview(Body(b): Body) -> ApiResult {
         "desc": desc,
         "slots": slots.iter().map(|(en, zh)| json!({"en": en, "zh": zh})).collect::<Vec<_>>(),
     }))
+}
+
+/// 用說的排版（站內助手幫忙拉格子）：{project, ask, brain} → {custom}（排版工作台的 v2 格式，已經整理過）。
+/// ask 空白就照這頁的劇情自己排。叫本機語言模型（預設 35B，可以指定 9B）；網頁套上後可以 Ctrl＋Z。
+pub async fn layout_ai(State(app): State<Shared>, Body(b): Body) -> ApiResult {
+    let p = &b["project"];
+    let ask = tx(&b["ask"]);
+    if ask.trim().is_empty() && tx(&p["script"]).trim().is_empty() {
+        return Err(bad("寫一句想怎麼排（例：左邊一格大特寫貫穿整頁，右邊切三格），或先寫這一頁的劇情"));
+    }
+    // 預設 35B：2026-10-27 實測 9B 常漏排、左右顛倒，35B 全對（載入後一次 3～5 秒）；機器上沒有 35B 會自動用 9B
+    let brain = if tx(&b["brain"]) == "9b" { "9b" } else { "35b" };
+    let (sys, user) = c::layout_messages(p, &ask);
+    let rid = format!("comic-layout-{}", tx(&p["id"]));
+    for attempt in 0..2 {
+        let r = app
+            .pe
+            .general_chat_as(&rid, &sys, &user, &[], 1500, if attempt == 0 { 0.4 } else { 0.7 }, Some(brain))
+            .await
+            .map_err(bad)?;
+        if let Some(v) = c::parse_layout(&r) {
+            return ok(json!({"custom": v}));
+        }
+        eprintln!("[comic] AI 排版讀不出版面（第 {} 次）：{}", attempt + 1, r.chars().take(300).collect::<String>());
+    }
+    Err(bad("AI 回的版面讀不出來，再按一次試試，或換 35B"))
 }
 
 // ================================================================ AI 排分鏡（35B）
