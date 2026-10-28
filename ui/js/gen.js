@@ -154,6 +154,8 @@ export function init() {
   F("expGoImport").onclick = goImport;
   F("otherModelsGo").onclick = () => { app.showPage("settings"); models.focusImport(); };
   F("basicMissingHide").onclick = () => { store.set("basicMissingHide", true); F("basicMissing").hidden = true; };
+  F("dirsPendingGo").onclick = restartForDirs;
+  F("dirsPendingHide").onclick = () => { store.set("dirsPendingHide", dirsPendingSig(app.state?.models?.dirs_pending)); F("dirsPending").hidden = true; };
   F("turboLora").onchange = () => { modelDefaults(); save(); };
   F("mossFast").onchange = (e) => setMossFast(e.target.checked);
   F("ipMethod").onchange = () => { F("denoise").value = F("ipMethod").value === "lllite" ? 1 : 0.75; F("denoiseOut").textContent = F("denoise").value; save(); };
@@ -346,7 +348,26 @@ function fillModels(m) {
   const names = Object.entries(other).map(([f, n]) => `${(m.family_names || {})[f] || f} ${n} 個`);
   F("otherModels").hidden = !(app.state?.online && names.length && !flows.length);
   if (names.length) F("otherModelsText").textContent = `你的 ComfyUI 裡還有 ${names.join("、")}：生圖站內建的功能畫不了它們，但可以把你平常用的 ComfyUI 工作流匯進來用（之後模型選單最下面會出現「⚙ 工作流」）。`;
+  paintDirsPending(m.dirs_pending);
   checkBasic(m);
+}
+
+// 加了外部模型資料夾、ComfyUI 還沒讀到：提醒重開（後端 model_dirs::pending_restart）。「不要再提醒」只記這一組資料夾，之後又加新的會再提醒
+const dirsPendingSig = (p) => (p?.list || []).map((d) => `${d.kind}|${d.path}`).sort().join("\n");
+function paintDirsPending(p) {
+  const box = F("dirsPending");
+  box.hidden = !p?.list?.length || !app.state?.online || store.get("dirsPendingHide", "") === dirsPendingSig(p);
+  if (box.hidden) return;
+  F("dirsPendingList").textContent = p.list.map((d) => `${d.label}（${d.path}）`).join("、");
+  F("dirsPendingGo").hidden = !p.can_restart;
+  F("dirsPendingManual").hidden = !!p.can_restart;
+}
+async function restartForDirs() {
+  try {
+    await api("/api/models/restart_comfy", { json: {} });
+    F("dirsPending").hidden = true;
+    toast("ComfyUI 重開中，大約半分鐘後模型選單就會多出來", "ok");
+  } catch (e) { toast(e.message, "err"); }
 }
 
 // 基本版只裝了一半（例如安裝到一半關掉）：主模型在、它要的文字編碼器或 VAE 卻不在，畫圖一定失敗。

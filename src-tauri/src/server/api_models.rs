@@ -122,9 +122,15 @@ pub async fn scan_apply(State(app): State<Shared>, Body(body): Body) -> ApiResul
 /// 家族只有 sdxl、sd15、flux、sd3 會算（看檔頭判斷，結果依檔案快取）；沒有就是空物件。網頁拿來提示「這些模型可以用『匯入工作流』來用」
 pub fn other_families(comfyui: &Path) -> Map<String, Value> {
     let mut count: Map<String, Value> = Map::new();
+    // Stable-diffusion 資料夾兩邊都算（model_dirs::effective），同一個檔只數一次
+    let mut seen: Vec<PathBuf> = vec![];
     for kind in ["checkpoints", "diffusion_models"] {
         for f in model_dirs::list_kind(comfyui, kind) {
             let p = Path::new(f["root"].as_str().unwrap_or("")).join(f["name"].as_str().unwrap_or(""));
+            if seen.iter().any(|s| model_dirs::same(s, &p)) {
+                continue;
+            }
+            seen.push(p.clone());
             let fam = families::detect(&p);
             if fam != families::OTHER && !families::is_builtin(fam) {
                 let n = count.get(fam).and_then(Value::as_u64).unwrap_or(0) + 1;

@@ -739,7 +739,9 @@ pub async fn start(paths: Paths, comfy_url: &str) -> Result<Shared, String> {
         loop {
             let u = live_url.clone();
             let got = blocking(move || crate::model_dirs::refresh_live(&u)).await;
-            tokio::time::sleep(std::time::Duration::from_secs(if got.is_some() { 60 } else { 10 })).await;
+            // 加了資料夾、ComfyUI 還沒讀到：問勤一點，重開好了提示才會很快消失
+            let quick = got.is_none() || !crate::model_dirs::pending_restart().is_empty();
+            tokio::time::sleep(std::time::Duration::from_secs(if quick { 10 } else { 60 })).await;
         }
     });
     let bg = app.clone();

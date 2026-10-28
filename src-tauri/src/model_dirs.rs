@@ -97,6 +97,54 @@ pub fn current() -> Vec<Dir> {
     EXTRA.read().unwrap_or_else(|e| e.into_inner()).clone()
 }
 
+/// 清單實際生效的樣子：每個 checkpoints 資料夾同時也算主模型（diffusion_models）資料夾，不看資料夾叫什麼名字
+/// （寫進 yaml、生圖站自己找檔都用這份）。
+/// 原因：A1111／Forge／SwarmUI 的 Stable-diffusion 資料夾（ComfyUI 官方範例 yaml 也把它填在 checkpoints）裡，
+/// Anima、MOSS 這類只有主模型的單檔跟 SDXL（Illustrious）整包模型混著放；ComfyUI 的 UNETLoader 只看 diffusion_models，
+/// 生成頁選單列的就是 UNETLoader 的清單，只登記成 checkpoints 的話那些主模型永遠不會出現。
+/// 整包模型（SDXL…）跟著出現在主模型清單也沒關係：生成頁只列內建畫得出來的家族（認家族看檔頭，有快取）
+pub fn effective(dirs: &[Dir]) -> Vec<Dir> {
+    effective_with(dirs, None)
+}
+
+/// effective，加上使用者自己 ComfyUI 的 extra_model_paths.yaml 裡填成 checkpoints 的資料夾（那份 yaml 我們不改，
+/// 所以在自己寫的 yaml 裡把它們也列成主模型）。comfyui＝目前使用的 ComfyUI 資料夾；只看 yaml 檔，不看開著的 ComfyUI 回報的，結果才不會一直變
+pub fn effective_with(dirs: &[Dir], comfyui: Option<&Path>) -> Vec<Dir> {
+    let mut out = dirs.to_vec();
+    let mut extra: Vec<Dir> = dirs.iter().filter(|d| d.kind == "checkpoints").cloned().collect();
+    if let Some(c) = comfyui {
+        let own = c.join("models").join("checkpoints");
+        for y in comfy_extra(c).into_iter().filter(|y| y.kind == "checkpoints" && y.path.is_dir() && !same(&y.path, &own)) {
+            extra.push(Dir { kind: y.kind, path: y.path, source: "yaml".into(), added: String::new() });
+        }
+    }
+    for d in extra {
+        if !out.iter().any(|o| o.kind == "diffusion_models" && same(&o.path, &d.path)) {
+            out.push(Dir { kind: "diffusion_models".into(), ..d });
+        }
+    }
+    out
+}
+
+/// 清單裡的資料夾，開著的 ComfyUI 還沒讀到（加了資料夾沒重開 ComfyUI；ComfyUI 不是生圖站開的所以沒帶到 yaml）。
+/// 判斷方式：ComfyUI 回報的資料夾（refresh_live，每分鐘更新）裡找不到。ComfyUI 沒回報過、或它根本不認得那個分類
+/// （舊版 ComfyUI 沒有的新分類、生圖站自己用的 LLM）就不算，免得永遠跳不必要的提醒
+pub fn pending_restart() -> Vec<Dir> {
+    let live = LIVE.read().unwrap_or_else(|e| e.into_inner()).clone();
+    if live.is_empty() {
+        return vec![];
+    }
+    let comfy = COMFY.read().unwrap_or_else(|e| e.into_inner()).clone();
+    pending_with(&effective_with(&current(), comfy.as_deref()), &live)
+}
+
+fn pending_with(dirs: &[Dir], live: &[(String, PathBuf)]) -> Vec<Dir> {
+    dirs.iter()
+        .filter(|d| d.path.is_dir() && live.iter().any(|(k, _)| *k == d.kind) && !live.iter().any(|(k, p)| *k == d.kind && same(p, &d.path)))
+        .cloned()
+        .collect()
+}
+
 /// 某個分類的外部資料夾（unet＝diffusion_models、clip＝text_encoders）：
 /// 生圖站自己的「外部模型資料夾」清單在前，後面接使用者自己 ComfyUI 的 extra_model_paths.yaml（comfy_extra）、
 /// 開著的 ComfyUI 回報的資料夾（live）。重複的、生圖站自己 ComfyUI 的 models\<分類> 不再列一次
@@ -108,9 +156,11 @@ pub fn roots(kind: &str) -> Vec<PathBuf> {
 /// roots 的本體：comfyui＝目前使用的 ComfyUI 資料夾（沒有就只看生圖站自己的清單）
 pub fn roots_with(kind: &str, comfyui: Option<&Path>) -> Vec<PathBuf> {
     let k = canonical(kind).unwrap_or(kind);
-    let mut v: Vec<PathBuf> = current().into_iter().filter(|d| d.kind == k).map(|d| d.path).collect();
+    let mut v: Vec<PathBuf> = effective_with(&current(), comfyui).into_iter().filter(|d| d.kind == k).map(|d| d.path).collect();
     if let Some(c) = comfyui {
-        for p in comfy_extra_roots(c, k) {
+        // 整包模型資料夾也算主模型資料夾（見 effective）：開著的 ComfyUI 回報的 checkpoints 資料夾也一起找檔、判斷家族
+        let also = if k == "diffusion_models" { comfy_extra_roots(c, "checkpoints") } else { vec![] };
+        for p in comfy_extra_roots(c, k).into_iter().chain(also) {
             if !v.iter().any(|x| same(x, &p)) {
                 v.push(p);
             }
@@ -331,7 +381,11 @@ pub fn save_checked(data: &Path, comfyui: &Path, dirs: Vec<Dir>) -> Result<(Vec<
 }
 
 /// ComfyUI 的 extra_model_paths 格式。沒有外部資料夾就把檔刪掉
-pub fn yaml_text(dirs: &[Dir]) -> String {
+pub fn yaml_text(dirs: &[Dir], comfyui: Option<&Path>) -> String {
+    yaml_render(&effective_with(dirs, comfyui))
+}
+
+fn yaml_render(dirs: &[Dir]) -> String {
     let mut by: Vec<(&str, Vec<String>)> = vec![];
     for d in dirs {
         let p = d.path.to_string_lossy().replace('\\', "/");
@@ -354,7 +408,8 @@ pub fn yaml_text(dirs: &[Dir]) -> String {
 
 fn write_yaml(comfyui: &Path, dirs: &[Dir]) -> Result<(), String> {
     let y = yaml_path(comfyui);
-    if dirs.is_empty() {
+    let eff = effective_with(dirs, Some(comfyui));
+    if eff.is_empty() {
         if y.exists() {
             std::fs::remove_file(&y).map_err(|e| format!("刪掉 {} 失敗：{e}", y.display()))?;
         }
@@ -363,13 +418,15 @@ fn write_yaml(comfyui: &Path, dirs: &[Dir]) -> Result<(), String> {
     if !comfyui.is_dir() {
         return Ok(()); // 精靈還沒裝 ComfyUI：裝好後下一次存清單、或開站時（ensure_yaml）會寫
     }
-    std::fs::write(&y, yaml_text(dirs)).map_err(|e| format!("寫 {} 失敗：{e}", y.display()))
+    std::fs::write(&y, yaml_render(&eff)).map_err(|e| format!("寫 {} 失敗：{e}", y.display()))
 }
 
-/// 開站時對一次：清單有、yaml 沒有（ComfyUI 後來才裝好、被刪掉）就補寫
+/// 開站時對一次：yaml 跟清單對不上（ComfyUI 後來才裝好、被刪掉、升版後規則變了）就重寫。
+/// 要在啟動 ComfyUI 之前做，ComfyUI 才讀得到新的
 pub fn ensure_yaml(comfyui: &Path) {
     let dirs = current();
-    if !dirs.is_empty() && std::fs::read_to_string(yaml_path(comfyui)).ok().as_deref() != Some(yaml_text(&dirs).as_str()) {
+    let eff = effective_with(&dirs, Some(comfyui));
+    if !eff.is_empty() && std::fs::read_to_string(yaml_path(comfyui)).ok().as_deref() != Some(yaml_render(&eff).as_str()) {
         if let Err(e) = write_yaml(comfyui, &dirs) {
             eprintln!("{e}");
         }
@@ -1090,7 +1147,7 @@ mod tests {
             Dir { kind: "loras".into(), path: "E:\\更多 LoRA".into(), source: "".into(), added: "".into() },
             Dir { kind: "vae".into(), path: "D:\\x\\vae".into(), source: "".into(), added: "".into() },
         ];
-        let y = yaml_text(&dirs);
+        let y = yaml_text(&dirs, None);
         assert!(y.contains("    loras: |\n        D:/x/loras\n        E:/更多 LoRA\n"));
         assert!(y.contains("    vae: |\n        D:/x/vae\n"));
         // 別人寫的 yaml：base_path＋相對路徑、單行、區塊、註解、unet 舊名
@@ -1109,6 +1166,66 @@ mod tests {
         assert_eq!(kinds, ["checkpoints", "diffusion_models", "loras", "loras"]); // vae 資料夾不存在：不算
         assert!(got[1].1.ends_with("models/unet"));
         let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn every_checkpoints_dir_also_counts_as_diffusion_models() {
+        let sd = |kind: &str, p: &str| Dir { kind: kind.into(), path: p.into(), source: "".into(), added: "".into() };
+        // 不管資料夾叫什麼（Forge 的 Stable-diffusion、使用者自己取的名字）：整包模型資料夾一律也算主模型資料夾
+        let dirs = vec![
+            sd("checkpoints", "D:\\Forge\\models\\Stable-diffusion"),
+            sd("checkpoints", "D:\\my_models\\big"),
+            sd("loras", "D:\\Forge\\models\\Lora"),
+        ];
+        let eff = effective(&dirs);
+        assert_eq!(eff.iter().filter(|d| d.kind == "diffusion_models").count(), 2);
+        let y = yaml_text(&dirs, None);
+        assert!(y.contains("    diffusion_models: |\n        D:/Forge/models/Stable-diffusion\n        D:/my_models/big\n"), "{y}");
+        assert!(y.contains("    checkpoints: |\n        D:/Forge/models/Stable-diffusion\n        D:/my_models/big\n"), "{y}");
+        // 使用者自己也登記過同一個主模型資料夾（斜線、大小寫、結尾斜線不同）：不重複
+        let mut again = dirs.clone();
+        again.push(sd("diffusion_models", "D:/Forge/models/stable-diffusion/"));
+        assert_eq!(effective(&again).iter().filter(|d| d.kind == "diffusion_models").count(), 2);
+        // 沒有 checkpoints 資料夾就不多出東西（連 yaml 都不用寫）
+        assert_eq!(effective(&[sd("loras", "D:\\l")]).len(), 1);
+    }
+
+    #[test]
+    fn users_own_yaml_checkpoints_dir_is_listed_as_diffusion_models_too() {
+        // ComfyUI 官方範例 yaml 把 A1111 的 Stable-diffusion 填成 checkpoints：我們不改那份，在自己的 yaml 裡補一份主模型
+        let c = tmp("own_yaml_comfy");
+        let sdd = tmp("own_yaml_sd");
+        std::fs::create_dir_all(c.join("models").join("checkpoints")).unwrap();
+        std::fs::write(c.join("extra_model_paths.yaml"), format!("a111:\n    checkpoints: |\n        {}\n        {}\n", sdd.display(), c.join("models").join("checkpoints").display())).unwrap();
+        let eff = effective_with(&[], Some(&c));
+        let paths: Vec<&Path> = eff.iter().filter(|d| d.kind == "diffusion_models").map(|d| d.path.as_path()).collect();
+        // （這台電腦的官方桌面版 yaml 也可能補進別的資料夾，所以不數總數）
+        assert!(paths.iter().any(|p| same(p, &sdd)), "{eff:?}");
+        assert!(!paths.iter().any(|p| same(p, &c.join("models").join("checkpoints"))), "{eff:?}");
+        assert!(yaml_text(&[], Some(&c)).contains(&sdd.to_string_lossy().replace('\\', "/")));
+        // ComfyUI 自己的 models\checkpoints 不用補（它本來就會讀）；沒給 ComfyUI 資料夾就不讀 yaml
+        assert!(effective_with(&[], None).is_empty());
+        let _ = std::fs::remove_dir_all(&c);
+        let _ = std::fs::remove_dir_all(&sdd);
+    }
+
+    #[test]
+    fn pending_restart_only_counts_what_comfyui_knows_about() {
+        let a = tmp("pending_a");
+        let b = tmp("pending_b");
+        let sd = |kind: &str, p: &Path| Dir { kind: kind.into(), path: p.to_path_buf(), source: "".into(), added: "".into() };
+        let dirs = vec![sd("diffusion_models", &a), sd("loras", &b), sd("model_patches", &b), sd("LLM", &b)];
+        // ComfyUI 回報的資料夾裡有 a、沒有 b：只有 b 的 loras 算「還沒讀到」
+        let live = vec![("diffusion_models".to_string(), a.clone()), ("loras".to_string(), PathBuf::from("D:\\別的"))];
+        let p = pending_with(&dirs, &live);
+        assert_eq!(p.iter().map(|d| d.kind.as_str()).collect::<Vec<_>>(), ["loras"]);
+        // ComfyUI 讀到了（路徑寫法不同也算同一個）：沒有待辦
+        let live = vec![("diffusion_models".to_string(), a.clone()), ("loras".to_string(), PathBuf::from(b.to_string_lossy().replace('\\', "/").to_uppercase()))];
+        assert!(pending_with(&dirs[..2], &live).is_empty());
+        // 資料夾不見了（外接硬碟沒插）不算
+        assert!(pending_with(&[sd("loras", Path::new("Z:\\不存在"))], &live).is_empty());
+        let _ = std::fs::remove_dir_all(&a);
+        let _ = std::fs::remove_dir_all(&b);
     }
 
     #[test]

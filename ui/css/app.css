@@ -452,7 +452,7 @@ input.flip-in.go { animation: flipit .28s ease-in-out; }
 .pick-note { font-size: 11px; color: var(--label-dim); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 
 /* ---------- 中：觀景窗 ---------- */
-.monitor { display: grid; grid-template-rows: auto 1fr auto; gap: 10px; padding: 22px 14px 14px; }
+.monitor { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto; gap: 10px; padding: 22px 14px 14px; }
 .readout { display: flex; align-items: center; gap: 12px; padding: 5px 12px; border-radius: 5px; background: var(--screen); white-space: nowrap; overflow: hidden;
   font: 19px/1 var(--f-vfd); color: var(--ph-green); box-shadow: inset 0 1px 3px rgba(0,0,0,.8), 0 1px 0 var(--case-hi); min-width: 0; }
 .readout .a { color: var(--ph-amber); } .readout .r { color: var(--ph-red); }
@@ -1479,7 +1479,9 @@ img.hc-last { width: 96px; aspect-ratio: 1; object-fit: contain; background: var
   grid-template-areas: "l sl t sr r" "l sl st sr r" "l sl m sr r" "l sl sb sr r" "l sl b sr r"; }
 .dock-zone[data-zone=top] { grid-area: t; } .dock-zone[data-zone=left] { grid-area: l; } .dock-zone[data-zone=right] { grid-area: r; } .dock-zone[data-zone=bottom] { grid-area: b; }
 .dock-split[data-split=top] { grid-area: st; } .dock-split[data-split=left] { grid-area: sl; } .dock-split[data-split=right] { grid-area: sr; } .dock-split[data-split=bottom] { grid-area: sb; }
-.dock-main { grid-area: m; position: relative; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 12px; min-width: 0; min-height: 0; }
+/* 說明列（LoRA 名稱一長串、不換行）會把看圖區撐出去、壓到右邊的區：欄寬要定死（隱含欄寬跟著內容走），裡面的格子也不能比欄寬寬（min-width: auto） */
+.dock-main > * { min-width: 0; }
+.dock-main { grid-area: m; position: relative; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 12px; min-width: 0; min-height: 0; }
 .dock-main .genrow { justify-self: center; width: min(100%, 560px); }
 /* 看圖區釘選：在浮動面板上面 */
 .dock-host.pinned > .dock-main { z-index: 9000; }

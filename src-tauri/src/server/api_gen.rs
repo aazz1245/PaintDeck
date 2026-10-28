@@ -96,6 +96,21 @@ pub async fn state(State(app): State<Shared>) -> ApiResult {
             json!({"name": n, "title": g("title"), "version": g("version")})
         })
         .collect();
+    // 加進來的外部模型資料夾，開著的 ComfyUI 還沒讀到（沒重開、或 ComfyUI 不是生圖站開的）：網頁在生成頁提醒
+    let pending = crate::model_dirs::pending_restart();
+    if !pending.is_empty() {
+        // 同一個資料夾只列一次（整包模型資料夾同時也算主模型資料夾，見 model_dirs::effective）
+        let mut seen: Vec<&std::path::Path> = vec![];
+        let mut list: Vec<Value> = vec![];
+        for d in &pending {
+            if seen.iter().any(|s| crate::model_dirs::same(s, &d.path)) {
+                continue;
+            }
+            seen.push(&d.path);
+            list.push(json!({"kind": d.kind, "label": crate::model_dirs::kind_label(&d.kind), "path": d.path.to_string_lossy()}));
+        }
+        models.insert("dirs_pending".into(), json!({"list": list, "can_restart": app.restart_comfy.get().is_some()}));
+    }
     models.insert("unet_family".into(), Value::Object(unet_family));
     models.insert(
         "family_names".into(),

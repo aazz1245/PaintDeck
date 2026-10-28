@@ -84,6 +84,10 @@
       <div class="muted sm" id="modelHint"></div>
       <div class="row" id="exportRow"><button class="akey sm" id="exportGraph" data-ic="floppy" type="button" title="把目前這個功能（照生成頁現在的設定）存成 ComfyUI 工作流，拿到 ComfyUI 改好再匯回來，就能取代內建的">拿去 ComfyUI 改…</button></div>
       <div class="warnbox sm" id="noModels" hidden>還沒有可以用的生圖模型（可能是安裝時跳過了下載那一步）。<a class="akey sm go" href="/setup#models">去下載模型</a></div>
+      <!-- 加了外部模型資料夾、開著的 ComfyUI 還沒讀到（沒重開）：模型選單會缺模型，提醒重開（gen.js paintDirsPending） -->
+      <div class="warnbox sm" id="dirsPending" hidden>加進來的外部模型資料夾，ComfyUI 還沒讀到，所以這裡的模型選單會缺模型：<span id="dirsPendingList" translate="no"></span>
+        <span id="dirsPendingManual" hidden>這個 ComfyUI 不是生圖站開的：請把它關掉再開一次。</span>
+        <button class="akey sm go" id="dirsPendingGo" type="button">重開 ComfyUI</button> <button class="akey sm" id="dirsPendingHide" type="button">不要再提醒</button></div>
       <!-- 只有 SDXL／Flux 這類內建畫不了的模型（老手）：告訴他用匯入工作流（gen.js fillModels） -->
       <div class="warnbox sm" id="otherModels" hidden><span id="otherModelsText"></span> <button class="akey sm go" id="otherModelsGo" type="button">去匯入工作流</button></div>
       <!-- 基本版的檔只裝了一半（安裝中途關掉）：提醒去補（gen.js checkBasic） -->
