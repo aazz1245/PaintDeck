@@ -830,7 +830,7 @@ const loraDisplayTitle = (l) => {
 };
 
 // ---------------------------------------------------------------- LoRA 疊加
-export function addLora(l, insertIntoPrompt = false) {
+export function addLora(l, insertIntoPrompt = true) {
   const t = l.title || baseName(l.name);
   const existing = S.loras.find((x) => x.name === l.name);
   const meta = (app.state?.models?.loras || []).find((x) => x.name === l.name);
@@ -865,18 +865,19 @@ export function addLora(l, insertIntoPrompt = false) {
     });
   }
 
-  // 默認不將卡匣內的提示詞放入主提示詞框，只有明確要求時才插入
+  // 默認將卡匣內的提示詞放入主體提示詞框
   if (insertIntoPrompt && uniqueTrigs.length) {
-    prependTriggers(uniqueTrigs);
+    prependTriggers(uniqueTrigs, F("prompt"));
   }
 
   renderLoras();
   save();
 }
 
-export function applyLoraRecipe(recipe) {
+export function applyLoraRecipe(recipe, insertIntoPrompt = true) {
   if (!recipe || !Array.isArray(recipe.loras)) return;
   let added = 0;
+  const allTrigs = [];
   for (const item of recipe.loras) {
     if (!item.name) continue;
     const existing = S.loras.find((x) => x.name === item.name);
@@ -907,6 +908,10 @@ export function applyLoraRecipe(recipe) {
       existing.enabled = true;
       if (uniqueTrigs.length) existing.triggers = uniqueTrigs;
     }
+    if (uniqueTrigs.length) allTrigs.push(...uniqueTrigs);
+  }
+  if (insertIntoPrompt && allTrigs.length) {
+    prependTriggers([...new Set(allTrigs)], F("prompt"));
   }
   renderLoras();
   save();
@@ -998,24 +1003,20 @@ export function renderLoras() {
     const uniqueTriggers = [...new Set(allTrigs)];
     l.triggers = uniqueTriggers;
 
-    const curPrompt = F("prompt")?.value || "";
-    const haveSet = new Set(curPrompt.split(",").map(normTag).filter(Boolean));
-    const strippedPromptSet = new Set(curPrompt.split(",").map(stripTag).filter(Boolean));
-
     const trigPreview = el("div", { class: "lora-trig-preview" },
       el("span", { class: "trig-lbl" }, "提示詞："),
       uniqueTriggers.length
         ? uniqueTriggers.map((tw) => {
-            const inPrompt = haveSet.has(normTag(tw)) || strippedPromptSet.has(stripTag(tw));
+            const inPrompt = hasPrompt(tw);
             return el("span", {
               class: "trig-tag" + (inPrompt ? " in-prompt" : ""),
-              title: inPrompt ? "已在主提示詞框中（點擊移除）" : "尚未在主提示詞框中（生成時會自動置頂發送；點擊亦可手動加入）",
+              title: inPrompt ? "已在提示詞框中（點擊移除）" : "尚未在提示詞框中（點擊加入主體提示詞框）",
               onclick: (e) => {
                 e.stopPropagation();
                 if (inPrompt) {
                   removePrompt(tw);
                 } else {
-                  prependTriggers([tw]);
+                  prependTriggers([tw], F("prompt"));
                 }
                 renderLoras();
               }
@@ -1074,19 +1075,10 @@ export function triggerWords() {
   return words;
 }
 
-// 觸發詞做成小標籤，點一下加入或移除
+// 觸發詞做成小標籤，點一下加入或移除（已整合進 LoRA 卡匣預覽，本區隱藏）
 function renderTrig() {
-  const words = triggerWords();
-  F("trigChips").hidden = !words.length;
-  const box = F("trigList");
-  box.innerHTML = "";
-  const curPrompt = getRawPrompt();
-  const have = new Set(curPrompt.split(",").map(normTag).filter(Boolean));
-  const strippedHave = new Set(curPrompt.split(",").map(stripTag).filter(Boolean));
-  for (const w of words) {
-    const on = have.has(normTag(w)) || strippedHave.has(stripTag(w));
-    box.append(el("button", { class: "chip" + (on ? " on" : ""), type: "button", title: on ? "點一下從提示詞框移除" : "點一下加到提示詞框", onclick: () => toggleTrigger(w, on) }, w));
-  }
+  const wrap = F("trigChips");
+  if (wrap) wrap.hidden = true;
 }
 
 function toggleTrigger(w, on) {
@@ -1134,14 +1126,14 @@ export function setActivePrompt(id) {
   }
 }
 
-export function prependTriggers(words) {
+export function prependTriggers(words, targetBox = null) {
   const flat = (Array.isArray(words) ? words : [words])
     .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
     .map((s) => s.trim())
     .filter(Boolean);
   if (!flat.length) return;
 
-  const target = F("promptPrefix") || getActivePromptEl();
+  const target = targetBox || F("prompt") || getActivePromptEl();
   const cur = target.value.trim();
   if (!cur) {
     target.value = flat.join(", ");
@@ -1156,7 +1148,7 @@ export function prependTriggers(words) {
   const add = flat.filter((w) => !have.has(normTag(w)));
   if (!add.length) return;
 
-  target.value = [...add, ...curParts].join(", ");
+  target.value = add.join(", ") + ", " + cur;
   save();
   renderTrig?.();
   promptx.refresh?.();

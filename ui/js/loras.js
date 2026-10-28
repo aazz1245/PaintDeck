@@ -55,10 +55,10 @@ export function init() {
         strength: 1.0,
         title: title,
         triggers: flatTriggers
-      }, false);
+      }, true);
       app.showPage("gen");
       const trigMsg = flatTriggers.length
-        ? `已將「${title}」加入生圖卡匣（已綁定 ${flatTriggers.length} 個提示詞，生成時置頂生效）！`
+        ? `已將「${title}」加入生圖卡匣（已將 ${flatTriggers.length} 個提示詞加入主體提示詞框）！`
         : `已將「${title}」加入生圖卡匣！`;
       toast(trigMsg, "ok");
     } else if (e.data?.type === "PAINTDECK_LM_RECIPES") {

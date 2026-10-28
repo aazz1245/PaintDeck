@@ -435,7 +435,7 @@ details.pe textarea, details.pe input[type=text] { font: 13px/1.5 var(--f-ui); }
 .lora-trig-preview .trig-tag:hover { background: rgba(74, 222, 128, 0.2); border-color: var(--ph-green, #4ade80); }
 .lora-trig-preview .trig-tag.in-prompt { background: rgba(74, 222, 128, 0.18); font-weight: 600; box-shadow: 0 0 4px rgba(74, 222, 128, 0.2); }
 .lora-trig-preview .trig-none { color: var(--label-dim, #777); font-size: 11px; font-style: italic; }
-.trig-chips .chips { margin-top: 4px; }
+.trig-chips { display: none !important; }
 
 /* 旋鈕 */
 .knobs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 2px; }

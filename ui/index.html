@@ -260,7 +260,6 @@
     <section class="group">
       <div class="lbl" data-silk="CART">LoRA 卡匣<button class="act" id="addLora" type="button">＋插入</button></div>
       <div id="loraStack" class="lora-stack"><div class="muted sm">沒有使用 LoRA</div></div>
-      <div class="trig-chips" id="trigChips" hidden><span class="sub">觸發詞（點一下加入／移除提示詞；亮的＝已經在提示詞裡）</span><div class="chips" id="trigList"></div></div>
     </section>
   </div>
 
@@ -1548,7 +1547,7 @@
       </select>
       <button class="minikey red" data-close data-ic="power" type="button" aria-label="關閉"></button>
     </div>
-    <div class="row gap"><input type="search" id="lpQ" placeholder="搜尋名稱、觸發詞、標籤…" aria-label="搜尋 LoRA"><label class="check inline"><input type="checkbox" id="lpTrig"> 自動加入觸發詞</label></div>
+    <div class="row gap"><input type="search" id="lpQ" placeholder="搜尋名稱、觸發詞、標籤…" aria-label="搜尋 LoRA"><label class="check inline"><input type="checkbox" id="lpTrig" checked> 自動加入觸發詞</label></div>
     <div class="cards compact" id="lpGrid"></div>
   </div>
 </div>
