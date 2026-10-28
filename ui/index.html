@@ -1500,7 +1500,13 @@
 
 <div class="modal" id="loraPicker" hidden>
   <div class="dialog wide">
-    <div class="row between"><b>選擇 LoRA 卡匣</b><button class="minikey red" data-close data-ic="power" type="button" aria-label="關閉"></button></div>
+    <div class="row between">
+      <b>選擇 LoRA 卡匣</b>
+      <select id="lpFolder" class="lp-folder" aria-label="選擇資料夾">
+        <option value="">📁 全部資料夾</option>
+      </select>
+      <button class="minikey red" data-close data-ic="power" type="button" aria-label="關閉"></button>
+    </div>
     <div class="row gap"><input type="search" id="lpQ" placeholder="搜尋…" aria-label="搜尋 LoRA"><label class="check inline"><input type="checkbox" id="lpTrig" checked> 自動加入觸發詞</label></div>
     <div class="cards compact" id="lpGrid"></div>
   </div>

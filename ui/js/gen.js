@@ -95,7 +95,13 @@ let assetDrawer = null;  // 提示詞上面的資產抽屜（assetdrawer.js）
 export function init() {
   // 資產：Anima 的圖可以當底圖或構圖控制；Qwen 2.1 的圖放進多圖參考（會切到多圖參考模式）
   assetDrawer = drawer.mount(F("genAssets"), {
-    family: () => fam(), insert: appendPrompt,
+    family: () => fam(),
+    insert: appendPrompt,
+    remove: removePrompt,
+    has: hasPrompt,
+    toggle: togglePrompt,
+    isLocked: (id) => (S.locked || []).some((c) => c.id === id),
+    unlock: (id) => { S.locked = (S.locked || []).filter((c) => c.id !== id); renderLocked(); save(); },
     images: {
       base: (r) => useInput("img2img", r),
       control: (r) => setCtrl(r),
@@ -131,7 +137,10 @@ export function init() {
   attachAutocomplete(F("prompt"), F("acPrompt"));
   attachAutocomplete(F("negative"), F("acNeg"));
   promptx.init({ prompt: F("prompt"), negative: F("negative"), family: () => fam(), save: () => save() });
-  F("prompt").addEventListener("input", debounce(renderTrig, 150));
+  F("prompt").addEventListener("input", debounce(() => {
+    renderTrig();
+    assetDrawer?.refresh?.();
+  }, 150));
 
   // 滑桿數值顯示
   const outs = [["denoise", "denoiseOut"], ["ipGrow", "ipGrowOut"], ["ipBlur", "ipBlurOut"], ["ipPad", "ipPadOut"], ["upDenoise", "upDenoiseOut"],
@@ -773,10 +782,20 @@ export function setCtrl(r, o = {}) {
   save();
 }
 
+const baseName = (name) => (name || "").replace(/\\/g, "/").split("/").pop().replace(/\.(safetensors|pt|bin|ckpt)$/i, "");
+
+const loraDisplayTitle = (l) => {
+  const meta = (app.state?.models?.loras || []).find((x) => x.name === l.name);
+  const t = meta?.title || l.title || baseName(l.name);
+  if (t && !t.includes("/") && !t.includes("\\")) return t;
+  return baseName(t || l.name);
+};
+
 // ---------------------------------------------------------------- LoRA 疊加
 export function addLora(l, triggers) {
   if (S.loras.some((x) => x.name === l.name)) return toast("這個 LoRA 已經在清單裡了");
-  S.loras.push({ name: l.name, strength: l.strength ?? (OFFICIAL_TURBO.test(l.name) ? 1 : 0.8), enabled: true, title: l.title, min: l.min, max: l.max, slider: l.slider });
+  const t = l.title || baseName(l.name);
+  S.loras.push({ name: l.name, strength: l.strength ?? (OFFICIAL_TURBO.test(l.name) ? 1 : 0.8), enabled: true, title: t, min: l.min, max: l.max, slider: l.slider });
   if (triggers && l.triggers?.length) insertTriggers(l.triggers);
   renderLoras();
   save();
@@ -813,7 +832,7 @@ async function sweep(l) {
   }
 }
 
-function renderLoras() {
+export function renderLoras() {
   // 開關官方 Turbo LoRA 會換排程：步數、CFG 跟著改（第一次只記下狀態，不蓋掉存檔裡的設定）
   const ot = isOfficialTurbo();
   if (S.officialTurbo !== undefined && ot !== S.officialTurbo) { S.officialTurbo = ot; modelDefaults(); }
@@ -831,9 +850,10 @@ function renderLoras() {
         ? `這個 LoRA 是 ${famShort(loraFam(l))} 用的，工作流「${wfSet()?.name || ""}」是 ${famShort(wfFam())} 的，用不了，生成時會略過。`
         : `這個 LoRA 是 ${famLabel(loraFam(l))} 用的，目前的模型用不了，生成時會略過。`)
       : meta[l.name]?.note || "";
+    const dispName = loraDisplayTitle(l);
     const row = el("div", { class: "lora-item" + (l.enabled && !bad ? "" : " off") + (bad ? " mismatch" : "") },
       el("input", { type: "checkbox", checked: l.enabled, title: "暫時停用", onchange: (e) => { l.enabled = e.target.checked; renderLoras(); save(); } }),
-      el("span", { class: "nm", title: (note ? note + "\n\n" : "") + l.name }, l.title || l.name.replace(/\.safetensors$/, "")),
+      el("span", { class: "nm", title: (note ? note + "\n\n" : "") + l.name }, dispName),
       el("input", { type: "range", min: l.min ?? -1, max: l.max ?? 2, step: 0.05, value: l.strength, title: "左右拖曳調整強度",
         oninput: (e) => { l.strength = +e.target.value; row.querySelector("input[type=number]").value = l.strength; save(); } }),
       el("input", { type: "number", min: l.min ?? -2, max: l.max ?? 3, step: 0.05, value: l.strength,
@@ -905,14 +925,53 @@ function insertTriggers(words) {
   save();
 }
 
+const normTag = (s) => s.trim().replace(/\\([()\[\]])/g, "$1").toLowerCase();
+
+export function hasPrompt(text) {
+  if (!text) return false;
+  const cur = F("prompt").value;
+  const have = new Set(cur.split(",").map(normTag).filter(Boolean));
+  const words = text.split(",").map(normTag).filter(Boolean);
+  if (!words.length) return false;
+  return words.every((w) => have.has(w));
+}
+
+export function removePrompt(text) {
+  if (!text) return false;
+  const t = F("prompt");
+  const wordsToRemove = new Set(text.split(",").map(normTag).filter(Boolean));
+  if (!wordsToRemove.size) return false;
+  const curParts = t.value.split(",").map((s) => s.trim()).filter(Boolean);
+  const remaining = curParts.filter((s) => !wordsToRemove.has(normTag(s)));
+  if (remaining.length === curParts.length) return false;
+  t.value = remaining.join(", ");
+  save();
+  renderTrig();
+  assetDrawer?.refresh?.();
+  return true;
+}
+
 export function appendPrompt(text) {
   const t = F("prompt");
   const cur = t.value.trim().replace(/,\s*$/, "");
-  const have = new Set(cur.split(",").map((s) => s.trim().toLowerCase()));
-  const add = text.split(",").map((s) => s.trim()).filter((s) => s && !have.has(s.toLowerCase()));
-  if (!add.length) return;
+  const have = new Set(cur.split(",").map(normTag).filter(Boolean));
+  const add = text.split(",").map((s) => s.trim()).filter((s) => s && !have.has(normTag(s)));
+  if (!add.length) return false;
   t.value = (cur ? cur + ", " : "") + add.join(", ");
   save();
+  renderTrig();
+  assetDrawer?.refresh?.();
+  return true;
+}
+
+export function togglePrompt(text) {
+  if (hasPrompt(text)) {
+    removePrompt(text);
+    return false;
+  } else {
+    appendPrompt(text);
+    return true;
+  }
 }
 
 function applyTags(text, replace) {

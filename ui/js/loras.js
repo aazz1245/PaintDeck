@@ -13,6 +13,7 @@ export function init() {
   $("#loraMore").onclick = () => renderPage(false);
   $("#loraLearn").onclick = () => $("#assistBtn").click();
   $("#lpQ").oninput = debounce(() => { pickShown = 0; renderPicker(); }, 150);
+  $("#lpFolder").onchange = () => { pickShown = 0; renderPicker(); };
   $("#loraRefresh").onclick = async () => { await app.refreshState(); toast("已重新整理", "ok"); };
 }
 
@@ -23,7 +24,8 @@ export function onState(st) {
 
 export function showPage() { fillFilters(); renderPage(true); }
 
-const title = (l) => l.title || l.name.replace(/\.safetensors$/, "");
+const baseName = (name) => (name || "").replace(/\\/g, "/").split("/").pop().replace(/\.(safetensors|pt|bin|ckpt)$/i, "");
+const title = (l) => l.title || baseName(l.name);
 const famName = (l) => app.state?.models?.family_names?.[l.family] || "";
 // 卡片右上角的家族小標（Anima 是預設，不標）
 const FAM_BADGE = { qwen21: "Qwen 2.1", moss: "MOSS", sdxl: "SDXL", sd15: "SD1.5", flux: "Flux", sd3: "SD3" };
@@ -106,6 +108,7 @@ function card(l) {
         el("input", { type: "number", step: 0.05, min: -2, max: 3, value: l.strength ?? 0.8, style: "width:70px", onchange: (e) => setMeta(l, { strength: +e.target.value }) })),
       el("div", { class: "ft" },
         el("button", { class: "btn sm primary", onclick: () => { import("./gen.js").then((g) => { g.addLora(l, true); app.showPage("gen"); toast(`已加入「${title(l)}」`, "ok"); }); } }, "加到生成"),
+        el("button", { class: "btn sm", onclick: () => editTitle(l) }, "改名稱"),
         el("button", { class: "btn sm", onclick: () => editTriggers(l) }, "改觸發詞"),
         el("button", { class: "btn sm", onclick: () => editCategory(l) }, "分類"),
         el("button", { class: "btn sm", onclick: () => editTags(l) }, "標籤"),
@@ -129,6 +132,25 @@ async function remove(l) {
 async function setMeta(l, patch, rerender) {
   Object.assign(l, await api("/api/loras/meta", { json: { name: l.name, ...patch } }));
   if (rerender) { await app.refreshState(); fillFilters(); renderPage(true); }
+  if (!$("#loraPicker")?.hidden) renderPicker();
+}
+
+async function editTitle(l) {
+  const current = l.title || baseName(l.name);
+  const value = prompt("LoRA 顯示名稱（清空＝恢復預設檔案名）：", current);
+  if (value === null) return;
+  const t = value.trim();
+  l.title = t;
+  await setMeta(l, { title: t }, false);
+  try {
+    const gen = await import("./gen.js");
+    const item = gen.S?.loras?.find((x) => x.name === l.name);
+    if (item) item.title = t;
+    gen.renderLoras?.();
+  } catch (_) {}
+  renderPicker();
+  if (app.page === "loras") { fillFilters(); renderPage(true); }
+  toast(t ? `已將名稱改為「${t}」` : `已恢復為預設名稱`, "ok");
 }
 
 async function editCategory(l) {
@@ -162,39 +184,193 @@ async function editAgentDesc(l) {
   await setMeta(l, { agent: t ? { ...a, desc: t, desc_zh: t, kind: a.kind || "other", sure: true, src: "user", t: Date.now() / 1000 } : {} }, true);
 }
 
+let pickerMenuEl = null;
+
+export function closePickerMenu() {
+  pickerMenuEl?.remove();
+  pickerMenuEl = null;
+}
+
+document.addEventListener("pointerdown", (e) => {
+  if (pickerMenuEl && !pickerMenuEl.contains(e.target)) closePickerMenu();
+}, true);
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closePickerMenu();
+});
+
+window.addEventListener("scroll", closePickerMenu, true);
+
+function openPickerMenu(e, l) {
+  closePickerMenu();
+  const dispName = title(l);
+  const item = (label, fn) => el("button", {
+    type: "button",
+    role: "menuitem",
+    onclick: (ev) => {
+      ev.stopPropagation();
+      closePickerMenu();
+      fn();
+    }
+  }, label);
+
+  const m = el("div", {
+    class: "play-menu lora-picker-menu",
+    role: "menu",
+    style: "z-index: 99999; min-width: 190px; box-shadow: 0 8px 28px rgba(0,0,0,.65), 0 0 0 1px var(--case-hi);"
+  },
+    el("div", {
+      class: "muted sm",
+      style: "padding: 5px 9px 4px; font-weight: bold; border-bottom: 1px solid var(--edge, rgba(128,128,128,.2)); margin-bottom: 3px; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+    }, `更多工具：${dispName}`),
+    item("✏️ 重命名", () => editTitle(l)),
+    item("💬 改觸發詞", () => editTriggers(l)),
+    item("🏷️ 標籤", () => editTags(l)),
+    item("📁 分類", () => editCategory(l)),
+    item(l.fav ? "★ 取消收藏" : "☆ 設為收藏", async () => {
+      await setMeta(l, { fav: !l.fav }, false);
+      renderPicker();
+      toast(l.fav ? "已取消收藏 ☆" : "已加入收藏 ★", "ok");
+    }),
+    item("📋 複製檔案路徑", () => {
+      navigator.clipboard?.writeText(l.name);
+      toast(`已複製路徑：${l.name}`, "ok");
+    }),
+    item("➕ 插入此 LoRA", () => {
+      pickCb(l, $("#lpTrig").checked);
+      closeModal("#loraPicker");
+    })
+  );
+
+  document.body.append(m);
+  pickerMenuEl = m;
+  const mw = m.offsetWidth || 190, mh = m.offsetHeight || 220;
+  const x = Math.max(8, Math.min(innerWidth - mw - 8, e.clientX));
+  const y = Math.max(8, Math.min(innerHeight - mh - 8, e.clientY));
+  m.style.left = `${x}px`;
+  m.style.top = `${y}px`;
+  m.querySelector("button")?.focus();
+}
+
 // ---------------------------------------------------------------- 挑選視窗
 // fam：只列出這個家族的 LoRA（Anima 的 LoRA 套在 Qwen 2.1 上沒有用，反之亦然）。
 // 也可以給判斷函式 (l) => 能不能用（匯入的工作流組：同家族或家族不明的都能接）；用函式時列表下面有「顯示全部」可以看被藏起來的
 export function openPicker(cb, fam) {
+  closePickerMenu();
   pickCb = cb;
   pickFam = fam || null;
   pickAll = false;
   pickShown = 0;
   $("#lpQ").value = "";
+  if ($("#lpFolder")) $("#lpFolder").value = "";
+  const fits = (x) => !pickFam || (typeof pickFam === "function" ? pickFam(x) : (x.family || "anima") === pickFam);
+  const usable = pickAll ? list : list.filter(fits);
+  fillPickerFolders(usable);
   renderPicker();
   openModal("#loraPicker");
   setTimeout(() => $("#lpQ").focus(), 50);
 }
 
+function folderOf(name) {
+  const norm = (name || "").replace(/\\/g, "/");
+  const i = norm.lastIndexOf("/");
+  return i !== -1 ? norm.slice(0, i) : "";
+}
+
+function matchFolder(l, sel) {
+  if (!sel) return true;
+  const f = folderOf(l.name);
+  if (sel === "__root__") return !f;
+  return f === sel || f.startsWith(sel + "/");
+}
+
+function fillPickerFolders(items) {
+  const sel = $("#lpFolder");
+  if (!sel) return;
+  const oldVal = sel.value;
+
+  const allFolders = new Set();
+  let rootCount = 0;
+  for (const l of items) {
+    const f = folderOf(l.name);
+    if (!f) {
+      rootCount++;
+      continue;
+    }
+    const parts = f.split("/");
+    for (let i = 1; i <= parts.length; i++) {
+      allFolders.add(parts.slice(0, i).join("/"));
+    }
+  }
+
+  const counts = new Map();
+  for (const f of allFolders) {
+    const prefix = f + "/";
+    let cnt = 0;
+    for (const l of items) {
+      const lf = folderOf(l.name);
+      if (lf === f || lf.startsWith(prefix)) cnt++;
+    }
+    counts.set(f, cnt);
+  }
+
+  const sortedFolders = Array.from(allFolders).sort((a, b) => a.localeCompare(b));
+
+  const options = [
+    el("option", { value: "" }, `📁 全部資料夾 (${items.length})`)
+  ];
+  if (rootCount > 0) {
+    options.push(el("option", { value: "__root__" }, `📁 [根目錄] (${rootCount})`));
+  }
+
+  for (const f of sortedFolders) {
+    const parts = f.split("/");
+    const depth = parts.length - 1;
+    const indent = depth > 0 ? "\u00A0\u00A0".repeat(depth) + "└ " : "";
+    const name = parts[parts.length - 1];
+    const cnt = counts.get(f) || 0;
+    options.push(el("option", { value: f }, `${indent}📁 ${name} (${cnt})`));
+  }
+
+  sel.replaceChildren(...options);
+  if ([...sel.options].some((o) => o.value === oldVal)) {
+    sel.value = oldVal;
+  } else {
+    sel.value = "";
+  }
+}
+
 function renderPicker() {
   const q = $("#lpQ").value.trim();
+  const folder = $("#lpFolder")?.value || "";
   const g = $("#lpGrid");
   g.innerHTML = "";
   const fits = (x) => !pickFam || (typeof pickFam === "function" ? pickFam(x) : (x.family || "anima") === pickFam);
   const usable = pickAll ? list : list.filter(fits);
   if (!usable.length) g.append(el("div", { class: "muted pad" }, "還沒有這個模型能用的 LoRA。到「Civitai」分頁搜尋下載（記得選對基底模型）。"));
-  const matches = usable.filter((x) => match(x, q));
+  const matches = usable.filter((x) => matchFolder(x, folder) && match(x, q));
   for (const l of matches.slice(0, pickShown + 80)) {
     const blur = app.state?.settings?.blur_nsfw && l.nsfw;
-    g.append(el("div", { class: "card pick", onclick: () => { pickCb(l, $("#lpTrig").checked); closeModal("#loraPicker"); } },
+    const fPath = folderOf(l.name);
+    const cardEl = el("div", {
+      class: "card pick",
+      title: (fPath ? `${fPath} / ${title(l)}` : title(l)) + "\n【右鍵：更多工具／重命名】",
+      onclick: () => { pickCb(l, $("#lpTrig").checked); closeModal("#loraPicker"); }
+    },
       el("div", { class: "ph" + (blur ? " blur" : ""), style: preview(l) ? `background-image:${preview(l)};aspect-ratio:1` : "aspect-ratio:1" }, preview(l) ? "" : "無預覽"),
-      el("div", { class: "bd" }, el("div", { class: "t" }, title(l)), l.triggers?.length ? el("div", { class: "trig" }, l.triggers.slice(0, 4).join(", ")) : null,
-        l.note ? el("div", { class: "pick-note", title: l.note }, l.note) : null)));
+      el("div", { class: "bd" }, el("div", { class: "t" }, (l.fav ? "★ " : "") + title(l)), l.triggers?.length ? el("div", { class: "trig" }, l.triggers.slice(0, 4).join(", ")) : null,
+        l.note ? el("div", { class: "pick-note", title: l.note }, l.note) : null));
+    cardEl.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openPickerMenu(e, l);
+    });
+    g.append(cardEl);
   }
   pickShown = Math.min(matches.length, pickShown + 80);
   if (pickShown < matches.length) g.append(el("button", { class: "akey sm", type: "button", onclick: () => renderPicker() }, `載入更多（${matches.length - pickShown} 個）`));
   // 匯入的工作流組：不同家族的 LoRA 先藏起來，需要時按「顯示全部」（選了也會在生成時被略過）
-  const hidden = typeof pickFam === "function" && !pickAll ? list.filter((x) => !fits(x)).length : 0;
+  const hidden = !pickAll ? list.filter((x) => !fits(x)).length : 0;
   if (hidden) g.append(el("div", { class: "muted sm pick-more" }, `已藏起 ${hidden} 個其他模型家族的 LoRA（用了也會被略過）。`,
-    el("button", { class: "link", type: "button", onclick: () => { pickAll = true; pickShown = 0; renderPicker(); } }, "顯示全部")));
+    el("button", { class: "link", type: "button", onclick: () => { pickAll = true; pickShown = 0; fillPickerFolders(list); renderPicker(); } }, "顯示全部")));
 }

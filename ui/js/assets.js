@@ -10,16 +10,18 @@ const F = (id) => document.getElementById(id);
 export const KINDS = [
   ["char", "角色"], ["scene", "場景"], ["frame", "首幀／姿勢"], ["outfit", "服裝"], ["prop", "道具"],
   ["fx", "特效"], ["sound", "聲音"], ["snippet", "提示詞片段"], ["set", "整套設定"], ["shot", "拍攝單範本"],
+  ["少女", "少女"], ["萝莉", "萝莉"], ["假小子", "假小子"], ["肉感", "肉感"],
+  ["厚涂", "厚涂"], ["强烈质感设计", "强烈质感"], ["后缀", "后缀"], ["anima", "Anima"],
 ];
 export const KIND_NAME = Object.fromEntries(KINDS);
-const MEDIA = new Set(["char", "scene", "frame", "outfit", "prop", "fx", "sound", "shot"]);
+const MEDIA = new Set(["char", "scene", "frame", "outfit", "prop", "fx", "sound", "shot", "少女", "萝莉", "假小子", "肉感", "厚涂", "强烈质感设计", "后缀", "anima"]);
 /** 圖片用途：鍵、中文名（順序就是拿去用時的排序） */
 export const ROLES = [
   ["src", "原圖"], ["portrait", "正面特寫"], ["sheet", "多視圖（穿衣）"], ["face", "臉部特寫表"], ["sheet_nude", "多視圖（裸體）"], ["detail", "細節"],
   ["pose", "姿勢"], ["outfit", "服裝"], ["other", "其他"],
 ];
 const LAYOUT = [["top", "上方"], ["bottom", "下方"], ["left", "左邊"], ["right", "右邊"], ["fg", "前景"], ["mid", "中景"], ["bg", "遠景"], ["light", "光線"]];
-const TEXT_KINDS = new Set(["frame", "outfit", "prop", "fx", "sound"]);
+const TEXT_KINDS = new Set(["frame", "outfit", "prop", "fx", "sound", "少女", "萝莉", "假小子", "肉感", "厚涂", "强烈质感设计", "后缀", "anima"]);
 
 let items = [];        // /api/lib 的全部（含整套設定、片段）
 let kind = "all";      // 目前的分類晶片
