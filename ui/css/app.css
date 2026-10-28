@@ -379,6 +379,12 @@ details.pe textarea, details.pe input[type=text] { font: 13px/1.5 var(--f-ui); }
 .lora-item input[type=checkbox]::after { display: none; }
 .lora-note { grid-column: 1 / -1; margin: -2px 0 1px 30px; font-size: 11px; line-height: 1.45; color: var(--label-dim); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lora-note.open { white-space: normal; color: var(--label); }
+.lora-trig-preview { grid-column: 1 / -1; margin: 4px 0 2px 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 4px 8px; background: rgba(0, 0, 0, 0.28); border-radius: 4px; border-left: 2px solid var(--acc, #e6742c); }
+.lora-trig-preview .trig-lbl { font-size: 10px; font-weight: 700; color: var(--label-dim, #888); white-space: nowrap; }
+.lora-trig-preview .trig-tag { background: var(--screen, #141f17); color: var(--ph-green, #4ade80); font-family: var(--f-data, monospace); font-size: 11px; padding: 1px 6px; border-radius: 3px; border: 1px solid rgba(74, 222, 128, 0.3); cursor: pointer; transition: all 0.15s ease; user-select: text; }
+.lora-trig-preview .trig-tag:hover { background: rgba(74, 222, 128, 0.2); border-color: var(--ph-green, #4ade80); }
+.lora-trig-preview .trig-tag.in-prompt { background: rgba(74, 222, 128, 0.18); font-weight: 600; box-shadow: 0 0 4px rgba(74, 222, 128, 0.2); }
+.lora-trig-preview .trig-none { color: var(--label-dim, #777); font-size: 11px; font-style: italic; }
 .trig-chips .chips { margin-top: 4px; }
 
 /* 旋鈕 */

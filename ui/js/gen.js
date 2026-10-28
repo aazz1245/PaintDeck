@@ -799,9 +799,9 @@ export function addLora(l, triggers) {
     existing.enabled = true;
     if (l.strength != null) existing.strength = l.strength;
   } else {
-    S.loras.push({ name: l.name, strength: l.strength ?? (OFFICIAL_TURBO.test(l.name) ? 1 : 0.8), enabled: true, title: t, min: l.min, max: l.max, slider: l.slider });
+    S.loras.push({ name: l.name, strength: l.strength ?? 1, enabled: true, title: t, min: l.min, max: l.max, slider: l.slider });
   }
-  if (triggers && l.triggers?.length) insertTriggers(l.triggers);
+  if (triggers && l.triggers?.length) prependTriggers(l.triggers);
   renderLoras();
   save();
 }
@@ -815,7 +815,7 @@ export function applyLoraRecipe(recipe) {
     if (!existing) {
       S.loras.push({
         name: item.name,
-        strength: item.strength ?? 0.8,
+        strength: item.strength ?? 1,
         enabled: true,
         title: item.title || baseName(item.name)
       });
@@ -825,12 +825,38 @@ export function applyLoraRecipe(recipe) {
       existing.enabled = true;
     }
     if (item.triggers?.length) {
-      insertTriggers(item.triggers);
+      prependTriggers(item.triggers);
     }
   }
   renderLoras();
   save();
   toast(`已套用配方「${recipe.name || 'LoRA 配方'}」（共 ${added} 個 LoRA）`, "ok");
+}
+
+export function removeLora(index) {
+  const l = S.loras[index];
+  if (!l) return;
+  const meta = (app.state?.models?.loras || []).find((x) => x.name === l.name);
+  const triggers = [
+    ...(l.triggers || []),
+    ...(meta?.triggers || [])
+  ].flatMap((x) => (typeof x === "string" ? x.split(",") : [])).map((s) => s.trim()).filter(Boolean);
+  const uniqueTriggers = [...new Set(triggers)];
+
+  if (uniqueTriggers.length) {
+    for (const w of uniqueTriggers) {
+      removePrompt(w);
+    }
+  }
+
+  S.loras.splice(index, 1);
+  renderLoras();
+  save();
+  if (uniqueTriggers.length) {
+    toast(`已移除「${l.title || l.name}」及 ${uniqueTriggers.length} 個提示詞`, "ok");
+  } else {
+    toast(`已移除「${l.title || l.name}」`, "ok");
+  }
 }
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -883,17 +909,50 @@ export function renderLoras() {
         : `這個 LoRA 是 ${famLabel(loraFam(l))} 用的，目前的模型用不了，生成時會略過。`)
       : meta[l.name]?.note || "";
     const dispName = loraDisplayTitle(l);
+    const allTrigs = [
+      ...(l.triggers || []),
+      ...(meta[l.name]?.triggers || [])
+    ].flatMap((x) => (typeof x === "string" ? x.split(",") : [])).map((s) => s.trim()).filter(Boolean);
+    const uniqueTriggers = [...new Set(allTrigs)];
+    l.triggers = uniqueTriggers;
+
+    const curPrompt = F("prompt")?.value || "";
+    const haveSet = new Set(curPrompt.split(",").map(normTag).filter(Boolean));
+
+    const trigPreview = el("div", { class: "lora-trig-preview" },
+      el("span", { class: "trig-lbl" }, "提示詞："),
+      uniqueTriggers.length
+        ? uniqueTriggers.map((tw) => {
+            const inPrompt = haveSet.has(normTag(tw));
+            return el("span", {
+              class: "trig-tag" + (inPrompt ? " in-prompt" : ""),
+              title: inPrompt ? "已在提示詞中（點擊移除）" : "尚未在提示詞中（點擊置頂加入）",
+              onclick: (e) => {
+                e.stopPropagation();
+                if (inPrompt) {
+                  removePrompt(tw);
+                } else {
+                  prependTriggers([tw]);
+                }
+                renderLoras();
+              }
+            }, tw);
+          })
+        : el("span", { class: "trig-none" }, "（無專屬提示詞）")
+    );
+
     const row = el("div", { class: "lora-item" + (l.enabled && !bad ? "" : " off") + (bad ? " mismatch" : "") },
       el("input", { type: "checkbox", checked: l.enabled, title: "暫時停用", onchange: (e) => { l.enabled = e.target.checked; renderLoras(); save(); } }),
       el("span", { class: "nm", title: (note ? note + "\n\n" : "") + l.name }, dispName),
-      el("input", { type: "range", min: l.min ?? -1, max: l.max ?? 2, step: 0.05, value: l.strength, title: "左右拖曳調整強度",
+      el("input", { type: "range", min: l.min ?? -1, max: l.max ?? 2, step: 0.05, value: l.strength ?? 1, title: "左右拖曳調整強度",
         oninput: (e) => { l.strength = +e.target.value; row.querySelector("input[type=number]").value = l.strength; save(); } }),
-      el("input", { type: "number", min: l.min ?? -2, max: l.max ?? 3, step: 0.05, value: l.strength,
+      el("input", { type: "number", min: l.min ?? -2, max: l.max ?? 3, step: 0.05, value: l.strength ?? 1,
         onchange: (e) => { l.strength = clamp(+e.target.value, l.min ?? -2, l.max ?? 3); renderLoras(); save(); } }),
       el("button", { class: "icon", title: "強度對照：同一個種子，用幾種強度各畫一張", onclick: () => sweep(l) }, "⇆"),
-      el("button", { class: "icon", title: "移除", onclick: () => { S.loras.splice(i, 1); renderLoras(); save(); } }, "✕"),
+      el("button", { class: "icon", title: "移除", onclick: () => removeLora(i) }, "✕"),
       note ? el("div", { class: "lora-note" + (S.openNotes.has(l.name) ? " open" : ""), title: "點一下展開／收合",
-        onclick: (e) => { S.openNotes.has(l.name) ? S.openNotes.delete(l.name) : S.openNotes.add(l.name); e.currentTarget.classList.toggle("open"); } }, note) : null);
+        onclick: (e) => { S.openNotes.has(l.name) ? S.openNotes.delete(l.name) : S.openNotes.add(l.name); e.currentTarget.classList.toggle("open"); } }, note) : null,
+      trigPreview);
     box.append(row);
   });
 }
@@ -914,7 +973,17 @@ function fillSnippets() {
 export function triggerWords() {
   const meta = Object.fromEntries((app.state?.models?.loras || []).map((x) => [x.name, x]));
   const words = [];
-  for (const l of S.loras) if (l.enabled && !mismatch(l)) for (const t of meta[l.name]?.triggers || []) if (!words.includes(t)) words.push(t);
+  for (const l of S.loras) {
+    if (l.enabled && !mismatch(l)) {
+      const trigs = [...(l.triggers || []), ...(meta[l.name]?.triggers || [])]
+        .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
+        .map((s) => s.trim())
+        .filter(Boolean);
+      for (const t of trigs) {
+        if (!words.includes(t)) words.push(t);
+      }
+    }
+  }
   return words;
 }
 
@@ -932,11 +1001,11 @@ function renderTrig() {
 }
 
 function toggleTrigger(w, on) {
-  const t = F("prompt");
-  if (on) t.value = t.value.split(",").filter((s) => s.trim().toLowerCase() !== w.trim().toLowerCase()).join(",").replace(/^\s*,\s*/, "").replace(/,\s*,/g, ",");
-  else insertTriggers([w]);
+  if (on) removePrompt(w);
+  else prependTriggers([w]);
   save();
   renderTrig();
+  renderLoras();
 }
 
 // 觸發詞插在開頭的品質／評級詞後面（masterpiece, best quality, safe, jgdxstyle, …）：放越前面 LoRA 越穩；沒有品質詞就放最前面
@@ -952,13 +1021,34 @@ export function insertAfterQuality(cur, words) {
   return [...parts.slice(0, i).map((s) => s.trim()), ...add, ...(rest ? [rest] : [])].join(", ");
 }
 
-function insertTriggers(words) {
+export function prependTriggers(words) {
   const flat = (Array.isArray(words) ? words : [words])
     .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
     .map((s) => s.trim())
     .filter(Boolean);
-  F("prompt").value = insertAfterQuality(F("prompt").value, flat);
+  if (!flat.length) return;
+
+  const cur = F("prompt").value.trim();
+  if (!cur) {
+    F("prompt").value = flat.join(", ");
+    save();
+    renderTrig?.();
+    return;
+  }
+
+  const curParts = cur.split(",").map((s) => s.trim()).filter(Boolean);
+  const have = new Set(curParts.map(normTag));
+  const add = flat.filter((w) => !have.has(normTag(w)));
+  if (!add.length) return;
+
+  // 默認直接置於所有提示詞最前面
+  F("prompt").value = [...add, ...curParts].join(", ");
   save();
+  renderTrig?.();
+}
+
+function insertTriggers(words) {
+  prependTriggers(words);
 }
 
 const normTag = (s) => s.trim().replace(/\\([()\[\]])/g, "$1").toLowerCase();

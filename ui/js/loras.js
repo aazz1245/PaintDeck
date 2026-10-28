@@ -52,7 +52,7 @@ export function init() {
       const gen = await import("./gen.js");
       gen.addLora({
         name: loraName,
-        strength: e.data.strength ?? 0.8,
+        strength: e.data.strength ?? 1,
         title: title,
         triggers: flatTriggers
       }, true);
@@ -72,7 +72,7 @@ export function init() {
         name: e.data.recipeName || "LoRA 配方",
         loras: (e.data.loras || []).map((x) => ({
           name: x.name.endsWith(".safetensors") || x.name.endsWith(".pt") ? x.name : `${x.name}.safetensors`,
-          strength: x.strength ?? 0.8,
+          strength: x.strength ?? 1,
           title: x.title || x.name,
           triggers: x.triggers || []
         }))
@@ -557,7 +557,7 @@ function renderRecipePicker() {
             name: r.title || r.name,
             loras: (r.loras || []).map((x) => ({
               name: (x.file_name || x.name).endsWith(".safetensors") || (x.file_name || x.name).endsWith(".pt") ? (x.file_name || x.name) : `${x.file_name || x.name}.safetensors`,
-              strength: x.strength || x.weight || 0.8,
+              strength: x.strength || x.weight || 1,
               title: x.custom_name || x.file_name || x.name,
               triggers: x.trigger_words || x.trained_words || []
             }))
