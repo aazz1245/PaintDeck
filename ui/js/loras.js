@@ -35,16 +35,32 @@ export function init() {
       lmOnline = true;
       console.log("[PaintDeck] ComfyUI-Lora-Manager bridge confirmed ready");
     } else if (e.data?.type === "PAINTDECK_INSERT_LORA") {
+      const canonical = resolveCanonicalLora(e.data.name);
+      const loraName = canonical?.name || (e.data.name.endsWith(".safetensors") || e.data.name.endsWith(".pt") ? e.data.name : `${e.data.name}.safetensors`);
+      const title = canonical?.title || e.data.title || e.data.name;
+
+      let triggers = Array.isArray(e.data.triggers) ? e.data.triggers : [];
+      if ((!triggers || !triggers.length) && canonical?.triggers?.length) {
+        triggers = canonical.triggers;
+      }
+
+      const flatTriggers = (Array.isArray(triggers) ? triggers : [triggers])
+        .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
+        .map((s) => s.trim())
+        .filter(Boolean);
+
       const gen = await import("./gen.js");
-      const loraName = e.data.name.endsWith(".safetensors") || e.data.name.endsWith(".pt") ? e.data.name : `${e.data.name}.safetensors`;
       gen.addLora({
         name: loraName,
         strength: e.data.strength ?? 0.8,
-        title: e.data.title || e.data.name,
-        triggers: e.data.triggers || []
+        title: title,
+        triggers: flatTriggers
       }, true);
       app.showPage("gen");
-      toast(`已將「${e.data.title || e.data.name}」加入生圖卡匣！`, "ok");
+      const trigMsg = flatTriggers.length
+        ? `已將「${title}」加入生圖卡匣並載入 ${flatTriggers.length} 個提示詞！`
+        : `已將「${title}」加入生圖卡匣！`;
+      toast(trigMsg, "ok");
     } else if (e.data?.type === "PAINTDECK_LM_RECIPES") {
       if (Array.isArray(e.data.recipes)) {
         lmRecipes = e.data.recipes;
@@ -168,6 +184,23 @@ async function syncLmData() {
   } catch (err) {
     console.warn("syncLmData error:", err);
   }
+}
+
+export function resolveCanonicalLora(inputName) {
+  if (!inputName) return null;
+  const all = app.state?.models?.loras || list || [];
+  const norm = (s) => (s || "").replace(/\\/g, "/").toLowerCase();
+  const base = (s) => norm(s).split("/").pop().replace(/\.(safetensors|pt|bin|ckpt)$/i, "");
+  const inNorm = norm(inputName);
+  const inBase = base(inputName);
+
+  let found = all.find((x) => norm(x.name) === inNorm || norm(x.name) === `${inNorm}.safetensors` || norm(x.name).endsWith(`/${inNorm}`) || norm(x.name).endsWith(`/${inNorm}.safetensors`));
+  if (found) return found;
+
+  found = all.find((x) => base(x.name) === inBase);
+  if (found) return found;
+
+  return null;
 }
 
 const baseName = (name) => (name || "").replace(/\\/g, "/").split("/").pop().replace(/\.(safetensors|pt|bin|ckpt)$/i, "");

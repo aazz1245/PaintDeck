@@ -793,9 +793,14 @@ const loraDisplayTitle = (l) => {
 
 // ---------------------------------------------------------------- LoRA 疊加
 export function addLora(l, triggers) {
-  if (S.loras.some((x) => x.name === l.name)) return toast("這個 LoRA 已經在清單裡了");
   const t = l.title || baseName(l.name);
-  S.loras.push({ name: l.name, strength: l.strength ?? (OFFICIAL_TURBO.test(l.name) ? 1 : 0.8), enabled: true, title: t, min: l.min, max: l.max, slider: l.slider });
+  const existing = S.loras.find((x) => x.name === l.name);
+  if (existing) {
+    existing.enabled = true;
+    if (l.strength != null) existing.strength = l.strength;
+  } else {
+    S.loras.push({ name: l.name, strength: l.strength ?? (OFFICIAL_TURBO.test(l.name) ? 1 : 0.8), enabled: true, title: t, min: l.min, max: l.max, slider: l.slider });
+  }
   if (triggers && l.triggers?.length) insertTriggers(l.triggers);
   renderLoras();
   save();
@@ -948,7 +953,11 @@ export function insertAfterQuality(cur, words) {
 }
 
 function insertTriggers(words) {
-  F("prompt").value = insertAfterQuality(F("prompt").value, words);
+  const flat = (Array.isArray(words) ? words : [words])
+    .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
+    .map((s) => s.trim())
+    .filter(Boolean);
+  F("prompt").value = insertAfterQuality(F("prompt").value, flat);
   save();
 }
 
