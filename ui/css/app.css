@@ -1627,3 +1627,22 @@ body.docking { cursor: grabbing; user-select: none; }
 .sh-segref { padding: 0; border: 2px solid var(--acc); border-radius: 6px; background: none; cursor: pointer; line-height: 0; }
 .sh-segref .sh-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
 .sh-segref.off { border-color: transparent; opacity: .35; filter: grayscale(1); }
+
+/* ---------- ComfyUI-Lora-Manager 全屏内嵌宿主与离线卡片 ---------- */
+.lm-host-wrap { position: relative; width: 100%; height: calc(100vh - 110px); min-height: 520px; display: flex; flex-direction: column; }
+.lm-frame { width: 100%; height: 100%; flex: 1; border: 0; border-radius: 8px; background: var(--case-2); box-shadow: inset 0 2px 6px rgba(0,0,0,.6); }
+.lm-offline { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(14,11,9,.75); backdrop-filter: blur(4px); border-radius: 8px; z-index: 10; }
+.lm-offline-box { background: var(--case); padding: 28px 36px; border-radius: 10px; text-align: center; max-width: 460px; box-shadow: 0 12px 36px rgba(0,0,0,.6), 0 0 0 1px var(--case-hi); }
+.lm-offline-ic { font-size: 42px; margin-bottom: 8px; }
+
+/* 弹窗内的胶囊 Tabs */
+.pill-tabs { display: inline-flex; background: var(--key-dark); border-radius: 20px; padding: 2px; gap: 2px; align-items: center; }
+.pill-tabs .pill { border: 0; background: none; color: var(--label-dim); font: 700 11px/1 var(--f-ui); padding: 5px 12px; border-radius: 18px; cursor: pointer; transition: all .15s; }
+.pill-tabs .pill:hover { color: var(--label); }
+.pill-tabs .pill.on { background: var(--acc); color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+
+/* 配方卡片特有样式 */
+.card.recipe-card { border-left: 3px solid var(--acc); }
+.card.recipe-card .sub-loras { font-size: 11px; color: var(--label-dim); line-height: 1.4; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card.recipe-card .recipe-count { font: 700 10px/1 var(--f-ui); background: var(--key-dark); color: var(--warn); padding: 2px 5px; border-radius: 3px; display: inline-block; margin-right: 4px; }
+

@@ -801,6 +801,33 @@ export function addLora(l, triggers) {
   save();
 }
 
+export function applyLoraRecipe(recipe) {
+  if (!recipe || !Array.isArray(recipe.loras)) return;
+  let added = 0;
+  for (const item of recipe.loras) {
+    if (!item.name) continue;
+    const existing = S.loras.find((x) => x.name === item.name);
+    if (!existing) {
+      S.loras.push({
+        name: item.name,
+        strength: item.strength ?? 0.8,
+        enabled: true,
+        title: item.title || baseName(item.name)
+      });
+      added++;
+    } else {
+      existing.strength = item.strength ?? existing.strength;
+      existing.enabled = true;
+    }
+    if (item.triggers?.length) {
+      insertTriggers(item.triggers);
+    }
+  }
+  renderLoras();
+  save();
+  toast(`已套用配方「${recipe.name || 'LoRA 配方'}」（共 ${added} 個 LoRA）`, "ok");
+}
+
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 // 強度對照：其他設定與種子都固定，只改這個 LoRA 的強度，各生成一張

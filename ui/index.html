@@ -573,21 +573,20 @@
 
 <!-- ======================= LoRA ======================= -->
 <main id="page-loras" class="page">
-  <section class="panel lib screws">
-  <div class="toolbar">
-    <div class="scr search-scr"><span data-ic="search" class="sic"></span><input type="search" id="loraQ" placeholder="搜尋已安裝的 LoRA…" aria-label="搜尋 LoRA"></div>
-    <select id="loraFamily" aria-label="模型家族"><option value="">全部模型</option></select>
-    <select id="loraCategory" aria-label="用途分類"><option value="">全部分類</option></select>
-    <select id="loraTag" aria-label="標籤"><option value="">常用標籤</option></select>
-    <label class="check inline"><input type="checkbox" id="loraFav"> 只看收藏</label>
-    <span class="vfd g" id="loraTotal"></span>
-    <span class="grow"></span>
-    <button class="akey sm" id="loraLearn" type="button" data-ic="chip">讓助手認識 LoRA</button>
-    <button class="akey sm" id="loraRefresh" type="button" data-ic="loop">重新整理清單</button>
+  <div class="lm-host-wrap">
+    <iframe id="loraManagerFrame" class="lm-frame" src="about:blank" title="ComfyUI-Lora-Manager"></iframe>
+    <div id="loraManagerOffline" class="lm-offline" hidden>
+      <div class="lm-offline-box">
+        <div class="lm-offline-ic">🔌</div>
+        <h3>ComfyUI 尚未連線</h3>
+        <p class="muted sm">ComfyUI-Lora-Manager 需要 ComfyUI 繪圖引擎處於運行狀態。<br>啟動 ComfyUI 後將自動在此載入完整的 LoRA 模型庫、觸發詞與配方管理控制台。</p>
+        <div class="row gap center" style="margin-top: 14px;">
+          <button class="btn primary" id="lmRetryBtn" type="button">重新整理連線</button>
+          <a class="btn" id="lmDirectLink" href="http://127.0.0.1:8188/loras" target="_blank">在獨立瀏覽器開啟 ↗</a>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="muted sm pad lora-library-note">用途會依「讓助手認識 LoRA」的結果、Civitai 標籤與檔名自動分類；卡片可自行改分類與標籤。搜尋框也能找所有標籤；大量清單會分批顯示。</div>
-  <div class="lib-scroll"><div class="cards" id="loraGrid"></div><div class="center"><button class="akey" id="loraMore" type="button" hidden>載入更多</button></div></div>
-  </section>
 </main>
 
 <!-- ======================= 下載（Civitai） ======================= -->
@@ -1502,12 +1501,16 @@
   <div class="dialog wide">
     <div class="row between">
       <b>選擇 LoRA 卡匣</b>
+      <div class="pill-tabs" id="lpTabs">
+        <button class="pill on" data-tab="single" type="button">📦 單個 LoRA</button>
+        <button class="pill" data-tab="recipe" type="button">🧩 配方組 (Recipes)</button>
+      </div>
       <select id="lpFolder" class="lp-folder" aria-label="選擇資料夾">
         <option value="">📁 全部資料夾</option>
       </select>
       <button class="minikey red" data-close data-ic="power" type="button" aria-label="關閉"></button>
     </div>
-    <div class="row gap"><input type="search" id="lpQ" placeholder="搜尋…" aria-label="搜尋 LoRA"><label class="check inline"><input type="checkbox" id="lpTrig" checked> 自動加入觸發詞</label></div>
+    <div class="row gap"><input type="search" id="lpQ" placeholder="搜尋名稱、觸發詞、標籤…" aria-label="搜尋 LoRA"><label class="check inline"><input type="checkbox" id="lpTrig" checked> 自動加入觸發詞</label></div>
     <div class="cards compact" id="lpGrid"></div>
   </div>
 </div>
