@@ -45,6 +45,11 @@ export function init() {
       }, true);
       app.showPage("gen");
       toast(`已將「${e.data.title || e.data.name}」加入生圖卡匣！`, "ok");
+    } else if (e.data?.type === "PAINTDECK_LM_RECIPES") {
+      if (Array.isArray(e.data.recipes)) {
+        lmRecipes = e.data.recipes;
+        if (pickerTab === "recipe") renderRecipePicker();
+      }
     } else if (e.data?.type === "PAINTDECK_APPLY_RECIPE") {
       const gen = await import("./gen.js");
       gen.applyLoraRecipe({
@@ -80,39 +85,30 @@ export function init() {
 
 export function onState(st) {
   list = (st.models?.loras || []).slice().sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0) || (a.title || a.name).localeCompare(b.title || b.name));
-  if (lmOnline && !lmMetaSynced) {
-    syncLmData();
+  if (app.page === "loras") {
+    showPage();
   }
 }
 
 // ---------------------------------------------------------------- 全屏管理頁面
-export async function showPage() {
+export function showPage() {
   const frame = $("#loraManagerFrame");
   const offline = $("#loraManagerOffline");
   if (!frame || !offline) return;
 
-  try {
-    const ctrl = new AbortController();
-    const tm = setTimeout(() => ctrl.abort(), 2000);
-    const res = await fetch(`${LM_ORIGIN}/api/lm/loras/list?page=1&page_size=1`, { signal: ctrl.signal });
-    clearTimeout(tm);
-    if (res.ok) {
-      lmOnline = true;
-      offline.hidden = true;
-      frame.hidden = false;
-      if (!lmLoaded || frame.src === "about:blank" || !frame.src.startsWith(LM_ORIGIN)) {
-        frame.src = LM_PAGE_URL;
-        lmLoaded = true;
-      }
-      if (!lmMetaSynced) syncLmData();
-      return;
-    }
-  } catch (_) {}
+  const isOnline = app.state?.online !== false;
 
-  // 離線處理
-  lmOnline = false;
-  offline.hidden = false;
-  frame.hidden = true;
+  if (isOnline) {
+    offline.hidden = true;
+    frame.hidden = false;
+    if (!lmLoaded || frame.src === "about:blank" || !frame.src.startsWith(LM_ORIGIN)) {
+      frame.src = LM_PAGE_URL;
+      lmLoaded = true;
+    }
+  } else {
+    offline.hidden = false;
+    frame.hidden = true;
+  }
 }
 
 // ---------------------------------------------------------------- 同步 Lora-Manager 豐富資料
