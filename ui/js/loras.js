@@ -52,13 +52,13 @@ export function init() {
       const gen = await import("./gen.js");
       gen.addLora({
         name: loraName,
-        strength: e.data.strength ?? 1,
+        strength: 1.0,
         title: title,
         triggers: flatTriggers
-      }, true);
+      }, false);
       app.showPage("gen");
       const trigMsg = flatTriggers.length
-        ? `已將「${title}」加入生圖卡匣並載入 ${flatTriggers.length} 個提示詞！`
+        ? `已將「${title}」加入生圖卡匣（已綁定 ${flatTriggers.length} 個提示詞，生成時置頂生效）！`
         : `已將「${title}」加入生圖卡匣！`;
       toast(trigMsg, "ok");
     } else if (e.data?.type === "PAINTDECK_LM_RECIPES") {
@@ -72,7 +72,7 @@ export function init() {
         name: e.data.recipeName || "LoRA 配方",
         loras: (e.data.loras || []).map((x) => ({
           name: x.name.endsWith(".safetensors") || x.name.endsWith(".pt") ? x.name : `${x.name}.safetensors`,
-          strength: x.strength ?? 1,
+          strength: 1.0,
           title: x.title || x.name,
           triggers: x.triggers || []
         }))
@@ -188,19 +188,23 @@ async function syncLmData() {
 
 export function resolveCanonicalLora(inputName) {
   if (!inputName) return null;
-  const all = app.state?.models?.loras || list || [];
+  const pool = [...(app.state?.models?.loras || []), ...(list || [])];
   const norm = (s) => (s || "").replace(/\\/g, "/").toLowerCase();
   const base = (s) => norm(s).split("/").pop().replace(/\.(safetensors|pt|bin|ckpt)$/i, "");
   const inNorm = norm(inputName);
   const inBase = base(inputName);
 
-  let found = all.find((x) => norm(x.name) === inNorm || norm(x.name) === `${inNorm}.safetensors` || norm(x.name).endsWith(`/${inNorm}`) || norm(x.name).endsWith(`/${inNorm}.safetensors`));
+  let found = pool.find((x) => norm(x.name) === inNorm || norm(x.name) === `${inNorm}.safetensors` || norm(x.name).endsWith(`/${inNorm}`) || norm(x.name).endsWith(`/${inNorm}.safetensors`));
   if (found) return found;
 
-  found = all.find((x) => base(x.name) === inBase);
+  found = pool.find((x) => base(x.name) === inBase);
   if (found) return found;
 
   return null;
+}
+
+export function getLoraInfo(inputName) {
+  return resolveCanonicalLora(inputName);
 }
 
 const baseName = (name) => (name || "").replace(/\\/g, "/").split("/").pop().replace(/\.(safetensors|pt|bin|ckpt)$/i, "");
@@ -543,7 +547,7 @@ function renderRecipePicker() {
   }
 
   for (const r of matches) {
-    const lorasList = (r.loras || []).map((x) => `${x.file_name || x.name} (${x.strength || x.weight || 0.8})`).join("、 ");
+    const lorasList = (r.loras || []).map((x) => `${x.file_name || x.name} (${x.strength || x.weight || 1})`).join("、 ");
     const previewStyle = r.file_path ? `background-image:url("${LM_ORIGIN}/api/lm/previews?path=${encodeURIComponent(r.file_path)}")` : "";
 
     const cardEl = el(

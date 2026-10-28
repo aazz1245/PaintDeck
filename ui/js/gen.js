@@ -792,16 +792,46 @@ const loraDisplayTitle = (l) => {
 };
 
 // ---------------------------------------------------------------- LoRA 疊加
-export function addLora(l, triggers) {
+export function addLora(l, insertIntoPrompt = false) {
   const t = l.title || baseName(l.name);
   const existing = S.loras.find((x) => x.name === l.name);
+  const meta = (app.state?.models?.loras || []).find((x) => x.name === l.name);
+  const info = loras.getLoraInfo?.(l.name);
+
+  const rawTrigs = [
+    ...(Array.isArray(l.triggers) ? l.triggers : (l.triggers ? [l.triggers] : [])),
+    ...(Array.isArray(meta?.triggers) ? meta.triggers : (meta?.triggers ? [meta.triggers] : [])),
+    ...(Array.isArray(info?.triggers) ? info.triggers : (info?.triggers ? [info.triggers] : []))
+  ];
+  const trigs = rawTrigs
+    .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const uniqueTrigs = [...new Set(trigs)];
+
   if (existing) {
     existing.enabled = true;
     if (l.strength != null) existing.strength = l.strength;
+    if (uniqueTrigs.length) existing.triggers = uniqueTrigs;
+    if (t) existing.title = t;
   } else {
-    S.loras.push({ name: l.name, strength: l.strength ?? 1, enabled: true, title: t, min: l.min, max: l.max, slider: l.slider });
+    S.loras.push({
+      name: l.name,
+      strength: l.strength ?? 1,
+      enabled: true,
+      title: t,
+      min: l.min,
+      max: l.max,
+      slider: l.slider,
+      triggers: uniqueTrigs
+    });
   }
-  if (triggers && l.triggers?.length) prependTriggers(l.triggers);
+
+  // 默認不將卡匣內的提示詞放入主提示詞框，只有明確要求時才插入
+  if (insertIntoPrompt && uniqueTrigs.length) {
+    prependTriggers(uniqueTrigs);
+  }
+
   renderLoras();
   save();
 }
@@ -812,20 +842,32 @@ export function applyLoraRecipe(recipe) {
   for (const item of recipe.loras) {
     if (!item.name) continue;
     const existing = S.loras.find((x) => x.name === item.name);
+    const meta = (app.state?.models?.loras || []).find((x) => x.name === item.name);
+    const info = loras.getLoraInfo?.(item.name);
+    const rawTrigs = [
+      ...(Array.isArray(item.triggers) ? item.triggers : (item.triggers ? [item.triggers] : [])),
+      ...(Array.isArray(meta?.triggers) ? meta.triggers : (meta?.triggers ? [meta.triggers] : [])),
+      ...(Array.isArray(info?.triggers) ? info.triggers : (info?.triggers ? [info.triggers] : []))
+    ];
+    const trigs = rawTrigs
+      .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const uniqueTrigs = [...new Set(trigs)];
+
     if (!existing) {
       S.loras.push({
         name: item.name,
         strength: item.strength ?? 1,
         enabled: true,
-        title: item.title || baseName(item.name)
+        title: item.title || baseName(item.name),
+        triggers: uniqueTrigs
       });
       added++;
     } else {
       existing.strength = item.strength ?? existing.strength;
       existing.enabled = true;
-    }
-    if (item.triggers?.length) {
-      prependTriggers(item.triggers);
+      if (uniqueTrigs.length) existing.triggers = uniqueTrigs;
     }
   }
   renderLoras();
@@ -837,23 +879,23 @@ export function removeLora(index) {
   const l = S.loras[index];
   if (!l) return;
   const meta = (app.state?.models?.loras || []).find((x) => x.name === l.name);
+  const info = loras.getLoraInfo?.(l.name);
   const triggers = [
     ...(l.triggers || []),
-    ...(meta?.triggers || [])
+    ...(meta?.triggers || []),
+    ...(info?.triggers || [])
   ].flatMap((x) => (typeof x === "string" ? x.split(",") : [])).map((s) => s.trim()).filter(Boolean);
   const uniqueTriggers = [...new Set(triggers)];
 
   if (uniqueTriggers.length) {
-    for (const w of uniqueTriggers) {
-      removePrompt(w);
-    }
+    removePrompt(uniqueTriggers);
   }
 
   S.loras.splice(index, 1);
   renderLoras();
   save();
   if (uniqueTriggers.length) {
-    toast(`已移除「${l.title || l.name}」及 ${uniqueTriggers.length} 個提示詞`, "ok");
+    toast(`已移除「${l.title || l.name}」及相應提示詞`, "ok");
   } else {
     toast(`已移除「${l.title || l.name}」`, "ok");
   }
@@ -878,7 +920,7 @@ async function sweep(l) {
   const others = S.loras.filter((x) => x.enabled && x.name !== l.name && !mismatch(x)).map((x) => ({ name: x.name, strength: x.strength }));
   try {
     for (const v of vals) {
-      const r = await api("/api/generate", { json: { params: { ...p, loras: v ? [...others, { name: l.name, strength: v }] : others }, count: 1 } });
+      const r = await api("/api/generate", { json: { params: { ...p, prompt: fullPrompt(p.prompt), loras: v ? [...others, { name: l.name, strength: v }] : others }, count: 1 } });
       for (const j of r.jobs) S.pending.set(j.job, { seed: j.seed });
     }
     S.lastSeed = p.seed;
@@ -909,24 +951,27 @@ export function renderLoras() {
         : `這個 LoRA 是 ${famLabel(loraFam(l))} 用的，目前的模型用不了，生成時會略過。`)
       : meta[l.name]?.note || "";
     const dispName = loraDisplayTitle(l);
+    const info = loras.getLoraInfo?.(l.name);
     const allTrigs = [
       ...(l.triggers || []),
-      ...(meta[l.name]?.triggers || [])
+      ...(meta[l.name]?.triggers || []),
+      ...(info?.triggers || [])
     ].flatMap((x) => (typeof x === "string" ? x.split(",") : [])).map((s) => s.trim()).filter(Boolean);
     const uniqueTriggers = [...new Set(allTrigs)];
     l.triggers = uniqueTriggers;
 
     const curPrompt = F("prompt")?.value || "";
     const haveSet = new Set(curPrompt.split(",").map(normTag).filter(Boolean));
+    const strippedPromptSet = new Set(curPrompt.split(",").map(stripTag).filter(Boolean));
 
     const trigPreview = el("div", { class: "lora-trig-preview" },
       el("span", { class: "trig-lbl" }, "提示詞："),
       uniqueTriggers.length
         ? uniqueTriggers.map((tw) => {
-            const inPrompt = haveSet.has(normTag(tw));
+            const inPrompt = haveSet.has(normTag(tw)) || strippedPromptSet.has(stripTag(tw));
             return el("span", {
               class: "trig-tag" + (inPrompt ? " in-prompt" : ""),
-              title: inPrompt ? "已在提示詞中（點擊移除）" : "尚未在提示詞中（點擊置頂加入）",
+              title: inPrompt ? "已在主提示詞框中（點擊移除）" : "尚未在主提示詞框中（生成時會自動置頂發送；點擊亦可手動加入）",
               onclick: (e) => {
                 e.stopPropagation();
                 if (inPrompt) {
@@ -975,10 +1020,14 @@ export function triggerWords() {
   const words = [];
   for (const l of S.loras) {
     if (l.enabled && !mismatch(l)) {
-      const trigs = [...(l.triggers || []), ...(meta[l.name]?.triggers || [])]
-        .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
-        .map((s) => s.trim())
-        .filter(Boolean);
+      const info = loras.getLoraInfo?.(l.name);
+      const trigs = [
+        ...(l.triggers || []),
+        ...(meta[l.name]?.triggers || []),
+        ...(info?.triggers || [])
+      ].flatMap((x) => (typeof x === "string" ? x.split(",") : []))
+       .map((s) => s.trim())
+       .filter(Boolean);
       for (const t of trigs) {
         if (!words.includes(t)) words.push(t);
       }
@@ -993,10 +1042,12 @@ function renderTrig() {
   F("trigChips").hidden = !words.length;
   const box = F("trigList");
   box.innerHTML = "";
-  const have = new Set(F("prompt").value.split(",").map((s) => s.trim().toLowerCase()));
+  const curPrompt = F("prompt")?.value || "";
+  const have = new Set(curPrompt.split(",").map(normTag).filter(Boolean));
+  const strippedHave = new Set(curPrompt.split(",").map(stripTag).filter(Boolean));
   for (const w of words) {
-    const on = have.has(w.trim().toLowerCase());
-    box.append(el("button", { class: "chip" + (on ? " on" : ""), type: "button", title: on ? "點一下從提示詞移除" : "點一下加到提示詞", onclick: () => toggleTrigger(w, on) }, w));
+    const on = have.has(normTag(w)) || strippedHave.has(stripTag(w));
+    box.append(el("button", { class: "chip" + (on ? " on" : ""), type: "button", title: on ? "點一下從主提示詞框移除" : "點一下加到主提示詞框", onclick: () => toggleTrigger(w, on) }, w));
   }
 }
 
@@ -1051,30 +1102,68 @@ function insertTriggers(words) {
   prependTriggers(words);
 }
 
-const normTag = (s) => s.trim().replace(/\\([()\[\]])/g, "$1").toLowerCase();
+const normTag = (s) => (s || "").trim().replace(/\\([()\[\]])/g, "$1").toLowerCase();
+const stripTag = (s) => (s || "").trim().replace(/^[\(\[\{]+|[\)\]\}]+$/g, "").replace(/:[0-9.]+\s*$/, "").trim().toLowerCase();
 
 export function hasPrompt(text) {
   if (!text) return false;
-  const cur = F("prompt").value;
-  const have = new Set(cur.split(",").map(normTag).filter(Boolean));
-  const words = text.split(",").map(normTag).filter(Boolean);
+  const cur = F("prompt")?.value || "";
+  const haveSet = new Set(cur.split(",").map(normTag).filter(Boolean));
+  const strippedHaveSet = new Set(cur.split(",").map(stripTag).filter(Boolean));
+  const words = (Array.isArray(text) ? text : [text])
+    .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
+    .map((s) => s.trim())
+    .filter(Boolean);
   if (!words.length) return false;
-  return words.every((w) => have.has(w));
+  return words.every((w) => haveSet.has(normTag(w)) || strippedHaveSet.has(stripTag(w)));
 }
 
 export function removePrompt(text) {
   if (!text) return false;
   const t = F("prompt");
-  const wordsToRemove = new Set(text.split(",").map(normTag).filter(Boolean));
-  if (!wordsToRemove.size) return false;
+  if (!t) return false;
+  const rawToRemove = (Array.isArray(text) ? text : [text])
+    .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!rawToRemove.length) return false;
+
+  const wordsToRemove = new Set(rawToRemove.map(normTag));
+  const strippedToRemove = new Set(rawToRemove.map(stripTag));
+
   const curParts = t.value.split(",").map((s) => s.trim()).filter(Boolean);
-  const remaining = curParts.filter((s) => !wordsToRemove.has(normTag(s)));
+  const remaining = curParts.filter((s) => {
+    const n = normTag(s);
+    const st = stripTag(s);
+    return !wordsToRemove.has(n) && !strippedToRemove.has(st);
+  });
+
   if (remaining.length === curParts.length) return false;
   t.value = remaining.join(", ");
   save();
   renderTrig();
   assetDrawer?.refresh?.();
   return true;
+}
+
+export function withLoraTriggers(prompt) {
+  const words = triggerWords();
+  if (!words.length) return (prompt || "").trim();
+  const body = (prompt || "").trim();
+  const have = new Set(body.split(",").map(normTag).filter(Boolean));
+  const strippedHave = new Set(body.split(",").map(stripTag).filter(Boolean));
+  const toAdd = words.filter((w) => !have.has(normTag(w)) && !strippedHave.has(stripTag(w)));
+  if (!toAdd.length) return body;
+  const head = toAdd.join(", ");
+  if (!body) return head;
+  return `${head}, ${body.replace(/^,\s*/, "")}`;
+}
+
+export function fullPrompt(text) {
+  if (F("promptBox")?.hidden) return text;
+  const refNames = () => (S.mode === "multiref" ? refs.get().map((r) => r.name) : []);
+  const lockedText = lk.withLocked(text, S.locked, fam(), refNames());
+  return withLoraTriggers(lockedText);
 }
 
 export function appendPrompt(text) {
@@ -1308,7 +1397,7 @@ async function generate() {
   if (S.mode === "outpaint" && !Object.values(opVals()).some((v) => v > 0)) return toast("擴圖：至少填一邊要往外擴幾像素（或按下面的快捷鈕）", "err");
   const refNames = () => (S.mode === "multiref" ? refs.get().map((r) => r.name) : []);
   // 四視圖沒有提示詞框，不接
-  const full = (text) => (F("promptBox").hidden ? text : lk.withLocked(text, S.locked, fam(), refNames()));
+  const full = (text) => fullPrompt(text);
   if (S.mode === "multiref") {
     if (fam() === "custom") {
       // 工作流組：參考圖放進標了 {{ref1}}、{{ref2}}… 的 Load Image，提示詞不用 <image1> 標記
