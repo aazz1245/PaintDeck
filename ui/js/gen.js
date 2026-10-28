@@ -133,14 +133,44 @@ export function init() {
     else if (v) appendPrompt(v);
   };
   F("promptLib").onclick = () => library.open();
-  F("promptClear").onclick = () => { F("prompt").value = ""; save(); F("prompt").focus(); };
-  attachAutocomplete(F("prompt"), F("acPrompt"));
-  attachAutocomplete(F("negative"), F("acNeg"));
-  promptx.init({ prompt: F("prompt"), negative: F("negative"), family: () => fam(), save: () => save() });
-  F("prompt").addEventListener("input", debounce(() => {
+  F("promptClear").onclick = () => {
+    if (F("promptPrefix")) F("promptPrefix").value = "";
+    F("prompt").value = "";
+    if (F("promptSuffix")) F("promptSuffix").value = "";
+    save();
+    promptx.refresh?.();
     renderTrig();
     assetDrawer?.refresh?.();
-  }, 150));
+    getActivePromptEl().focus();
+  };
+  attachAutocomplete(F("promptPrefix"), F("acPromptPrefix"));
+  attachAutocomplete(F("prompt"), F("acPrompt"));
+  attachAutocomplete(F("promptSuffix"), F("acPromptSuffix"));
+  attachAutocomplete(F("negative"), F("acNeg"));
+
+  promptx.init({
+    prompt: F("prompt"),
+    promptPrefix: F("promptPrefix"),
+    promptSuffix: F("promptSuffix"),
+    negative: F("negative"),
+    family: () => fam(),
+    save: () => save(),
+    getFullPrompt: () => getRawPrompt(),
+    getActive: () => getActivePromptEl()
+  });
+
+  for (const id of ["promptPrefix", "prompt", "promptSuffix"]) {
+    const el = F(id);
+    if (!el) continue;
+    el.addEventListener("focus", () => setActivePrompt(id));
+    el.addEventListener("click", () => setActivePrompt(id));
+    el.addEventListener("input", debounce(() => {
+      save();
+      promptx.refresh?.();
+      renderTrig();
+      assetDrawer?.refresh?.();
+    }, 150));
+  }
 
   // 滑桿數值顯示
   const outs = [["denoise", "denoiseOut"], ["ipGrow", "ipGrowOut"], ["ipBlur", "ipBlurOut"], ["ipPad", "ipPadOut"], ["upDenoise", "upDenoiseOut"],
@@ -210,11 +240,18 @@ export function init() {
   });
 
   // 多圖參考
-  refs.init({ prompt: F("prompt"), save: () => save(), onChange: () => familyUI() });
+  refs.init({
+    prompt: F("prompt"),
+    promptPrefix: F("promptPrefix"),
+    promptSuffix: F("promptSuffix"),
+    getActive: () => getActivePromptEl(),
+    save: () => save(),
+    onChange: () => familyUI()
+  });
 
   // AI 改寫提示詞
   pe.init({
-    prompt: F("prompt"), save: () => save(), family: () => fam(), mode: () => S.mode, model: () => F("model").value,
+    prompt: F("prompt"), getFullPrompt: () => getRawPrompt(), save: () => save(), family: () => fam(), mode: () => S.mode, model: () => F("model").value,
     images: () => (S.mode === "multiref" ? refs.get().map((r) => r.name) : S.init && S.mode !== "txt2img" ? [S.init.name] : []),
     size: () => [+F("width").value, +F("height").value],
     canSize: () => !(S.mode === "inpaint" || S.mode === "upscale"),
@@ -251,8 +288,9 @@ export function init() {
     else if (v) library.useById(+v);
   };
   library.init({
-    collect: libSnapshot, apply: applyLibSet, insert: appendPrompt, replace: (t) => { F("prompt").value = t; save(); },
-    family: () => fam(), famOf: (m) => app.state?.models?.unet_family?.[m] || "", current: () => S.current, promptEl: () => F("prompt"),
+    collect: libSnapshot, apply: applyLibSet, insert: appendPrompt,
+    replace: (t) => { const el = getActivePromptEl(); el.value = t; save(); promptx.refresh?.(); },
+    family: () => fam(), famOf: (m) => app.state?.models?.unet_family?.[m] || "", current: () => S.current, promptEl: () => getActivePromptEl(),
     onChange: fillSnippets,
   });
 
@@ -1042,18 +1080,18 @@ function renderTrig() {
   F("trigChips").hidden = !words.length;
   const box = F("trigList");
   box.innerHTML = "";
-  const curPrompt = F("prompt")?.value || "";
+  const curPrompt = getRawPrompt();
   const have = new Set(curPrompt.split(",").map(normTag).filter(Boolean));
   const strippedHave = new Set(curPrompt.split(",").map(stripTag).filter(Boolean));
   for (const w of words) {
     const on = have.has(normTag(w)) || strippedHave.has(stripTag(w));
-    box.append(el("button", { class: "chip" + (on ? " on" : ""), type: "button", title: on ? "點一下從主提示詞框移除" : "點一下加到主提示詞框", onclick: () => toggleTrigger(w, on) }, w));
+    box.append(el("button", { class: "chip" + (on ? " on" : ""), type: "button", title: on ? "點一下從提示詞框移除" : "點一下加到提示詞框", onclick: () => toggleTrigger(w, on) }, w));
   }
 }
 
 function toggleTrigger(w, on) {
   if (on) removePrompt(w);
-  else prependTriggers([w]);
+  else appendPrompt(w);
   save();
   renderTrig();
   renderLoras();
@@ -1072,6 +1110,30 @@ export function insertAfterQuality(cur, words) {
   return [...parts.slice(0, i).map((s) => s.trim()), ...add, ...(rest ? [rest] : [])].join(", ");
 }
 
+export function getRawPrompt() {
+  const parts = [
+    F("promptPrefix")?.value?.trim() || "",
+    F("prompt")?.value?.trim() || "",
+    F("promptSuffix")?.value?.trim() || ""
+  ].filter(Boolean);
+  return parts.join(", ");
+}
+
+let activePromptId = "prompt";
+
+export function getActivePromptEl() {
+  return F(activePromptId) || F("prompt");
+}
+
+export function setActivePrompt(id) {
+  if (!["promptPrefix", "prompt", "promptSuffix"].includes(id)) return;
+  activePromptId = id;
+  for (const pid of ["promptPrefix", "prompt", "promptSuffix"]) {
+    const sec = F(pid === "prompt" ? "secPrompt" : pid === "promptPrefix" ? "secPromptPrefix" : "secPromptSuffix");
+    if (sec) sec.classList.toggle("active", pid === id);
+  }
+}
+
 export function prependTriggers(words) {
   const flat = (Array.isArray(words) ? words : [words])
     .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
@@ -1079,11 +1141,13 @@ export function prependTriggers(words) {
     .filter(Boolean);
   if (!flat.length) return;
 
-  const cur = F("prompt").value.trim();
+  const target = F("promptPrefix") || getActivePromptEl();
+  const cur = target.value.trim();
   if (!cur) {
-    F("prompt").value = flat.join(", ");
+    target.value = flat.join(", ");
     save();
     renderTrig?.();
+    promptx.refresh?.();
     return;
   }
 
@@ -1092,10 +1156,10 @@ export function prependTriggers(words) {
   const add = flat.filter((w) => !have.has(normTag(w)));
   if (!add.length) return;
 
-  // 默認直接置於所有提示詞最前面
-  F("prompt").value = [...add, ...curParts].join(", ");
+  target.value = [...add, ...curParts].join(", ");
   save();
   renderTrig?.();
+  promptx.refresh?.();
 }
 
 function insertTriggers(words) {
@@ -1107,7 +1171,7 @@ const stripTag = (s) => (s || "").trim().replace(/^[\(\[\{]+|[\)\]\}]+$/g, "").r
 
 export function hasPrompt(text) {
   if (!text) return false;
-  const cur = F("prompt")?.value || "";
+  const cur = getRawPrompt();
   const haveSet = new Set(cur.split(",").map(normTag).filter(Boolean));
   const strippedHaveSet = new Set(cur.split(",").map(stripTag).filter(Boolean));
   const words = (Array.isArray(text) ? text : [text])
@@ -1120,8 +1184,6 @@ export function hasPrompt(text) {
 
 export function removePrompt(text) {
   if (!text) return false;
-  const t = F("prompt");
-  if (!t) return false;
   const rawToRemove = (Array.isArray(text) ? text : [text])
     .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
     .map((s) => s.trim())
@@ -1131,16 +1193,25 @@ export function removePrompt(text) {
   const wordsToRemove = new Set(rawToRemove.map(normTag));
   const strippedToRemove = new Set(rawToRemove.map(stripTag));
 
-  const curParts = t.value.split(",").map((s) => s.trim()).filter(Boolean);
-  const remaining = curParts.filter((s) => {
-    const n = normTag(s);
-    const st = stripTag(s);
-    return !wordsToRemove.has(n) && !strippedToRemove.has(st);
-  });
+  let changed = false;
+  for (const id of ["promptPrefix", "prompt", "promptSuffix"]) {
+    const t = F(id);
+    if (!t || !t.value) continue;
+    const curParts = t.value.split(",").map((s) => s.trim()).filter(Boolean);
+    const remaining = curParts.filter((s) => {
+      const n = normTag(s);
+      const st = stripTag(s);
+      return !wordsToRemove.has(n) && !strippedToRemove.has(st);
+    });
+    if (remaining.length !== curParts.length) {
+      t.value = remaining.join(", ");
+      changed = true;
+    }
+  }
 
-  if (remaining.length === curParts.length) return false;
-  t.value = remaining.join(", ");
+  if (!changed) return false;
   save();
+  promptx.refresh?.();
   renderTrig();
   assetDrawer?.refresh?.();
   return true;
@@ -1166,14 +1237,48 @@ export function fullPrompt(text) {
   return withLoraTriggers(lockedText);
 }
 
-export function appendPrompt(text) {
-  const t = F("prompt");
-  const cur = t.value.trim().replace(/,\s*$/, "");
-  const have = new Set(cur.split(",").map(normTag).filter(Boolean));
-  const add = text.split(",").map((s) => s.trim()).filter((s) => s && !have.has(normTag(s)));
-  if (!add.length) return false;
-  t.value = (cur ? cur + ", " : "") + add.join(", ");
+export function appendPrompt(text, targetTa = null) {
+  const ta = targetTa || getActivePromptEl();
+  if (!ta) return false;
+
+  const raw = (Array.isArray(text) ? text : [text])
+    .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!raw.length) return false;
+
+  const v = ta.value;
+  const s = ta.selectionStart ?? v.length;
+  const e = ta.selectionEnd ?? s;
+
+  const before = v.slice(0, s);
+  const after = v.slice(e);
+
+  let prefix = "";
+  let suffix = "";
+
+  if (before.length > 0 && !/[,\n\s]$/.test(before)) {
+    prefix = ", ";
+  } else if (before.length > 0 && /[,]$/.test(before)) {
+    prefix = " ";
+  }
+
+  const addText = raw.join(", ");
+
+  if (after.length > 0 && !/^[\s,]/.test(after)) {
+    suffix = ", ";
+  } else if (!after.length && !v.endsWith(", ")) {
+    suffix = ", ";
+  }
+
+  const ins = prefix + addText + suffix;
+  ta.value = before + ins + after;
+  const caret = before.length + ins.length;
+  ta.setSelectionRange(caret, caret);
+  ta.focus();
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
   save();
+  promptx.refresh?.();
   renderTrig();
   assetDrawer?.refresh?.();
   return true;
@@ -1190,16 +1295,24 @@ export function togglePrompt(text) {
 }
 
 function applyTags(text, replace) {
-  if (replace) F("prompt").value = text;
-  else appendPrompt(text);
+  if (replace) {
+    const ta = getActivePromptEl();
+    ta.value = text;
+  } else {
+    appendPrompt(text);
+  }
   save();
+  promptx.refresh?.();
 }
 
 // ---------------------------------------------------------------- 收集／套用參數
 export function collectParams() {
   const p = {
     mode: S.mode, model: F("model").value, turbo_lora: (!isTurboModel() && F("turboLora").value) || false,
-    prompt: F("prompt").value.trim(), negative: F("negative").value.trim(),
+    prompt: getRawPrompt(),
+    promptPrefix: F("promptPrefix")?.value || "",
+    promptSuffix: F("promptSuffix")?.value || "",
+    negative: F("negative").value.trim(),
     steps: +F("steps").value, cfg: +F("cfg").value, sampler: F("sampler").value, scheduler: F("scheduler").value,
     seed: F("seed").value.trim() === "" ? null : +F("seed").value,
     width: +F("width").value, height: +F("height").value,
@@ -1244,7 +1357,7 @@ export function baseParams() {
     sampler: p.sampler, scheduler: p.scheduler, loras: p.loras, family: fam() };
 }
 
-const FORM_IDS = ["prompt", "negative", "width", "height", "autoSize", "denoise", "ipMethod", "ipArea", "ipGrow", "ipBlur", "ipPad", "upModel", "upScale", "upRefine", "upDenoise",
+const FORM_IDS = ["promptPrefix", "prompt", "promptSuffix", "negative", "width", "height", "autoSize", "denoise", "ipMethod", "ipArea", "ipGrow", "ipBlur", "ipPad", "upModel", "upScale", "upRefine", "upDenoise",
   "hiresOn", "hiresScale", "hiresDenoise", "hiresUpscaler", "ctrlOn", "ctrlType", "ctrlPre", "ctrlStr", "ctrlEnd", "ctrlInvert", "model", "steps", "cfg", "sampler", "scheduler", "turboLora", "seed", "count", "refPixels",
   "sheetReq",
   "opTop", "opBottom", "opLeft", "opRight", "opFeather", "autoDetail", "detailDenoise", "batchLines"];
@@ -1267,6 +1380,8 @@ function applyForm(f) {
     else if (e.tagName === "SELECT" && f[id] !== "" && f[id] != null && ![...e.options].some((o) => o.value === String(f[id]))) pendingSel[id] = f[id];
     else { e.value = f[id]; delete pendingSel[id]; }
   }
+  if (!("promptPrefix" in f) && F("promptPrefix")) F("promptPrefix").value = "";
+  if (!("promptSuffix" in f) && F("promptSuffix")) F("promptSuffix").value = "";
   S.loras = (f.loras || []).map((l) => ({ ...l }));
   if (f.ctrl !== undefined) S.ctrl = f.ctrl;
   if (f.init !== undefined) S.init = f.init;
@@ -1282,7 +1397,7 @@ function applyForm(f) {
   setMode(f.mode || "txt2img");
 }
 
-const save = () => { store.set("form", collectForm()); promptx.refresh(); };
+const save = () => { store.set("form", collectForm()); promptx.refresh?.(); };
 
 // 鎖定角色標籤列：換模型、動參考圖時滑過去看的全文跟著變
 function renderLocked() {
@@ -1292,7 +1407,10 @@ function renderLocked() {
 
 function restore() {
   const d = {
-    prompt: "masterpiece, best quality, safe, 1girl, solo, ", width: 1024, height: 1536, autoSize: true, denoise: 0.6,
+    promptPrefix: "masterpiece, best quality, safe, ",
+    prompt: "1girl, solo, ",
+    promptSuffix: "",
+    width: 1024, height: 1536, autoSize: true, denoise: 0.6,
     ipMethod: "lllite", ipArea: "full", ipGrow: 8, ipBlur: 12, ipPad: 64, upScale: "2", upDenoise: 0.3,
     hiresScale: 1.5, hiresDenoise: 0.4, ctrlType: "any", ctrlPre: "canny", ctrlStr: 1, ctrlEnd: 1, ctrlInvert: true,
     sheetReq: "",
@@ -1306,7 +1424,10 @@ function restore() {
 export function applyParams(p, withMode = true) {
   if (!p) return toast("這張圖沒有可用的生成參數", "err");
   const set = (id, v) => { if (v !== undefined && v !== null && F(id)) F(id).value = v; };
-  set("prompt", p.prompt); set("negative", p.negative); set("steps", p.steps); set("cfg", p.cfg);
+  set("promptPrefix", p.promptPrefix || "");
+  set("prompt", p.prompt || "");
+  set("promptSuffix", p.promptSuffix || "");
+  set("negative", p.negative); set("steps", p.steps); set("cfg", p.cfg);
   set("sampler", p.sampler); set("scheduler", p.scheduler); set("seed", p.seed);
   if (p.width && p.height && p.mode !== "upscale") { set("width", p.width); set("height", p.height); }
   if (p.model && [...F("model").options].some((o) => o.value === p.model)) F("model").value = p.model;
@@ -1363,7 +1484,10 @@ function paramsToForm(p) {
   const keepMode = ["multiref", "img2img", "inpaint", "outpaint", "upscale", "sheet"].includes(p.mode);
   const f = { mode: keepMode ? p.mode : "txt2img", loras: (p.loras || []).map((l) => ({ ...l, enabled: true })) };
   const put = (k, v) => { if (v !== undefined && v !== null) f[k] = v; };
-  put("prompt", p.prompt); put("negative", p.negative); put("steps", p.steps); put("cfg", p.cfg);
+  put("promptPrefix", p.promptPrefix);
+  put("prompt", p.prompt);
+  put("promptSuffix", p.promptSuffix);
+  put("negative", p.negative); put("steps", p.steps); put("cfg", p.cfg);
   put("sampler", p.sampler); put("scheduler", p.scheduler); put("model", p.model);
   if (p.width && p.height && p.mode !== "upscale") { f.width = p.width; f.height = p.height; }
   f.turboLora = p.turbo_lora === true ? "anima-turbo-lora-v0.2.safetensors" : (p.turbo_lora || "");
@@ -1418,7 +1542,12 @@ async function generate() {
     return toast(modeName[S.mode] + "要用 Qwen 2.1 官方 Turbo（qwen_image_2.1_turbo_int8_convrot），模型清單裡找不到", "err");
   const count = S.mode === "upscale" ? 1 : +F("count").value;
   // 批次：每一行各送一次（AI 改寫的紀錄只對整框有意義，拿掉）
-  const lines = batch ? p.prompt.split("\n").map((s) => s.trim()).filter(Boolean) : [p.prompt];
+  const prefix = F("promptPrefix")?.value?.trim() || "";
+  const suffix = F("promptSuffix")?.value?.trim() || "";
+  const bodyLines = F("prompt")?.value?.split("\n").map((s) => s.trim()).filter(Boolean) || [];
+  const lines = batch
+    ? bodyLines.map((line) => [prefix, line, suffix].filter(Boolean).join(", "))
+    : [p.prompt];
   if (batch && !lines.length) return toast("提示詞是空的", "err");
   if (lines.length > 50) return toast(`一次最多 50 行（現在 ${lines.length} 行）`, "err");
   const btn = F("genBtn");

@@ -63,14 +63,17 @@ function pickMany() {
 
 // 把 <imageN> 的編號照 map（舊索引 → 新索引，null＝被刪掉）改掉
 function remapPrompt(map) {
-  const t = ctx.prompt;
+  const tas = [ctx.promptPrefix, ctx.prompt, ctx.promptSuffix].filter(Boolean);
+  const targets = tas.length ? tas : (ctx.prompt ? [ctx.prompt] : []);
   let lost = false;
-  t.value = t.value.replace(/<image(\d+)>/g, (m, n) => {
-    const to = map[+n - 1];
-    if (to === undefined) return m;
-    if (to === null) { lost = true; return "<image?>"; }
-    return tag(to);
-  });
+  for (const t of targets) {
+    t.value = t.value.replace(/<image(\d+)>/g, (m, n) => {
+      const to = map[+n - 1];
+      if (to === undefined) return m;
+      if (to === null) { lost = true; return "<image?>"; }
+      return tag(to);
+    });
+  }
   if (lost) toast("提示詞裡提到被移除的那張圖（已標成 <image?>），記得改一下", "err");
 }
 
@@ -105,7 +108,8 @@ function setRole(i, role) {
 }
 
 function insertTag(i) {
-  const t = ctx.prompt, s = t.selectionStart ?? t.value.length, e = t.selectionEnd ?? s;
+  const t = ctx.getActive ? ctx.getActive() : ctx.prompt;
+  const s = t.selectionStart ?? t.value.length, e = t.selectionEnd ?? s;
   const ins = (s > 0 && !/\s$/.test(t.value.slice(0, s)) ? " " : "") + tag(i) + " ";
   t.value = t.value.slice(0, s) + ins + t.value.slice(e);
   t.focus(); t.selectionStart = t.selectionEnd = s + ins.length;

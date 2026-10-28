@@ -8,7 +8,8 @@ const MAX_RECENT = 40;
 
 export function init(c) {
   ctx = c;
-  for (const ta of [ctx.prompt, ctx.negative]) {
+  const promptList = [ctx.promptPrefix, ctx.prompt, ctx.promptSuffix].filter(Boolean);
+  for (const ta of [...promptList, ctx.negative].filter(Boolean)) {
     ta.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
         e.preventDefault();
@@ -17,10 +18,11 @@ export function init(c) {
       }
     }, true);
   }
-  const hl = F("promptHl");
-  ctx.prompt.addEventListener("input", refresh);
-  ctx.prompt.addEventListener("scroll", () => { hl.scrollTop = ctx.prompt.scrollTop; });
-  new ResizeObserver(() => { hl.style.height = ctx.prompt.offsetHeight + "px"; }).observe(ctx.prompt);
+
+  setupHl(ctx.promptPrefix, F("promptPrefixHl"));
+  setupHl(ctx.prompt, F("promptHl"));
+  setupHl(ctx.promptSuffix, F("promptSuffixHl"));
+
   F("recentSel").onchange = () => {
     const v = F("recentSel").value;
     F("recentSel").value = "";
@@ -28,7 +30,9 @@ export function init(c) {
     if (v === "__clear") { if (confirm("清空「最近用過的提示詞」？")) { store.set("recent", []); fillRecent(); } return; }
     const r = store.get("recent", [])[+v];
     if (!r) return;
+    if (ctx.promptPrefix) ctx.promptPrefix.value = "";
     ctx.prompt.value = r.prompt;
+    if (ctx.promptSuffix) ctx.promptSuffix.value = "";
     ctx.prompt.dispatchEvent(new Event("input", { bubbles: true }));
     ctx.save();
     toast("已換成這段提示詞（Ctrl+Z 可以復原）", "ok");
@@ -37,34 +41,56 @@ export function init(c) {
   refresh();
 }
 
+function setupHl(ta, hl) {
+  if (!ta || !hl) return;
+  ta.addEventListener("input", refresh);
+  ta.addEventListener("scroll", () => { hl.scrollTop = ta.scrollTop; });
+  new ResizeObserver(() => { hl.style.height = ta.offsetHeight + "px"; }).observe(ta);
+}
+
 // ---------------------------------------------------------------- 高亮與長度
 const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 
-export function refresh() {
-  if (!ctx) return;
-  const v = ctx.prompt.value;
+function renderHl(ta, hl) {
+  if (!ta || !hl) return;
+  const v = ta.value;
   const qwen = ["qwen21", "moss"].includes(ctx.family());
-  // 一次掃過：(文字:權重)、{a|b}、<image1>、@畫師
   const re = /\(((?:\\.|[^()\\])*?):\s*(-?\d+(?:\.\d+)?)\)|\{[^{}]*\|[^{}]*\}|<image\d+>|<image\?>|(?<=^|[,\s])@[^,\n]+/g;
-  let html = "", last = 0, weights = 0;
+  let html = "", last = 0;
   for (const m of v.matchAll(re)) {
     html += esc(v.slice(last, m.index));
     let cls;
-    if (m[2] !== undefined) { weights++; cls = qwen ? "w-bad" : +m[2] >= 1 ? "w-up" : "w-down"; }
+    if (m[2] !== undefined) { cls = qwen ? "w-bad" : +m[2] >= 1 ? "w-up" : "w-down"; }
     else if (m[0][0] === "{") cls = "w-rand";
     else if (m[0][0] === "<") cls = m[0] === "<image?>" ? "w-bad" : "w-img";
     else cls = "w-artist";
     html += `<mark class="${cls}">${esc(m[0])}</mark>`;
     last = m.index + m[0].length;
   }
-  F("promptHl").innerHTML = html + esc(v.slice(last)) + "\n";
-  F("promptHl").scrollTop = ctx.prompt.scrollTop;
+  hl.innerHTML = html + esc(v.slice(last)) + "\n";
+  hl.scrollTop = ta.scrollTop;
+}
+
+export function refresh() {
+  if (!ctx) return;
+  renderHl(ctx.promptPrefix, F("promptPrefixHl"));
+  renderHl(ctx.prompt, F("promptHl"));
+  renderHl(ctx.promptSuffix, F("promptSuffixHl"));
+
+  const fullText = (ctx.getFullPrompt ? ctx.getFullPrompt() : [
+    ctx.promptPrefix?.value || "",
+    ctx.prompt?.value || "",
+    ctx.promptSuffix?.value || ""
+  ].filter(Boolean).join(", ")).trim();
+
+  const qwen = ["qwen21", "moss"].includes(ctx.family());
+  const weights = (fullText.match(/\(((?:\\.|[^()\\])*?):\s*(-?\d+(?:\.\d+)?)\)/g) || []).length;
 
   // 長度：tag 數、英文字數；中文字另外算
-  const tags = v.split(/[,\n]/).map((s) => s.trim()).filter(Boolean).length;
-  const words = (v.match(/[A-Za-z0-9_'-]+/g) || []).length;
-  const cjk = (v.match(/[㐀-鿿]/g) || []).length;
-  const approx = Math.round(words * 1.35 + cjk * 1.1 + (v.match(/[,.()]/g) || []).length * 0.5);
+  const tags = fullText.split(/[,\n]/).map((s) => s.trim()).filter(Boolean).length;
+  const words = (fullText.match(/[A-Za-z0-9_'-]+/g) || []).length;
+  const cjk = (fullText.match(/[㐀-鿿]/g) || []).length;
+  const approx = Math.round(words * 1.35 + cjk * 1.1 + (fullText.match(/[,.()]/g) || []).length * 0.5);
   const parts = [`約 ${approx} token`, `${tags} 段`];
   if (cjk) parts.push(`含 ${cjk} 個中文字`);
   let warn = "";

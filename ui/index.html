@@ -149,7 +149,45 @@
       <div id="genAssets" class="adr-slot"></div>
       <div id="lkRow" class="row wrap lk-row" hidden></div>
       <div class="scr prompt-scr">
-        <div class="ac-wrap hl-wrap"><div class="hl" id="promptHl" aria-hidden="true" translate="no"></div><textarea id="prompt" rows="6" spellcheck="false" placeholder="masterpiece, best quality, safe, 1girl, ...（可輸入中文找 tag；{紅|藍} 每張隨機挑一個）"></textarea><div class="ac" id="acPrompt"></div></div>
+        <!-- 1. 前綴 -->
+        <div class="prompt-section" id="secPromptPrefix" data-part="prefix">
+          <div class="prompt-section-lbl">
+            <span class="badge">前綴</span>
+            <span class="dim">品質詞、畫風、相機視角</span>
+          </div>
+          <div class="ac-wrap hl-wrap">
+            <div class="hl" id="promptPrefixHl" aria-hidden="true" translate="no"></div>
+            <textarea id="promptPrefix" rows="2" spellcheck="false" placeholder="前綴：masterpiece, best quality, safe, ..."></textarea>
+            <div class="ac" id="acPromptPrefix"></div>
+          </div>
+        </div>
+
+        <!-- 2. 主體 -->
+        <div class="prompt-section active" id="secPrompt" data-part="body">
+          <div class="prompt-section-lbl">
+            <span class="badge">主體</span>
+            <span class="dim">角色、外觀、服裝、動作、場景</span>
+          </div>
+          <div class="ac-wrap hl-wrap">
+            <div class="hl" id="promptHl" aria-hidden="true" translate="no"></div>
+            <textarea id="prompt" rows="3" spellcheck="false" placeholder="主體：1girl, solo, smile, ...（可輸入中文找 tag；{紅|藍} 每張隨機挑一個）"></textarea>
+            <div class="ac" id="acPrompt"></div>
+          </div>
+        </div>
+
+        <!-- 3. 後綴 -->
+        <div class="prompt-section" id="secPromptSuffix" data-part="suffix">
+          <div class="prompt-section-lbl">
+            <span class="badge">後綴</span>
+            <span class="dim">光影、細節增強、修飾標籤</span>
+          </div>
+          <div class="ac-wrap hl-wrap">
+            <div class="hl" id="promptSuffixHl" aria-hidden="true" translate="no"></div>
+            <textarea id="promptSuffix" rows="2" spellcheck="false" placeholder="後綴：cinematic lighting, dynamic angle, highly detailed, ..."></textarea>
+            <div class="ac" id="acPromptSuffix"></div>
+          </div>
+        </div>
+
         <div class="foot"><span id="promptStats"></span><span class="hint-keys" title="游標放在某個 tag 上（或選取文字）再按">CTRL+↑↓ 權重</span></div>
       </div>
       <div class="warn-line sm" id="promptWarn" hidden></div>

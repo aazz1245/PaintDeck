@@ -309,6 +309,56 @@ input[type=range]:focus-visible { outline-offset: 0; }
 .hl .w-img { background: rgba(120,200,255,.28); }
 .hl .w-artist { background: rgba(80,220,220,.25); }
 .hl .w-bad { background: rgba(255,90,74,.35); text-decoration: underline wavy var(--ph-red); }
+
+/* 三段式提示詞（前綴、主體、後綴） */
+.prompt-scr { display: flex; flex-direction: column; gap: 6px; }
+.prompt-section {
+  position: relative;
+  border-radius: 4px;
+  padding: 4px 6px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(77, 122, 92, 0.3);
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.prompt-section.active {
+  border-color: rgba(141, 255, 176, 0.75);
+  background: rgba(141, 255, 176, 0.04);
+  box-shadow: 0 0 8px rgba(141, 255, 176, 0.15);
+}
+.prompt-section-lbl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 11px/1.2 var(--f-vfd, monospace);
+  margin-bottom: 2px;
+  user-select: none;
+}
+.prompt-section-lbl .badge {
+  background: rgba(77, 122, 92, 0.35);
+  color: var(--ph-dim);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.15s ease;
+}
+.prompt-section.active .prompt-section-lbl .badge {
+  background: var(--ph-green);
+  color: #0b1a0e;
+  box-shadow: 0 0 8px var(--ph-green);
+}
+.prompt-section-lbl .dim {
+  color: #4d7a5c;
+  font-size: 11px;
+}
+.prompt-section .hl-wrap textarea {
+  min-height: 44px;
+  padding: 2px 0;
+  resize: vertical;
+}
+.prompt-section[data-part="body"] .hl-wrap textarea {
+  min-height: 60px;
+}
 /* 自動完成 */
 .ac { position: absolute; left: -10px; right: -10px; top: 100%; z-index: 30; background: var(--case); border-radius: 6px; color: var(--label);
   box-shadow: 0 1px 0 var(--case-hi) inset, 0 3px 0 var(--case-lo), 0 14px 30px rgba(0,0,0,.45); max-height: 300px; overflow-y: auto; display: none; font: 13px/1.4 var(--f-ui); }
