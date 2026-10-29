@@ -115,7 +115,15 @@ export function init() {
   });
   lay = layoutEditor({ onChange: () => { layCount(); save(); } });
   F("layMount").append(lay.el);
-  $("#modeSeg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) setMode(b.dataset.mode); });
+  $("#modeSeg").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.mode === "booru" && S.mode === "booru") {
+      setMode("txt2img");
+      return;
+    }
+    setMode(b.dataset.mode);
+  });
 
   // 尺寸
   const chips = F("sizeChips");
@@ -709,8 +717,11 @@ export function setMode(mode) {
   F("outpaintBox").hidden = mode !== "outpaint";
   F("stripBox").hidden = mode !== "strip";
   F("sheetBox").hidden = mode !== "sheet";
-  F("booruBox").hidden = mode !== "booru";
-  if (mode === "booru") booru.onModeActive?.();
+  const isBooru = mode === "booru";
+  const bp = F("booruPanel"), bs = F("booruSplitter");
+  if (bp) bp.hidden = !isBooru;
+  if (bs) bs.hidden = !isBooru;
+  if (isBooru) booru.onModeActive?.();
   F("promptBox").hidden = mode === "strip" || mode === "sheet";  // 一鍵脫衣、四視圖不用提示詞框（指令寫在各自的區塊）
   F("hiresBox").hidden = !(mode === "txt2img" || mode === "img2img");  // 多圖參考先不開高解析修復：參考圖已經很吃顯存
   F("controlBox").hidden = !(mode === "txt2img" || mode === "img2img");
@@ -1307,7 +1318,7 @@ function applyTags(text, replace) {
 // ---------------------------------------------------------------- 收集／套用參數
 export function collectParams() {
   const p = {
-    mode: S.mode, model: F("model").value, turbo_lora: (!isTurboModel() && F("turboLora").value) || false,
+    mode: S.mode === "booru" ? (S.init ? "img2img" : "txt2img") : S.mode, model: F("model").value, turbo_lora: (!isTurboModel() && F("turboLora").value) || false,
     prompt: getRawPrompt(),
     promptPrefix: F("promptPrefix")?.value || "",
     promptSuffix: F("promptSuffix")?.value || "",

@@ -145,7 +145,7 @@ labelControls();
 // 生成頁的停靠式版面（dock.js）：看圖區＋生成鈕固定在中間，其他面板可以搬到左／右／下區、收起、拉寬。要在 i18n 前面組好，面板標題才會一起翻
 mountDock($("#page-gen"), {
   name: "gen",
-  main: [$("#page-gen > .monitor"), $("#genRow")],
+  main: [$("#dockMainStage") || $("#page-gen > .monitor"), $("#genRow")],
   panels: [
     { id: "source", title: "模型與輸入", zone: "left" },
     { id: "prompt", title: "提示詞", zone: "left" },

@@ -1,7 +1,7 @@
 // Booru 畫廊：整合 ComfyUI-Aaalice-Nodes 的 BooruGalleryNode 服務
 // 支援 Danbooru / Gelbooru / Safebooru / AI TAG 瀑布流檢索、抽卡、標籤提取與圖生圖聯動
 
-import { $, $$, el, toast, uploadFile } from "./util.js";
+import { $, $$, el, toast, uploadFile, store } from "./util.js";
 import { appendPrompt, setInit, setMode, refs, S } from "./gen.js";
 
 const COMFY_URL = "http://127.0.0.1:8188";
@@ -434,14 +434,6 @@ export function init() {
     searchPosts();
   });
 
-  // 大視圖展開
-  $("#booruExpandBtn")?.addEventListener("click", () => {
-    const box = $("#booruBox");
-    if (!box) return;
-    box.classList.toggle("booru-expanded");
-    $("#booruExpandBtn").textContent = box.classList.contains("booru-expanded") ? "✕" : "⛶";
-  });
-
   // 詳情彈窗按鈕
   $("#booruSetInitBtn")?.addEventListener("click", () => {
     if (state.selectedPost) setPostAsInput(state.selectedPost);
@@ -458,12 +450,88 @@ export function init() {
     if (url) window.open(url, "_blank");
   });
 
+  // 面板控制（自由拉伸、最大化、關閉）
+  initSplitter();
+
+  $("#booruPanelClose")?.addEventListener("click", () => {
+    setMode("txt2img");
+  });
+
+  $("#booruPanelExpand")?.addEventListener("click", () => {
+    const panel = $("#booruPanel");
+    if (!panel) return;
+    panel.classList.toggle("maximized");
+    const isMax = panel.classList.contains("maximized");
+    const btn = $("#booruPanelExpand");
+    if (btn) {
+      btn.textContent = isMax ? "⧉" : "⛶";
+      btn.title = isMax ? "還原視窗" : "最大化畫廊";
+    }
+  });
+
   fetchSources();
+}
+
+export function initSplitter() {
+  const splitter = $("#booruSplitter");
+  const panel = $("#booruPanel");
+  const stage = $("#dockMainStage");
+  if (!splitter || !panel) return;
+
+  const savedW = store.get("booru_width", 500);
+  if (savedW) {
+    document.documentElement.style.setProperty("--booru-w", `${savedW}px`);
+  }
+
+  let startX = 0;
+  let startW = 0;
+  let dragging = false;
+
+  const onPointerMove = (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const stageW = stage ? stage.clientWidth : window.innerWidth;
+    const minW = 280;
+    const maxW = Math.max(minW, stageW - 200);
+    const newW = Math.min(maxW, Math.max(minW, startW + dx));
+    document.documentElement.style.setProperty("--booru-w", `${Math.round(newW)}px`);
+    store.set("booru_width", Math.round(newW));
+  };
+
+  const onPointerUp = () => {
+    if (!dragging) return;
+    dragging = false;
+    splitter.classList.remove("dragging");
+    document.removeEventListener("pointermove", onPointerMove);
+    document.removeEventListener("pointerup", onPointerUp);
+    document.removeEventListener("pointercancel", onPointerUp);
+  };
+
+  splitter.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    startX = e.clientX;
+    startW = panel.getBoundingClientRect().width;
+    dragging = true;
+    splitter.classList.add("dragging");
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerup", onPointerUp);
+    document.addEventListener("pointercancel", onPointerUp);
+  });
+
+  // 雙擊重設預設寬度
+  splitter.addEventListener("dblclick", () => {
+    document.documentElement.style.setProperty("--booru-w", "500px");
+    store.set("booru_width", 500);
+  });
 }
 
 // 當使用者切換到畫廊模式時呼叫
 export function onModeActive() {
   if (!state.initialized) init();
+  const bp = $("#booruPanel");
+  const bs = $("#booruSplitter");
+  if (bp) bp.hidden = false;
+  if (bs) bs.hidden = false;
   if (!state.posts.length && !state.loading) {
     searchPosts();
   }

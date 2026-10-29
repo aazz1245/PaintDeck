@@ -1714,25 +1714,102 @@ body.docking { cursor: grabbing; user-select: none; }
 .card.recipe-card .recipe-count { font: 700 10px/1 var(--f-ui); background: var(--key-dark); color: var(--warn); padding: 2px 5px; border-radius: 3px; display: inline-block; margin-right: 4px; }
 
 /* ---------- Booru 畫廊 (BooruGalleryNode) ---------- */
-#booruBox { position: relative; }
-.booru-toolbar { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.dock-main-stage {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  gap: 0;
+  position: relative;
+}
+.dock-main-stage > .monitor {
+  flex: 1 1 0%;
+  min-width: 220px;
+  height: 100%;
+}
+
+.booru-panel {
+  display: flex;
+  flex-direction: column;
+  width: var(--booru-w, 520px);
+  min-width: 300px;
+  max-width: min(90vw, calc(100% - 180px));
+  flex: none;
+  height: 100%;
+  border-radius: 8px;
+  background: var(--case);
+  box-shadow: inset 0 1px 0 var(--case-hi), 0 0 0 1px var(--groove);
+  padding: 10px 12px;
+  gap: 8px;
+  overflow: hidden;
+  position: relative;
+}
+.booru-panel[hidden] { display: none !important; }
+
+.booru-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 2px 6px;
+  border-bottom: 1px solid var(--groove);
+  font: 700 12px/1 var(--f-ui);
+  color: var(--label);
+}
+.booru-grip { font-size: 13px; opacity: .55; }
+.booru-panel-title { color: var(--acc); letter-spacing: 0.5px; }
+
+.booru-splitter {
+  width: 12px;
+  flex: none;
+  cursor: ew-resize;
+  position: relative;
+  user-select: none;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 2px;
+  z-index: 10;
+}
+.booru-splitter[hidden] { display: none !important; }
+.booru-splitter::before {
+  content: "";
+  width: 4px;
+  height: 54px;
+  border-radius: 2px;
+  background: var(--groove);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.5);
+  transition: all .15s ease;
+}
+.booru-splitter:hover::before,
+.booru-splitter.dragging::before {
+  background: var(--acc);
+  box-shadow: 0 0 10px var(--acc);
+  height: 100px;
+  width: 4px;
+}
+
+.booru-toolbar { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
 .booru-filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .booru-search-row { display: flex; gap: 6px; align-items: center; }
 .booru-search-row input[type="search"] { flex: 1; min-width: 140px; }
-.booru-meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.booru-meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .booru-pager { display: flex; gap: 6px; align-items: center; }
 
 .booru-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 8px;
-  max-height: 460px;
   overflow-y: auto;
   padding: 4px 2px;
   background: var(--screen);
   border-radius: 6px;
   border: 1px solid var(--groove);
-  min-height: 180px;
+  min-height: 160px;
+  flex: 1;
 }
 .booru-grid.loading { opacity: 0.6; pointer-events: none; }
 .booru-empty-msg {
@@ -1828,24 +1905,16 @@ body.docking { cursor: grabbing; user-select: none; }
 }
 .booru-quick-btn:hover { background: var(--acc); }
 
-.booru-tip { margin-top: 6px; opacity: .75; line-height: 1.4; }
+.booru-tip { margin-top: 4px; opacity: .75; line-height: 1.4; }
 
-/* 寬幅展開模式 */
-#booruBox.booru-expanded {
-  position: fixed;
-  inset: 50px 20px 20px 20px;
-  z-index: 1000;
-  background: var(--case);
-  box-shadow: 0 16px 48px rgba(0,0,0,.8), 0 0 0 1px var(--case-hi);
-  border-radius: 8px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
+/* 畫廊最大化展開 */
+.booru-panel.maximized {
+  width: 100% !important;
+  max-width: 100% !important;
 }
-#booruBox.booru-expanded .booru-grid {
-  flex: 1;
-  max-height: none;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+.dock-main-stage:has(.booru-panel.maximized) .monitor,
+.dock-main-stage:has(.booru-panel.maximized) .booru-splitter {
+  display: none !important;
 }
 
 /* 詳情彈窗 */
