@@ -42,6 +42,20 @@
     "note": null
   },
   {
+    "path": "LLM/Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved-APEX-I-Compact.gguf",
+    "size": 17016624544,
+    "sha256": "ff82d1993140be550f21f17ec9e93697a060d71ce15d8f6089c911032b448058",
+    "url": "https://huggingface.co/SC117/Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved-APEX-GGUF/resolve/313e55f61a045dd18ac023d28fe845ee35988a5d/Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved-APEX-I-Compact.gguf",
+    "note": null
+  },
+  {
+    "path": "LLM/mmproj-Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved-APEX-F16.gguf",
+    "size": 899283072,
+    "sha256": "c8e702344a81f8c226a914aa980ed6e1f604bce9374f1fed8e65c896908af414",
+    "url": "https://huggingface.co/SC117/Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved-APEX-GGUF/resolve/313e55f61a045dd18ac023d28fe845ee35988a5d/mmproj-Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved-APEX-F16.gguf",
+    "note": null
+  },
+  {
     "path": "LLM/pe_i2i_heretic-Q4_K_M.gguf",
     "size": 5891334720,
     "sha256": "4fa7d846acc6b6366f2b959293fb073f304d18c2d0a73d7a193cb09cc87bf074",

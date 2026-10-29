@@ -10,7 +10,16 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 use tokio_tungstenite::tungstenite::Message;
 
-pub const CLIENT_ID: &str = "anima-web";
+/// ComfyUI 的事件只送給「最後一個用這個 client_id 連上的」：正式站（8190）用 anima-web，
+/// 其他 port 的測試站加上 port，借用同一個 ComfyUI 時才不會把正式站的完成通知搶走（2026-10-28 測試站關掉後，正式站整個收不到圖）
+pub fn client_id_for(port: Option<&str>) -> String {
+    match port.map(str::trim).filter(|p| !p.is_empty() && *p != "8190") {
+        Some(p) => format!("anima-web-{p}"),
+        None => "anima-web".into(),
+    }
+}
+
+static CLIENT_ID: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| client_id_for(std::env::var("ANIMA_PORT").ok().as_deref()));
 
 #[derive(Debug, Clone)]
 pub struct ComfyError(pub String);
@@ -50,7 +59,7 @@ impl Comfy {
 
     pub fn new(url: &str, db: Arc<Db>, hub: Hub) -> Arc<Comfy> {
         let url = url.trim_end_matches('/').to_string();
-        let ws_url = format!("{}/ws?clientId={CLIENT_ID}", url.replacen("http", "ws", 1));
+        let ws_url = format!("{}/ws?clientId={}", url.replacen("http", "ws", 1), CLIENT_ID.as_str());
         // 本機的 ComfyUI 直連；雲端網址模式照代理設定（net.rs）
         let http = reqwest::Client::builder()
             .proxy(crate::net::proxy())
@@ -167,7 +176,7 @@ impl Comfy {
         let mut nodes = nodes.clone();
         fix_loaders(self, &mut nodes).await?;
         crate::diagnostics::snapshot("workflow_api", &nodes);
-        let payload = |n: &Value| json!({"prompt": n, "client_id": CLIENT_ID, "extra_data": {"extra_pnginfo": extra_pnginfo}});
+        let payload = |n: &Value| json!({"prompt": n, "client_id": CLIENT_ID.as_str(), "extra_data": {"extra_pnginfo": extra_pnginfo}});
         let (mut ok, mut r) = self.post_raw("/prompt", &payload(&nodes)).await?;
         // 模型檔名只差在斜線方向、子資料夾（別台電腦的工作流）：照 ComfyUI 附的清單換成同一個檔，再送一次
         if !ok && fix_listed_names(&mut nodes, &r) {
@@ -639,6 +648,8 @@ const LOADER_ALTS: &[Alt] = &[
     alt("ModelPatchLoader", "name", "anima-lllite-depth-1.safetensors", "Anima 構圖控制（深度）", &["lllite_depth"], "model_patches", "Hugging Face 的 Comfy-Org/Anima-LLLite", false),
     alt("ModelPatchLoader", "name", "anima-lllite-inpainting-v2.safetensors", "Anima 局部重繪的構圖控制", &["lllite_inpaint"], "model_patches", "Hugging Face 的 Comfy-Org/Anima-LLLite", false),
     alt("ModelPatchLoader", "name", "anima-lllite-any-test-like-v2.safetensors", "Anima 構圖控制（通用）", &["lllite_any"], "model_patches", "Hugging Face 的 Comfy-Org/Anima-LLLite", false),
+    alt("ModelPatchLoader", "name", "anima-lllite-pose-1.safetensors", "Anima 構圖控制（姿勢骨架）", &["lllite_pose"], "model_patches", "Hugging Face 的 Comfy-Org/Anima-LLLite", false),
+    alt("CheckpointLoaderSimple", "ckpt_name", crate::graphs::SDPOSE_CKPT, "抽骨架用的模型（SDPose）", &["sdpose_wholebody", "sdpose"], "checkpoints", "Hugging Face 的 Comfy-Org/SDPose", false),
 ];
 
 fn norm(s: &str) -> String {
@@ -713,6 +724,13 @@ async fn fix_loaders(comfy: &Comfy, nodes: &mut Value) -> Result<(), ComfyError>
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn test_stations_get_their_own_client_id() {
+        assert_eq!(client_id_for(None), "anima-web");
+        assert_eq!(client_id_for(Some("8190")), "anima-web");
+        assert_eq!(client_id_for(Some("8191")), "anima-web-8191");
+    }
+
     use super::*;
 
     fn have(v: &[&str]) -> Vec<String> {

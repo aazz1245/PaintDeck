@@ -7,6 +7,8 @@ import { LTX_NAME, H3_NAME } from "./gen.js";
 import * as models from "./models.js";
 import { mountNet } from "./net.js";
 import { mountComfyOpts } from "./comfyopts.js";
+import { mountSkills } from "./skills.js";
+import { applyStrip } from "./feature.js";
 import { openAi } from "./studio.js";
 import * as vidmap from "./vidmap.js";
 import * as updates from "./updates.js";
@@ -342,4 +344,35 @@ export function show() {
   loadReset(); loadVideo(); models.show(); if (!PROMPTS.length) loadPrompts();
   if (!netShown) { netShown = true; mountNet($("#netBox")); } // 網路（代理、下載來源）：第一次打開設定頁才讀
   mountComfyOpts($("#comfyOptsBox")); // ComfyUI 啟動方式：每次打開都重讀（安裝與修復可能改過）
+  mountSkills($("#setSkills")); // 外掛寫法：每次打開都重讀（可能自己放了資料夾進去）
+  mountFeatures(); // 外掛功能（內容補丁）：每次打開都重讀
+}
+
+let featuresWired = false;
+function mountFeatures() {
+  const refresh = async () => {
+    try {
+      const r = await api("/api/features/strip");
+      $("#featStripState").textContent = r.enabled ? `已安裝：${r.ui?.button || "外掛功能"}` : "目前沒有裝任何外掛功能內容補丁。";
+    } catch { /* 伺服器沒掛這個 API（舊版）就不顯示 */ }
+  };
+  if (!featuresWired) {
+    featuresWired = true;
+    const file = $("#featStripFile");
+    $("#featStripImport").onclick = () => file.click();
+    file.onchange = async () => {
+      const f = file.files[0];
+      if (f) {
+        try {
+          const pack = JSON.parse(await f.text());
+          const r = await api("/api/features/strip/install", { json: { pack } });
+          applyStrip(r.ui);
+          toast("補丁已匯入，功能已啟用", "ok");
+        } catch (e) { toast("匯入失敗：" + e.message, "err"); }
+      }
+      file.value = "";
+      refresh();
+    };
+  }
+  refresh();
 }

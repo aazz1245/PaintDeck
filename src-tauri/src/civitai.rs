@@ -39,6 +39,8 @@ pub fn base_subdir(base: &str) -> String {
 /// 兩邊練的 LoRA 生圖站都能用（2026-10-17 查 API：兩個名稱各只有一兩個 LoRA，要一起搜）
 pub fn base_models(base: &str) -> Vec<&str> {
     match base {
+        // 全部基底：不加 baseModels 過濾，Civitai 回所有基底的 LoRA，使用者自己挑
+        "*" => vec![],
         "MOSS Image" => vec!["MOSS Image", "MOSS Image Base"],
         // Krea 官方建議在 Raw 練 LoRA，套到 Turbo 推論；兩種標記要一起找。
         "Krea 2" | "Krea 2 Turbo" => vec!["Krea 2", "Krea 2 Turbo"],
@@ -47,6 +49,9 @@ pub fn base_models(base: &str) -> Vec<&str> {
 }
 
 fn base_is(base: &str, v: &Value) -> bool {
+    if base == "*" {
+        return true;
+    }
     let vb = v["baseModel"].as_str().unwrap_or("").to_lowercase();
     base_models(base).iter().any(|b| b.to_lowercase() == vb)
 }
@@ -97,6 +102,7 @@ fn vinfo(v: &Value) -> Value {
         .collect();
     json!({"id": v["id"], "name": v.get("name").cloned().unwrap_or(Value::Null),
            "trainedWords": v.get("trainedWords").cloned().unwrap_or(json!([])),
+           "base": v.get("baseModel").cloned().unwrap_or(Value::Null),
            "file": f.get("name").cloned().unwrap_or(Value::Null), "sizeMB": round1(kb / 1024.0), "published": published})
 }
 
@@ -219,6 +225,31 @@ impl Civitai {
 
     pub fn subdir(&self, base: &str) -> PathBuf {
         self.lora_dir.join(base_subdir(base))
+    }
+
+    /// 已安裝的 LoRA 檔名。base="*"（全部基底）時掃 loras 根目錄和每個基底子目錄；否則只掃該基底的子目錄
+    pub fn installed_names(&self, base: &str) -> std::collections::HashSet<String> {
+        let names = |dir: &Path| -> Vec<String> {
+            std::fs::read_dir(dir)
+                .map(|rd| rd.flatten().filter(|e| e.path().is_file()).map(|e| e.file_name().to_string_lossy().to_string()).collect())
+                .unwrap_or_default()
+        };
+        if base != "*" {
+            return names(&self.subdir(base)).into_iter().collect();
+        }
+        let mut out: std::collections::HashSet<String> = names(&self.lora_dir).into_iter().collect();
+        if let Ok(rd) = std::fs::read_dir(&self.lora_dir) {
+            for e in rd.flatten().filter(|e| e.path().is_dir()) {
+                out.extend(names(&e.path()));
+                // other\ 底下還有一層（未知基底）
+                if let Ok(sub) = std::fs::read_dir(e.path()) {
+                    for s in sub.flatten().filter(|s| s.path().is_dir()) {
+                        out.extend(names(&s.path()));
+                    }
+                }
+            }
+        }
+        out
     }
 
     /// 選項跟 Civitai 的 BaseModel enum 同步；前端仍可輸入新名稱，不用等生圖站更新。
@@ -503,5 +534,20 @@ mod tests {
         assert!(base_subdir("Flux.3").starts_with("other\\flux_3_"));
         assert!(!base_subdir("../../escape").contains(".."));
         assert!(version_for(&m, "Anima", Some(2)).is_none());
+    }
+
+    #[test]
+    fn all_bases_lists_every_version_with_its_base() {
+        // "*"：不加 baseModels 過濾，每個版本都算，卡片上帶各自的基底
+        assert!(base_models("*").is_empty());
+        let m = json!({"id": 9, "name": "x", "creator": {"username": "u"}, "stats": {},
+                       "modelVersions": [{"id": 1, "baseModel": "Anima"}, {"id": 2, "baseModel": "Qwen 2.1"}]});
+        let s = simplify(&m, "*");
+        let vs = s["versions"].as_array().unwrap();
+        assert_eq!(vs.len(), 2);
+        assert_eq!(vs[0]["base"], "Anima");
+        assert_eq!(vs[1]["base"], "Qwen 2.1");
+        // 主版本（卡片預設）是第一個
+        assert_eq!(s["version"]["base"], "Anima");
     }
 }

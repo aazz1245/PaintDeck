@@ -616,6 +616,10 @@ input.flip-in.go { animation: flipit .28s ease-in-out; }
 .reset-parts .check { align-items: flex-start; }
 .reset-history { display: flex; flex-direction: column; gap: 6px; }
 .reset-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--case-2); border-radius: 5px; padding: 6px 10px; box-shadow: inset 0 1px 2px var(--groove); }
+.sk-item { display: grid; gap: 4px; background: var(--case-2); border-radius: 5px; padding: 8px 10px; margin: 6px 0; box-shadow: inset 0 1px 2px var(--groove); }
+.sk-desc { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.sk-toc { max-height: 260px; overflow: auto; white-space: pre-wrap; font-size: 12px; margin: 4px 0 0; }
+#skUrl { flex: 1; min-width: 240px; }
 
 /* ---------- 底部 VFD 狀態列 ---------- */
 .status { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 7px 14px; border-radius: 6px; background: var(--screen); white-space: nowrap; overflow: hidden;
@@ -1085,6 +1089,13 @@ input.flip-in.go { animation: flipit .28s ease-in-out; }
 @media (prefers-reduced-motion: reduce) { .ag-flash { animation: none; outline: 3px solid rgba(255, 196, 0, .85); } }
 .ag-flags { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 2px 14px; }
 .ag-flags .check { align-items: flex-start; }
+/* 助手的生圖設定：直接在這裡改 */
+.ag-base { display: grid; gap: 6px; margin: 6px 0; }
+.ag-base select, .ag-base input, .ag-base textarea { width: 100%; }
+.ag-base-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 6px 10px; }
+.ag-base-loras { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ag-base-lora { display: inline-flex; align-items: center; gap: 6px; padding: 3px 4px 3px 8px; border-radius: 4px; background: var(--case-3); font-size: 12px; }
+.ag-base-lora input { width: 56px; }
 .ag-cloud-st { display: flex; align-items: center; gap: 8px; font-weight: 600; }
 .ag-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--led-off); flex: none; box-shadow: inset 0 1px 1px rgba(0,0,0,.6); }
 .ag-dot.on { background: var(--ph-green); box-shadow: 0 0 6px var(--ph-green); }

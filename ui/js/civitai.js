@@ -2,8 +2,9 @@
 import { $, el, api, toast, fmtN } from "./util.js";
 import { app } from "./state.js";
 
-let next = null, loaded = false, basesLoaded = false, base = "Anima";
+let next = null, loaded = false, basesLoaded = false, base = "*";
 const cards = new Map(); // versionId -> 卡片上的下載區
+const ALL = "全部基底"; // 網頁上顯示的「全部基底」→ 後端的 "*"
 
 export function init() {
   $("#cvGo").onclick = () => search(false);
@@ -16,7 +17,7 @@ export function show() {
   if (!basesLoaded) {
     basesLoaded = true;
     api("/api/civitai/bases").then((r) => {
-      const values = new Set(["Anima", "Qwen 2.1", "MOSS Image", "Krea 2", "Krea 2 Turbo", ...(r.bases || [])]);
+      const values = new Set([ALL, "Anima", "Qwen 2.1", "MOSS Image", "Krea 2", "Krea 2 Turbo", ...(r.bases || [])]);
       $("#cvBaseList").replaceChildren(...[...values].map((b) => el("option", { value: b })));
     }).catch(() => { basesLoaded = false; });
   }
@@ -26,9 +27,13 @@ export function show() {
 async function search(append) {
   loaded = true;
   if (!append) { $("#cvGrid").innerHTML = ""; next = null; cards.clear(); }
-  if (!append) base = $("#cvBase").value.trim();
-  if (!base) { $("#cvGrid").append(el("div", { class: "muted pad" }, "先填基底模型名稱。")); return; }
-  $("#cvNote").textContent = `只列出有 ${base} 版本的 LoRA。下載後會依基底模型分開存放，觸發詞也會一起存好。`;
+  if (!append) {
+    const v = $("#cvBase").value.trim();
+    base = !v || v === ALL ? "*" : v;
+  }
+  $("#cvNote").textContent = base === "*"
+    ? "列出所有基底的 LoRA，卡片上會標每個版本是哪個基底；下載後依基底分開存放，觸發詞也會一起存好。"
+    : `只列出有 ${base} 版本的 LoRA。下載後會依基底模型分開存放，觸發詞也會一起存好。`;
   const qs = new URLSearchParams({ base, query: $("#cvQ").value.trim(), sort: $("#cvSort").value, period: $("#cvPeriod").value, nsfw: $("#cvNsfw").checked ? 1 : 0 });
   if (append && next) qs.set("cursor", next);
   $("#cvMore").hidden = true;
@@ -39,7 +44,7 @@ async function search(append) {
     loading.remove();
     next = r.next;
     for (const it of r.items) $("#cvGrid").append(card(it));
-    if (!r.items.length && !append) $("#cvGrid").append(el("div", { class: "muted pad" }, `沒有找到有 ${base} 版本的 LoRA，換個關鍵字試試。`));
+    if (!r.items.length && !append) $("#cvGrid").append(el("div", { class: "muted pad" }, base === "*" ? "沒有找到 LoRA，換個關鍵字試試。" : `沒有找到有 ${base} 版本的 LoRA，換個關鍵字試試。`));
     $("#cvMore").hidden = !next;
   } catch (e) {
     loading.textContent = e.message;
@@ -55,8 +60,9 @@ function card(it) {
   c.setBtn = (installed) => {
     if (installed !== undefined) c.cur.installed = installed;
     c.dl.innerHTML = "";
-    if (c.cur.installed) c.dl.append(el("span", { class: "badge ok" }, "已安裝"));
-    else c.dl.append(el("button", { class: "btn sm primary", onclick: () => start(it, c) }, `下載（${c.cur.sizeMB} MB）`));
+    const bt = base === "*" && c.cur.base ? `${c.cur.base}・` : "";
+    if (c.cur.installed) c.dl.append(el("span", { class: "badge ok" }, bt ? `已安裝（${c.cur.base}）` : "已安裝"));
+    else c.dl.append(el("button", { class: "btn sm primary", onclick: () => start(it, c) }, `下載（${bt}${c.cur.sizeMB} MB）`));
     c.dl.append(el("a", { class: "icon", href: it.url, target: "_blank", title: "在 Civitai 開啟" }, "↗"));
     c.trig.textContent = c.cur.trainedWords?.length ? "觸發詞：" + c.cur.trainedWords.slice(0, 6).join(", ") : "";
   };
@@ -65,7 +71,7 @@ function card(it) {
   // 同一個基底模型有多個版本時，可以挑要下載的版本（預設最新）
   const sel = versions.length > 1
     ? el("select", { class: "sm", title: "選擇版本", onchange: (e) => { c.cur = versions.find((v) => String(v.id) === e.target.value); c.setBtn(); } },
-      ...versions.map((v) => el("option", { value: v.id }, `${v.name}${v.published ? "（" + v.published + "）" : ""}${v.installed ? " ✓" : ""}`)))
+      ...versions.map((v) => el("option", { value: v.id }, `${v.name}${v.published ? "（" + v.published + "）" : ""}${base === "*" && v.base ? "・" + v.base : ""}${v.installed ? " ✓" : ""}`)))
     : null;
   return el("div", { class: "card" },
     el("div", { class: "ph" + (blur ? " blur" : ""), style: im ? `background-image:url('${im.url}')` : "" }, im ? "" : "沒有預覽圖"),
@@ -81,7 +87,8 @@ function card(it) {
 
 async function start(it, c) {
   try {
-    await api("/api/civitai/download", { json: { modelId: it.id, versionId: c.cur.id, base } });
+    // 全部基底模式下 base 是 "*"，下載要用這個版本自己的基底決定存哪個資料夾
+    await api("/api/civitai/download", { json: { modelId: it.id, versionId: c.cur.id, base: c.cur.base || base } });
     c.dl.innerHTML = "";
     c.dl.append(el("div", { class: "bar", style: "flex:1" }, el("div")), el("span", { class: "sub" }, "準備中"));
   } catch (e) {

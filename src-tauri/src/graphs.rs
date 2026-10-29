@@ -23,6 +23,8 @@ pub const QWEN21_TE: &str = "qwen3vl_8b_w4a8.safetensors";
 pub const QWEN21_VAE: &str = "qwen_image_2.1_vae_bf16.safetensors";
 pub const QWEN21_PIXELS: f64 = 1024.0 * 1024.0;
 pub const DEPTH_MODEL: &str = "depth_anything_3_mono_large.safetensors";
+/// 抽骨架（OpenPose／DWPose 格式，ComfyUI 原生 SDPose；Comfy-Org/SDPose，放 models\checkpoints）
+pub const SDPOSE_CKPT: &str = "sdpose_wholebody_fp16.safetensors";
 /// MOSS-Image（Comfy-Org/MOSS-Image 的 ComfyUI 版檔案）：Qwen3.5-9B 文字編碼器（w4a8）＋FLUX.2 VAE。
 /// 官方建議：Euler、sgm_uniform、50 步、CFG 3、shift 5，負面那一路跳過第 22 層（SkipLayerGuidanceDiTSimple）。
 /// ComfyUI 0.38 原本沒有 MOSS：D 槽與安裝精靈都補了官方 commit e087d8f 的 9 個檔（resources\extras\comfy_moss）
@@ -86,6 +88,7 @@ fn lllite(kind: &str) -> &'static str {
         "lineart" => "anima-lllite-lineart-1.safetensors",
         "scribble" => "anima-lllite-scribble-1.safetensors",
         "depth" => "anima-lllite-depth-1.safetensors",
+        "pose" => "anima-lllite-pose-1.safetensors",
         "inpaint" => "anima-lllite-inpainting-v2.safetensors",
         _ => "anima-lllite-any-test-like-v2.safetensors",
     }
@@ -282,7 +285,7 @@ impl Graph {
     fn q(&self) -> bool {
         self.family == "qwen21"
     }
-    /// 一張圖裡換家族（四視圖、差分：生成頁是 Anima 也改用 Qwen）：文字編碼器、VAE 要重新載入對應家族的
+    /// 一張圖裡換家族（一鍵脫衣：先 Qwen 再 Anima）：文字編碼器、VAE 要重新載入對應家族的
     fn switch_family(&mut self, fam: &str) {
         self.family = fam.into();
         self.clip = None;
@@ -474,16 +477,17 @@ fn model_chain(g: &mut Graph, p: &Value, lll: Vec<Lllite>) -> Ref {
     m
 }
 
-// ---------------------------------------------------------------- Qwen 2.1 改圖（四視圖、差分）
-/// 生成頁不是 Qwen 時，改圖用的模型：Qwen 2.1 官方 Turbo（重繪 1.0 才改得動，低於 1 會整張照抄原圖）
-pub const EDIT_QWEN: &str = "qwen_image_2.1_turbo_int8_convrot.safetensors";
+// ---------------------------------------------------------------- 換家族改圖（兩段：Qwen 2.1 改 → Anima 精修 → 差異遮罩貼回）
+// 「一鍵脫衣」用這套引擎，改圖指令和精修 tag 是外部內容補丁（feature_strip），這裡只有中性的 graph 機制。
+pub const STRIP_QWEN: &str = "qwen_image_2.1_turbo_int8_convrot.safetensors";
+pub const STRIP_REFINE: &str = "anima-turbo-v1.1.safetensors";
 
-/// 四視圖、差分的 Qwen 那段：生成頁選的是 Qwen 就照它（模型、步數、CFG、LoRA），不然用官方 Turbo、不掛 LoRA
+/// 一鍵脫衣、四視圖編輯的 Qwen 那段：生成頁選的是 Qwen 就照它（模型、步數、CFG、LoRA），不然用官方 Turbo、不掛 LoRA
 fn edit_qwen_params(p: &Value, fam: &str) -> Value {
     let mut qp = if fam == "qwen21" {
         p.clone()
     } else {
-        json!({"model": EDIT_QWEN, "cfg": 1, "sampler": "euler", "scheduler": "simple", "steps": 8, "loras": []})
+        json!({"model": STRIP_QWEN, "cfg": 1, "sampler": "euler", "scheduler": "simple", "steps": 8, "loras": []})
     };
     qp["pose_control"] = Value::Null;
     qp
@@ -617,6 +621,18 @@ fn control_image(g: &mut Graph, c: &Value, w: i64, h: i64) -> Ref {
             let geo = g.add("DA3Inference", json!({"da3_model": dm, "image": img, "resolution": 504, "resize_method": "upper_bound_resize", "mode": "mono"}));
             img = g.add("DA3Render", json!({"da3_geometry": geo, "output": "depth", "output.normalization": "v2_style", "output.apply_sky_clip": false}));
         }
+        "pose" => {
+            // 照 ComfyUI 官方藍圖「Image to Pose Map (SDPose Multi-Person)」：先框人、每個框各抽一次骨架，再畫成 DWPose 那種彩色骨架圖。
+            // 藍圖的框人用 RT-DETR，這裡改用修臉已經在用的 SAM3（少下載一個模型）；一個人都沒框到時 SDPose 自己改抽整張圖。
+            // 不畫腳尖：Anima 的 pose LLLite 是拿 easy_dwpose 的圖訓練的，只有身體、手、臉。
+            let sam = g.add("CheckpointLoaderSimple", json!({"ckpt_name": SAM3_CKPT}));
+            let who = g.add("CLIPTextEncode", json!({"text": "person", "clip": Graph::slot(&sam, 1)}));
+            let det = g.add("SAM3_Detect", json!({"model": sam, "image": img, "conditioning": who, "threshold": 0.4, "refine_iterations": 0, "individual_masks": true}));
+            let sp = g.add("CheckpointLoaderSimple", json!({"ckpt_name": SDPOSE_CKPT}));
+            let kp = g.add("SDPoseKeypointExtractor", json!({"model": sp, "vae": Graph::slot(&sp, 2), "image": img, "batch_size": 1, "bboxes": Graph::slot(&det, 1)}));
+            img = g.add("SDPoseDrawKeypoints", json!({"keypoints": kp, "draw_body": true, "draw_hands": true, "draw_face": true, "draw_feet": false,
+                                                       "stick_width": 4, "face_point_size": 2, "score_threshold": 0.5, "draw_head": true}));
+        }
         _ => {}
     }
     if truthy(c.get("invert")) {
@@ -626,25 +642,41 @@ fn control_image(g: &mut Graph, c: &Value, w: i64, h: i64) -> Ref {
 }
 
 fn control_list(g: &mut Graph, p: &Value, w: i64, h: i64) -> Vec<Lllite> {
-    let Some(c) = p.get("control") else {
-        return vec![];
-    };
-    if !truthy(Some(c))
-        || !truthy(c.get("enabled"))
-        || !truthy(c.get("image"))
-        || g.family != "anima"
-    {
+    if g.family != "anima" {
         return vec![];
     }
-    let img = control_image(g, c, w, h);
-    vec![(
-        lllite(s(c.get("type"), "any")),
-        img,
-        None,
-        f(c.get("strength"), 1.0),
-        f(c.get("start"), 0.0),
-        f(c.get("end"), 1.0),
-    )]
+    // 構圖控制：一張（物件）或疊好幾張（陣列，例如深度＋骨架），依序接在模型上
+    let items = match p.get("control") {
+        Some(Value::Array(a)) => a.clone(),
+        Some(c) => vec![c.clone()],
+        None => vec![],
+    };
+    let mut out = vec![];
+    for c in items.iter().filter(|c| truthy(Some(c)) && truthy(c.get("enabled")) && truthy(c.get("image"))) {
+        let img = control_image(g, c, w, h);
+        out.push((
+            lllite(s(c.get("type"), "any")),
+            img,
+            None,
+            f(c.get("strength"), 1.0),
+            f(c.get("start"), 0.0),
+            f(c.get("end"), 1.0),
+        ));
+    }
+    // 體位庫的姿勢參考圖（3D 人偶的深度圖＋骨架）：深度 LLLite 鎖住兩個人的輪廓和前後，姿勢 LLLite 分出哪隻是左手右腳。
+    // 2026-10-28 實測：只掛骨架太弱（作者也說 pose 那顆比較弱），深度圖才拉得動雙人體位；Anima 熟的體位（背後式）不掛反而最好
+    if let Some(pc) = p.get("pose_control").filter(|v| v.is_object()) {
+        for (k, st, end) in [("depth", f(pc.get("depth_strength"), 0.8), f(pc.get("depth_end"), 0.6)),
+                             ("pose", f(pc.get("pose_strength"), 1.0), f(pc.get("pose_end"), 1.0))] {
+            let Some(file) = pc.get(k).and_then(Value::as_str).filter(|x| !x.is_empty()) else {
+                continue;
+            };
+            let li = g.add("LoadImage", json!({"image": format!("{POSE_INPUT}/{file}")}));
+            let img = g.scale(&li, w, h, "center", "lanczos");
+            out.push((lllite(k), img, None, st, 0.0, end));
+        }
+    }
+    out
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1231,6 +1263,75 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
             img = g.decode(&smp, w0, h0);
             (w, h) = (w0, h0);
         }
+        "strip" => {
+            // 一鍵脫衣：Qwen 2.1 改圖脫掉 →（可選）Anima 低重繪精修 →（可選）只把改到的地方貼回 Qwen 那張
+            let init = p.get("init_image").cloned().unwrap_or(Value::Null);
+            let (ow, oh) = image_size(&inp(&init))?;
+            let st = p.get("strip").filter(|v| v.is_object()).unwrap_or(&empty);
+            // 改圖指令和精修 tag 由內容補丁算好塞進 params（server::api_gen::prepare），graph 本身不含露骨文字
+            // 生成頁選的是 Qwen 模型就用它（連同步數、CFG、LoRA）；不然用官方 Turbo，LoRA 留給 Anima 精修那段
+            let qp = edit_qwen_params(p, &fam);
+            g.switch_family("qwen21");
+            let (w0, h0) = fit_pixels(ow, oh, QWEN21_PIXELS, 32);
+            let li = g.add("LoadImage", json!({"image": init}));
+            let src = g.scale(&li, w0, h0, "center", "lanczos");
+            let qprompt = s(st.get("qwen_prompt"), "").to_string();
+            let qmodel = model_chain(&mut g, &qp, vec![]);
+            let (qpos, qneg, qlat) = g.qtext(&qprompt, "", std::slice::from_ref(&src));
+            let qs = sample(&mut g, &qmodel, &qpos, &qneg, &qlat, &qp, seed, 1.0, None, (w0, h0));
+            let qimg = g.decode(&qs, w0, h0);
+            let refine = st.get("refine").map(|v| truthy(Some(v))).unwrap_or(true);
+            if !refine {
+                (img, w, h) = (qimg, w0, h0);
+            } else {
+                // 精修：Anima Turbo 8 步、CFG 1；生成頁是 Anima 時，它掛的 LoRA（畫風）一起用
+                let rmodel = s(st.get("refine_model"), STRIP_REFINE).to_string();
+                let turbo = rmodel.to_lowercase().contains("turbo");
+                let ap = json!({
+                    "model": rmodel, "turbo_lora": !turbo, "steps": if turbo { 8 } else { 10 }, "cfg": 1,
+                    "sampler": "euler", "scheduler": "simple",
+                    "loras": if fam == "anima" { p.get("loras").cloned().unwrap_or(json!([])) } else { json!([]) },
+                });
+                g.switch_family("anima");
+                let (aw, ah) = fit_pixels(w0, h0, 1024.0 * 1536.0, 16);
+                let qup = g.scale(&qimg, aw, ah, "disabled", "lanczos");
+                let amodel = model_chain(&mut g, &ap, vec![]);
+                // 不用生成頁的提示詞框：那裡常留著上一張的服裝 tag，精修會把衣服畫回去
+                let tags = s(st.get("refine_tags"), "");
+                let apos = g.text(tags);
+                let aneg = g.text("");
+                let alat = g.encode(&qup, aw, ah);
+                let den = f(st.get("refine_denoise"), 0.35).clamp(0.1, 0.8);
+                let asmp = sample(&mut g, &amodel, &apos, &aneg, &alat, &ap, seed, den, None, (aw, ah));
+                let rimg = g.decode(&asmp, aw, ah);
+                if st.get("merge").map(|v| truthy(Some(v))).unwrap_or(true) {
+                    // 改到的地方＝原圖和 Qwen 結果任一色版差超過門檻；先縮一點去掉線條錯位的雜點，再撐大、縮回補洞，最後柔化邊緣
+                    let diff = g.add("ImageBlend", json!({"image1": src, "image2": qimg, "blend_factor": 1.0, "blend_mode": "difference"}));
+                    let th = f(st.get("threshold"), 0.15);
+                    let mut m: Option<Ref> = None;
+                    for ch in ["red", "green", "blue"] {
+                        let c = g.add("ImageToMask", json!({"image": diff, "channel": ch}));
+                        let t = g.add("ThresholdMask", json!({"mask": c, "value": th}));
+                        m = Some(match m {
+                            None => t,
+                            Some(prev) => g.add("MaskComposite", json!({"destination": prev, "source": t, "x": 0, "y": 0, "operation": "or"})),
+                        });
+                    }
+                    let mut m = m.unwrap();
+                    for e in [-2, 20, -14] {
+                        m = g.add("GrowMask", json!({"mask": m, "expand": e, "tapered_corners": true}));
+                    }
+                    let m = g.mask_blur(&m, 6);
+                    let m = g.mask_scale(&m, aw, ah);
+                    img = g.add("ImageCompositeMasked", json!({"destination": qup, "source": rimg, "x": 0, "y": 0, "resize_source": false, "mask": m}));
+                } else {
+                    img = rimg;
+                }
+                (w, h) = (aw, ah);
+            }
+            prompt = qprompt;
+            fam = "qwen21".into();
+        }
         "sheet" => {
             // 四視圖編輯：圖1＝角色設定稿（構圖、尺寸照它），圖2＝可選的服裝參考；Qwen 改圖重繪 1.0
             let init = p.get("init_image").cloned().unwrap_or(Value::Null);
@@ -1517,7 +1618,7 @@ mod tests {
         assert!(n.values().any(|v| v["class_type"] == "VAEEncode"));
         assert!(!n.values().any(|v| v["class_type"] == "EmptyFlux2LatentImage"));
         assert_eq!(info["width"].as_i64().unwrap() % 16, 0);
-        // 姿勢參考圖：MOSS 從深度圖出發重繪 0.95；Anima 不理它
+        // 姿勢參考圖：MOSS 從深度圖出發重繪 0.95；Anima 改接 LLLite（深度＋骨架），還是從空白開始畫
         let pose = json!({"mode": "txt2img", "family": "moss", "model": "m.safetensors", "prompt": "a", "negative": "", "seed": 1, "steps": 25, "cfg": 3,
                           "width": 832, "height": 1216, "pose_control": {"depth": "cowgirl_depth.png", "pose": "cowgirl_pose.png"}});
         let (n, _) = build(&pose, &dir, 0).unwrap();
@@ -1526,10 +1627,56 @@ mod tests {
         let mut a = pose.clone();
         a["family"] = json!("anima");
         let (n, _) = build(&a, &dir, 0).unwrap();
-        assert!(!n.values().any(|v| v["class_type"] == "LoadImage"));
+        assert_eq!(n.values().filter(|v| v["class_type"] == "AnimaLLLiteApply").count(), 2);
+        assert_eq!(n.values().find(|v| v["class_type"] == "KSampler").unwrap()["inputs"]["denoise"], 1.0);
         let mut m = p.clone();
         m["mode"] = json!("multiref");
         assert!(build(&m, &dir, 0).unwrap_err().0.contains("只支援 Qwen 2.1"));
+        let _ = std::fs::remove_file(img);
+    }
+
+    #[test]
+    fn strip_graph() {
+        let dir = std::env::temp_dir();
+        let img = dir.join("aw_test_strip.png");
+        image::RgbImage::new(1024, 1536).save(&img).unwrap();
+        // 改圖指令和精修 tag 由內容補丁算好塞進 params（prepare）；graph 只負責把它們放進節點
+        let p = json!({"mode": "strip", "family": "anima", "model": "anima-turbo-v1.1.safetensors", "prompt": "", "negative": "", "seed": 5,
+                       "init_image": "aw_test_strip.png", "loras": [{"name": "style.safetensors", "strength": 0.8}],
+                       "strip": {"qwen_prompt": "改圖指令 A", "refine_tags": "refine tags A"}});
+        let (n, info) = build(&p, &dir, 0).unwrap();
+        let all = |c: &str| n.values().filter(|v| v["class_type"] == c).cloned().collect::<Vec<_>>();
+        // 兩段：Qwen 官方 Turbo 改圖＋Anima 精修，各自的文字編碼器
+        let unets: Vec<_> = all("UNETLoader").iter().map(|v| v["inputs"]["unet_name"].as_str().unwrap().to_string()).collect();
+        assert_eq!(unets, vec![STRIP_QWEN.to_string(), STRIP_REFINE.to_string()]);
+        assert_eq!(all("CLIPLoader").len(), 2);
+        // params 的 qwen_prompt 進 Qwen 文字編碼，refine_tags 進 Anima 文字編碼
+        let te = &all("TextEncodeQwenImage21")[0]["inputs"];
+        assert_eq!(te["prompt"], "改圖指令 A");
+        assert!(te.get("images.image_1").is_some());
+        assert!(n.values().any(|v| v["inputs"]["text"] == "refine tags A"));
+        // Anima 生成頁掛的 LoRA 只套在精修那段
+        assert_eq!(all("LoraLoaderModelOnly").len(), 1);
+        assert_eq!(all("KSampler")[0]["inputs"]["denoise"], 0.35);
+        assert_eq!(all("ImageBlend")[0]["inputs"]["blend_mode"], "difference");
+        assert_eq!(all("ImageCompositeMasked").len(), 1);
+        assert_eq!(all("SaveImage")[0]["inputs"]["filename_prefix"], "AnimaWeb/strip");
+        assert_eq!(info["mode"], "strip");
+        assert_eq!(info["family"], "qwen21");
+        // 精修那段約 150 萬像素：1024×1536 的原圖會回到原尺寸
+        assert_eq!((info["width"].as_i64().unwrap(), info["height"].as_i64().unwrap()), (1024, 1536));
+        // 不精修：只有 Qwen 那段，沒有貼回
+        let mut p2 = p.clone();
+        p2["strip"] = json!({"refine": false, "qwen_prompt": "只改這段"});
+        let (n2, info2) = build(&p2, &dir, 0).unwrap();
+        assert!(!n2.values().any(|v| v["class_type"] == "KSampler" || v["class_type"] == "ImageBlend"));
+        assert!(n2.values().any(|v| v["class_type"] == "TextEncodeQwenImage21" && v["inputs"]["prompt"] == "只改這段"));
+        assert_eq!(info2["width"].as_i64().unwrap() % 32, 0);
+        // 精修但不貼回
+        let mut p3 = p.clone();
+        p3["strip"] = json!({"merge": false, "refine_denoise": 0.4, "qwen_prompt": "x", "refine_tags": "y"});
+        let (n3, _) = build(&p3, &dir, 0).unwrap();
+        assert!(!n3.values().any(|v| v["class_type"] == "ImageCompositeMasked"));
         let _ = std::fs::remove_file(img);
     }
 
@@ -1545,7 +1692,7 @@ mod tests {
                        "sheet": {"req": "把上衣改成黑色", "ref": null}});
         let (n, info) = build(&p, &dir, 0).unwrap();
         let all = |n: &Map<String, Value>, c: &str| n.values().filter(|v| v["class_type"] == c).cloned().collect::<Vec<_>>();
-        assert_eq!(all(&n, "UNETLoader")[0]["inputs"]["unet_name"], EDIT_QWEN);
+        assert_eq!(all(&n, "UNETLoader")[0]["inputs"]["unet_name"], STRIP_QWEN);
         assert!(all(&n, "LoraLoaderModelOnly").is_empty());  // Anima 的 LoRA 不套到 Qwen
         let te = &all(&n, "TextEncodeQwenImage21")[0]["inputs"];
         let pr = te["prompt"].as_str().unwrap();
@@ -1693,6 +1840,61 @@ mod tests {
     }
 
     #[test]
+    fn pose_control_graph() {
+        let dir = std::env::temp_dir();
+        let p = json!({"mode": "txt2img", "family": "anima", "model": "anima-turbo-v1.1.safetensors", "prompt": "1girl", "negative": "",
+                       "seed": 1, "width": 832, "height": 1216, "steps": 8, "cfg": 1, "sampler": "euler", "scheduler": "simple",
+                       "control": {"enabled": true, "type": "pose", "preprocess": "none", "image": "skel.png", "strength": 1.0, "end": 0.8}});
+        let (n, _) = build(&p, &dir, 0).unwrap();
+        let ll = &by_class(&n, "AnimaLLLiteApply")[0]["inputs"];
+        let patch = &n[ll["model_patch"][0].as_str().unwrap()];
+        assert_eq!(patch["inputs"]["name"], "anima-lllite-pose-1.safetensors");
+        assert_eq!(ll["end_percent"], 0.8);
+        // 自己畫好的骨架圖：直接用，不抽
+        assert!(by_class(&n, "SDPoseKeypointExtractor").is_empty());
+        // 從照片抽骨架：SAM3 框人 → SDPose 抽點 → 畫成骨架圖，再接 LLLite
+        let mut q = p.clone();
+        q["control"]["preprocess"] = json!("pose");
+        let (n, _) = build(&q, &dir, 0).unwrap();
+        let ex = &by_class(&n, "SDPoseKeypointExtractor")[0]["inputs"];
+        assert_eq!(n[ex["model"][0].as_str().unwrap()]["inputs"]["ckpt_name"], SDPOSE_CKPT);
+        assert_eq!(ex["vae"][1], 2);
+        let det = &n[ex["bboxes"][0].as_str().unwrap()];
+        assert_eq!((det["class_type"].as_str(), ex["bboxes"][1].as_i64()), (Some("SAM3_Detect"), Some(1)));
+        let draw = by_class(&n, "SDPoseDrawKeypoints");
+        assert_eq!(draw.len(), 1);
+        // 控制圖縮成畫面大小後才進 LLLite
+        let ll = &by_class(&n, "AnimaLLLiteApply")[0]["inputs"];
+        let scaled = &n[ll["image"][0].as_str().unwrap()];
+        assert_ne!(scaled["class_type"], "SDPoseDrawKeypoints");
+        // 疊兩張（陣列）：深度＋骨架各一個 LLLite，照順序接
+        let mut two = p.clone();
+        two["control"] = json!([{"enabled": true, "type": "depth", "preprocess": "none", "image": "d.png", "strength": 0.8, "end": 0.6},
+                                {"enabled": true, "type": "pose", "preprocess": "none", "image": "skel.png"}]);
+        let (n, _) = build(&two, &dir, 0).unwrap();
+        let names: Vec<String> = by_class(&n, "ModelPatchLoader").iter().map(|v| v["inputs"]["name"].as_str().unwrap().to_string()).collect();
+        assert_eq!(names.len(), 2);
+        assert!(names.contains(&"anima-lllite-depth-1.safetensors".into()) && names.contains(&"anima-lllite-pose-1.safetensors".into()));
+        assert_eq!(by_class(&n, "AnimaLLLiteApply").len(), 2);
+        // 體位庫的姿勢參考圖：Anima 也吃（深度 0.8／前 60%，骨架 1.0）
+        let mut pc = p.clone();
+        pc["control"] = Value::Null;
+        pc["pose_control"] = json!({"depth": "cowgirl_depth.png", "pose": "cowgirl_pose.png"});
+        let (n, _) = build(&pc, &dir, 0).unwrap();
+        let ll = by_class(&n, "AnimaLLLiteApply");
+        assert_eq!(ll.len(), 2);
+        let depth = ll.iter().find(|v| n[v["inputs"]["model_patch"][0].as_str().unwrap()]["inputs"]["name"] == "anima-lllite-depth-1.safetensors").unwrap();
+        assert_eq!((depth["inputs"]["strength"].as_f64(), depth["inputs"]["end_percent"].as_f64()), (Some(0.8), Some(0.6)));
+        assert!(by_class(&n, "LoadImage").iter().any(|v| v["inputs"]["image"] == format!("{POSE_INPUT}/cowgirl_pose.png")));
+        // Qwen 2.1／MOSS 沒有 LLLite：控制整段不進圖
+        let mut m = q.clone();
+        m["family"] = json!("moss");
+        m["model"] = json!("moss_image_sft_int8_convrot.safetensors");
+        let (n, _) = build(&m, &dir, 0).unwrap();
+        assert!(by_class(&n, "SDPoseKeypointExtractor").is_empty() && by_class(&n, "AnimaLLLiteApply").is_empty());
+    }
+
+    #[test]
     fn outpaint_graph() {
         let dir = play_dir("outpaint", 640, 480, &[]);
         let base = json!({"mode": "outpaint", "family": "anima", "model": "anima-turbo-v1.1.safetensors", "prompt": "a beach", "negative": "",
@@ -1768,7 +1970,7 @@ mod tests {
         let d = json!({"mode": "diff", "family": "anima", "model": "anima-turbo-v1.1.safetensors", "prompt": "", "negative": "", "seed": 1,
                        "init_image": "in.png", "diff": {"req": "把表情改成开心的大笑"}});
         let (n, info) = build(&d, &dir, 0).unwrap();
-        assert_eq!(by_class(&n, "UNETLoader")[0]["inputs"]["unet_name"], EDIT_QWEN);
+        assert_eq!(by_class(&n, "UNETLoader")[0]["inputs"]["unet_name"], STRIP_QWEN);
         let te = by_class(&n, "TextEncodeQwenImage21");
         assert!(te[0]["inputs"]["prompt"].as_str().unwrap().contains("开心的大笑") && te[0]["inputs"]["prompt"].as_str().unwrap().contains("保持要求"));
         assert_eq!(info["family"], "qwen21");

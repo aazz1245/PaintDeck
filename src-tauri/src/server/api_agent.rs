@@ -120,6 +120,26 @@ pub async fn session_settings(State(app): State<Shared>, Body(b): Body) -> ApiRe
     ok(s)
 }
 
+/// 助手頁直接換生圖模型：{id, model}。步數、CFG、取樣器、反向詞照家族預設（跟助手自己換模型同一套），家族變了就拿掉固定 LoRA
+pub async fn base_model(State(app): State<Shared>, Body(b): Body) -> ApiResult {
+    let id = tx(&b["id"]);
+    let want = tx(&b["model"]);
+    let (list, neg) = super::api_agent_tools::models(&app).await.map_err(bad)?;
+    let Some((name, fam)) = list.into_iter().find(|(n, _)| *n == want) else {
+        return Err(bad(format!("找不到模型 {want}")));
+    };
+    if !families::is_builtin(&fam) {
+        return Err(bad("助手只能用 Anima、Qwen 2.1、MOSS-Image 的模型"));
+    }
+    let s = update(&app, &id, |s| {
+        let base = s["settings"]["base"].as_object().cloned().unwrap_or_default();
+        let nb = super::api_agent_tools::switch_base(&base, &name, &fam, &neg);
+        merge_settings(s, &json!({"base": nb}));
+    })
+    .await?;
+    ok(s)
+}
+
 fn merge_settings(s: &mut Value, patch: &Value) {
     let mut cur = s["settings"].as_object().cloned().unwrap_or_default();
     if let Some(p) = patch.as_object() {
@@ -182,6 +202,9 @@ pub async fn say(State(app): State<Shared>, Body(b): Body) -> ApiResult {
         .collect();
     let user_ev = |mid: bool| {
         let mut e = json!({"kind": "user", "text": text});
+        if let Some(n) = app.pe.poses.term_note(&text) {
+            e["pose"] = n;
+        }
         if mid {
             e["mid"] = json!(true);
         }
@@ -403,7 +426,7 @@ async fn catalog(app: &Shared, family: &str) -> Result<Vec<LoraInfo>, String> {
         names
             .iter()
             .filter_map(Value::as_str)
-            .filter(|n| !graphs::is_turbo_lora(n) && families::family_of(&roots, n) == fam)
+            .filter(|n| !graphs::is_turbo_lora(n) && families::lora_family(&roots, n, meta.get(*n)) == fam)
             .map(|n| LoraInfo::from_meta(n, meta.get(n).unwrap_or(&Value::Null)))
             .collect()
     })
@@ -572,8 +595,14 @@ async fn run(app: &Shared, id: &str, token: &CancellationToken) -> Step {
         let cat = catalog(app, family).await?;
         let fixed = fixed_loras(&base, &cat);
         let allow = truthy(st.get("loras"));
-        // 工作說明每一輪重讀：設定頁改了下一輪就生效
-        let system = ag::system_prompt(&app.pe.agent_text("agent"), &app.pe.agent_text(ag::guide_id(family)), family, &ag::loras_text(&cat, &fixed, allow));
+        let ask = ag::request_text(&events);
+        // 工作說明每一輪重讀：設定頁改了下一輪就生效。這個家族接了外掛寫法：寫法後面接照這次請求挑的段＋目錄
+        let mut guide = app.pe.agent_text(ag::guide_id(family));
+        if let Some(s) = crate::skills::for_guide(&app.paths.data, &app.paths.settings, ag::family_guide(family)) {
+            guide += "\n\n";
+            guide += &s.agent_block(ag::family_guide(family), &ask);
+        }
+        let system = ag::system_prompt(&app.pe.agent_text("agent"), &guide, family, &ag::loras_text(&cat, &fixed, allow));
         let (rounds, count) = (st["rounds"].as_i64().unwrap_or(3), st["count"].as_i64().unwrap_or(2));
         let left = ag::rounds_left(&events, rounds, truthy(st.get("auto")));
         let shown: Vec<i64> = ag::latest_result(&events)
@@ -595,7 +624,6 @@ async fn run(app: &Shared, id: &str, token: &CancellationToken) -> Step {
             _ => "",
         };
         let system = if uall.is_empty() { system } else { ag::with_images(&system, refs_mode) };
-        let ask = ag::request_text(&events);
         // 用 look 看的圖不是它畫的：不要求逐項打勾、可以直接回話
         let looked_only = ag::latest_result(&events).is_some_and(|e| e["tool"] == "look");
         let uparts = user_parts(app, &uall).await;
@@ -616,7 +644,12 @@ async fn run(app: &Shared, id: &str, token: &CancellationToken) -> Step {
         if st["mode"] == "prompt" {
             let target = tx(&st["target"]);
             let guide = ag::GUIDES.iter().find(|g| g.0 == target).map(|g| g.0).unwrap_or_else(|| ag::pick_guide(family, uall.len(), &ask));
-            let gtext = app.pe.agent_text(ag::guide_text_id(guide).unwrap_or("agent_other"));
+            let mut gtext = app.pe.agent_text(ag::guide_text_id(guide).unwrap_or("agent_other"));
+            // 只寫詞不能叫工具：外掛寫法照請求挑段一次給
+            if let Some(b) = crate::skills::for_guide(&app.paths.data, &app.paths.settings, guide).map(|s| s.pick_block(&ask, crate::skills::PICK_WRITE)).filter(|b| !b.is_empty()) {
+                gtext += "\n\n";
+                gtext += &b;
+            }
             let system = ag::prompt_system(&app.pe.agent_text("agent_prompt"), &gtext, guide, family);
             let mut msgs = ag::build_prompt_messages(&system, &events, &uparts);
             if let Some(a) = msgs.as_array_mut() {
@@ -736,12 +769,18 @@ async fn run(app: &Shared, id: &str, token: &CancellationToken) -> Step {
                 let refs: Vec<&LoraInfo> = fixed.iter().chain(chosen.iter()).collect();
                 let (mut used, added) = ag::add_triggers(&tx(&action["prompt"]), &refs, family);
                 used = crate::director::safe_text(&used, family == ANIMA);
+                // 使用者講的是體位庫裡的體位：程式保證那個體位真的寫進去（2026-10-28 擂台：沒有這步 9B 46 題全錯）
+                let (posed, pose_msg) = ag::pose_fix(&app.pe.poses, &events, family, &used);
+                used = posed;
                 if family == ANIMA {
                     used = crate::pe::fix_anima_tags(&used);
                 }
                 push(app, id, json!({"kind": "act", "action": action, "round": round, "secs": secs, "thought": thought, "used_prompt": used})).await?;
                 if !added.is_empty() {
                     note(app, id, format!("自動補上 LoRA 觸發詞：{}", added.join(", "))).await;
+                }
+                if let Some(m) = pose_msg {
+                    note(app, id, m).await;
                 }
                 let ask = events
                     .iter()

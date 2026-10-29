@@ -158,6 +158,24 @@ pub async fn delete_preset(State(app): State<Shared>, UrlPath(id): UrlPath<i64>)
 }
 
 // ---------------------------------------------------------------- LoRA
+/// GET /api/features/strip：一鍵脫衣的內容補丁裝了沒＋UI 文案（前端據此顯示入口、填文字）
+pub async fn feature_strip(State(app): State<Shared>) -> ApiResult {
+    let pack = crate::feature_strip::load(&app.paths.data, &app.paths.res);
+    ok(json!({"enabled": pack.is_some(), "ui": pack.map(|p| p.ui()).unwrap_or(Value::Null)}))
+}
+
+/// POST /api/features/strip/install：把補丁檔內容寫進 <資料>\plugins\strip\pack.json（body 是 pack 本身，或 {pack:…}）
+pub async fn feature_strip_install(State(app): State<Shared>, Body(body): Body) -> ApiResult {
+    let pack = body.get("pack").cloned().unwrap_or(body);
+    if pack.get("qwen").is_none() || pack.get("ui").is_none() {
+        return Err(bad("這不像「一鍵脫衣」的補丁檔（缺 qwen 或 ui）"));
+    }
+    let dir = crate::feature_strip::dir(&app.paths.data);
+    std::fs::create_dir_all(&dir).map_err(|e| bad(e.to_string()))?;
+    std::fs::write(dir.join(crate::feature_strip::PACK), serde_json::to_vec_pretty(&pack).unwrap()).map_err(|e| bad(e.to_string()))?;
+    ok(json!({"ok": true, "ui": pack.get("ui").cloned().unwrap_or(Value::Null)}))
+}
+
 pub async fn civitai_bases(State(app): State<Shared>) -> ApiResult {
     let bases = app.civitai.bases().await.map_err(bad)?;
     ok(json!({"bases": bases}))
@@ -297,13 +315,7 @@ pub async fn civitai_search(
         )
         .await
         .map_err(|e| bad(format!("Civitai 搜尋失敗：{e}")))?;
-    let installed: std::collections::HashSet<String> = std::fs::read_dir(app.civitai.subdir(&base))
-        .map(|rd| {
-            rd.flatten()
-                .map(|e| e.file_name().to_string_lossy().to_string())
-                .collect()
-        })
-        .unwrap_or_default();
+    let installed = app.civitai.installed_names(&base);
     let has = |f: &Value| f.as_str().map(|f| installed.contains(f)).unwrap_or(false);
     for it in r["items"].as_array_mut().into_iter().flatten() {
         it["installed"] = json!(!it["version"].is_null() && has(&it["version"]["file"]));

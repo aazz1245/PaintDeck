@@ -50,3 +50,21 @@ test('手動安裝的 LoRA 能使用模型旁的預覽圖', () => {
   const image = h.preview({ name: 'krea2\\sample.safetensors', local_preview: true });
   assert.match(image, /\/api\/loras\/local-preview\?name=krea2%5Csample\.safetensors/);
 });
+
+test('模型篩選同一個底模只出現一次，名稱用新寫法（Anima、MOSS Image）', () => {
+  const h = harness();
+  h.onState({ models: { loras: [
+    { name: 'a.safetensors', family: 'anima', base_model: 'Anima' },
+    { name: 'b.safetensors', family: 'anima' },
+    { name: 'moss\c.safetensors', family: 'moss', base_model: 'MOSS Image' },
+    { name: 'moss\d.safetensors', family: 'moss' },
+    { name: 'q.safetensors', family: 'qwen21' },
+    { name: 'ltx.safetensors', family: 'other', base_model: 'LTXV 2.3' },
+    { name: 'x.safetensors', family: 'other' },
+  ] } });
+  const labels = h.get('loraFamily').options.map((o) => o.attrs.value).filter(Boolean);
+  assert.deepEqual(labels, ['Anima', 'LTXV 2.3', 'MOSS Image', 'Qwen 2.1', '其他']);
+  h.get('loraFamily').value = 'MOSS Image';
+  h.renderPage(true);
+  assert.equal(h.get('loraGrid').children.length, 2);
+});

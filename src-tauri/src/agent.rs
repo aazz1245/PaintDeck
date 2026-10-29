@@ -463,6 +463,56 @@ pub fn rounds_used(events: &[Value]) -> i64 {
         .count() as i64
 }
 
+/// 使用者最後一句話（插話不算）對到體位庫的體位（事件的 pose，見 Poses::term_note）：照那個體位補正助手寫的提示詞。
+/// Anima 補人數、sex、體位 tag，拿掉打架的；MOSS、Qwen 2.1 沒提到體位就接上驗證過的擺法。Anima 另外補使用者講了、模型漏掉的外觀／鏡頭詞。
+/// 只看最後一句：下一句講別的（換背景、改穿衣服）就不再硬塞。回傳（提示詞, 給使用者看的一句說明）
+pub fn pose_fix(poses: &crate::poses::Poses, events: &[Value], family: &str, prompt: &str) -> (String, Option<String>) {
+    let last = events.iter().rev().find(|e| ev_kind(e) == "user" && !truthy(e.get("mid")));
+    let pose = last.and_then(|e| e["pose"]["id"].as_str()).and_then(|id| poses.get(id));
+    let text = last.map(|e| tx(&e["text"])).unwrap_or_default();
+    polish(pose, family == ANIMA, prompt, &text)
+}
+
+/// 照使用者這句話補正一份提示詞：對到體位就照體位庫（[`fix_by_pose`]）；Anima 再補 [`crate::poses::asked_tags`]（雙馬尾、黑絲、第一人稱…）。
+/// 助手畫圖前（pose_fix）和 AI 改寫的 Anima 版／文生圖版共用。回傳（新提示詞, 給使用者看的說明）
+pub fn polish(pose: Option<&crate::poses::Pose>, anima: bool, prompt: &str, text: &str) -> (String, Option<String>) {
+    let (s, pose_msg) = match pose {
+        Some(p) => fix_by_pose(p, anima, prompt, text),
+        None => (prompt.to_string(), None),
+    };
+    if !anima {
+        return (s, pose_msg);
+    }
+    let (s, added) = crate::poses::insert_tags(&s, &crate::poses::asked_tags(text));
+    let asked_msg = (!added.is_empty()).then(|| format!("照你講的補上 {}", added.join(", ")));
+    let msg = [pose_msg, asked_msg].into_iter().flatten().collect::<Vec<_>>().join("；");
+    (s, (!msg.is_empty()).then_some(msg))
+}
+
+/// 照體位庫補正：Anima 補 tag／拿掉打架的 tag，句子型（MOSS、Qwen）沒提到體位就接上擺法。
+/// text＝使用者的原話：講了床以外的地點（[`crate::poses::names_place`]）就不寫床、不硬塞體位附帶的場景 tag
+pub fn fix_by_pose(p: &crate::poses::Pose, anima: bool, prompt: &str, text: &str) -> (String, Option<String>) {
+    let place = crate::poses::names_place(text);
+    if !anima {
+        return match p.fix_text_at(prompt, place) {
+            Some(s) => (s, Some(format!("提示詞沒寫到「{}」，接上體位庫驗證過的擺法", p.zh))),
+            None => (prompt.to_string(), None),
+        };
+    }
+    let (s, added, removed) = p.fix_anima_at(prompt, place);
+    if added.is_empty() && removed.is_empty() {
+        return (s, None);
+    }
+    let mut msg = format!("照體位庫「{}」補正提示詞", p.zh);
+    if !added.is_empty() {
+        msg.push_str(&format!("：補上 {}", added.join(", ")));
+    }
+    if !removed.is_empty() {
+        msg.push_str(&format!("；拿掉 {}", removed.join(", ")));
+    }
+    (s, Some(msg))
+}
+
 /// 這個請求叫了幾次工具
 pub fn calls_used(events: &[Value]) -> i64 {
     let start = events
@@ -596,6 +646,9 @@ fn build_messages_ending(system: &str, events: &[Value], look: &[(i64, Value)], 
                 } else {
                     format!("The user says: {t}")
                 }));
+                if let Some(n) = e.get("pose").filter(|n| n.is_object()) {
+                    buf.push(text(crate::poses::Poses::term_line(n)));
+                }
                 for im in e["images"].as_array().into_iter().flatten() {
                     let Some(n) = im["n"].as_i64() else { continue };
                     match uimgs.iter().find(|(k, _)| *k == n) {
@@ -808,9 +861,24 @@ fn repair_check(raw: &str) -> Option<Map<String, Value>> {
     json_in(&fixed)
 }
 
+/// 35B 會把 prompt 的 tag 寫完先關掉字串，英文句子另外當成沒有鍵名的字串放在後面：
+/// "prompt": "masterpiece, …, from side", "She lies on her back…", "width": 832（2026-10-28 擂台交配按壓連 4 次這樣，內容是對的）。
+/// 把這種落單的字串接回 prompt
+fn repair_prompt_tail(raw: &str) -> Option<Map<String, Value>> {
+    static TAIL: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r#"("prompt"\s*:\s*"(?:[^"\\]|\\.)*)"\s*,\s*"((?:[^"\\]|\\.)*)"\s*([,}])"#).unwrap()
+    });
+    let mut fixed = raw.to_string();
+    while let Some(c) = TAIL.captures(&fixed) {
+        let joined = format!("{}, {}\"{}", &c[1], &c[2], &c[3]);
+        fixed.replace_range(c.get(0)?.range(), &joined);
+    }
+    (fixed != raw).then(|| json_in(&fixed)).flatten()
+}
+
 /// 模型輸出 → 正規化的動作；不合格回傳要退回給它的英文說明
 pub fn parse_action(raw: &str, c: &Check) -> Result<Map<String, Value>, String> {
-    let Some(m) = json_in(raw).or_else(|| repair_check(raw)) else {
+    let Some(m) = json_in(raw).or_else(|| repair_check(raw)).or_else(|| repair_prompt_tail(raw)) else {
         return Err("Your reply was not a JSON object. Reply with exactly ONE JSON object, nothing else.".into());
     };
     let mut action = tx(m.get("action").unwrap_or(&Value::Null)).trim().to_lowercase();
@@ -1355,6 +1423,26 @@ pub fn blank_session(settings: &Value) -> Value {
 mod tests {
     use super::*;
 
+    #[test]
+    fn pose_fix_uses_the_latest_request_and_explains_itself() {
+        let poses = crate::poses::Poses::load(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("resources"));
+        let pz = poses.get("paizuri").unwrap();
+        // Anima：補 tag、拿掉打架的，說明列出改了什麼（2026-10-28 AI 改寫實測 9B 寫成 nipple clamp、missionary）
+        let (s, msg) = fix_by_pose(pz, true, "explicit, 1girl, 1boy, hetero, missionary, nipple clamp, She squeezes him.", "幫我畫乳交");
+        assert!(s.contains("paizuri") && !s.contains("missionary"), "{s}");
+        let msg = msg.unwrap();
+        assert!(msg.starts_with("照體位庫「") && msg.contains("補上") && msg.contains("拿掉 missionary"), "{msg}");
+        // 已經寫對：不動、不囉嗦
+        assert_eq!(fix_by_pose(pz, true, "explicit, 1girl, 1boy, hetero, paizuri, penis", "乳交"), ("explicit, 1girl, 1boy, hetero, paizuri, penis".to_string(), None));
+        // 句子型：沒提到體位才接擺法
+        assert!(fix_by_pose(pz, false, "A woman on a bed.", "乳交").1.unwrap().contains("接上體位庫"));
+        // 助手：看最後一個（不是途中補充的）使用者訊息的體位
+        let ev = |pose: &str, mid: bool| json!({"kind": "user", "text": "x", "mid": mid, "pose": {"id": pose}});
+        let events = vec![ev("doggy_style", false), ev("paizuri", false), ev("doggy_style", true)];
+        let (s, _) = pose_fix(&poses, &events, ANIMA, "explicit, 1girl, 1boy, hetero, doggystyle");
+        assert!(s.contains("paizuri"), "{s}");
+    }
+
     fn lora(name: &str, trig: &[&str]) -> LoraInfo {
         LoraInfo {
             name: name.into(),
@@ -1514,6 +1602,14 @@ mod tests {
     }
 
     #[test]
+    fn pose_term_reaches_model() {
+        let ev = vec![json!({"kind": "user", "text": "幫我畫個乳交圖。", "pose": {"said": "乳交", "zh": "乳交", "en": "paizuri / titjob", "geometry": "Her breasts are pressed together around his penis."}})];
+        let m = build_messages("SYS", &ev, &[], 2, 2);
+        let u = m[1]["content"].as_str().unwrap();
+        assert!(u.contains("「乳交」") && u.contains("paizuri / titjob") && u.contains("around his penis"), "{u}");
+    }
+
+    #[test]
     fn long_chats_are_summarised() {
         let mut ev = vec![json!({"kind": "user", "text": "第一個要求"})];
         for i in 0..14 {
@@ -1637,6 +1733,24 @@ mod tests {
         assert!(parse_action(r#"{"action":"call","tool":"api","args":{"method":"POST","path":"/api/trash/empty"}}"#, &c).unwrap_err().starts_with("Not allowed"));
         c.calls_left = 0;
         assert!(parse_action(r#"{"action":"call","tool":"gallery","args":{}}"#, &c).unwrap_err().contains("tool calls"));
+    }
+
+    #[test]
+    fn parse_action_takes_back_sentences_written_outside_the_prompt() {
+        let cat: Vec<LoraInfo> = vec![];
+        let c = Check {
+            family: ANIMA, rounds_left: 3, last: None, saw_images: false, images: &[], catalog: &cat, fixed: &[],
+            allow_loras: true, nudged: false, user_images: &[], request_user_images: &[], refs_mode: "", ask: "", calls_left: 12,
+        };
+        // 2026-10-28 擂台 35B「交配按壓」原樣（節錄）
+        let raw = "{\n  \"action\": \"generate\",\n  \"check\": [],\n  \"prompt\": \"masterpiece, best quality, score_7, nsfw, 1girl, 1boy, hetero, mating press position, on back, from side\",\n  \"She lies on her back on the bed with her knees folded tightly against her chest. He kneels above her.\",\n  \"width\": 832,\n  \"height\": 1248,\n  \"loras\": [],\n  \"changes\": \"\",\n  \"say\": \"生成交配按壓姿勢\"\n}";
+        let a = parse_action(raw, &c).unwrap();
+        let p = a["prompt"].as_str().unwrap();
+        assert!(p.starts_with("masterpiece") && p.ends_with("He kneels above her."), "{p}");
+        assert_eq!(a["width"], json!(832));
+        // 正常的 JSON 不受影響
+        let ok = r#"{"action":"generate","prompt":"masterpiece, 1girl. She smiles.","say":"好"}"#;
+        assert_eq!(parse_action(ok, &c).unwrap()["prompt"], json!("masterpiece, 1girl. She smiles."));
     }
 
     #[test]

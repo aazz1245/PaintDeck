@@ -25,8 +25,8 @@ export function showPage() { fillFilters(); renderPage(true); }
 
 const title = (l) => l.title || l.name.replace(/\.safetensors$/, "");
 const famName = (l) => app.state?.models?.family_names?.[l.family] || "";
-// 卡片右上角的家族小標（Anima 是預設，不標）
-const FAM_BADGE = { qwen21: "Qwen 2.1", moss: "MOSS", sdxl: "SDXL", sd15: "SD1.5", flux: "Flux", sd3: "SD3" };
+// 卡片的底模小標和「模型」篩選：照站上判斷的家族分組，名稱用 Civitai 的寫法（2026-10-28 使用者：同一個底模出現「Anima」「Anima（動漫）」、「MOSS」「MOSS Image」兩個選項）
+const FAM_LABEL = { anima: "Anima", moss: "MOSS Image", qwen21: "Qwen 2.1", sdxl: "SDXL", sd15: "SD1.5", flux: "Flux", sd3: "SD3" };
 const tagsOf = (l) => Array.isArray(l.tags) ? l.tags.filter((x) => typeof x === "string" && x.trim()) : [];
 const categoryOf = (l) => {
   if (l.category) return l.category;
@@ -44,7 +44,7 @@ const categoryOf = (l) => {
   return clues.find(([, re]) => re.test(words))?.[0] || l.agent?.kind || "";
 };
 const categoryLabel = (c) => KIND_ZH[c] || c || "未分類";
-const modelLabel = (l) => l.base_model || FAM_BADGE[l.family] || famName(l) || l.family || "其他";
+const modelLabel = (l) => FAM_LABEL[l.family] || l.base_model || "其他";
 const match = (l, q) => !q || (title(l) + " " + modelLabel(l) + " " + l.name + " " + (l.triggers || []).join(" ") + " " + tagsOf(l).join(" ") + " " + categoryLabel(categoryOf(l)) + " " + (l.note || "") + " " + (l.agent?.desc_zh || "") + " " + (l.agent?.desc || "")).toLowerCase().includes(q.toLowerCase());
 // 生圖助手對這個 LoRA 的認識（agent.rs 的 parse_lora_desc 寫進 lora_meta.agent）
 function agentDesc(l) {
@@ -61,7 +61,7 @@ function fillFilters() {
     box.replaceChildren(...options.map(([value, label]) => el("option", { value }, label)));
     box.value = [...box.options].some((o) => o.value === old) ? old : "";
   };
-  const families = [...new Set(list.map(modelLabel))].sort((a, b) => a.localeCompare(b));
+  const families = [...new Set(list.map(modelLabel))].sort((a, b) => (a === "其他") - (b === "其他") || a.localeCompare(b));
   const categories = [...new Set(list.map(categoryOf))].filter((c) => c && !KIND_ZH[c]).sort((a, b) => a.localeCompare(b));
   const counts = new Map();
   for (const l of list) for (const tag of tagsOf(l)) counts.set(tag, (counts.get(tag) || 0) + 1);

@@ -142,18 +142,18 @@ pub async fn detail(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     }
 
     // 生圖參數：照原圖的模型、LoRA、提示詞，換成 detail 模式；跟這次無關的欄位拿掉
-    // 四視圖、差分記的提示詞是給 Qwen 的改圖指令，不能拿來重畫臉：改用空白＋extra
+    // 一鍵脫衣、四視圖、差分記的提示詞是給 Qwen 的改圖指令，不能拿來重畫臉：改用空白＋extra
     let mode = p.get("mode").and_then(Value::as_str).unwrap_or("").to_string();
     if let Some(r) = p.shift_remove("prompt_resolved") {
         if truthy(Some(&r)) {
             p.insert("prompt".into(), r);
         }
     }
-    if matches!(mode.as_str(), "sheet" | "diff" | "rembg") {
+    if matches!(mode.as_str(), "strip" | "sheet" | "diff" | "rembg") {
         p.insert("prompt".into(), json!(""));
     }
     for k in [
-        "refs", "mask", "inpaint", "upscale", "control", "hires", "layout", "sheet", "diff", "outpaint", "pose_control",
+        "refs", "mask", "inpaint", "upscale", "control", "hires", "layout", "strip", "sheet", "diff", "outpaint", "pose_control",
         "video_preview", "poster", "size_mode", "pixels", "ref_pixels", "director", "agent", "comic", "idea", "pe_prompt", "detail",
     ] {
         p.shift_remove(k);

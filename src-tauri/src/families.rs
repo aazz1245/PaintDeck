@@ -388,6 +388,9 @@ impl Probe {
         let t: Vec<&str> = low.split(['.', '_']).filter(|s| !s.is_empty()).collect();
         let t = &t[..];
         self.video_evidence(t);
+        // MOSS 的 LoRA 也有 kohya 底線版（lora_unet_layers_0_proj_qkv）和只練注意力層的（沒有 ffn_up_gate）：認 layers.N.proj.<qkv|q|k|v|o|ffn>
+        self.moss |= has(t, &["shared", "block", "modulation"])
+            || after(t, &["layers"]).is_some_and(|r| num(r, 0).is_some() && r.get(1) == Some(&"proj") && r.get(2).is_some_and(|x| matches!(*x, "qkv" | "q" | "k" | "v" | "o" | "ffn")));
         // Flux／SD3／HunyuanVideo 一族
         if let Some(n) = after(t, &["double", "blocks"]).and_then(|r| num(r, 0)) {
             bump(&mut self.dbl_max, n);
@@ -738,6 +741,34 @@ pub fn family_of(roots: &[PathBuf], name: &str) -> &'static str {
     resolve(roots, name).map(|p| detect(&p)).unwrap_or(OTHER)
 }
 
+/// Civitai 寫的底模（baseModel，例如 "Anima"、"MOSS Image"）對到內建家族；
+/// "Qwen" 不寫 2.1 的是第一代 Qwen-Image，架構不同，不猜
+pub fn from_base_model(base: &str) -> Option<&'static str> {
+    let b = base.to_lowercase();
+    if b.contains("anima") {
+        Some(ANIMA)
+    } else if b.contains("moss") {
+        Some(MOSS)
+    } else if b.contains("qwen") && b.contains("2.1") {
+        Some(QWEN21)
+    } else {
+        None
+    }
+}
+
+/// LoRA 的家族：先看檔頭；認不出來（other）才用 Civitai 資料（lora_meta）寫的底模補。
+/// 2026-10-28：使用者回報新格式的 MOSS LoRA 被判成 other，選單選不到、生成時被略過
+pub fn lora_family(roots: &[PathBuf], name: &str, meta: Option<&serde_json::Value>) -> &'static str {
+    match family_of(roots, name) {
+        OTHER => meta
+            .and_then(|m| m.get("base_model"))
+            .and_then(serde_json::Value::as_str)
+            .and_then(from_base_model)
+            .unwrap_or(OTHER),
+        f => f,
+    }
+}
+
 /// 這個名稱的檔案是不是 LTX 影片模型／LoRA（看檔頭、有快取）
 pub fn is_ltx_of(roots: &[PathBuf], name: &str) -> bool {
     resolve(roots, name).is_some_and(|p| cached(&p).ltx)
@@ -824,6 +855,31 @@ mod tests {
             classify(&s(&["model.diffusion_model.input_blocks.0"])),
             OTHER
         );
+    }
+
+    #[test]
+    fn civitai_base_model_fills_unknown_lora_family() {
+        assert_eq!(from_base_model("Anima"), Some(ANIMA));
+        assert_eq!(from_base_model("MOSS Image"), Some(MOSS));
+        assert_eq!(from_base_model("Qwen Image 2.1"), Some(QWEN21));
+        // Qwen-Image 第一代跟 2.1 架構不同，不能猜成 2.1；影片模型維持 other
+        assert_eq!(from_base_model("Qwen"), None);
+        assert_eq!(from_base_model("LTXV 2.3"), None);
+        // 檔案找不到（看不出家族）時才用 Civitai 的底模
+        let roots = vec![std::env::temp_dir().join("no_such_lora_root_20261028")];
+        assert_eq!(lora_family(&roots, "x.safetensors", Some(&json!({"base_model": "MOSS Image"}))), MOSS);
+        assert_eq!(lora_family(&roots, "x.safetensors", Some(&json!({"base_model": "SDXL 1.0"}))), OTHER);
+        assert_eq!(lora_family(&roots, "x.safetensors", None), OTHER);
+    }
+
+    #[test]
+    fn moss_lora_other_formats() {
+        // kohya 底線版、只練注意力層（沒有 ffn_up_gate）的 MOSS LoRA：以前認成 other，助手和選單都看不到
+        assert_eq!(classify(&s(&["lora_unet_layers_0_proj_ffn_up_gate.lora_down.weight"])), MOSS);
+        assert_eq!(classify(&s(&["lora_unet_layers_12_proj_qkv.lora_up.weight", "lora_unet_layers_12_proj_o.alpha"])), MOSS);
+        assert_eq!(classify(&s(&["transformer.layers.4.proj.q.lora_A.weight", "transformer.layers.4.proj.v.lora_B.weight"])), MOSS);
+        // 文字編碼器 LoRA（layers.N.self_attn.q_proj）不能被認成 MOSS
+        assert_eq!(classify(&s(&["model.layers.0.self_attn.q_proj.lora_A.weight"])), OTHER);
     }
 
     #[test]

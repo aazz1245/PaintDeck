@@ -1135,12 +1135,14 @@ pub const PACKS: &[(&str, &str, &str, &str)] = &[
     ("pe", "AI 改寫、生圖助手", "通用語言模型 Qwen3.5-9B（含看圖檔）＋llama.cpp：AI 改寫提示詞、生圖助手、導演台分段", ""),
     // 2026-10-27 模型精簡：AI 改寫預設改用上面的通用模型；PE 授權不能商用、會把露骨內容寫淡，降成選配，「完整版」也不勾
     ("pe_official", "官方改寫模型（選配）", "Qwen-Image 2.1 PE Heretic 兩顆（約 12.7GB）。Qwen Research License 不可商用；不裝也能用 AI 改寫，要在設定頁選了才會用", "pe"),
+    // 2026-10-29 使用者：「把35b做成選配」。原本只能手動下載；17GB、要 32GB 記憶體，所以「完整版」也不勾
+    ("pe_35b", "35B 大腦（選配）", "通用語言模型 Qwen3.6-35B-A3B Heretic（含看圖檔，約 17.9GB）：生圖助手、漫畫台、導演台寫得更準。要 32GB 記憶體以上；8GB 顯卡也能跑（一部分放 CPU）", "pe"),
     ("studio", "影音工作台、剪輯台工具", "Node.js、ffmpeg（約 150MB）。影片模型要另外下載", ""),
     ("anima_loras", "Anima 常用 LoRA", "畫風、細節、光影、身材滑桿…（有些來自 Civitai，要 API key）", "anima"),
     ("qwen_loras", "Qwen 2.1 常用 LoRA", "寫實風、加速、滑桿…（有些來自 Civitai，要 API key）", "qwen"),
 ];
 /// 「完整版」也不會自動勾的選配包（要自己勾）
-pub const OPTIONAL_PACKS: &[&str] = &["pe_official"];
+pub const OPTIONAL_PACKS: &[&str] = &["pe_official", "pe_35b"];
 /// 基本版：三種畫風的生圖功能都能用（models_basic.json 要跟這個一致，測試會檢查）
 pub const BASIC_PACKS: &[&str] = &["anima", "qwen", "qwen_pose", "moss", "face", "bg"];
 
@@ -1150,6 +1152,7 @@ pub fn pack_of(rel: &str) -> &'static str {
     let (kind, name) = r.split_once('/').unwrap_or(("", r.as_str()));
     match kind {
         "llm" if name.starts_with("pe_") => "pe_official",
+        "llm" if name.contains("35b") => "pe_35b",
         "llm" => "pe",
         "loras" if name.starts_with("qwen21/") => "qwen_loras",
         "loras" if name.starts_with("anima-turbo-lora") => "anima", // Anima 的官方加速 LoRA：Turbo 選單要用
@@ -1227,7 +1230,7 @@ fn pack_view(res: &Path, p: &Plan, extra: &[crate::model_dirs::Dir], variant: &s
             // 工具（llama.cpp 約 1.3GB 解開後、Vulkan 版約 0.1GB；Node.js＋ffmpeg 約 0.6GB）也算進大小
             let (tool_ok, tool_bytes) = match *id {
                 "pe" => (llama_ok, if variant == "nvidia" { 1_300_000_000u64 } else { 130_000_000u64 }),
-                "pe_official" => (llama_ok, 0),
+                "pe_official" | "pe_35b" => (llama_ok, 0),
                 "studio" => (tools_ok, 600_000_000u64),
                 _ => (true, 0),
             };
@@ -1235,7 +1238,7 @@ fn pack_view(res: &Path, p: &Plan, extra: &[crate::model_dirs::Dir], variant: &s
             s["bytes"] = json!(s["bytes"].as_u64().unwrap_or(0) + if tool_ok { 0 } else { tool_bytes });
             json!({"id": id, "label": label, "desc": desc, "requires": req, "files": mine.len(),
                    "total": mine.iter().map(|m| m.size).sum::<u64>() + tool_bytes,
-                   "tool": !matches!(*id, "pe" | "pe_official" | "studio") || tool_ok, "optional": OPTIONAL_PACKS.contains(id), "missing": s})
+                   "tool": !matches!(*id, "pe" | "pe_official" | "pe_35b" | "studio") || tool_ok, "optional": OPTIONAL_PACKS.contains(id), "missing": s})
         })
         .collect()
 }
@@ -3591,10 +3594,14 @@ mod tests {
         assert_eq!(packs_from(&json!({"models": "basic"})).unwrap(), BASIC_PACKS);
         assert!(packs_from(&json!({"models": "none"})).unwrap().is_empty());
         let full_packs = packs_from(&json!({"models": "full"})).unwrap();
-        assert!(full_packs.len() == PACKS.len() - OPTIONAL_PACKS.len() + 1 && !full_packs.iter().any(|p| p == "pe_official"));
+        assert!(full_packs.len() == PACKS.len() - OPTIONAL_PACKS.len() + 1 && !full_packs.iter().any(|p| p == "pe_official" || p == "pe_35b"));
         // 官方 PE 是選配；9B 跟它的看圖檔在 AI 改寫包
         assert_eq!(pack_of("LLM/pe_t2i_heretic-Q4_K_M.gguf"), "pe_official");
         assert_eq!(pack_of("LLM/Huihui-Qwen3.5-9B-abliterated.Q4_K_M.gguf"), "pe");
+        // 35B 是選配，要先有 AI 改寫包（llama.cpp）
+        assert_eq!(pack_of("LLM/Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved-APEX-I-Compact.gguf"), "pe_35b");
+        assert_eq!(pack_of("LLM/mmproj-Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved-APEX-F16.gguf"), "pe_35b");
+        assert_eq!(packs_from(&json!({"packs": ["pe_35b"]})).unwrap(), vec!["pe_35b", "pe"]);
         // 要先有的那一包會自動補上
         let v = packs_from(&json!({"packs": ["qwen_loras", "qwen_pose"]})).unwrap();
         assert_eq!(v, vec!["qwen_loras", "qwen_pose", "qwen"]);
@@ -3625,7 +3632,10 @@ mod tests {
         assert_eq!(name, "Huihui-Qwen3.5-9B-abliterated.mmproj-f16.gguf");
         assert!(size > 500_000_000 && url.contains("/resolve/") && url.ends_with(&name) && sha.is_some());
         assert_eq!(pack_of(&format!("LLM/{name}")), "pe");
-        assert!(mmproj_source(&res, "qwen3.6").is_none());
+        // 2026-10-29 起 35B 是選配包，它的看圖檔也在清單裡：有 35B 主檔、缺 mmproj 時可以自動補
+        let (name, _, url, sha) = mmproj_source(&res, "qwen3.6").expect("35B 的 mmproj");
+        assert!(name.starts_with("mmproj-Qwen3.6-35B") && url.ends_with(&name) && sha.is_some());
+        assert_eq!(pack_of(&format!("LLM/{name}")), "pe_35b");
         let d = std::env::temp_dir().join("anima_sha_test.bin");
         std::fs::write(&d, b"abc").unwrap();
         assert_eq!(sha256_file(&d).unwrap(), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
