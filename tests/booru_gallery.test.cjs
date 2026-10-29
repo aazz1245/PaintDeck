@@ -148,11 +148,11 @@ function harness() {
   context.globalThis = context;
 
   vm.runInContext(
-    source + '\nglobalThis.subject = { extractPromptTags, ratingBadge, togglePostPrompt, addPostPromptToMain, setSelectionMode, clearSelection, openPromptConfigDialog, openSettingsDialog, state, promptConfig, detailCache, SELECTION_STAMPS, STAMP_LABELS, createSelectionStamp, setSelectionStamp, parseTagLines };',
+    source + '\nglobalThis.subject = { extractPromptTags, ratingBadge, togglePostPrompt, addPostPromptToMain, setSelectionMode, clearSelection, openPromptConfigDialog, openSettingsDialog, state, promptConfig, detailCache, SELECTION_STAMPS, STAMP_LABELS, createSelectionStamp, setSelectionStamp, parseTagLines, VirtualMasonryLayout, masonryColumnCount, ratingKey, ratingTone, ratingLabel, renderGrid };',
     context,
     { filename: 'booru.js' }
   );
-  return { ...context.subject, mainPromptEl, appendCalls, removeCalls, toasts, promptModal, settingsModal };
+  return { ...context.subject, mainPromptEl, appendCalls, removeCalls, toasts, promptModal, settingsModal, nodes };
 }
 
 test('extractPromptTags：按角色、作品、畫師、常規標籤順序提取並排除浮水印等噪音', () => {
@@ -364,5 +364,71 @@ test('parseTagLines：正確解析多行與逗號分隔的標籤並清理前後�
   const parsed = h.parseTagLines(raw);
   assert.deepEqual(parsed, ['watermark', 'bad_anatomy', 'signature', 'logo']);
 });
+
+test('masonryColumnCount：依寬度自適應欄位數', () => {
+  const h = harness();
+  assert.equal(h.masonryColumnCount(280, { minCardWidth: 118, gap: 6, maxColumns: 6 }), 2);
+  assert.equal(h.masonryColumnCount(500, { minCardWidth: 118, gap: 6, maxColumns: 6 }), 4);
+  assert.equal(h.masonryColumnCount(750, { minCardWidth: 118, gap: 6, maxColumns: 6 }), 6);
+});
+
+test('VirtualMasonryLayout：不同解析度圖片按原始比例計算高度（非強制等高正方形）', () => {
+  const h = harness();
+  const layout = new h.VirtualMasonryLayout({ width: 500, minCardWidth: 118, gap: 6, maxColumns: 4 });
+  assert.equal(layout.columnCount, 4);
+  assert.ok(layout.cardWidth > 115);
+
+  const portrait = { source: 'danbooru', postId: '1', width: 800, height: 1200 }; // 2:3 直圖
+  const landscape = { source: 'danbooru', postId: '2', width: 1920, height: 1080 }; // 16:9 橫圖
+  const square = { source: 'danbooru', postId: '3', width: 1000, height: 1000 }; // 1:1 正方形
+
+  layout.append([portrait, landscape, square]);
+
+  const pPlacement = layout.placementsByKey.get('danbooru:1');
+  const lPlacement = layout.placementsByKey.get('danbooru:2');
+  const sPlacement = layout.placementsByKey.get('danbooru:3');
+
+  assert.ok(pPlacement && lPlacement && sPlacement);
+  // 直圖高度顯著大於橫圖與正方形，完全保留自然縱橫比
+  assert.ok(pPlacement.height > sPlacement.height);
+  assert.ok(sPlacement.height > lPlacement.height);
+  assert.equal(Math.round(pPlacement.height / sPlacement.height * 10) / 10, 1.5);
+});
+
+test('VirtualMasonryLayout：優先填補最短欄位並在重設寬度時重排', () => {
+  const h = harness();
+  const layout = new h.VirtualMasonryLayout({ width: 250, minCardWidth: 118, gap: 6, maxColumns: 4 });
+  assert.equal(layout.columnCount, 2);
+
+  layout.append([
+    { source: 'x', postId: '1', width: 100, height: 300 }, // col 0
+    { source: 'x', postId: '2', width: 100, height: 100 }, // col 1
+    { source: 'x', postId: '3', width: 100, height: 100 }, // 應排入最短的 col 1
+  ]);
+
+  assert.equal(layout.placementsByKey.get('x:1').column, 0);
+  assert.equal(layout.placementsByKey.get('x:2').column, 1);
+  assert.equal(layout.placementsByKey.get('x:3').column, 1);
+
+  // 當容器拉寬時，reflow 重新配置欄位
+  assert.equal(layout.configure(500), true);
+  assert.equal(layout.columnCount, 4);
+});
+
+test('ratingLabel 與 ratingTone：正確映射原版分級文字與色彩標識', () => {
+  const h = harness();
+  assert.equal(h.ratingTone('general'), 'general');
+  assert.equal(h.ratingTone('safe'), 'safe');
+  assert.equal(h.ratingTone('sensitive'), 'sensitive');
+  assert.equal(h.ratingTone('questionable'), 'questionable');
+  assert.equal(h.ratingTone('explicit'), 'explicit');
+
+  assert.equal(h.ratingLabel('general'), '全龄');
+  assert.equal(h.ratingLabel('safe'), '全龄');
+  assert.equal(h.ratingLabel('sensitive'), '敏感');
+  assert.equal(h.ratingLabel('questionable'), '疑虑');
+  assert.equal(h.ratingLabel('explicit'), '色情');
+});
+
 
 

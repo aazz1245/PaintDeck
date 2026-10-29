@@ -841,8 +841,195 @@ export function cancelHideHoverTooltip() {
   }
 }
 
+/* ================= 瀑布流版面核心 (Virtual Masonry Layout) ================= */
+export function masonryColumnCount(width, { minCardWidth = 118, gap = 6, maxColumns = 6 } = {}) {
+  return Math.max(1, Math.min(maxColumns, Math.floor((Math.max(1, width) + gap) / (minCardWidth + gap))));
+}
+
+export class VirtualMasonryLayout {
+  constructor({ width = 1, minCardWidth = 118, gap = 6, maxColumns = 6 } = {}) {
+    this.options = { minCardWidth, gap, maxColumns };
+    this.items = [];
+    this.placements = [];
+    this.placementsByKey = new Map();
+    this.columns = [];
+    this.keys = new Set();
+    this.itemsByKey = new Map();
+    this.sizesByKey = new Map();
+    this.revision = 0;
+    this.configure(width);
+  }
+
+  configure(width) {
+    const nextWidth = Math.max(1, Number(width) || 1);
+    const nextColumns = masonryColumnCount(nextWidth, this.options);
+    if (this.width === nextWidth && this.columnCount === nextColumns) return false;
+    this.width = nextWidth;
+    this.columnCount = nextColumns;
+    this.cardWidth = (nextWidth - this.options.gap * (nextColumns - 1)) / nextColumns;
+    this.reflow();
+    return true;
+  }
+
+  append(items) {
+    for (const item of items || []) this._place(item, this.items.length);
+    return this;
+  }
+
+  setItems(items) {
+    this.items = [];
+    this.placements = [];
+    this.placementsByKey = new Map();
+    this.columns = Array.from({ length: this.columnCount }, () => []);
+    this.heights = Array(this.columnCount).fill(0);
+    this.keys = new Set();
+    this.itemsByKey = new Map();
+    this.sizesByKey = new Map();
+    this.append(items);
+    this.revision += 1;
+    return this;
+  }
+
+  reflow() {
+    const items = [...(this.items || [])];
+    this.items = [];
+    this.placements = [];
+    this.placementsByKey = new Map();
+    this.columns = Array.from({ length: this.columnCount }, () => []);
+    this.heights = Array(this.columnCount).fill(0);
+    this.keys = new Set();
+    this.itemsByKey = new Map();
+    this.sizesByKey = new Map();
+    this.append(items);
+    this.revision += 1;
+    return this;
+  }
+
+  _place(item, index) {
+    if (!this.columns.length) this.reflow();
+    const key = `${item?.source}:${item?.postId}`;
+    if (this.keys.has(key)) return;
+    this.keys.add(key);
+    this.itemsByKey.set(key, item);
+    this.sizesByKey.set(key, { width: item?.width, height: item?.height });
+    let column = 0;
+    for (let current = 1; current < this.columnCount; current += 1) {
+      if (this.heights[current] < this.heights[column]) column = current;
+    }
+    const width = Math.max(1, Number(item?.width) || 1);
+    const height = Math.max(1, Number(item?.height) || (item?.width ? item.width : 1.33));
+    const displayHeight = Math.round(this.cardWidth * height / width);
+    const y = this.heights[column];
+    const x = Math.round(column * (this.cardWidth + this.options.gap));
+    const placement = {
+      index,
+      item,
+      key,
+      column,
+      x,
+      y,
+      width: Math.round(this.cardWidth),
+      height: displayHeight,
+      bottom: y + displayHeight,
+    };
+    this.items.push(item);
+    this.placements.push(placement);
+    this.placementsByKey.set(key, placement);
+    this.columns[column].push(placement);
+    this.heights[column] = placement.bottom + this.options.gap;
+  }
+
+  updateItemSize(key, width, height) {
+    const item = this.itemsByKey.get(key);
+    const placement = this.placementsByKey.get(key);
+    const current = this.sizesByKey.get(key);
+    if (!item || !placement || !(width > 0) || !(height > 0) || (current?.width === width && current?.height === height)) return false;
+    this.sizesByKey.set(key, { width, height });
+    item.width = width;
+    item.height = height;
+    return Math.abs(placement.height - this.cardWidth * height / width) > 1e-6;
+  }
+
+  get totalHeight() {
+    return Math.max(0, ...(this.heights || [0])) - (this.items.length ? this.options.gap : 0);
+  }
+
+  viewportAnchor(scrollTop) {
+    const top = Math.max(0, Number(scrollTop) || 0);
+    let anchor = null;
+    let distance = Infinity;
+    for (const column of this.columns) {
+      for (const placement of column) {
+        const d = Math.abs(placement.y - top);
+        if (d < distance) {
+          anchor = placement;
+          distance = d;
+        }
+      }
+    }
+    return anchor ? { key: anchor.key, offset: top - anchor.y, index: anchor.index } : null;
+  }
+
+  scrollTopForAnchor(anchor, viewportHeight = 0) {
+    const placement = this.placementsByKey.get(String(anchor?.key || ""));
+    const offset = Number(anchor?.offset);
+    if (!placement || !Number.isFinite(offset)) return null;
+    const maximum = Math.max(0, this.totalHeight - Math.max(0, Number(viewportHeight) || 0));
+    return Math.min(maximum, Math.max(0, placement.y + offset));
+  }
+}
+
+export function ratingKey(value) {
+  const rating = String(value || "").trim().toLowerCase();
+  return ({ g: "general", s: "sensitive", q: "questionable", e: "explicit" })[rating] || rating || "unknown";
+}
+
+export function ratingTone(value) {
+  const rating = ratingKey(value);
+  return ["general", "safe", "sensitive", "questionable", "explicit"].includes(rating) ? rating : "unknown";
+}
+
+export function ratingLabel(value) {
+  const key = ratingKey(value);
+  return ({ general: "全龄", safe: "全龄", sensitive: "敏感", questionable: "疑虑", explicit: "色情" })[key] || "—";
+}
+
+let currentMasonryLayout = null;
+let currentMasonrySpacer = null;
+let currentGridResizeObserver = null;
+let reflowFrame = 0;
+
+export function scheduleMasonryReflow() {
+  if (reflowFrame) return;
+  if (typeof requestAnimationFrame === "function") {
+    reflowFrame = requestAnimationFrame(() => {
+      reflowFrame = 0;
+      reflowMasonryCards();
+    });
+  } else {
+    reflowMasonryCards();
+  }
+}
+
+export function reflowMasonryCards() {
+  if (!currentMasonryLayout || !currentMasonrySpacer) return;
+  currentMasonryLayout.reflow();
+  currentMasonrySpacer.style.height = `${Math.ceil(currentMasonryLayout.totalHeight)}px`;
+  const cards = currentMasonrySpacer.children || [];
+  for (const card of cards) {
+    const key = card.dataset?.cardKey;
+    if (!key) continue;
+    const placement = currentMasonryLayout.placementsByKey.get(key);
+    if (placement) {
+      card.style.width = `${placement.width}px`;
+      card.style.height = `${placement.height}px`;
+      card.style.transform = `translate3d(${placement.x}px, ${placement.y}px, 0)`;
+    }
+  }
+}
+
 /* ================= 瀑布流卡片列表渲染 ================= */
-function renderGrid() {
+export function renderGrid() {
   const grid = $("#booruGrid");
   if (!grid) return;
   grid.innerHTML = "";
@@ -850,43 +1037,77 @@ function renderGrid() {
 
   if (!state.posts.length) {
     grid.innerHTML = '<div class="booru-empty-msg">查無相關圖片，請嘗試變更搜尋標籤或篩選條件</div>';
+    currentMasonryLayout = null;
+    currentMasonrySpacer = null;
     return;
   }
+
+  const spacer = el("div", { class: "aa-virtual-masonry__spacer" });
+  grid.append(spacer);
+  currentMasonrySpacer = spacer;
+
+  const containerWidth = Math.max(1, grid.clientWidth || 500);
+  const layout = new VirtualMasonryLayout({ width: containerWidth, minCardWidth: 118, gap: 6, maxColumns: 6 });
+  layout.setItems(state.posts);
+  currentMasonryLayout = layout;
+
+  spacer.style.height = `${Math.ceil(layout.totalHeight)}px`;
 
   for (const post of state.posts) {
     const key = `${post.source}:${post.postId}`;
     const isSelected = state.selectedPosts.has(key);
+    const placement = layout.placementsByKey.get(key);
 
-    const card = el("div", {
-      class: "booru-card" + (isSelected ? " is-selected" : ""),
+    const card = el("article", {
+      class: "aa-gallery-card booru-card" + (isSelected ? " is-selected" : ""),
       "data-id": post.postId,
       "data-source": post.source,
       "data-card-key": key,
+      tabindex: 0,
     });
+    if (placement) {
+      card.style.width = `${placement.width}px`;
+      card.style.height = `${placement.height}px`;
+      card.style.transform = `translate3d(${placement.x}px, ${placement.y}px, 0)`;
+    }
 
-    const imgWrap = el("div", { class: "booru-img-wrap" });
+    const imgWrap = el("div", { class: "aa-gallery-card__surface booru-img-wrap" });
     const img = el("img", {
       loading: "lazy",
       alt: post.postId,
       src: mediaUrl(post.source, post.previewUrl || post.sampleUrl),
     });
+
+    img.onload = () => {
+      img.classList.add("loaded");
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        if (layout.updateItemSize(key, img.naturalWidth, img.naturalHeight)) {
+          scheduleMasonryReflow();
+        }
+      }
+    };
     img.onerror = () => {
       img.alt = "載入失敗";
-      img.style.opacity = "0.4";
+      imgWrap.classList.add("is-error");
     };
     imgWrap.append(img);
 
-    // Badges 標籤 (分級、解析度、評分)
-    const badgeBar = el("div", { class: "booru-badge-bar" });
-    const rb = ratingBadge(post.rating);
-    badgeBar.append(el("span", { class: `booru-tag-badge ${rb.cls}` }, rb.text));
-    if (post.width && post.height) {
-      badgeBar.append(el("span", { class: "booru-tag-badge dim" }, `${post.width}×${post.height}`));
-    }
-    if (post.score) {
-      badgeBar.append(el("span", { class: "booru-tag-badge score" }, `★${post.score}`));
-    }
-    imgWrap.append(badgeBar);
+    // 載入 shimmer 動畫層
+    const loadingLayer = el("div", { class: "aa-gallery-card__loading", "aria-hidden": "true" });
+    imgWrap.append(loadingLayer);
+
+    // 陰影漸變層
+    const shadeLayer = el("div", { class: "aa-gallery-card__shade" });
+    imgWrap.append(shadeLayer);
+
+    // 分級標籤膠囊（右上方，符合原版設計：全齡、敏感、疑慮、色情）
+    const tone = ratingTone(post.rating);
+    const lbl = ratingLabel(post.rating);
+    const ratingEl = el("span", {
+      class: `aa-gallery-card__rating ${ratingBadge(post.rating).cls}`,
+      "data-rating": tone,
+    }, lbl);
+    imgWrap.append(ratingEl);
 
     // 已選中印章與圖層 (符合原始畫廊設計：印章置中，無角落小標)
     if (isSelected) {
@@ -895,31 +1116,30 @@ function renderGrid() {
       imgWrap.append(selLayer, stamp);
     }
 
-    // 快捷懸浮操作列
-    const hoverBar = el("div", { class: "booru-hover-bar" });
+    // 快捷懸浮操作列（懸浮時淡入取代分級標籤）
+    const hoverBar = el("div", { class: "aa-gallery-card__actions booru-hover-bar" });
     const initBtn = el("button", {
-      class: "booru-quick-btn",
+      class: "aa-gallery-card-action booru-quick-btn is-edit",
       type: "button",
       title: "設為輸入圖（圖生圖）",
-    }, "🖼️ 輸入圖");
+    }, "🖼️");
     initBtn.onclick = (e) => {
       e.stopPropagation();
       setPostAsInput(post);
     };
 
     const detailBtn = el("button", {
-      class: "booru-quick-btn",
+      class: "aa-gallery-card-action booru-quick-btn is-detail",
       type: "button",
       title: "查看詳細資訊與所有分類標籤",
-    }, "🔍 詳情");
+    }, "🔍");
     detailBtn.onclick = (e) => {
       e.stopPropagation();
       openDetailModal(post);
     };
 
     hoverBar.append(initBtn, detailBtn);
-    imgWrap.append(hoverBar);
-    card.append(imgWrap);
+    card.append(imgWrap, hoverBar);
 
     // 懸浮預覽圖片與提示詞
     card.addEventListener("mouseenter", () => showHoverTooltip(post, card));
@@ -927,14 +1147,29 @@ function renderGrid() {
 
     // 點擊卡片：加入或去除提示詞
     card.onclick = async (e) => {
-      if (e.target.closest(".booru-quick-btn")) return;
+      if (e.target.closest(".booru-quick-btn") || e.target.closest(".aa-gallery-card-action")) return;
       await togglePostPrompt(post, card);
     };
 
     // 雙擊開啟完整詳情彈窗
     card.ondblclick = () => openDetailModal(post);
 
-    grid.append(card);
+    spacer.append(card);
+  }
+
+  // 設置容器 ResizeObserver 自動重排
+  if (typeof ResizeObserver === "function" && !currentGridResizeObserver) {
+    currentGridResizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width;
+        if (w > 0 && currentMasonryLayout) {
+          if (currentMasonryLayout.configure(w)) {
+            scheduleMasonryReflow();
+          }
+        }
+      }
+    });
+    currentGridResizeObserver.observe(grid);
   }
 
   updateSelectionUI();
@@ -1912,6 +2147,7 @@ export function initSplitter() {
     const newW = Math.min(maxW, Math.max(minW, startW + dx));
     document.documentElement.style.setProperty("--booru-w", `${Math.round(newW)}px`);
     store.set("booru_width", Math.round(newW));
+    scheduleMasonryReflow();
   };
 
   const onPointerUp = () => {
@@ -1921,6 +2157,7 @@ export function initSplitter() {
     document.removeEventListener("pointermove", onPointerMove);
     document.removeEventListener("pointerup", onPointerUp);
     document.removeEventListener("pointercancel", onPointerUp);
+    scheduleMasonryReflow();
   };
 
   splitter.addEventListener("pointerdown", (e) => {
@@ -1938,6 +2175,7 @@ export function initSplitter() {
   splitter.addEventListener("dblclick", () => {
     document.documentElement.style.setProperty("--booru-w", "500px");
     store.set("booru_width", 500);
+    scheduleMasonryReflow();
   });
 }
 
