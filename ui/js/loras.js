@@ -10,6 +10,8 @@ let pickCb = null;
 let pickFam = null;
 let pickAll = false;
 let pickShown = 0;
+let shown = 0;
+const PAGE = 60;
 let pickerTab = "single"; // "single" | "recipe"
 
 let lmOnline = false;
@@ -102,6 +104,8 @@ export function init() {
 export function onState(st) {
   list = (st.models?.loras || []).slice().sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0) || (a.title || a.name).localeCompare(b.title || b.name));
   if (app.page === "loras") {
+    fillFilters();
+    renderPage(true);
     showPage();
   }
 }
@@ -278,6 +282,39 @@ function fillFilters() {
   fill("#loraTag", [["", "常用標籤"], ...tags.slice(0, 100).map(([tag, n]) => [tag, `${tag} (${n})`])]);
 }
 
+function filtered() {
+  const q = $("#loraQ")?.value?.trim() || "", fam = $("#loraFamily")?.value, category = $("#loraCategory")?.value, tag = $("#loraTag")?.value;
+  return list.filter((l) => match(l, q) && (!fam || modelLabel(l) === fam) && (!category || (category === "_none" ? !categoryOf(l) : categoryOf(l) === category)) && (!tag || tagsOf(l).includes(tag)) && (!$("#loraFav")?.checked || l.fav));
+}
+
+export function renderPage(reset = true) {
+  const items = filtered(), g = $("#loraGrid");
+  if (!g) return;
+  if (reset) { shown = 0; g.replaceChildren(); }
+  const end = Math.min(items.length, shown + PAGE);
+  for (const l of items.slice(shown, end)) g.append(card(l));
+  shown = end;
+  if ($("#loraMore")) $("#loraMore").hidden = shown >= items.length;
+  if ($("#loraTotal")) $("#loraTotal").textContent = `${items.length} / ${list.length} 個`;
+}
+
+function card(l) {
+  const blur = app.state?.settings?.blur_nsfw && l.nsfw;
+  return el("div", { class: "card" },
+    el("div", { class: "ph" + (blur ? " blur" : ""), style: preview(l) ? `background-image:${preview(l)}` : "" }, preview(l) ? "" : "沒有預覽圖"),
+    el("div", { class: "bd" },
+      el("div", { class: "t" }, (l.fav ? "★ " : "") + title(l), modelLabel(l) ? el("span", { class: "badge fam" }, modelLabel(l)) : null),
+      el("div", { class: "st" }, l.name),
+      el("div", { class: "lora-card-meta" },
+        el("span", { class: "badge" + (!l.category ? " auto" : ""), title: l.category ? "手動分類" : "依助手認識結果、標籤與名稱自動分類" }, categoryLabel(categoryOf(l))),
+        ...tagsOf(l).slice(0, 8).map((tag) => el("button", { class: "chip", type: "button", title: `只看標籤 ${tag}`, onclick: () => { const box = $("#loraTag"); if (![...box.options].some((o) => o.value === tag)) box.append(el("option", { value: tag }, tag)); box.value = tag; renderPage(true); } }, tag))),
+      l.triggers?.length ? el("div", { class: "trig", title: "觸發詞" }, "觸發詞：" + l.triggers.join(", ")) : el("div", { class: "st" }, "沒有觸發詞"),
+      l.note ? el("div", { class: "st", style: "white-space:pre-wrap" }, l.note) : null,
+      agentDesc(l)
+    )
+  );
+}
+
 // ---------------------------------------------------------------- 右鍵選單
 let pickerMenuEl = null;
 
@@ -286,15 +323,19 @@ export function closePickerMenu() {
   pickerMenuEl = null;
 }
 
-document.addEventListener("pointerdown", (e) => {
-  if (pickerMenuEl && !pickerMenuEl.contains(e.target)) closePickerMenu();
-}, true);
+if (typeof document !== "undefined") {
+  document.addEventListener("pointerdown", (e) => {
+    if (pickerMenuEl && !pickerMenuEl.contains(e.target)) closePickerMenu();
+  }, true);
 
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closePickerMenu();
-});
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closePickerMenu();
+  });
+}
 
-window.addEventListener("scroll", closePickerMenu, true);
+if (typeof window !== "undefined") {
+  window.addEventListener("scroll", closePickerMenu, true);
+}
 
 function openPickerMenu(e, l) {
   closePickerMenu();
