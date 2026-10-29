@@ -469,7 +469,19 @@
             <option value="week">本周榜單</option>
             <option value="month">本月榜單</option>
           </select>
+        </div>
+        <div class="row gap wrap booru-action-row" id="booruActionRow">
           <button class="akey sm" id="booruRandomBtn" type="button" title="隨機洗牌抽卡">🎲 抽卡</button>
+          <div class="booru-seg-group" id="booruSelectionModeGroup" title="點擊圖片時的選取模式">
+            <button class="booru-seg-btn active" id="booruModeSingle" type="button" title="單選模式：點選圖片加入提示詞，更換圖片時自動替換；再次點選同一張可移除">⊙ 單選</button>
+            <button class="booru-seg-btn" id="booruModeMulti" type="button" title="多選模式：點選可連續加入多張圖片的標籤；再次點選已選圖片可單獨移除">⚏ 多選</button>
+          </div>
+          <button class="akey sm" id="booruPromptConfigBtn" type="button" title="設定提示詞分類、下劃線轉換、排除標籤等">🏷️ 提示詞處理</button>
+          <button class="akey sm" id="booruSettingsBtn" type="button" title="設定圖庫帳號、API Key、快取管理">⚙️ 設定</button>
+          <div class="booru-selection-status" id="booruSelectionStatus" hidden>
+            <span class="sm muted" id="booruSelectedCount">已選 0 張</span>
+            <button class="minikey sm red" id="booruClearSelectionBtn" type="button" title="清空全部已選圖片並從主體提示詞中移除標籤">✕ 清空</button>
+          </div>
         </div>
         <div class="row gap booru-search-row">
           <input type="search" id="booruQuery" placeholder="搜尋標籤（例如: 1girl, solo, frieren...）" spellcheck="false" autocomplete="off">
@@ -2165,6 +2177,103 @@
         <div class="sub">分類標籤（點擊任意標籤插入當前提示詞框）</div>
         <div id="booruTagsContainer" class="booru-tags-list"></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Booru 提示詞處理設定視窗 -->
+<div class="modal" id="booruPromptModal" hidden>
+  <div class="dialog booru-config-dialog">
+    <div class="row between">
+      <b>🏷️ 提示詞處理設定 (Prompt Processing)</b>
+      <button class="minikey red" data-close data-ic="power" type="button" aria-label="關閉"></button>
+    </div>
+    <div class="booru-config-body">
+      <div class="booru-config-section">
+        <div class="sub">包含標籤分類 (Categories)</div>
+        <div class="row gap wrap">
+          <label class="check"><input type="checkbox" id="booruCatChar" checked> 🌸 角色 (Character)</label>
+          <label class="check"><input type="checkbox" id="booruCatCopy" checked> 📚 作品 (Copyright)</label>
+          <label class="check"><input type="checkbox" id="booruCatArt" checked> 🎨 畫師 (Artist)</label>
+          <label class="check"><input type="checkbox" id="booruCatGen" checked> 🏷️ 常規標籤 (General)</label>
+          <label class="check"><input type="checkbox" id="booruCatMeta"> ⚙️ 元數據 (Meta)</label>
+        </div>
+      </div>
+      <div class="booru-config-section">
+        <div class="sub">文字格式處理 (Formatting)</div>
+        <div class="col gap">
+          <label class="check"><input type="checkbox" id="booruReplaceUnderscores" checked> 下劃線轉空格 (例如 <code>black_hair</code> → <code>black hair</code>)</label>
+          <label class="check"><input type="checkbox" id="booruEscapeParentheses"> 轉義圓括號 (例如 <code>(tag)</code> → <code>\(tag\)</code>)</label>
+        </div>
+      </div>
+      <div class="booru-config-section">
+        <div class="sub">排除/黑名單標籤 (每行一個或逗號分隔，自動濾除)</div>
+        <textarea id="booruPromptBlacklist" rows="4" class="sm" spellcheck="false" placeholder="watermark, signature, username, logo..."></textarea>
+      </div>
+    </div>
+    <div class="row gap between">
+      <button class="akey sm" id="booruPromptResetBtn" type="button">重設預設值</button>
+      <div class="row gap">
+        <button class="akey sm" data-close type="button">取消</button>
+        <button class="akey sm go" id="booruPromptSaveBtn" type="button">儲存設定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Booru 畫廊設定視窗 (API 與快取) -->
+<div class="modal" id="booruSettingsModal" hidden>
+  <div class="dialog booru-config-dialog">
+    <div class="row between">
+      <b>⚙️ Booru 畫廊設定 (Gallery Settings)</b>
+      <button class="minikey red" data-close data-ic="power" type="button" aria-label="關閉"></button>
+    </div>
+    <div class="booru-config-body">
+      <div class="booru-config-section">
+        <div class="sub">圖庫帳號與 API 金鑰 (Danbooru / Gelbooru)</div>
+        <p class="sm muted">配置 API 憑據後可解鎖更多標籤搜尋配額、存取高分或限制內容。</p>
+        
+        <div class="booru-account-card">
+          <div class="row between">
+            <b>Danbooru</b>
+            <span class="sm muted" id="danbooruAccountStatus">檢查中...</span>
+          </div>
+          <div class="row gap wrap">
+            <input type="text" id="danbooruUsername" placeholder="使用者名稱 (Username)" class="sm">
+            <input type="password" id="danbooruApiKey" placeholder="API Key" class="sm">
+            <button class="akey sm" id="danbooruTestBtn" type="button">測試連線</button>
+          </div>
+        </div>
+
+        <div class="booru-account-card">
+          <div class="row between">
+            <b>Gelbooru</b>
+            <span class="sm muted" id="gelbooruAccountStatus">檢查中...</span>
+          </div>
+          <div class="row gap wrap">
+            <input type="text" id="gelbooruUserId" placeholder="User ID" class="sm">
+            <input type="password" id="gelbooruApiKey" placeholder="API Key" class="sm">
+            <button class="akey sm" id="gelbooruTestBtn" type="button">測試連線</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="booru-config-section">
+        <div class="sub">快取與儲存管理 (Cache Management)</div>
+        <div class="row between">
+          <span class="sm">清理本地下載暫存的原圖與中繼資料快取：</span>
+          <button class="akey sm warn" id="booruClearCacheBtn" type="button">清除快取</button>
+        </div>
+      </div>
+
+      <div class="booru-config-section">
+        <div class="sub">瀏覽與懸浮行為</div>
+        <label class="check"><input type="checkbox" id="booruTooltipEnabled" checked> 啟用滑鼠懸浮預覽大圖與提示詞</label>
+      </div>
+    </div>
+    <div class="row gap end">
+      <button class="akey sm" data-close type="button">取消</button>
+      <button class="akey sm go" id="booruSettingsSaveBtn" type="button">儲存設定</button>
     </div>
   </div>
 </div>

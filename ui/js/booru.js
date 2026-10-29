@@ -1,12 +1,23 @@
 // Booru 畫廊：整合 ComfyUI-Aaalice-Nodes 的 BooruGalleryNode 服務
 // 支援 Danbooru / Gelbooru / Safebooru / AI TAG 瀑布流檢索、抽卡、標籤提取與圖生圖聯動
-// 支援懸浮預覽大圖與提示詞，點擊圖片直接加入「主體提示詞框」
+// 支援懸浮預覽大圖與提示詞、點擊圖片加入/移除「主體提示詞」、單選/多選模式、提示詞處理與設定功能
 
 import { $, $$, el, toast, uploadFile, store } from "./util.js";
-import { appendPrompt, setInit, setMode, refs, S } from "./gen.js";
+import { appendPrompt, removePrompt, setInit, setMode, refs, S } from "./gen.js";
 
 const COMFY_URL = "http://127.0.0.1:8188";
 const API = `${COMFY_URL}/aaalice/booru-gallery`;
+
+// 提示詞處理預設設定
+export const promptConfig = {
+  categories: ["character", "copyright", "artist", "general"],
+  replaceUnderscores: false,
+  escapeParentheses: false,
+  blacklist: [
+    "watermark", "signature", "username", "logo", "web_address",
+    "commentary_request", "bad_id", "bad_pixiv_id", "translation_request",
+  ],
+};
 
 export const state = {
   source: "safebooru",
@@ -23,6 +34,9 @@ export const state = {
   activeDetail: null,
   sources: [],
   initialized: false,
+  selectionMode: "single", // "single" | "multi"
+  selectedPosts: new Map(), // key -> { post, tags, promptText }
+  tooltipEnabled: true,
 };
 
 // 詳情快取：避免反覆請求相同的帖子
@@ -133,36 +147,64 @@ export async function getDetail(source, postId) {
   }
 }
 
-// 從 detail 物件中提取提示詞標籤，排除噪音與無關標籤
-export function extractPromptTags(detail) {
+// 根據提示詞設定從 detail 物件中提取提示詞標籤
+export function extractPromptTags(detail, cfg = promptConfig) {
   if (!detail || !detail.tags) return [];
   const groups = detail.tags;
-  const character = groups.character || [];
-  const copyright = groups.copyright || [];
-  const artist = groups.artist || [];
-  const general = groups.general || [];
+  const categories = cfg?.categories || ["character", "copyright", "artist", "general"];
+  const replaceUnderscores = Boolean(cfg?.replaceUnderscores);
+  const escapeParentheses = Boolean(cfg?.escapeParentheses);
 
-  const exclude = new Set([
-    "watermark", "signature", "username", "logo", "web_address",
-    "commentary_request", "bad_id", "bad_pixiv_id", "translation_request",
-  ]);
+  const blacklistSet = new Set(
+    (cfg?.blacklist || []).map((t) => String(t).trim().toLowerCase()).filter(Boolean)
+  );
 
-  const all = [...character, ...copyright, ...artist, ...general]
-    .map((t) => String(t || "").trim())
-    .filter((t) => Boolean(t) && !exclude.has(t.toLowerCase()));
+  const all = [];
+  for (const cat of ["character", "copyright", "artist", "general", "meta"]) {
+    if (!categories.includes(cat)) continue;
+    const list = groups[cat] || [];
+    for (const rawTag of list) {
+      const t = String(rawTag || "").trim();
+      if (!t || blacklistSet.has(t.toLowerCase())) continue;
+      let rendered = replaceUnderscores ? t.replaceAll("_", " ") : t;
+      if (escapeParentheses) rendered = rendered.replaceAll("(", "\\(").replaceAll(")", "\\)");
+      all.push(rendered);
+    }
+  }
 
   return [...new Set(all)];
 }
 
-// 點選圖片直接將提示詞填入「主體提示詞框」
-export async function addPostPromptToMain(post, card = null) {
+// 點選圖片：加入提示詞；再次點選：去除提示詞
+export async function togglePostPrompt(post, card = null) {
+  const key = `${post.source}:${post.postId}`;
+  const isSelected = state.selectedPosts.has(key);
+
+  if (isSelected) {
+    // 已經選中：再次點擊 -> 去除提示詞
+    const info = state.selectedPosts.get(key);
+    state.selectedPosts.delete(key);
+
+    if (info && info.tags) {
+      removePrompt(info.tags);
+    }
+
+    if (card) {
+      card.classList.remove("is-selected");
+      card.querySelector(".booru-selected-badge")?.remove();
+    }
+    updateSelectionUI();
+    toast(`已從主體提示詞框移除該圖標籤`, "info");
+    return;
+  }
+
+  // 未選中：點擊 -> 加入提示詞
   if (card) {
     card.classList.add("prompt-added");
-    setTimeout(() => card.classList.remove("prompt-added"), 600);
+    setTimeout(() => card.classList.remove("prompt-added"), 500);
   }
 
   let detail = null;
-  const key = `${post.source}:${post.postId}`;
   const cached = detailCache.get(key);
   if (cached) {
     detail = cached instanceof Promise ? await cached : cached;
@@ -177,15 +219,100 @@ export async function addPostPromptToMain(post, card = null) {
     }
   }
 
-  const tags = extractPromptTags(detail);
+  const tags = extractPromptTags(detail, promptConfig);
   if (!tags.length) {
-    return toast("該圖片未包含可用標籤", "warn");
+    return toast("該圖片未包含符合條件的可用標籤", "warn");
   }
 
+  // 單選模式：切換選取時先移除上一張圖的標籤
+  if (state.selectionMode === "single") {
+    for (const [prevKey, prevInfo] of state.selectedPosts.entries()) {
+      if (prevInfo && prevInfo.tags) {
+        removePrompt(prevInfo.tags);
+      }
+      const prevCard = $(`[data-card-key="${prevKey}"]`, $("#booruGrid"));
+      if (prevCard) {
+        prevCard.classList.remove("is-selected");
+        prevCard.querySelector(".booru-selected-badge")?.remove();
+      }
+    }
+    state.selectedPosts.clear();
+  }
+
+  // 加入主體提示詞框
   const promptText = tags.join(", ");
   const mainPromptEl = $("#prompt");
   appendPrompt(promptText, mainPromptEl);
+
+  // 登記至已選集合
+  state.selectedPosts.set(key, { post, tags, promptText });
+
+  if (card) {
+    card.classList.add("is-selected");
+    if (!card.querySelector(".booru-selected-badge")) {
+      const badge = el("span", { class: "booru-selected-badge" }, "✓ 已加入");
+      card.querySelector(".booru-img-wrap")?.append(badge);
+    }
+  }
+
+  updateSelectionUI();
   toast(`已將 ${tags.length} 個標籤加入主體提示詞框`, "ok");
+}
+
+export const addPostPromptToMain = togglePostPrompt;
+
+export function updateSelectionUI() {
+  const countEl = $("#booruSelectedCount");
+  const statusEl = $("#booruSelectionStatus");
+  const count = state.selectedPosts.size;
+  if (countEl) countEl.textContent = `已選 ${count} 張`;
+  if (statusEl) statusEl.hidden = count === 0;
+
+  const btnSingle = $("#booruModeSingle");
+  const btnMulti = $("#booruModeMulti");
+  if (btnSingle) btnSingle.classList.toggle("active", state.selectionMode === "single");
+  if (btnMulti) btnMulti.classList.toggle("active", state.selectionMode === "multi");
+}
+
+export function clearSelection() {
+  if (!state.selectedPosts.size) return;
+  for (const [key, info] of state.selectedPosts.entries()) {
+    if (info && info.tags) {
+      removePrompt(info.tags);
+    }
+  }
+  state.selectedPosts.clear();
+  $$(".booru-card.is-selected", $("#booruGrid")).forEach((c) => {
+    c.classList.remove("is-selected");
+    c.querySelector(".booru-selected-badge")?.remove();
+  });
+  updateSelectionUI();
+  toast("已清空所有已選圖片及其提示詞", "info");
+}
+
+export function setSelectionMode(mode) {
+  if (mode !== "single" && mode !== "multi") return;
+  state.selectionMode = mode;
+  store.set("booru_selection_mode", mode);
+
+  // 切換至單選模式時，若已選多張，僅保留最後一張
+  if (mode === "single" && state.selectedPosts.size > 1) {
+    const entries = [...state.selectedPosts.entries()];
+    const keep = entries[entries.length - 1];
+    for (const [k, info] of entries.slice(0, entries.length - 1)) {
+      if (info && info.tags) removePrompt(info.tags);
+      state.selectedPosts.delete(k);
+    }
+    $$(".booru-card", $("#booruGrid")).forEach((card) => {
+      const key = card.getAttribute("data-card-key");
+      const isKept = key === keep[0];
+      card.classList.toggle("is-selected", isKept);
+      if (!isKept) card.querySelector(".booru-selected-badge")?.remove();
+    });
+  }
+
+  updateSelectionUI();
+  toast(`已切換至${mode === "single" ? "單選模式（換圖自動替換）" : "多選模式（可連續累加）"}`);
 }
 
 function setStatus(text, isErr = false) {
@@ -228,7 +355,6 @@ function ensureHoverTooltip() {
     hidden: true,
   });
 
-  // 頂部大圖預覽
   const mediaWrap = el("div", { class: "booru-hover-media" });
   const hoverImg = el("img", { class: "booru-hover-img", alt: "" });
   const badgeBar = el("div", { class: "booru-hover-badges" });
@@ -238,7 +364,6 @@ function ensureHoverTooltip() {
   badgeBar.append(badgeRating, badgeDim, badgeScore);
   mediaWrap.append(hoverImg, badgeBar);
 
-  // 內容區
   const body = el("div", { class: "booru-hover-content" });
 
   const head = el("div", { class: "booru-hover-head" });
@@ -250,17 +375,14 @@ function ensureHoverTooltip() {
   }, "🔍 完整詳情");
   head.append(title, detailBtn);
 
-  // 分類標籤（角色、作品、畫師）
   const tagsWrap = el("div", { class: "booru-hover-tags", id: "booruHoverTags" });
 
-  // 提示詞文字預覽框
   const promptWrap = el("div", { class: "booru-hover-prompt-wrap" });
   const promptLbl = el("span", { class: "booru-hover-prompt-lbl", id: "booruHoverPromptLbl" }, "提示詞預覽 (PROMPT)");
   const promptBox = el("div", { class: "booru-hover-prompt-box", id: "booruHoverPromptBox" });
   promptWrap.append(promptLbl, promptBox);
 
-  // 底部提示與操作列
-  const hint = el("div", { class: "booru-hover-hint" }, "💡 點選圖片直接填入「主體提示詞框」");
+  const hint = el("div", { class: "booru-hover-hint" }, "💡 點選圖片直接填入／移除「主體提示詞框」");
   const actions = el("div", { class: "booru-hover-actions" });
   const initBtn = el("button", { class: "booru-hover-btn go", type: "button" }, "🖼️ 設為輸入圖");
   const copyBtn = el("button", { class: "booru-hover-btn", type: "button" }, "📋 複製提示詞");
@@ -269,7 +391,6 @@ function ensureHoverTooltip() {
   body.append(head, tagsWrap, promptWrap, hint, actions);
   tip.append(mediaWrap, body);
 
-  // 懸浮保持事件
   tip.addEventListener("mouseenter", () => cancelHideHoverTooltip());
   tip.addEventListener("mouseleave", () => scheduleHideHoverTooltip());
 
@@ -305,18 +426,14 @@ function positionHoverTooltip(cardEl, tipEl) {
   const tipHeight = tipEl.offsetHeight || 400;
 
   let left;
-  // 優先顯示於卡片右側
   if (cardRect.right + tipWidth + 16 <= window.innerWidth) {
     left = cardRect.right + 10;
   } else if (cardRect.left - tipWidth - 10 >= 0) {
-    // 右側空間不足則顯示於卡片左側
     left = cardRect.left - tipWidth - 10;
   } else {
-    // 兩側均不足時置中限制
     left = Math.max(10, Math.min(window.innerWidth - tipWidth - 10, cardRect.left));
   }
 
-  // 垂直位置對齊卡片頂部，並限制於視窗內
   let top = cardRect.top;
   if (top + tipHeight > window.innerHeight - 10) {
     top = Math.max(10, window.innerHeight - tipHeight - 10);
@@ -329,6 +446,7 @@ function positionHoverTooltip(cardEl, tipEl) {
 }
 
 export function showHoverTooltip(post, cardEl) {
+  if (!state.tooltipEnabled) return;
   cancelHideHoverTooltip();
   if (hoverTimer) clearTimeout(hoverTimer);
 
@@ -337,7 +455,6 @@ export function showHoverTooltip(post, cardEl) {
     const tip = ensureHoverTooltip();
     tip.hidden = false;
 
-    // 圖片預覽：先顯示縮略圖，後台加載高清 sample 圖升級
     const img = tip.querySelector(".booru-hover-img");
     const previewSrc = mediaUrl(post.source, post.previewUrl || post.sampleUrl);
     img.src = previewSrc;
@@ -353,7 +470,6 @@ export function showHoverTooltip(post, cardEl) {
       preImg.src = sampleSrc;
     }
 
-    // 標題與數值
     const title = tip.querySelector("#booruHoverTitle");
     title.textContent = `${post.source.toUpperCase()} #${post.postId}`;
 
@@ -370,15 +486,12 @@ export function showHoverTooltip(post, cardEl) {
     scoreEl.textContent = post.score ? `★${post.score}` : "";
     scoreEl.hidden = !scoreEl.textContent;
 
-    // 標籤與提示詞框重設
     const tagsCont = tip.querySelector("#booruHoverTags");
     const promptBox = tip.querySelector("#booruHoverPromptBox");
     const promptLbl = tip.querySelector("#booruHoverPromptLbl");
 
-    // 初始位置定位
     positionHoverTooltip(cardEl, tip);
 
-    // 取得或讀取詳情快取
     const key = `${post.source}:${post.postId}`;
     let detail = detailCache.get(key);
     if (!detail) {
@@ -409,11 +522,9 @@ export function showHoverTooltip(post, cardEl) {
 
     if (currentHoverPost?.postId !== post.postId) return;
 
-    // 渲染高頻分類標籤 (角色/作品/畫師)
     renderHoverTags(tagsCont, detail);
 
-    // 渲染提示詞純文字預覽
-    const promptTags = extractPromptTags(detail);
+    const promptTags = extractPromptTags(detail, promptConfig);
     if (promptTags.length) {
       promptLbl.textContent = `提示詞預覽 (${promptTags.length} 個標籤)`;
       promptBox.textContent = promptTags.join(", ");
@@ -422,7 +533,6 @@ export function showHoverTooltip(post, cardEl) {
       promptBox.textContent = "未檢測到標籤";
     }
 
-    // 內容膨脹後更新貼齊位置
     positionHoverTooltip(cardEl, tip);
   }, 100);
 }
@@ -501,10 +611,14 @@ function renderGrid() {
   }
 
   for (const post of state.posts) {
+    const key = `${post.source}:${post.postId}`;
+    const isSelected = state.selectedPosts.has(key);
+
     const card = el("div", {
-      class: "booru-card",
+      class: "booru-card" + (isSelected ? " is-selected" : ""),
       "data-id": post.postId,
       "data-source": post.source,
+      "data-card-key": key,
     });
 
     const imgWrap = el("div", { class: "booru-img-wrap" });
@@ -530,6 +644,12 @@ function renderGrid() {
       badgeBar.append(el("span", { class: "booru-tag-badge score" }, `★${post.score}`));
     }
     imgWrap.append(badgeBar);
+
+    // 已選中勾選標章
+    if (isSelected) {
+      const selectedBadge = el("span", { class: "booru-selected-badge" }, "✓ 已加入");
+      imgWrap.append(selectedBadge);
+    }
 
     // 快捷懸浮操作列
     const hoverBar = el("div", { class: "booru-hover-bar" });
@@ -561,10 +681,10 @@ function renderGrid() {
     card.addEventListener("mouseenter", () => showHoverTooltip(post, card));
     card.addEventListener("mouseleave", () => scheduleHideHoverTooltip());
 
-    // 點擊卡片：直接將提示詞加入「主體提示詞框」
+    // 點擊卡片：加入或去除提示詞
     card.onclick = async (e) => {
       if (e.target.closest(".booru-quick-btn")) return;
-      await addPostPromptToMain(post, card);
+      await togglePostPrompt(post, card);
     };
 
     // 雙擊開啟完整詳情彈窗
@@ -572,6 +692,8 @@ function renderGrid() {
 
     grid.append(card);
   }
+
+  updateSelectionUI();
 }
 
 export async function openDetailModal(post) {
@@ -728,16 +850,199 @@ export async function addPostAsRef(post) {
 export function insertAllTags(detail) {
   const d = detail || state.activeDetail || state.selectedPost;
   if (!d || !d.tags) return toast("尚未取得標籤", "warn");
-  const tags = extractPromptTags(d);
+  const tags = extractPromptTags(d, promptConfig);
 
   if (!tags.length) return toast("沒有可用標籤", "warn");
   appendPrompt(tags.join(", "), $("#prompt"));
   toast(`已將 ${tags.length} 個標籤加入主體提示詞框`, "ok");
 }
 
+/* ================= 提示詞處理設定彈窗 ================= */
+export function openPromptConfigDialog() {
+  const modal = $("#booruPromptModal");
+  if (!modal) return;
+
+  const charCheck = $("#booruCatChar");
+  const copyCheck = $("#booruCatCopy");
+  const artCheck = $("#booruCatArt");
+  const genCheck = $("#booruCatGen");
+  const metaCheck = $("#booruCatMeta");
+  const underCheck = $("#booruReplaceUnderscores");
+  const parenCheck = $("#booruEscapeParentheses");
+  const blText = $("#booruPromptBlacklist");
+
+  if (charCheck) charCheck.checked = promptConfig.categories.includes("character");
+  if (copyCheck) copyCheck.checked = promptConfig.categories.includes("copyright");
+  if (artCheck) artCheck.checked = promptConfig.categories.includes("artist");
+  if (genCheck) genCheck.checked = promptConfig.categories.includes("general");
+  if (metaCheck) metaCheck.checked = promptConfig.categories.includes("meta");
+  if (underCheck) underCheck.checked = promptConfig.replaceUnderscores !== false;
+  if (parenCheck) parenCheck.checked = !!promptConfig.escapeParentheses;
+  if (blText) blText.value = (promptConfig.blacklist || []).join("\n");
+
+  modal.hidden = false;
+}
+
+export function savePromptConfigFromDialog() {
+  const categories = [];
+  if ($("#booruCatChar")?.checked) categories.push("character");
+  if ($("#booruCatCopy")?.checked) categories.push("copyright");
+  if ($("#booruCatArt")?.checked) categories.push("artist");
+  if ($("#booruCatGen")?.checked) categories.push("general");
+  if ($("#booruCatMeta")?.checked) categories.push("meta");
+
+  promptConfig.categories = categories.length ? categories : ["general"];
+  promptConfig.replaceUnderscores = $("#booruReplaceUnderscores")?.checked ?? true;
+  promptConfig.escapeParentheses = $("#booruEscapeParentheses")?.checked ?? false;
+
+  const rawBl = $("#booruPromptBlacklist")?.value || "";
+  promptConfig.blacklist = rawBl
+    .split(/[\n,]/)
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+
+  store.set("booru_prompt_config", promptConfig);
+  $("#booruPromptModal").hidden = true;
+  toast("提示詞處理設定已儲存！", "ok");
+}
+
+/* ================= 畫廊設定彈窗 (API 與快取) ================= */
+export async function openSettingsDialog() {
+  const modal = $("#booruSettingsModal");
+  if (!modal) return;
+
+  modal.hidden = false;
+
+  const danStatus = $("#danbooruAccountStatus");
+  const gelStatus = $("#gelbooruAccountStatus");
+  const danUser = $("#danbooruUsername");
+  const danKey = $("#danbooruApiKey");
+  const gelUser = $("#gelbooruUserId");
+  const gelKey = $("#gelbooruApiKey");
+  const tooltipCheck = $("#booruTooltipEnabled");
+
+  if (danStatus) danStatus.textContent = "載入中...";
+  if (gelStatus) gelStatus.textContent = "載入中...";
+  if (tooltipCheck) tooltipCheck.checked = state.tooltipEnabled;
+
+  try {
+    const res = await fetch(`${API}/settings`);
+    if (res.ok) {
+      const cfg = await res.json();
+      const cStatus = cfg.credentialStatus || {};
+      if (danStatus) {
+        const hasDan = cStatus.danbooru?.hasUsername && cStatus.danbooru?.hasApiKey;
+        danStatus.textContent = hasDan ? "✓ 已配置憑據" : "未配置 (留空將使用公開配額)";
+        danStatus.className = hasDan ? "sm st-ok" : "sm muted";
+      }
+      if (gelStatus) {
+        const hasGel = cStatus.gelbooru?.hasUserId && cStatus.gelbooru?.hasApiKey;
+        gelStatus.textContent = hasGel ? "✓ 已配置憑據" : "未配置 (留空將使用公開配額)";
+        gelStatus.className = hasGel ? "sm st-ok" : "sm muted";
+      }
+      if (danUser && !danUser.value) danUser.placeholder = cStatus.danbooru?.hasUsername ? "已儲存；留空保持原樣" : "使用者名稱 (Username)";
+      if (danKey && !danKey.value) danKey.placeholder = cStatus.danbooru?.hasApiKey ? "已儲存；留空保持原樣" : "API Key";
+      if (gelUser && !gelUser.value) gelUser.placeholder = cStatus.gelbooru?.hasUserId ? "已儲存；留空保持原樣" : "User ID";
+      if (gelKey && !gelKey.value) gelKey.placeholder = cStatus.gelbooru?.hasApiKey ? "已儲存；留空保持原樣" : "API Key";
+    }
+  } catch (e) {
+    if (danStatus) danStatus.textContent = "無法連線至 ComfyUI";
+    if (gelStatus) gelStatus.textContent = "無法連線至 ComfyUI";
+  }
+}
+
+export async function testSourceConnection(source, creds, statusEl) {
+  if (statusEl) {
+    statusEl.textContent = "測試連線中...";
+    statusEl.className = "sm";
+  }
+  try {
+    const res = await fetch(`${API}/test`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ source, credentials: creds }),
+    });
+    const result = await res.json();
+    if (res.ok && result?.success !== false) {
+      if (statusEl) {
+        statusEl.textContent = "✓ 連線成功！";
+        statusEl.className = "sm st-ok";
+      }
+      toast(`[${source}] 連線成功！`, "ok");
+    } else {
+      throw new Error(result?.message || result?.error || "連線未通過");
+    }
+  } catch (e) {
+    if (statusEl) {
+      statusEl.textContent = `✕ 失敗: ${e.message}`;
+      statusEl.className = "sm err";
+    }
+    toast(`[${source}] 測試失敗: ${e.message}`, "err");
+  }
+}
+
+export async function clearBooruCache() {
+  toast("正在清理畫廊快取...");
+  try {
+    const res = await fetch(`${API}/cache/clear`, { method: "POST" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    detailCache.clear();
+    toast("✓ 已成功清除本地畫廊圖片與中繼資料快取！", "ok");
+  } catch (e) {
+    toast(`清除快取失敗: ${e.message}`, "err");
+  }
+}
+
+export async function saveGallerySettings() {
+  const danUser = $("#danbooruUsername")?.value?.trim();
+  const danKey = $("#danbooruApiKey")?.value?.trim();
+  const gelUser = $("#gelbooruUserId")?.value?.trim();
+  const gelKey = $("#gelbooruApiKey")?.value?.trim();
+  const tooltipEnabled = $("#booruTooltipEnabled")?.checked ?? true;
+
+  state.tooltipEnabled = tooltipEnabled;
+  store.set("booru_tooltip_enabled", tooltipEnabled);
+
+  const credentials = {};
+  if (danUser || danKey) {
+    credentials.danbooru = {};
+    if (danUser) credentials.danbooru.username = danUser;
+    if (danKey) credentials.danbooru.apiKey = danKey;
+  }
+  if (gelUser || gelKey) {
+    credentials.gelbooru = {};
+    if (gelUser) credentials.gelbooru.userId = gelUser;
+    if (gelKey) credentials.gelbooru.apiKey = gelKey;
+  }
+
+  try {
+    if (Object.keys(credentials).length) {
+      const res = await fetch(`${API}/settings/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credentials }),
+      });
+      if (!res.ok) throw new Error("儲存後端失敗");
+    }
+    $("#booruSettingsModal").hidden = true;
+    toast("畫廊設定已儲存！", "ok");
+  } catch (e) {
+    toast(`儲存設定失敗: ${e.message}`, "err");
+  }
+}
+
 export function init() {
   if (state.initialized) return;
   state.initialized = true;
+
+  // 載入本地持久化配置
+  const savedPromptCfg = store.get("booru_prompt_config");
+  if (savedPromptCfg && typeof savedPromptCfg === "object") {
+    Object.assign(promptConfig, savedPromptCfg);
+  }
+  const savedMode = store.get("booru_selection_mode", "single");
+  state.selectionMode = savedMode;
+  state.tooltipEnabled = store.get("booru_tooltip_enabled", true);
 
   // 來源選擇
   $("#booruSource")?.addEventListener("change", (e) => {
@@ -777,6 +1082,43 @@ export function init() {
     searchPosts();
     toast(state.random ? "🎲 抽卡模式已開啟" : "🎲 抽卡模式已關閉");
   });
+
+  // 單選 / 多選切換按鈕
+  $("#booruModeSingle")?.addEventListener("click", () => setSelectionMode("single"));
+  $("#booruModeMulti")?.addEventListener("click", () => setSelectionMode("multi"));
+
+  // 清空選取按鈕
+  $("#booruClearSelectionBtn")?.addEventListener("click", () => clearSelection());
+
+  // 提示詞處理按鈕
+  $("#booruPromptConfigBtn")?.addEventListener("click", () => openPromptConfigDialog());
+  $("#booruPromptSaveBtn")?.addEventListener("click", () => savePromptConfigFromDialog());
+  $("#booruPromptResetBtn")?.addEventListener("click", () => {
+    promptConfig.categories = ["character", "copyright", "artist", "general"];
+    promptConfig.replaceUnderscores = false;
+    promptConfig.escapeParentheses = false;
+    promptConfig.blacklist = [
+      "watermark", "signature", "username", "logo", "web_address",
+      "commentary_request", "bad_id", "bad_pixiv_id", "translation_request",
+    ];
+    openPromptConfigDialog();
+    toast("已重設為預設值");
+  });
+
+  // 設定按鈕
+  $("#booruSettingsBtn")?.addEventListener("click", () => openSettingsDialog());
+  $("#booruSettingsSaveBtn")?.addEventListener("click", () => saveGallerySettings());
+  $("#danbooruTestBtn")?.addEventListener("click", () => {
+    const username = $("#danbooruUsername")?.value?.trim();
+    const apiKey = $("#danbooruApiKey")?.value?.trim();
+    testSourceConnection("danbooru", { username, apiKey }, $("#danbooruAccountStatus"));
+  });
+  $("#gelbooruTestBtn")?.addEventListener("click", () => {
+    const userId = $("#gelbooruUserId")?.value?.trim();
+    const apiKey = $("#gelbooruApiKey")?.value?.trim();
+    testSourceConnection("gelbooru", { userId, apiKey }, $("#gelbooruAccountStatus"));
+  });
+  $("#booruClearCacheBtn")?.addEventListener("click", () => clearBooruCache());
 
   // 搜尋列
   $("#booruSearchBtn")?.addEventListener("click", () => {
@@ -845,6 +1187,7 @@ export function init() {
     }
   });
 
+  updateSelectionUI();
   fetchSources();
 }
 

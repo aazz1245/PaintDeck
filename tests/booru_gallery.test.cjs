@@ -40,6 +40,7 @@ function harness() {
 
   const toasts = [];
   const appendCalls = [];
+  const removeCalls = [];
 
   const utilMock = {
     $: (sel) => nodes[sel] || null,
@@ -49,14 +50,25 @@ function harness() {
       attrs,
       kids,
       style: {},
-      classList: { add() {}, remove() {}, toggle() {} },
+      classList: {
+        add(cls) { this[cls] = true; },
+        remove(cls) { this[cls] = false; },
+        toggle(cls, force) { this[cls] = force !== undefined ? !!force : !this[cls]; },
+        contains(cls) { return !!this[cls]; },
+      },
       addEventListener() {},
       append() {},
+      querySelector() { return null; },
+      remove() {},
       getBoundingClientRect: () => ({ left: 100, top: 100, right: 200, bottom: 200, width: 100, height: 100 }),
     }),
     toast: (msg, type) => { toasts.push({ msg, type }); },
     uploadFile: async () => ({ name: 'test.png', width: 512, height: 512 }),
-    store: { get: () => 500, set: () => {} },
+    store: {
+      data: new Map(),
+      get(k, fallback) { return this.data.has(k) ? this.data.get(k) : fallback; },
+      set(k, v) { this.data.set(k, v); },
+    },
   };
 
   const genMock = {
@@ -65,6 +77,18 @@ function harness() {
       if (targetTa) {
         targetTa.value = targetTa.value ? `${targetTa.value}, ${text}` : text;
       }
+      return true;
+    },
+    removePrompt: (text) => {
+      removeCalls.push(text);
+      const toRemove = new Set(
+        (Array.isArray(text) ? text : [text])
+          .flatMap((x) => (typeof x === 'string' ? x.split(',') : []))
+          .map((s) => s.trim().toLowerCase())
+          .filter(Boolean)
+      );
+      const curParts = mainPromptEl.value.split(',').map((s) => s.trim()).filter(Boolean);
+      mainPromptEl.value = curParts.filter((s) => !toRemove.has(s.toLowerCase())).join(', ');
       return true;
     },
     setInit: () => {},
@@ -105,8 +129,12 @@ function harness() {
   });
   context.globalThis = context;
 
-  vm.runInContext(source + '\nglobalThis.subject = { extractPromptTags, ratingBadge, addPostPromptToMain, detailCache };', context, { filename: 'booru.js' });
-  return { ...context.subject, mainPromptEl, appendCalls, toasts };
+  vm.runInContext(
+    source + '\nglobalThis.subject = { extractPromptTags, ratingBadge, togglePostPrompt, addPostPromptToMain, setSelectionMode, clearSelection, state, promptConfig, detailCache };',
+    context,
+    { filename: 'booru.js' }
+  );
+  return { ...context.subject, mainPromptEl, appendCalls, removeCalls, toasts };
 }
 
 test('extractPromptTags：按角色、作品、畫師、常規標籤順序提取並排除浮水印等噪音', () => {
@@ -135,6 +163,32 @@ test('extractPromptTags：按角色、作品、畫師、常規標籤順序提取
   assert.equal(tags.includes('signature'), false);
 });
 
+test('extractPromptTags：支援替換底線為空格與轉義括號', () => {
+  const h = harness();
+  const detail = {
+    tags: {
+      character: ['rem_(re:zero)'],
+      copyright: ['re:zero'],
+      artist: ['nagatsuki_tappei'],
+      general: ['blue_hair', 'maid_apron'],
+    },
+  };
+
+  const tags = h.extractPromptTags(detail, {
+    categories: ['character', 'copyright', 'artist', 'general'],
+    replaceUnderscores: true,
+    escapeParentheses: true,
+  });
+
+  assert.deepEqual([...tags], [
+    'rem \\(re:zero\\)',
+    're:zero',
+    'nagatsuki tappei',
+    'blue hair',
+    'maid apron',
+  ]);
+});
+
 test('ratingBadge：正確回傳全年齡、微澀、R15與R18樣式級別', () => {
   const h = harness();
   assert.deepEqual({ ...h.ratingBadge('general') }, { text: 'SFW', cls: 'sfw' });
@@ -143,7 +197,7 @@ test('ratingBadge：正確回傳全年齡、微澀、R15與R18樣式級別', () 
   assert.deepEqual({ ...h.ratingBadge('explicit') }, { text: 'R18', cls: 'nsfw' });
 });
 
-test('addPostPromptToMain：點選圖片直接將標籤填入主體提示詞框（#prompt）', async () => {
+test('togglePostPrompt：點選圖片加入提示詞，再次點選去除提示詞', async () => {
   const h = harness();
   const post = { source: 'safebooru', postId: '12345' };
   const detail = {
@@ -160,14 +214,65 @@ test('addPostPromptToMain：點選圖片直接將標籤填入主體提示詞框�
     classList: {
       add(cls) { this[cls] = true; },
       remove(cls) { this[cls] = false; },
+      contains(cls) { return !!this[cls]; },
     },
+    querySelector() { return null; },
   };
 
-  await h.addPostPromptToMain(post, cardMock);
+  // 第一次點選：加入提示詞
+  await h.togglePostPrompt(post, cardMock);
 
   assert.equal(h.appendCalls.length, 1);
   assert.equal(h.appendCalls[0].targetTa, h.mainPromptEl);
   assert.equal(h.appendCalls[0].text, 'rem_(re:zero), re:zero, 1girl, blue_hair, maid');
   assert.equal(h.mainPromptEl.value, 'rem_(re:zero), re:zero, 1girl, blue_hair, maid');
-  assert.equal(h.toasts.some((t) => t.msg.includes('加入主體提示詞框')), true);
+  assert.equal(cardMock.classList.contains('is-selected'), true);
+  assert.equal(h.state.selectedPosts.has('safebooru:12345'), true);
+
+  // 第二次點選：去除提示詞
+  await h.togglePostPrompt(post, cardMock);
+
+  assert.equal(h.removeCalls.length, 1);
+  assert.equal(h.mainPromptEl.value, '');
+  assert.equal(cardMock.classList.contains('is-selected'), false);
+  assert.equal(h.state.selectedPosts.has('safebooru:12345'), false);
+  assert.equal(h.toasts.some((t) => t.msg.includes('移除該圖標籤')), true);
+});
+
+test('togglePostPrompt：單選模式下換選新圖自動替換提示詞', async () => {
+  const h = harness();
+  h.state.selectionMode = 'single';
+
+  const post1 = { source: 'safebooru', postId: '101' };
+  const detail1 = {
+    tags: { character: ['frieren'], copyright: [], artist: [], general: ['elf', 'white_hair'] },
+  };
+  h.detailCache.set('safebooru:101', detail1);
+
+  const post2 = { source: 'safebooru', postId: '102' };
+  const detail2 = {
+    tags: { character: ['fern'], copyright: [], artist: [], general: ['purple_hair'] },
+  };
+  h.detailCache.set('safebooru:102', detail2);
+
+  const card1 = {
+    classList: { add(cls) { this[cls] = true; }, remove(cls) { this[cls] = false; }, contains(cls) { return !!this[cls]; } },
+    querySelector() { return null; },
+  };
+  const card2 = {
+    classList: { add(cls) { this[cls] = true; }, remove(cls) { this[cls] = false; }, contains(cls) { return !!this[cls]; } },
+    querySelector() { return null; },
+  };
+
+  // 選中圖1
+  await h.togglePostPrompt(post1, card1);
+  assert.equal(h.mainPromptEl.value, 'frieren, elf, white_hair');
+  assert.equal(h.state.selectedPosts.size, 1);
+
+  // 選中圖2：自動替換掉圖1
+  await h.togglePostPrompt(post2, card2);
+  assert.equal(h.mainPromptEl.value, 'fern, purple_hair');
+  assert.equal(h.state.selectedPosts.size, 1);
+  assert.equal(h.state.selectedPosts.has('safebooru:102'), true);
+  assert.equal(h.state.selectedPosts.has('safebooru:101'), false);
 });

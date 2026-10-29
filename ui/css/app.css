@@ -2179,6 +2179,126 @@ body.docking { cursor: grabbing; user-select: none; }
   color: #fff;
 }
 
+/* 操作列（抽卡、單選/多選、提示詞處理、設定） */
+.booru-action-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 2px 0 4px;
+}
+
+/* 分段切換組 (Segmented Control) */
+.booru-seg-group {
+  display: inline-flex;
+  border: 1px solid var(--groove);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--case-2);
+}
+.booru-seg-btn {
+  border: 0;
+  background: transparent;
+  color: var(--label-dim);
+  font: 11px/1.3 var(--f-ui);
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.booru-seg-btn:hover {
+  color: var(--label);
+  background: rgba(255, 255, 255, 0.06);
+}
+.booru-seg-btn.active {
+  background: var(--acc);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* 已選狀態列 */
+.booru-selection-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--label);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--groove);
+}
+
+/* 卡片已選取樣式與勾選標章 */
+.booru-card.is-selected {
+  border-color: var(--acc) !important;
+  box-shadow: 0 0 0 2px var(--acc), 0 4px 16px rgba(0, 0, 0, 0.6) !important;
+}
+.booru-selected-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: var(--acc);
+  color: #fff;
+  font: 700 9px/1 var(--f-ui);
+  padding: 2px 5px;
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* 提示詞處理與畫廊設定彈窗 */
+.booru-config-dialog {
+  width: 520px;
+  max-width: 95vw;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.booru-config-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.booru-config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--groove);
+}
+.booru-config-section:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.booru-config-section textarea {
+  width: 100%;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 6px 8px;
+}
+.booru-account-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--case-2);
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--groove);
+  margin-top: 4px;
+}
+.booru-account-card input {
+  flex: 1;
+  min-width: 130px;
+}
+
 @media (max-width: 768px) {
   .booru-modal-body { grid-template-columns: 1fr; }
 }
