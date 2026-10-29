@@ -37,7 +37,231 @@ export const state = {
   selectionMode: "single", // "single" | "multi"
   selectedPosts: new Map(), // key -> { post, tags, promptText }
   tooltipEnabled: true,
+  selectionStamp: store.get("booru_selection_stamp", "quarantineQualified"),
 };
+
+// 原始畫廊全部 43 款檢驗印章
+export const SELECTION_STAMPS = [
+  "inspection", "approved", "pass", "qa", "audit", "certified", "verified", "selected", "quality", "accepted", "official", "checked", "pure", "crown",
+  "inspectionDate", "inspectionReverse", "passDate", "qaDate", "reviewBadge", "birthday", "organic", "silverCapital", "visa", "hotPick", "soldOut", "hot", "nationwideShipping", "nationwideFlight",
+  "sfShipping", "qualityGuarantee", "praise", "delicacySquare", "traditionVertical", "chinaCuisine", "ruyi", "snowCuisine", "traditionCircle", "delicacyWide", "traditionWide", "auspicious", "exclusiveCertification", "soldOutPostal", "quarantineQualified"
+];
+
+export const STAMP_LABELS = {
+  inspection: "检验合格",
+  approved: "审核通过",
+  pass: "PASS",
+  qa: "质量检验",
+  audit: "已审核",
+  certified: "专属认证",
+  verified: "认证通过",
+  selected: "已选",
+  quality: "品质认证",
+  accepted: "验收合格",
+  official: "官方认证",
+  checked: "检查通过",
+  pure: "百分百纯正",
+  crown: "优选",
+  inspectionDate: "检验01日期章",
+  inspectionReverse: "合格检01章",
+  passDate: "PASS检02章",
+  qaDate: "QA01日期章",
+  reviewBadge: "审核通过齿章",
+  birthday: "生日快乐",
+  organic: "百分百原生态",
+  silverCapital: "官银资本",
+  visa: "VISA灰章",
+  hotPick: "爆款推荐",
+  soldOut: "今日已售罄",
+  hot: "爆",
+  nationwideShipping: "全国包邮",
+  nationwideFlight: "全国可飞",
+  sfShipping: "顺丰包邮",
+  qualityGuarantee: "品质保证",
+  praise: "好评如潮",
+  delicacySquare: "美味佳肴方章",
+  traditionVertical: "传统文化竖章",
+  chinaCuisine: "中国美味",
+  ruyi: "如意",
+  snowCuisine: "雪尖美食",
+  traditionCircle: "传统文化圆章",
+  delicacyWide: "美味佳肴横章",
+  traditionWide: "传统文化横章",
+  auspicious: "吉祥",
+  exclusiveCertification: "专属认证齿章",
+  soldOutPostal: "闲鱼卖掉了邮戳",
+  quarantineQualified: "检疫合格圆章"
+};
+
+export function selectionStampCopy(style) {
+  return {
+    inspection: ["NO.01", "INSPECTED", "APPROVED"],
+    approved: ["APPROVED", "APPROVED", "PASS"],
+    pass: ["QUALITY", "PASS", "NO.02"],
+    qa: ["QA 01", "QUALITY", "PASS"],
+    audit: ["AUDIT", "AUDITED", "OK"],
+    certified: ["100%", "CERTIFIED", "PASS"],
+    verified: ["CHECK", "VERIFIED", "OK"],
+    selected: ["PICK", "SELECTED", "✓"],
+    quality: ["QA", "QUALITY", "100%"],
+    accepted: ["REVIEW", "ACCEPTED", "PASS"],
+    official: ["OFFICIAL", "OFFICIAL", "SEAL"],
+    checked: ["CHECK", "CHECKED", "✓"],
+    pure: ["100%", "PURE", "PASS"],
+    crown: ["♛", "PREMIUM", "PASS"],
+    inspectionDate: ["检验01", "2020.03.10", "合格"],
+    inspectionReverse: ["合格", "2020.03.10", "检01"],
+    passDate: ["PASS", "2020.03.10", "检02"],
+    qaDate: ["QA01", "2020.03.10", "PASS"],
+    reviewBadge: ["", "审核通过", ""],
+    birthday: ["HAPPY BIRTHDAY", "生日快乐", "HAPPY BIRTHDAY"],
+    organic: ["百分百", "原生态", "100% PURE"],
+    silverCapital: ["♛", "官银资本", "OFFICIAL"],
+    visa: ["", "VISA", ""],
+    hotPick: ["爆款推荐", "HOT SALE", "爆款推荐"],
+    soldOut: ["100%", "今日已售罄", "SOLD OUT"],
+    hot: ["", "爆", ""],
+    nationwideShipping: ["全国", "全国包邮", "包邮"],
+    nationwideFlight: ["全国", "全国可飞", "可飞"],
+    sfShipping: ["顺丰", "顺丰包邮", "包邮"],
+    qualityGuarantee: ["品质", "品质保证", "保证"],
+    praise: ["好评", "好评如潮", "如潮"],
+    delicacySquare: ["", "美味\n佳肴", ""],
+    traditionVertical: ["", "传\n统\n文\n化", ""],
+    chinaCuisine: ["", "中国\n美味", ""],
+    ruyi: ["", "如\n意", ""],
+    snowCuisine: ["", "雪尖\n美食", ""],
+    traditionCircle: ["", "传统\n文化", ""],
+    delicacyWide: ["", "美味佳肴", ""],
+    traditionWide: ["", "传统文化", ""],
+    auspicious: ["", "吉\n祥", ""],
+    exclusiveCertification: ["", "专属认证", ""],
+    soldOutPostal: ["", "", ""],
+    quarantineQualified: ["", "", ""],
+  }[style] || ["NO.01", "INSPECTED", "APPROVED"];
+}
+
+function createSvg(html, className, viewBox) {
+  if (typeof document !== "undefined" && typeof document.createElementNS === "function") {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", viewBox);
+    svg.setAttribute("class", className);
+    svg.setAttribute("aria-hidden", "true");
+    svg.innerHTML = html;
+    return svg;
+  }
+  const e = el("svg", { class: className, viewBox, "aria-hidden": "true" });
+  e.innerHTML = html;
+  return e;
+}
+
+export function quarantineQualifiedArt() {
+  return createSvg(
+    '<g class="aa-gallery-stamp__quarantine-rings"><circle cx="32" cy="32" r="29"/><circle cx="32" cy="32" r="25"/></g><g class="aa-gallery-stamp__quarantine-copy"><text x="32" y="25">检疫</text><text x="32" y="45">合格</text></g>',
+    'aa-gallery-stamp__quarantine',
+    '0 0 64 64'
+  );
+}
+
+export function soldOutPostalArt() {
+  return createSvg(
+    '<g class="aa-gallery-stamp__postal-ring"><circle cx="34" cy="36" r="27"/><circle cx="34" cy="36" r="22"/></g><g class="aa-gallery-stamp__postal-waves"><path d="M58 20c10-6 17 4 28-2 6-3 10-7 16-9"/><path d="M59 28c10-6 17 4 28-2 6-3 10-7 16-9"/><path d="M59 36c10-6 17 4 28-2 6-3 10-7 16-9"/><path d="M58 44c10-6 17 4 28-2 6-3 10-7 16-9"/></g><text class="aa-gallery-stamp__postal-xianyu" x="34" y="20">XIANYU</text><text class="aa-gallery-stamp__postal-sold" x="34" y="59">SOLD OUT</text><g class="aa-gallery-stamp__postal-board"><rect x="5" y="25" width="65" height="27" rx="3"/><rect x="8" y="28" width="59" height="21" rx="2"/><text x="37" y="44">卖掉了</text></g>',
+    'aa-gallery-stamp__postal',
+    '0 0 104 72'
+  );
+}
+
+const TRADITIONAL_SEAL_SPECS = Object.freeze({
+  delicacySquare: { shape: "square", lines: ["美味", "佳肴"] },
+  traditionVertical: { shape: "vertical", lines: ["传", "统", "文", "化"] },
+  chinaCuisine: { shape: "square", lines: ["中国", "美味"] },
+  ruyi: { shape: "vertical", lines: ["如", "意"] },
+  snowCuisine: { shape: "square", lines: ["雪尖", "美食"] },
+  traditionCircle: { shape: "circle", lines: ["传统", "文化"] },
+  delicacyWide: { shape: "wide", lines: ["美味佳肴"] },
+  traditionWide: { shape: "wide", lines: ["传统文化"] },
+  auspicious: { shape: "vertical", lines: ["吉", "祥"] },
+});
+
+export function traditionalSealArt(style) {
+  const spec = TRADITIONAL_SEAL_SPECS[style];
+  if (!spec) return null;
+  const dimensions = spec.shape === "vertical" ? [40, 68] : spec.shape === "wide" ? [76, 42] : [64, 64];
+  const [width, height] = dimensions;
+  const outline = spec.shape === "circle"
+    ? `<circle cx="32" cy="32" r="29"/><circle class="aa-gallery-stamp__traditional-inset" cx="32" cy="32" r="25"/>`
+    : `<rect x="2" y="2" width="${width - 4}" height="${height - 4}" rx="${spec.shape === "wide" ? 5 : 7}"/><rect class="aa-gallery-stamp__traditional-inset" x="5" y="5" width="${width - 10}" height="${height - 10}" rx="${spec.shape === "wide" ? 3 : 5}"/>`;
+  const fontSize = spec.shape === "vertical" ? (spec.lines.length === 4 ? 13 : 19) : spec.shape === "wide" ? 16 : 20;
+  const lineHeight = spec.shape === "vertical" && spec.lines.length === 4 ? 14 : fontSize + 3;
+  const totalHeight = (spec.lines.length - 1) * lineHeight;
+  const firstY = height / 2 - totalHeight / 2;
+  const text = spec.lines.map((line, index) => `<text x="${width / 2}" y="${firstY + index * lineHeight}" font-size="${fontSize}">${line}</text>`).join("");
+  return createSvg(
+    `<g class="aa-gallery-stamp__traditional-ink">${outline}${text}</g>`,
+    "aa-gallery-stamp__traditional",
+    `0 0 ${width} ${height}`
+  );
+}
+
+const SELECTION_STAMP_ART = Object.freeze({
+  soldOutPostal: soldOutPostalArt,
+  quarantineQualified: quarantineQualifiedArt,
+  ...Object.fromEntries(Object.keys(TRADITIONAL_SEAL_SPECS).map((style) => [style, () => traditionalSealArt(style)])),
+});
+
+export function createSelectionStamp(initialStyle, { preview = false } = {}) {
+  const top = el("span", { class: "aa-gallery-stamp__top" });
+  const main = el("span", { class: "aa-gallery-stamp__main" });
+  const bottom = el("span", { class: "aa-gallery-stamp__bottom" });
+  const art = el("span", { class: "aa-gallery-stamp__art" });
+
+  const root = el("span", {
+    class: `aa-gallery-card__selection${preview ? " is-preview" : ""}`,
+    "aria-hidden": "true",
+  });
+  root.append(top, main, bottom, art);
+
+  const setStyle = (value) => {
+    const style = SELECTION_STAMPS.includes(value) ? value : "quarantineQualified";
+    if (root.dataset) {
+      root.dataset.stamp = style;
+    } else {
+      root.dataset = { stamp: style };
+    }
+    if (typeof root.setAttribute === "function") {
+      root.setAttribute("data-stamp", style);
+    }
+    const copy = selectionStampCopy(style);
+    top.textContent = copy[0] || "";
+    main.textContent = copy[1] || "";
+    bottom.textContent = copy[2] || "";
+
+    if (typeof art.replaceChildren === "function") {
+      art.replaceChildren();
+    } else {
+      art.innerHTML = "";
+    }
+    const artFn = SELECTION_STAMP_ART[style];
+    if (artFn) {
+      const artNode = artFn();
+      if (artNode) art.append(artNode);
+    }
+  };
+
+  setStyle(initialStyle || state.selectionStamp || "quarantineQualified");
+  return { root, setStyle };
+}
+
+export function setSelectionStamp(style) {
+  if (!SELECTION_STAMPS.includes(style)) return;
+  state.selectionStamp = style;
+  store.set("booru_selection_stamp", style);
+  // 更新當前網格中所有選中卡片的印章
+  $$(".booru-card.is-selected .booru-img-wrap", $("#booruGrid")).forEach((wrap) => {
+    wrap.querySelector(".aa-gallery-card__selection")?.remove();
+    wrap.append(createSelectionStamp(style).root);
+  });
+}
 
 // 詳情快取：避免反覆請求相同的帖子
 export const detailCache = new Map();
@@ -194,6 +418,8 @@ export async function togglePostPrompt(post, card = null) {
 
     if (card) {
       card.classList.remove("is-selected");
+      card.querySelector(".aa-gallery-card__selection")?.remove();
+      card.querySelector(".aa-gallery-card__selected-layer")?.remove();
       card.querySelector(".booru-selected-badge")?.remove();
     }
     updateSelectionUI();
@@ -227,7 +453,7 @@ export async function togglePostPrompt(post, card = null) {
     return toast("該圖片未包含符合條件的可用標籤", "warn");
   }
 
-  // 單選模式：切換選取時先移除上一張圖的標籤
+  // 單選模式：切換選取時先移除上一張圖的標籤與印章
   if (state.selectionMode === "single") {
     for (const [prevKey, prevInfo] of state.selectedPosts.entries()) {
       if (prevInfo && prevInfo.tags) {
@@ -236,6 +462,8 @@ export async function togglePostPrompt(post, card = null) {
       const prevCard = $(`[data-card-key="${prevKey}"]`, $("#booruGrid"));
       if (prevCard) {
         prevCard.classList.remove("is-selected");
+        prevCard.querySelector(".aa-gallery-card__selection")?.remove();
+        prevCard.querySelector(".aa-gallery-card__selected-layer")?.remove();
         prevCard.querySelector(".booru-selected-badge")?.remove();
       }
     }
@@ -252,9 +480,15 @@ export async function togglePostPrompt(post, card = null) {
 
   if (card) {
     card.classList.add("is-selected");
-    if (!card.querySelector(".booru-selected-badge")) {
-      const badge = el("span", { class: "booru-selected-badge" }, "✓ 已加入");
-      card.querySelector(".booru-img-wrap")?.append(badge);
+    card.querySelector(".aa-gallery-card__selection")?.remove();
+    card.querySelector(".aa-gallery-card__selected-layer")?.remove();
+    card.querySelector(".booru-selected-badge")?.remove();
+
+    const wrap = card.querySelector(".booru-img-wrap");
+    if (wrap) {
+      const selLayer = el("span", { class: "aa-gallery-card__selected-layer" });
+      const stamp = createSelectionStamp(state.selectionStamp).root;
+      wrap.append(selLayer, stamp);
     }
   }
 
@@ -287,6 +521,8 @@ export function clearSelection() {
   state.selectedPosts.clear();
   $$(".booru-card.is-selected", $("#booruGrid")).forEach((c) => {
     c.classList.remove("is-selected");
+    c.querySelector(".aa-gallery-card__selection")?.remove();
+    c.querySelector(".aa-gallery-card__selected-layer")?.remove();
     c.querySelector(".booru-selected-badge")?.remove();
   });
   updateSelectionUI();
@@ -310,7 +546,11 @@ export function setSelectionMode(mode) {
       const key = card.getAttribute("data-card-key");
       const isKept = key === keep[0];
       card.classList.toggle("is-selected", isKept);
-      if (!isKept) card.querySelector(".booru-selected-badge")?.remove();
+      if (!isKept) {
+        card.querySelector(".aa-gallery-card__selection")?.remove();
+        card.querySelector(".aa-gallery-card__selected-layer")?.remove();
+        card.querySelector(".booru-selected-badge")?.remove();
+      }
     });
   }
 
@@ -648,10 +888,11 @@ function renderGrid() {
     }
     imgWrap.append(badgeBar);
 
-    // 已選中勾選標章
+    // 已選中印章與圖層 (符合原始畫廊設計：印章置中，無角落小標)
     if (isSelected) {
-      const selectedBadge = el("span", { class: "booru-selected-badge" }, "✓ 已加入");
-      imgWrap.append(selectedBadge);
+      const selLayer = el("span", { class: "aa-gallery-card__selected-layer" });
+      const stamp = createSelectionStamp(state.selectionStamp).root;
+      imgWrap.append(selLayer, stamp);
     }
 
     // 快捷懸浮操作列
@@ -909,55 +1150,446 @@ export function savePromptConfigFromDialog() {
   toast("提示詞處理設定已儲存！", "ok");
 }
 
-/* ================= 畫廊設定彈窗 (API 與快取) ================= */
-export async function openSettingsDialog() {
+export const GALLERY_CATEGORIES = ["character", "copyright", "artist", "general", "meta"];
+export const CATEGORY_LABELS = {
+  character: "🌸 角色",
+  copyright: "📚 作品",
+  artist: "🎨 画师",
+  general: "🏷️ 常规",
+  meta: "⚙️ 元数据",
+};
+
+let currentSettingsTab = "accounts";
+let currentSettingsSource = "danbooru";
+let currentSettingsCache = null;
+const sourceInputsMap = {};
+const sourceClearsSet = {};
+
+export function parseTagLines(text) {
+  if (!text) return [];
+  return text
+    .split(/[\r\n,]+/)
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/* ================= 完整畫廊設定彈窗 (5 標籤) ================= */
+export async function openSettingsDialog(targetTab = "accounts") {
   const modal = $("#booruSettingsModal");
   if (!modal) return;
 
   modal.hidden = false;
+  currentSettingsTab = targetTab || "accounts";
 
-  const danStatus = $("#danbooruAccountStatus");
-  const gelStatus = $("#gelbooruAccountStatus");
-  const danUser = $("#danbooruUsername");
-  const danKey = $("#danbooruApiKey");
-  const gelUser = $("#gelbooruUserId");
-  const gelKey = $("#gelbooruApiKey");
-  const tooltipCheck = $("#booruTooltipEnabled");
+  // 切換分頁導航
+  const navButtons = $$(".aa-gallery-settings__nav-item", modal);
+  const pages = $$(".aa-gallery-settings__page", modal);
 
-  if (danStatus) danStatus.textContent = "載入中...";
-  if (gelStatus) gelStatus.textContent = "載入中...";
-  if (tooltipCheck) tooltipCheck.checked = state.tooltipEnabled;
+  const setPage = (pageName) => {
+    currentSettingsTab = pageName;
+    navButtons.forEach((btn) => {
+      const active = btn.getAttribute("data-page") === pageName;
+      btn.classList.toggle("is-active", active);
+    });
+    pages.forEach((page) => {
+      const active = page.getAttribute("data-page") === pageName;
+      page.hidden = !active;
+      page.classList.toggle("is-active", active);
+    });
+  };
 
+  navButtons.forEach((btn) => {
+    btn.onclick = () => setPage(btn.getAttribute("data-page"));
+  });
+
+  setPage(currentSettingsTab);
+
+  // 嘗試取得後端最新配置
+  let cfg = null;
   try {
-    const res = await fetch(`${API}/settings`);
-    if (res.ok) {
-      const cfg = await res.json();
-      const cStatus = cfg.credentialStatus || {};
-      if (danStatus) {
-        const hasDan = cStatus.danbooru?.hasUsername && cStatus.danbooru?.hasApiKey;
-        danStatus.textContent = hasDan ? "✓ 已配置憑據" : "未配置 (留空將使用公開配額)";
-        danStatus.className = hasDan ? "sm st-ok" : "sm muted";
-      }
-      if (gelStatus) {
-        const hasGel = cStatus.gelbooru?.hasUserId && cStatus.gelbooru?.hasApiKey;
-        gelStatus.textContent = hasGel ? "✓ 已配置憑據" : "未配置 (留空將使用公開配額)";
-        gelStatus.className = hasGel ? "sm st-ok" : "sm muted";
-      }
-      if (danUser && !danUser.value) danUser.placeholder = cStatus.danbooru?.hasUsername ? "已儲存；留空保持原樣" : "使用者名稱 (Username)";
-      if (danKey && !danKey.value) danKey.placeholder = cStatus.danbooru?.hasApiKey ? "已儲存；留空保持原樣" : "API Key";
-      if (gelUser && !gelUser.value) gelUser.placeholder = cStatus.gelbooru?.hasUserId ? "已儲存；留空保持原樣" : "User ID";
-      if (gelKey && !gelKey.value) gelKey.placeholder = cStatus.gelbooru?.hasApiKey ? "已儲存；留空保持原樣" : "API Key";
+    if (typeof fetch === "function") {
+      const res = await fetch(`${API}/settings`);
+      if (res.ok) cfg = await res.json();
     }
   } catch (e) {
-    if (danStatus) danStatus.textContent = "無法連線至 ComfyUI";
-    if (gelStatus) gelStatus.textContent = "無法連線至 ComfyUI";
+    console.warn("無法取得 Booru 畫廊後端設定:", e);
   }
+  currentSettingsCache = cfg || {};
+
+  // 1. 賬戶 (Accounts)
+  renderSettingsAccounts(currentSettingsCache);
+
+  // 2. 瀏覽 (Browse)
+  renderSettingsBrowse(currentSettingsCache);
+
+  // 3. 內容黑名單 (Blacklist)
+  renderSettingsBlacklist(currentSettingsCache);
+
+  // 4. 提示詞 (Prompt)
+  renderSettingsPrompt(currentSettingsCache);
+
+  // 5. 存儲 (Storage / Performance)
+  renderSettingsStorage(currentSettingsCache);
+}
+
+function renderSettingsAccounts(cfg) {
+  const sourceList = $("#booruSettingsSourceList");
+  const sourceDetail = $("#booruSettingsSourceDetail");
+  const summaryEl = $("#booruAccountsSummary");
+  if (!sourceList || !sourceDetail) return;
+
+  sourceList.innerHTML = "";
+  sourceDetail.innerHTML = "";
+
+  const defaultSources = [
+    {
+      source: "danbooru",
+      displayName: "Danbooru",
+      authFields: ["username", "apiKey"],
+      credentialsUrl: "https://danbooru.donmai.us/profile",
+      favoriteRead: true,
+      favoriteWrite: true,
+      categorizedTags: true,
+      rankingPeriods: ["day", "week", "month"],
+    },
+    {
+      source: "gelbooru",
+      displayName: "Gelbooru",
+      authFields: ["userId", "apiKey"],
+      credentialsUrl: "https://gelbooru.com/index.php?page=account&s=options",
+      favoriteRead: true,
+      favoriteWrite: false,
+      categorizedTags: true,
+      rankingPeriods: [],
+    },
+    {
+      source: "safebooru",
+      displayName: "Safebooru",
+      authFields: [],
+      credentialsUrl: "",
+      favoriteRead: false,
+      favoriteWrite: false,
+      categorizedTags: true,
+      rankingPeriods: [],
+    },
+    {
+      source: "aitag",
+      displayName: "AI TAG",
+      authFields: [],
+      credentialsUrl: "",
+      favoriteRead: false,
+      favoriteWrite: false,
+      categorizedTags: true,
+      rankingPeriods: [],
+    },
+  ];
+
+  const caps = state.sources && state.sources.length ? state.sources : defaultSources;
+  const credentialStatus = cfg?.credentialStatus || {};
+
+  let configuredCount = 0;
+  for (const cap of caps) {
+    sourceInputsMap[cap.source] = sourceInputsMap[cap.source] || {};
+    sourceClearsSet[cap.source] = sourceClearsSet[cap.source] || new Set();
+
+    const authFields = cap.authFields || [];
+    const isConfigured = authFields.length > 0 && authFields.every((f) => {
+      const statusKey = `has${f[0].toUpperCase()}${f.slice(1)}`;
+      return credentialStatus[cap.source]?.[statusKey];
+    });
+    if (isConfigured) configuredCount++;
+  }
+
+  if (summaryEl) {
+    summaryEl.textContent = `${configuredCount} 个账户就绪`;
+  }
+
+  const renderActiveSourceDetail = (cap) => {
+    sourceDetail.innerHTML = "";
+    const authFields = cap.authFields || [];
+    const isConfigured = authFields.length > 0 && authFields.every((f) => {
+      const statusKey = `has${f[0].toUpperCase()}${f.slice(1)}`;
+      return credentialStatus[cap.source]?.[statusKey];
+    });
+
+    const stateText = !authFields.length
+      ? "公开访问"
+      : isConfigured
+      ? "已配置"
+      : "未配置";
+
+    const detailCard = el("div", {
+      class: `aa-gallery-settings__source ${isConfigured ? "is-configured" : authFields.length ? "needs-setup" : "is-public"}`,
+    });
+
+    // 標題行
+    const header = el("div", { class: "row between" });
+    const identity = el("div", { class: "aa-gallery-settings__source-identity" });
+    const mark = el("span", { class: "aa-gallery-settings__source-mark" }, isConfigured ? "✓" : authFields.length ? "🔒" : "🌐");
+    const titleBox = el("div");
+    titleBox.append(el("strong", null, cap.displayName || cap.source), el("small", null, ` (${cap.source})`));
+    identity.append(mark, titleBox);
+
+    const stateBadge = el("span", { class: "aa-gallery-settings__source-state" });
+    stateBadge.append(el("i"), document.createTextNode(` ${stateText}`));
+    header.append(identity, stateBadge);
+    detailCard.append(header);
+
+    // 能力標籤
+    const capsBox = el("div", { class: "aa-gallery-settings__capabilities" });
+    if (!authFields.length) {
+      capsBox.append(el("span", null, "公开访问"));
+    }
+    if (cap.favoriteRead) capsBox.append(el("span", null, "可读取收藏"));
+    if (cap.favoriteWrite) capsBox.append(el("span", null, "可修改收藏"));
+    if (cap.categorizedTags) capsBox.append(el("span", null, "分类标签"));
+    if ((cap.rankingPeriods || []).length) capsBox.append(el("span", null, "排行榜"));
+    detailCard.append(capsBox);
+
+    // 憑據輸入框
+    if (authFields.length) {
+      const credGrid = el("div", { class: "aa-gallery-settings__credentials" });
+      for (const fieldName of authFields) {
+        const credItem = el("div", { class: "aa-gallery-settings__credential" });
+        const labelText = fieldName === "username" ? "用户名 (Username)"
+          : fieldName === "userId" ? "用户 ID (User ID)"
+          : fieldName === "apiKey" ? "API Key"
+          : fieldName;
+        const lbl = el("label", null, labelText);
+
+        const row = el("div", { class: "aa-gallery-settings__credential-row" });
+        const input = el("input", {
+          type: fieldName.toLowerCase().includes("key") ? "password" : "text",
+          class: "sm",
+          placeholder: credentialStatus[cap.source]?.[`has${fieldName[0].toUpperCase()}${fieldName.slice(1)}`]
+            ? "已保存；留空保持原值"
+            : `请输入 ${labelText}`,
+        });
+        if (sourceInputsMap[cap.source][fieldName]?.value) {
+          input.value = sourceInputsMap[cap.source][fieldName].value;
+        }
+        sourceInputsMap[cap.source][fieldName] = input;
+
+        const clearBtn = el("button", {
+          type: "button",
+          class: "akey sm warn",
+          title: "清除已保存值",
+        }, "✕");
+        clearBtn.onclick = () => {
+          sourceClearsSet[cap.source].add(fieldName);
+          input.value = "";
+          input.placeholder = "保存后将清除此值";
+          toast(`已标记清除 ${cap.displayName} 的 ${labelText}`, "info");
+        };
+
+        row.append(input, clearBtn);
+        credItem.append(lbl, row);
+        credGrid.append(credItem);
+      }
+
+      if (cap.credentialsUrl) {
+        const link = el("a", {
+          href: cap.credentialsUrl,
+          target: "_blank",
+          rel: "noopener noreferrer",
+          class: "aa-gallery-settings__credentials-link",
+        }, `前往 ${cap.displayName} 账户页面获取 API Key ↗`);
+        credGrid.append(link);
+      }
+      detailCard.append(credGrid);
+    } else {
+      const note = el("p", { class: "sm muted" }, "此来源无需登录即可公开浏览。");
+      detailCard.append(note);
+    }
+
+    // 底部測試操作
+    const actions = el("div", { class: "aa-gallery-settings__actions" });
+    const statusText = el("span", { class: "aa-gallery-settings__connection-status" });
+    const testBtn = el("button", {
+      type: "button",
+      class: "akey sm",
+    }, "测试连接");
+
+    testBtn.onclick = async () => {
+      testBtn.disabled = true;
+      statusText.className = "aa-gallery-settings__connection-status";
+      statusText.textContent = "正在测试连接…";
+      const creds = {};
+      for (const [k, inp] of Object.entries(sourceInputsMap[cap.source] || {})) {
+        if (inp?.value) creds[k] = inp.value;
+      }
+      try {
+        await testSourceConnection(cap.source, creds, statusText);
+      } finally {
+        testBtn.disabled = false;
+      }
+    };
+
+    actions.append(testBtn, statusText);
+    detailCard.append(actions);
+    sourceDetail.append(detailCard);
+  };
+
+  caps.forEach((cap) => {
+    const authFields = cap.authFields || [];
+    const isConfigured = authFields.length > 0 && authFields.every((f) => {
+      const statusKey = `has${f[0].toUpperCase()}${f.slice(1)}`;
+      return credentialStatus[cap.source]?.[statusKey];
+    });
+    const stateText = !authFields.length ? "公开访问" : isConfigured ? "已配置" : "未配置";
+
+    const tab = el("button", {
+      type: "button",
+      class: `aa-gallery-settings__source-tab ${cap.source === currentSettingsSource ? "is-active" : ""}`,
+      "data-source": cap.source,
+    });
+    const nameSpan = el("span", { class: "aa-gallery-settings__source-tab-name" }, `${isConfigured ? "✓ " : authFields.length ? "🔒 " : "🌐 "}${cap.displayName || cap.source}`);
+    const stateSpan = el("span", { class: "aa-gallery-settings__source-tab-state" }, stateText);
+    tab.append(nameSpan, stateSpan);
+
+    tab.onclick = () => {
+      currentSettingsSource = cap.source;
+      $$(".aa-gallery-settings__source-tab", sourceList).forEach((t) => {
+        t.classList.toggle("is-active", t.getAttribute("data-source") === cap.source);
+      });
+      renderActiveSourceDetail(cap);
+    };
+
+    sourceList.append(tab);
+  });
+
+  const activeCap = caps.find((c) => c.source === currentSettingsSource) || caps[0];
+  if (activeCap) renderActiveSourceDetail(activeCap);
+}
+
+function renderSettingsBrowse(cfg) {
+  const defSourceSel = $("#booruSettingDefaultSource");
+  if (defSourceSel) {
+    const caps = state.sources && state.sources.length ? state.sources : [
+      { source: "danbooru", displayName: "Danbooru" },
+      { source: "gelbooru", displayName: "Gelbooru" },
+      { source: "safebooru", displayName: "Safebooru" },
+      { source: "aitag", displayName: "AI TAG" },
+    ];
+    defSourceSel.innerHTML = "";
+    for (const c of caps) {
+      defSourceSel.append(el("option", { value: c.source }, c.displayName || c.source));
+    }
+    defSourceSel.value = cfg?.defaultSource || state.source || "danbooru";
+  }
+
+  const tooltipCheck = $("#booruSettingTooltip");
+  if (tooltipCheck) {
+    tooltipCheck.checked = cfg?.tooltip ?? state.tooltipEnabled ?? true;
+  }
+
+  const picker = $("#booruStampPicker");
+  if (picker) {
+    picker.innerHTML = "";
+    for (const style of SELECTION_STAMPS) {
+      const opt = el("button", {
+        type: "button",
+        class: `aa-gallery-settings__stamp-option${style === state.selectionStamp ? " is-active" : ""}`,
+        "data-stamp": style,
+      });
+      const preview = createSelectionStamp(style, { preview: true }).root;
+      const label = el("span", null, STAMP_LABELS[style] || style);
+      opt.append(preview, label);
+
+      opt.onclick = () => {
+        $$(".aa-gallery-settings__stamp-option", picker).forEach((o) => o.classList.remove("is-active"));
+        opt.classList.add("is-active");
+        setSelectionStamp(style);
+        toast(`已选用印章：${STAMP_LABELS[style] || style}`, "info");
+      };
+
+      picker.append(opt);
+    }
+  }
+}
+
+function renderSettingsBlacklist(cfg) {
+  const blInput = $("#booruBlacklistInput");
+  const blCount = $("#booruBlacklistCount");
+  if (!blInput) return;
+
+  const currentList = cfg?.blacklist || promptConfig.blacklist || [];
+  blInput.value = currentList.join("\n");
+
+  const syncCount = () => {
+    const count = parseTagLines(blInput.value).length;
+    if (blCount) {
+      blCount.textContent = `已屏蔽 ${count} 个标签`;
+      blCount.classList.toggle("is-active", count > 0);
+    }
+  };
+
+  blInput.oninput = syncCount;
+  syncCount();
+}
+
+function renderSettingsPrompt(cfg) {
+  const catCont = $("#booruPromptCategories");
+  if (catCont) {
+    catCont.innerHTML = "";
+    const activeCats = new Set(cfg?.promptDefaults?.categories || promptConfig.categories || ["character", "copyright", "artist", "general"]);
+
+    for (const cat of GALLERY_CATEGORIES) {
+      const isSel = activeCats.has(cat);
+      const pill = el("button", {
+        type: "button",
+        class: `aa-category-pill${isSel ? " is-selected" : ""}`,
+        "data-cat": cat,
+      }, CATEGORY_LABELS[cat] || cat);
+
+      pill.onclick = () => {
+        pill.classList.toggle("is-selected");
+      };
+      catCont.append(pill);
+    }
+  }
+
+  const underCheck = $("#booruSettingUnderscores");
+  if (underCheck) {
+    underCheck.checked = !!(cfg?.promptDefaults?.replaceUnderscores ?? promptConfig.replaceUnderscores);
+  }
+
+  const parenCheck = $("#booruSettingParentheses");
+  if (parenCheck) {
+    parenCheck.checked = !!(cfg?.promptDefaults?.escapeParentheses ?? promptConfig.escapeParentheses);
+  }
+
+  const filterInput = $("#booruOutputFilterInput");
+  const filterCount = $("#booruOutputFilterCount");
+  if (filterInput) {
+    filterInput.value = (cfg?.outputFilterTags || []).join("\n");
+    const syncCount = () => {
+      const count = parseTagLines(filterInput.value).length;
+      if (filterCount) {
+        filterCount.textContent = `输出过滤 ${count} 个标签`;
+        filterCount.classList.toggle("is-active", count > 0);
+      }
+    };
+    filterInput.oninput = syncCount;
+    syncCount();
+  }
+}
+
+function renderSettingsStorage(cfg) {
+  const timeoutInp = $("#booruSettingTimeout");
+  if (timeoutInp) timeoutInp.value = cfg?.timeout || 30;
+
+  const budgetInp = $("#booruSettingBudget");
+  if (budgetInp) budgetInp.value = cfg?.cacheBudgetMiB || 1024;
+
+  const clearBtn = $("#booruSettingClearCacheBtn");
+  if (clearBtn) clearBtn.onclick = () => clearBooruCache();
 }
 
 export async function testSourceConnection(source, creds, statusEl) {
   if (statusEl) {
-    statusEl.textContent = "測試連線中...";
-    statusEl.className = "sm";
+    statusEl.textContent = "测试连接中...";
+    statusEl.className = "aa-gallery-settings__connection-status";
   }
   try {
     const res = await fetch(`${API}/test`, {
@@ -968,69 +1600,126 @@ export async function testSourceConnection(source, creds, statusEl) {
     const result = await res.json();
     if (res.ok && result?.success !== false) {
       if (statusEl) {
-        statusEl.textContent = "✓ 連線成功！";
-        statusEl.className = "sm st-ok";
+        statusEl.textContent = "✓ 连接成功！";
+        statusEl.className = "aa-gallery-settings__connection-status is-success";
       }
-      toast(`[${source}] 連線成功！`, "ok");
+      toast(`[${source}] 连接成功！`, "ok");
     } else {
-      throw new Error(result?.message || result?.error || "連線未通過");
+      throw new Error(result?.message || result?.error || "连接未通过");
     }
   } catch (e) {
     if (statusEl) {
-      statusEl.textContent = `✕ 失敗: ${e.message}`;
-      statusEl.className = "sm err";
+      statusEl.textContent = `✕ 失败: ${e.message}`;
+      statusEl.className = "aa-gallery-settings__connection-status is-error";
     }
-    toast(`[${source}] 測試失敗: ${e.message}`, "err");
+    toast(`[${source}] 测试失败: ${e.message}`, "err");
   }
 }
 
 export async function clearBooruCache() {
-  toast("正在清理畫廊快取...");
+  toast("正在清理画廊快取...");
   try {
     const res = await fetch(`${API}/cache/clear`, { method: "POST" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     detailCache.clear();
-    toast("✓ 已成功清除本地畫廊圖片與中繼資料快取！", "ok");
+    toast("✓ 已成功清除本地画廊图片与中继資料快取！", "ok");
   } catch (e) {
     toast(`清除快取失敗: ${e.message}`, "err");
   }
 }
 
 export async function saveGallerySettings() {
-  const danUser = $("#danbooruUsername")?.value?.trim();
-  const danKey = $("#danbooruApiKey")?.value?.trim();
-  const gelUser = $("#gelbooruUserId")?.value?.trim();
-  const gelKey = $("#gelbooruApiKey")?.value?.trim();
-  const tooltipEnabled = $("#booruTooltipEnabled")?.checked ?? true;
+  const saveBtn = $("#booruSettingsSaveBtn");
+  const statusEl = $("#booruSettingsStatus");
+  if (saveBtn) saveBtn.disabled = true;
+  if (statusEl) statusEl.textContent = "正在保存更改…";
 
-  state.tooltipEnabled = tooltipEnabled;
-  store.set("booru_tooltip_enabled", tooltipEnabled);
+  const defaultSource = $("#booruSettingDefaultSource")?.value || "danbooru";
+  const tooltipEnabled = $("#booruSettingTooltip")?.checked ?? true;
+  const blacklist = parseTagLines($("#booruBlacklistInput")?.value || "");
+  const outputFilterTags = parseTagLines($("#booruOutputFilterInput")?.value || "");
 
+  const categories = [];
+  $$(".aa-category-pill.is-selected", $("#booruPromptCategories")).forEach((pill) => {
+    const c = pill.getAttribute("data-cat");
+    if (c) categories.push(c);
+  });
+
+  const replaceUnderscores = $("#booruSettingUnderscores")?.checked ?? false;
+  const escapeParentheses = $("#booruSettingParentheses")?.checked ?? false;
+  const timeout = Number($("#booruSettingTimeout")?.value || 30);
+  const cacheBudgetMiB = Number($("#booruSettingBudget")?.value || 1024);
+
+  // 整理憑證與清除標記
   const credentials = {};
-  if (danUser || danKey) {
-    credentials.danbooru = {};
-    if (danUser) credentials.danbooru.username = danUser;
-    if (danKey) credentials.danbooru.apiKey = danKey;
+  for (const [source, fields] of Object.entries(sourceInputsMap)) {
+    const cred = {};
+    for (const [fieldName, inp] of Object.entries(fields)) {
+      if (inp?.value?.trim()) cred[fieldName] = inp.value.trim();
+    }
+    if (Object.keys(cred).length) credentials[source] = cred;
   }
-  if (gelUser || gelKey) {
-    credentials.gelbooru = {};
-    if (gelUser) credentials.gelbooru.userId = gelUser;
-    if (gelKey) credentials.gelbooru.apiKey = gelKey;
+
+  const clearCredentials = {};
+  for (const [source, set] of Object.entries(sourceClearsSet)) {
+    if (set && set.size) clearCredentials[source] = [...set];
   }
+
+  const payload = {
+    defaultSource,
+    blacklist,
+    outputFilterTags,
+    promptDefaults: {
+      categories: categories.length ? categories : ["character", "copyright", "artist", "general"],
+      replaceUnderscores,
+      escapeParentheses,
+    },
+    tooltip: tooltipEnabled,
+    selectionStamp: state.selectionStamp,
+    timeout,
+    cacheBudgetMiB,
+    credentials,
+    clearCredentials,
+  };
 
   try {
-    if (Object.keys(credentials).length) {
+    if (typeof fetch === "function") {
       const res = await fetch(`${API}/settings/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credentials }),
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("儲存後端失敗");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `HTTP ${res.status}`);
+      }
     }
+
+    // 更新本地狀態與 store
+    promptConfig.categories = payload.promptDefaults.categories;
+    promptConfig.replaceUnderscores = replaceUnderscores;
+    promptConfig.escapeParentheses = escapeParentheses;
+    promptConfig.blacklist = blacklist;
+
+    state.source = defaultSource;
+    state.tooltipEnabled = tooltipEnabled;
+
+    store.set("booru_source", defaultSource);
+    store.set("booru_prompt_config", promptConfig);
+    store.set("booru_tooltip_enabled", tooltipEnabled);
+    store.set("booru_selection_stamp", state.selectionStamp);
+
+    // 更新畫廊來源下拉選項與印章
+    if ($("#booruSource")) $("#booruSource").value = defaultSource;
+    setSelectionStamp(state.selectionStamp);
+
     $("#booruSettingsModal").hidden = true;
-    toast("畫廊設定已儲存！", "ok");
+    toast("✓ 画廊设置已成功保存！", "ok");
   } catch (e) {
-    toast(`儲存設定失敗: ${e.message}`, "err");
+    if (statusEl) statusEl.textContent = `保存失败: ${e.message}`;
+    toast(`保存设置失败: ${e.message}`, "err");
+  } finally {
+    if (saveBtn) saveBtn.disabled = false;
   }
 }
 
@@ -1098,8 +1787,8 @@ export function init() {
   // 清空選取按鈕
   $("#booruClearSelectionBtn")?.addEventListener("click", () => clearSelection());
 
-  // 提示詞處理按鈕
-  $("#booruPromptConfigBtn")?.addEventListener("click", () => openPromptConfigDialog());
+  // 提示詞處理按鈕 (打開畫廊設置的提示詞標籤頁)
+  $("#booruPromptConfigBtn")?.addEventListener("click", () => openSettingsDialog("prompt"));
   $("#booruPromptSaveBtn")?.addEventListener("click", () => savePromptConfigFromDialog());
   $("#booruPromptResetBtn")?.addEventListener("click", () => {
     promptConfig.categories = ["character", "copyright", "artist", "general"];

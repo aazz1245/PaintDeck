@@ -2222,59 +2222,162 @@
   </div>
 </div>
 
-<!-- Booru 畫廊設定視窗 (API 與快取) -->
+<!-- Booru 畫廊設定視窗 (完整 5 標籤：賬戶、瀏覽、黑名單、提示詞、存儲) -->
 <div class="modal" id="booruSettingsModal" hidden>
-  <div class="dialog booru-config-dialog">
-    <div class="row between">
-      <b>⚙️ Booru 畫廊設定 (Gallery Settings)</b>
-      <button class="minikey red" data-close data-ic="power" type="button" aria-label="關閉"></button>
+  <div class="dialog booru-settings-dialog">
+    <div class="row between booru-settings-header">
+      <b>⚙️ Booru 画廊设置 (Gallery Settings)</b>
+      <button class="minikey red" data-close data-ic="power" type="button" aria-label="关闭"></button>
     </div>
-    <div class="booru-config-body">
-      <div class="booru-config-section">
-        <div class="sub">圖庫帳號與 API 金鑰 (Danbooru / Gelbooru)</div>
-        <p class="sm muted">配置 API 憑據後可解鎖更多標籤搜尋配額、存取高分或限制內容。</p>
-        
-        <div class="booru-account-card">
-          <div class="row between">
-            <b>Danbooru</b>
-            <span class="sm muted" id="danbooruAccountStatus">檢查中...</span>
-          </div>
-          <div class="row gap wrap">
-            <input type="text" id="danbooruUsername" placeholder="使用者名稱 (Username)" class="sm">
-            <input type="password" id="danbooruApiKey" placeholder="API Key" class="sm">
-            <button class="akey sm" id="danbooruTestBtn" type="button">測試連線</button>
-          </div>
+    <div class="aa-gallery-settings">
+      <!-- 左側分頁導航 -->
+      <nav class="aa-gallery-settings__nav" aria-label="设置分类">
+        <button type="button" class="aa-gallery-settings__nav-item is-active" data-page="accounts">
+          <span>🔒</span> 账户
+        </button>
+        <button type="button" class="aa-gallery-settings__nav-item" data-page="browse">
+          <span>⚚</span> 浏览
+        </button>
+        <button type="button" class="aa-gallery-settings__nav-item" data-page="blacklist">
+          <span>🗑️</span> 内容黑名单
+        </button>
+        <button type="button" class="aa-gallery-settings__nav-item" data-page="prompt">
+          <span>🏷️</span> 提示词
+        </button>
+        <button type="button" class="aa-gallery-settings__nav-item" data-page="performance">
+          <span>💾</span> 存储
+        </button>
+        <div class="aa-gallery-settings__nav-summary">
+          <strong id="booruAccountsSummary">0 个账户就绪</strong>
         </div>
+      </nav>
 
-        <div class="booru-account-card">
-          <div class="row between">
-            <b>Gelbooru</b>
-            <span class="sm muted" id="gelbooruAccountStatus">檢查中...</span>
+      <!-- 右側分頁內容 -->
+      <div class="aa-gallery-settings__pages">
+        <!-- 1. 賬戶 -->
+        <section class="aa-gallery-settings__page is-active" id="booruPageAccounts" data-page="accounts">
+          <header class="aa-gallery-settings__section-header">
+            <span class="aa-gallery-settings__section-icon">🔒</span>
+            <strong>来源与账户</strong>
+          </header>
+          <div class="aa-gallery-settings__source-workspace">
+            <div class="aa-gallery-settings__source-list" id="booruSettingsSourceList" role="tablist">
+              <!-- 動態渲染各個來源的按鈕 -->
+            </div>
+            <div class="aa-gallery-settings__source-detail" id="booruSettingsSourceDetail">
+              <!-- 動態渲染所選來源的憑據輸入與測試 -->
+            </div>
           </div>
-          <div class="row gap wrap">
-            <input type="text" id="gelbooruUserId" placeholder="User ID" class="sm">
-            <input type="password" id="gelbooruApiKey" placeholder="API Key" class="sm">
-            <button class="akey sm" id="gelbooruTestBtn" type="button">測試連線</button>
+        </section>
+
+        <!-- 2. 瀏覽 -->
+        <section class="aa-gallery-settings__page" id="booruPageBrowse" data-page="browse" hidden>
+          <header class="aa-gallery-settings__section-header">
+            <span class="aa-gallery-settings__section-icon">⚚</span>
+            <strong>浏览预设</strong>
+          </header>
+          <div class="aa-gallery-settings__form-grid">
+            <div class="field">
+              <label for="booruSettingDefaultSource">默认来源</label>
+              <select id="booruSettingDefaultSource" class="sm">
+                <option value="danbooru">Danbooru</option>
+                <option value="gelbooru">Gelbooru</option>
+                <option value="safebooru">Safebooru</option>
+                <option value="aitag">AI TAG</option>
+              </select>
+            </div>
+            <div class="aa-gallery-settings__toggle-card">
+              <div>
+                <strong>显示悬停详情</strong>
+                <div class="sm muted">悬停后加载更大预览图和帖子信息。</div>
+              </div>
+              <label class="check"><input type="checkbox" id="booruSettingTooltip" checked></label>
+            </div>
           </div>
-        </div>
-      </div>
+          <div class="aa-gallery-settings__stamp-section">
+            <div class="row between" style="margin-bottom: 6px;">
+              <strong>选中印章</strong>
+              <span class="sm muted">所有画廊节点的已选图片共用这一款印章。</span>
+            </div>
+            <div class="aa-gallery-settings__stamp-picker" id="booruStampPicker" role="radiogroup" aria-label="选中印章">
+              <!-- 動態生成 43 款印章供點選 -->
+            </div>
+          </div>
+        </section>
 
-      <div class="booru-config-section">
-        <div class="sub">快取與儲存管理 (Cache Management)</div>
-        <div class="row between">
-          <span class="sm">清理本地下載暫存的原圖與中繼資料快取：</span>
-          <button class="akey sm warn" id="booruClearCacheBtn" type="button">清除快取</button>
-        </div>
-      </div>
+        <!-- 3. 內容黑名單 -->
+        <section class="aa-gallery-settings__page aa-gallery-settings__blacklist-page" id="booruPageBlacklist" data-page="blacklist" hidden>
+          <div class="aa-gallery-settings__blacklist-card">
+            <header>
+              <span class="aa-gallery-settings__blacklist-icon">🔒</span>
+              <strong>内容黑名单</strong>
+              <span class="aa-gallery-settings__blacklist-count" id="booruBlacklistCount">已屏蔽 0 个标签</span>
+            </header>
+            <p class="sm muted" style="margin: 0;">帖子只要包含任意屏蔽标签，就不会进入瀑布流。每行一个网站原始标签，精确匹配。这里会隐藏帖子，不会修改输出提示词。</p>
+            <textarea id="booruBlacklistInput" class="aa-ui-input aa-gallery-settings__blacklist-input" rows="8" placeholder="watermark&#10;text&#10;male_focus" spellcheck="false"></textarea>
+          </div>
+        </section>
 
-      <div class="booru-config-section">
-        <div class="sub">瀏覽與懸浮行為</div>
-        <label class="check"><input type="checkbox" id="booruTooltipEnabled" checked> 啟用滑鼠懸浮預覽大圖與提示詞</label>
+        <!-- 4. 提示詞 -->
+        <section class="aa-gallery-settings__page" id="booruPagePrompt" data-page="prompt" hidden>
+          <header class="aa-gallery-settings__section-header">
+            <span class="aa-gallery-settings__section-icon">🏷️</span>
+            <strong>提示词预设</strong>
+          </header>
+          <div class="field">
+            <label>类别</label>
+            <div class="aa-gallery-prompt-categories" id="booruPromptCategories">
+              <!-- 角色, 作品, 畫師, 通用, 元數據 -->
+            </div>
+          </div>
+          <div class="aa-gallery-settings__switches">
+            <label class="check"><input type="checkbox" id="booruSettingUnderscores"> <span>下划线转换为空格</span></label>
+            <label class="check"><input type="checkbox" id="booruSettingParentheses"> <span>转义括号</span></label>
+          </div>
+          <div class="aa-gallery-settings__blacklist-card">
+            <header>
+              <span class="aa-gallery-settings__blacklist-icon">🗑️</span>
+              <strong>输出过滤标签</strong>
+              <span class="aa-gallery-settings__blacklist-count" id="booruOutputFilterCount">输出过滤 0 个标签</span>
+            </header>
+            <p class="sm muted" style="margin: 0;">全局生效；只从输出和复制的提示词中移除，不隐藏帖子。</p>
+            <textarea id="booruOutputFilterInput" class="aa-ui-input aa-gallery-settings__blacklist-input" rows="5" placeholder="watermark&#10;artist_name" spellcheck="false"></textarea>
+          </div>
+        </section>
+
+        <!-- 5. 存儲 -->
+        <section class="aa-gallery-settings__page" id="booruPagePerformance" data-page="performance" hidden>
+          <header class="aa-gallery-settings__section-header">
+            <span class="aa-gallery-settings__section-icon">💾</span>
+            <strong>网络与存储</strong>
+          </header>
+          <div class="aa-gallery-settings__form-grid">
+            <div class="field">
+              <label for="booruSettingTimeout">请求超时（秒）</label>
+              <input type="number" id="booruSettingTimeout" min="3" max="300" value="30" class="sm">
+            </div>
+            <div class="field">
+              <label for="booruSettingBudget">原图缓存预算（MiB）</label>
+              <input type="number" id="booruSettingBudget" min="128" max="32768" value="1024" class="sm">
+            </div>
+          </div>
+          <div class="aa-gallery-settings__cache-card">
+            <span>🗑️</span>
+            <div>
+              <strong>清理画廊缓存</strong>
+              <small>移除已缓存的原图和元数据，不会影响节点选择。</small>
+            </div>
+            <button type="button" class="akey sm warn" id="booruSettingClearCacheBtn">清理画廊缓存</button>
+          </div>
+        </section>
       </div>
     </div>
-    <div class="row gap end">
-      <button class="akey sm" data-close type="button">取消</button>
-      <button class="akey sm go" id="booruSettingsSaveBtn" type="button">儲存設定</button>
+    <div class="row between booru-settings-footer">
+      <span class="sm muted" id="booruSettingsStatus"></span>
+      <div class="row gap">
+        <button class="akey sm" data-close type="button">取消</button>
+        <button class="akey sm go" id="booruSettingsSaveBtn" type="button">保存更改</button>
+      </div>
     </div>
   </div>
 </div>

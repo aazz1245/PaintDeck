@@ -58,23 +58,28 @@ function harness() {
   const utilMock = {
     $: (sel) => nodes[sel] || null,
     $$: () => [],
-    el: (tag, attrs = {}, ...kids) => ({
-      tag,
-      attrs,
-      kids,
-      style: {},
-      classList: {
+    el: (tag, attrs = {}, ...kids) => {
+      const initialClass = typeof attrs === 'string' ? attrs : (attrs?.class || attrs?.className || '');
+      const classListObj = {
         add(cls) { this[cls] = true; },
         remove(cls) { this[cls] = false; },
         toggle(cls, force) { this[cls] = force !== undefined ? !!force : !this[cls]; },
         contains(cls) { return !!this[cls]; },
-      },
-      addEventListener() {},
-      append() {},
-      querySelector() { return null; },
-      remove() {},
-      getBoundingClientRect: () => ({ left: 100, top: 100, right: 200, bottom: 200, width: 100, height: 100 }),
-    }),
+      };
+      initialClass.split(/\s+/).filter(Boolean).forEach((c) => { classListObj[c] = true; });
+      return {
+        tag,
+        attrs,
+        kids,
+        style: {},
+        classList: classListObj,
+        addEventListener() {},
+        append() {},
+        querySelector() { return null; },
+        remove() {},
+        getBoundingClientRect: () => ({ left: 100, top: 100, right: 200, bottom: 200, width: 100, height: 100 }),
+      };
+    },
     toast: (msg, type) => { toasts.push({ msg, type }); },
     uploadFile: async () => ({ name: 'test.png', width: 512, height: 512 }),
     store: {
@@ -143,7 +148,7 @@ function harness() {
   context.globalThis = context;
 
   vm.runInContext(
-    source + '\nglobalThis.subject = { extractPromptTags, ratingBadge, togglePostPrompt, addPostPromptToMain, setSelectionMode, clearSelection, openPromptConfigDialog, openSettingsDialog, state, promptConfig, detailCache };',
+    source + '\nglobalThis.subject = { extractPromptTags, ratingBadge, togglePostPrompt, addPostPromptToMain, setSelectionMode, clearSelection, openPromptConfigDialog, openSettingsDialog, state, promptConfig, detailCache, SELECTION_STAMPS, STAMP_LABELS, createSelectionStamp, setSelectionStamp, parseTagLines };',
     context,
     { filename: 'booru.js' }
   );
@@ -305,4 +310,59 @@ test('openPromptConfigDialog 與 openSettingsDialog：正常打開彈窗對話�
   await h.openSettingsDialog();
   assert.equal(h.settingsModal.hidden, false);
 });
+
+test('SELECTION_STAMPS：包含全部 43 款檢驗印章且預設為检疫合格', () => {
+  const h = harness();
+  assert.equal(h.SELECTION_STAMPS.length, 43);
+  assert.equal(h.SELECTION_STAMPS.includes('quarantineQualified'), true);
+  assert.equal(h.SELECTION_STAMPS.includes('pass'), true);
+  assert.equal(h.SELECTION_STAMPS.includes('qa'), true);
+  assert.equal(h.SELECTION_STAMPS.includes('soldOutPostal'), true);
+
+  assert.equal(h.STAMP_LABELS.quarantineQualified, '检疫合格圆章');
+  assert.equal(h.state.selectionStamp, 'quarantineQualified');
+
+  const stamp = h.createSelectionStamp('quarantineQualified');
+  assert.equal(stamp.root.dataset.stamp, 'quarantineQualified');
+  assert.equal(stamp.root.classList.contains('aa-gallery-card__selection'), true);
+});
+
+test('togglePostPrompt：選中卡片時掛載居中印章與選中圖層', async () => {
+  const h = harness();
+  const post = { source: 'danbooru', postId: '999' };
+  h.detailCache.set('danbooru:999', {
+    tags: { character: ['nahida'], copyright: ['genshin_impact'], artist: [], general: ['solo'] }
+  });
+
+  const children = [];
+  const wrapMock = {
+    append(...nodes) { children.push(...nodes); },
+  };
+
+  const cardMock = {
+    classList: {
+      add(cls) { this[cls] = true; },
+      remove(cls) { this[cls] = false; },
+      contains(cls) { return !!this[cls]; },
+    },
+    querySelector(sel) {
+      if (sel === '.booru-img-wrap') return wrapMock;
+      return null;
+    },
+  };
+
+  await h.togglePostPrompt(post, cardMock);
+
+  assert.equal(cardMock.classList.contains('is-selected'), true);
+  assert.equal(children.some((n) => n.classList?.contains('aa-gallery-card__selected-layer')), true);
+  assert.equal(children.some((n) => n.classList?.contains('aa-gallery-card__selection')), true);
+});
+
+test('parseTagLines：正確解析多行與逗號分隔的標籤並清理前後空白', () => {
+  const h = harness();
+  const raw = 'watermark\n  bad_anatomy  , signature\r\n\r\nlogo';
+  const parsed = h.parseTagLines(raw);
+  assert.deepEqual(parsed, ['watermark', 'bad_anatomy', 'signature', 'logo']);
+});
+
 
