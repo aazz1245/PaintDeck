@@ -2006,6 +2006,179 @@ body.docking { cursor: grabbing; user-select: none; }
 .booru-pill.cat-gen  { color: #38bdf8; border-color: rgba(56, 189, 248, .4); background: rgba(56, 189, 248, .08); }
 .booru-pill.cat-meta { color: #fb923c; border-color: rgba(251, 146, 60, .4); background: rgba(251, 146, 60, .08); }
 
+/* 卡片點擊加入提示詞閃爍回饋 */
+.booru-card.prompt-added {
+  animation: booruCardFlash 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes booruCardFlash {
+  0% { transform: scale(0.96); box-shadow: 0 0 0 2px var(--acc); border-color: var(--acc); }
+  50% { transform: scale(1.02); box-shadow: 0 0 16px var(--acc); border-color: var(--acc); }
+  100% { transform: scale(1); }
+}
+
+/* 懸浮預覽提示詞卡片 (Hover Preview Tooltip) */
+.booru-hover-tooltip {
+  position: fixed;
+  z-index: 9999;
+  width: 330px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 30px);
+  background: var(--case-2, #18181c);
+  border: 1px solid var(--groove, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto;
+  backdrop-filter: blur(12px);
+  animation: booruHoverIn 0.15s ease-out;
+}
+.booru-hover-tooltip[hidden] {
+  display: none !important;
+}
+@keyframes booruHoverIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.booru-hover-media {
+  position: relative;
+  width: 100%;
+  max-height: 220px;
+  min-height: 120px;
+  background: #000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--groove);
+}
+.booru-hover-img {
+  max-width: 100%;
+  max-height: 220px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+.booru-hover-badges {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.booru-hover-content {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  max-height: 380px;
+}
+.booru-hover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.booru-hover-title {
+  font: 700 11px/1 var(--f-mono);
+  color: var(--label);
+  letter-spacing: 0.5px;
+}
+.booru-hover-detail-btn {
+  border: 0;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--label);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font: 11px/1.4 var(--f-ui);
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+.booru-hover-detail-btn:hover {
+  background: var(--acc);
+  color: #fff;
+}
+
+.booru-hover-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.booru-pill.sm {
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+.booru-hover-prompt-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.booru-hover-prompt-lbl {
+  font: 700 10px/1 var(--f-ui);
+  color: var(--label-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.booru-hover-prompt-box {
+  font: 11px/1.45 var(--f-mono);
+  color: var(--label-hi);
+  background: var(--screen);
+  border: 1px solid var(--groove);
+  border-radius: 5px;
+  padding: 6px 8px;
+  max-height: 120px;
+  overflow-y: auto;
+  user-select: all;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.booru-hover-hint {
+  font: 11px/1.3 var(--f-ui);
+  color: var(--acc);
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 2px solid var(--acc);
+  padding: 4px 6px;
+  border-radius: 2px;
+}
+
+.booru-hover-actions {
+  display: flex;
+  gap: 6px;
+}
+.booru-hover-btn {
+  flex: 1;
+  border: 1px solid var(--groove);
+  background: var(--case);
+  color: var(--label);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font: 11px/1.3 var(--f-ui);
+  cursor: pointer;
+  text-align: center;
+  transition: all .15s ease;
+}
+.booru-hover-btn:hover {
+  border-color: var(--acc);
+  color: var(--acc);
+}
+.booru-hover-btn.go {
+  background: var(--key-dark);
+  border-color: var(--acc);
+  color: var(--acc);
+}
+.booru-hover-btn.go:hover {
+  background: var(--acc);
+  color: #fff;
+}
+
 @media (max-width: 768px) {
   .booru-modal-body { grid-template-columns: 1fr; }
 }
