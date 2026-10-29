@@ -18,6 +18,9 @@ import * as wfpanel from "./wfpanel.js";
 import * as models from "./models.js";
 import * as drawer from "./assetdrawer.js";
 import * as lk from "./lockedchips.js";
+import * as booru from "./booru.js";
+
+export { refs };
 
 const SIZES = [
   ["直 1024×1536", 1024, 1536], ["直 832×1216", 832, 1216], ["直 896×1152", 896, 1152], ["方 1024×1024", 1024, 1024],
@@ -689,10 +692,10 @@ function familyUI() {
 }
 
 // ---------------------------------------------------------------- 模式
-function setMode(mode) {
+export function setMode(mode) {
   S.mode = mode;
   $$("#modeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.mode === mode));
-  const needInit = mode !== "txt2img" && mode !== "multiref";
+  const needInit = mode !== "txt2img" && mode !== "multiref" && mode !== "booru";
   F("refBox").hidden = mode !== "multiref";
   F("initBox").hidden = !needInit;
   F("maskEdit").hidden = mode !== "inpaint";
@@ -706,6 +709,8 @@ function setMode(mode) {
   F("outpaintBox").hidden = mode !== "outpaint";
   F("stripBox").hidden = mode !== "strip";
   F("sheetBox").hidden = mode !== "sheet";
+  F("booruBox").hidden = mode !== "booru";
+  if (mode === "booru") booru.onModeActive?.();
   F("promptBox").hidden = mode === "strip" || mode === "sheet";  // 一鍵脫衣、四視圖不用提示詞框（指令寫在各自的區塊）
   F("hiresBox").hidden = !(mode === "txt2img" || mode === "img2img");  // 多圖參考先不開高解析修復：參考圖已經很吃顯存
   F("controlBox").hidden = !(mode === "txt2img" || mode === "img2img");
@@ -1539,6 +1544,8 @@ async function generate() {
       const bad = refs.check(full(p.prompt));
       if (bad) return toast(bad, "err");
     }
+  } else if (S.mode === "booru") {
+    if (!p.init_image && !p.prompt) return toast("畫廊模式：請先在畫廊點選圖片設為輸入圖，或選取標籤填入提示詞", "err");
   } else if (S.mode !== "txt2img" && !p.init_image) return toast("請先放入一張圖片", "err");
   if (S.mode === "inpaint" && !p.mask) return toast("請先按「畫遮罩」塗出要重繪的區域", "err");
   if (p.control?.enabled && !p.control.image) return toast("構圖控制需要一張控制圖", "err");

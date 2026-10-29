@@ -75,6 +75,7 @@
       <button data-mode="upscale" data-ic="zoom" type="button">放大</button>
       <button data-mode="strip" data-ic="i2i" type="button" hidden></button>
       <button data-mode="sheet" data-ic="multi" type="button" title="角色四視圖（設定稿）一次改：換衣服、改顏色、脫衣，每個視角同步改（Qwen 2.1，不用切模型）">四視圖</button>
+      <button data-mode="booru" data-ic="slides" type="button" title="畫廊：從 Danbooru、Gelbooru 等圖庫搜尋並挑選圖片與標籤">畫廊</button>
     </div>
 
     <section class="group" id="modelBox">
@@ -357,6 +358,58 @@
       <div class="drop small" id="sheetRefDrop"><img id="sheetRefImg" alt=""><div class="drop-hint">服裝參考圖（圖2，可空白）：拖曳或<button class="link" id="sheetRefPick" type="button">選擇檔案</button>、<button class="link" id="sheetRefGallery" type="button">從圖庫選</button>；點圖移除</div></div>
       <div class="muted sm">要改哪件衣服要點名，例如「紅色西裝外套」；只寫「上衣」常常整張沒改。</div>
       <div class="muted sm">照「Qwen21 四視圖編輯」工作流：你寫的要求外面會自動包一段「保持人物、姿勢、四視圖排版不變，各視角同步修改」。不用切模型，自動用 Qwen 2.1 官方 Turbo；生成頁選 Qwen 時改用那個模型和它的 LoRA。輸出約 160 萬像素、比例跟原圖一樣。</div>
+    </section>
+
+    <!-- Booru 畫廊：支援 Danbooru / Gelbooru / Safebooru / AI TAG 瀑布流瀏覽、抽卡、標籤提取與圖生圖 -->
+    <section class="group" id="booruBox" hidden>
+      <div class="lbl" data-silk="BOORU">Booru 畫廊
+        <span class="tools">
+          <button class="icon" id="booruExpandBtn" type="button" title="切換寬幅/大視圖" aria-label="切換大視圖">⛶</button>
+        </span>
+      </div>
+      <div class="booru-toolbar">
+        <div class="row gap wrap booru-filter-row">
+          <select id="booruSource" class="sm" title="圖庫來源">
+            <option value="safebooru">Safebooru (安全)</option>
+            <option value="danbooru">Danbooru</option>
+            <option value="gelbooru">Gelbooru</option>
+            <option value="aitag">AI TAG</option>
+          </select>
+          <select id="booruRating" class="sm" title="分級篩選">
+            <option value="">全部分級</option>
+            <option value="general">全年齡 (SFW)</option>
+            <option value="sensitive">微澀 (Sensitive)</option>
+            <option value="questionable">可疑 (Questionable)</option>
+            <option value="explicit">成人 (Explicit)</option>
+          </select>
+          <select id="booruSort" class="sm" title="排序">
+            <option value="latest">最新發布</option>
+            <option value="score">最高評分</option>
+            <option value="favcount">最多收藏</option>
+          </select>
+          <select id="booruRanking" class="sm" title="熱門榜單">
+            <option value="">一般搜尋</option>
+            <option value="day">今日熱門</option>
+            <option value="week">本周榜單</option>
+            <option value="month">本月榜單</option>
+          </select>
+          <button class="akey sm" id="booruRandomBtn" type="button" title="隨機洗牌抽卡">🎲 抽卡</button>
+        </div>
+        <div class="row gap booru-search-row">
+          <input type="search" id="booruQuery" placeholder="搜尋標籤（例如: 1girl, solo, frieren...）" spellcheck="false" autocomplete="off">
+          <button class="akey sm go" id="booruSearchBtn" type="button">搜尋</button>
+        </div>
+      </div>
+      <div class="row between booru-meta-row">
+        <span class="muted sm" id="booruStatus">準備就緒</span>
+        <div class="booru-pager">
+          <button class="akey sm" id="booruPrevPage" type="button" disabled>‹ 上頁</button>
+          <span class="muted sm" id="booruPageInfo">第 1 頁</span>
+          <button class="akey sm" id="booruNextPage" type="button">下頁 ›</button>
+        </div>
+      </div>
+      <div class="booru-grid" id="booruGrid"></div>
+      <div class="muted sm booru-tip">點選圖片檢視大圖與分類標籤；可點選單個標籤插入提示詞，或「設為輸入圖」直接圖生圖。</div>
     </section>
   </div>
 
@@ -2080,6 +2133,34 @@
     <pre id="updateNotes" style="white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit"></pre>
     <p class="muted sm" id="updateReason"></p><p id="updateProgress" aria-live="polite"></p>
     <button type="button" class="akey go" id="updateInstall" disabled>下載並更新</button>
+  </div>
+<div class="modal" id="booruModal" hidden>
+  <div class="dialog wide booru-dialog">
+    <div class="row between">
+      <b id="booruModalTitle">Booru 畫廊詳情</b>
+      <div class="row gap">
+        <a id="booruExternalLink" class="akey sm" href="#" target="_blank" rel="noopener">在原站開啟 ↗</a>
+        <button class="minikey red" data-close data-ic="power" type="button" aria-label="關閉"></button>
+      </div>
+    </div>
+    <div class="booru-modal-body">
+      <div class="booru-modal-left">
+        <div class="booru-modal-preview">
+          <img id="booruModalImg" alt="">
+        </div>
+        <div class="booru-modal-meta" id="booruModalMeta"></div>
+        <div class="row gap wrap booru-modal-actions">
+          <button class="akey sm go" id="booruSetInitBtn" type="button">🖼️ 設為輸入圖（圖生圖）</button>
+          <button class="akey sm" id="booruAddRefBtn" type="button">📎 加入多圖參考</button>
+          <button class="akey sm" id="booruAllTagsBtn" type="button">📝 全部標籤填入提示詞</button>
+          <button class="akey sm" id="booruDownloadBtn" type="button">💾 下載/開啟原圖</button>
+        </div>
+      </div>
+      <div class="booru-modal-right">
+        <div class="sub">分類標籤（點擊任意標籤插入當前提示詞框）</div>
+        <div id="booruTagsContainer" class="booru-tags-list"></div>
+      </div>
+    </div>
   </div>
 </div>
 </body>

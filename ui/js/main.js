@@ -25,6 +25,7 @@ import * as framepick from "./framepick.js";
 import * as charsheet from "./charsheet.js";
 import * as i18n from "./i18n.js";
 import * as diagnostics from "./diagnostics.js";
+import * as booru from "./booru.js";
 import { mountDock } from "./dock.js";
 
 function showPage(p) {
@@ -177,6 +178,7 @@ await i18n.init();
 deck.init();
 system.init();
 gen.init();
+booru.init();
 gallery.init();
 assets.init();
 loras.init();

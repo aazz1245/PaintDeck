@@ -1713,3 +1713,232 @@ body.docking { cursor: grabbing; user-select: none; }
 .card.recipe-card .sub-loras { font-size: 11px; color: var(--label-dim); line-height: 1.4; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .card.recipe-card .recipe-count { font: 700 10px/1 var(--f-ui); background: var(--key-dark); color: var(--warn); padding: 2px 5px; border-radius: 3px; display: inline-block; margin-right: 4px; }
 
+/* ---------- Booru 畫廊 (BooruGalleryNode) ---------- */
+#booruBox { position: relative; }
+.booru-toolbar { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.booru-filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.booru-search-row { display: flex; gap: 6px; align-items: center; }
+.booru-search-row input[type="search"] { flex: 1; min-width: 140px; }
+.booru-meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.booru-pager { display: flex; gap: 6px; align-items: center; }
+
+.booru-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+  max-height: 460px;
+  overflow-y: auto;
+  padding: 4px 2px;
+  background: var(--screen);
+  border-radius: 6px;
+  border: 1px solid var(--groove);
+  min-height: 180px;
+}
+.booru-grid.loading { opacity: 0.6; pointer-events: none; }
+.booru-empty-msg {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 30px 16px;
+  color: var(--label-dim);
+  font: 13px/1.6 var(--f-ui);
+}
+
+.booru-card {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--case-2);
+  border: 1px solid var(--groove);
+  cursor: pointer;
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  display: flex;
+  flex-direction: column;
+}
+.booru-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--acc);
+  box-shadow: 0 4px 12px rgba(0,0,0,.4);
+}
+.booru-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.booru-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .2s ease;
+}
+.booru-card:hover .booru-img-wrap img {
+  transform: scale(1.05);
+}
+
+.booru-badge-bar {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  display: flex;
+  gap: 4px;
+  pointer-events: none;
+}
+.booru-tag-badge {
+  font: 700 9px/1 var(--f-mono);
+  padding: 2px 4px;
+  border-radius: 3px;
+  background: rgba(0,0,0,.7);
+  color: #fff;
+  backdrop-filter: blur(2px);
+}
+.booru-tag-badge.dim { background: rgba(0,0,0,.5); color: #bbb; }
+.booru-tag-badge.score { background: rgba(0,0,0,.7); color: #ffc107; }
+.booru-tag-badge.sfw { background: rgba(40, 167, 69, .85); color: #fff; }
+.booru-tag-badge.sens { background: rgba(255, 193, 7, .85); color: #111; }
+.booru-tag-badge.quest { background: rgba(253, 126, 20, .85); color: #fff; }
+.booru-tag-badge.nsfw { background: rgba(220, 53, 69, .85); color: #fff; }
+
+.booru-hover-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 4px;
+  background: linear-gradient(to top, rgba(0,0,0,.85), transparent);
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+.booru-card:hover .booru-hover-bar { opacity: 1; }
+.booru-quick-btn {
+  border: 0;
+  background: rgba(255,255,255,.2);
+  color: #fff;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font: 11px/1.2 var(--f-ui);
+  cursor: pointer;
+  transition: background .15s;
+}
+.booru-quick-btn:hover { background: var(--acc); }
+
+.booru-tip { margin-top: 6px; opacity: .75; line-height: 1.4; }
+
+/* 寬幅展開模式 */
+#booruBox.booru-expanded {
+  position: fixed;
+  inset: 50px 20px 20px 20px;
+  z-index: 1000;
+  background: var(--case);
+  box-shadow: 0 16px 48px rgba(0,0,0,.8), 0 0 0 1px var(--case-hi);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+#booruBox.booru-expanded .booru-grid {
+  flex: 1;
+  max-height: none;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+/* 詳情彈窗 */
+.booru-dialog { width: 880px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column; }
+.booru-modal-body {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+  margin-top: 12px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+.booru-modal-left { display: flex; flex-direction: column; gap: 10px; }
+.booru-modal-preview {
+  width: 100%;
+  max-height: 380px;
+  border-radius: 6px;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--groove);
+}
+.booru-modal-preview img {
+  max-width: 100%;
+  max-height: 380px;
+  object-fit: contain;
+}
+.booru-modal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--label-dim);
+  background: var(--case-2);
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--groove);
+}
+.booru-modal-actions { display: flex; flex-direction: column; gap: 6px; }
+.booru-modal-actions button { width: 100%; text-align: left; padding: 7px 12px; }
+
+.booru-modal-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.booru-tags-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 480px;
+  overflow-y: auto;
+}
+.booru-tag-group { display: flex; flex-direction: column; gap: 4px; }
+.booru-tag-group-title {
+  font: 700 11px/1.2 var(--f-ui);
+  color: var(--label-dim);
+  border-bottom: 1px solid var(--groove);
+  padding-bottom: 3px;
+  margin-bottom: 2px;
+}
+.booru-pills-wrap { display: flex; flex-wrap: wrap; gap: 4px; }
+.booru-pill {
+  border: 1px solid var(--groove);
+  background: var(--case-2);
+  color: var(--label);
+  font: 12px/1.2 var(--f-mono);
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.booru-pill:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.2);
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+
+/* Danbooru 標籤色彩分類 */
+.booru-pill.cat-char { color: #4ade80; border-color: rgba(74, 222, 128, .4); background: rgba(74, 222, 128, .08); }
+.booru-pill.cat-copy { color: #c084fc; border-color: rgba(192, 132, 252, .4); background: rgba(192, 132, 252, .08); }
+.booru-pill.cat-art  { color: #fb7185; border-color: rgba(251, 113, 133, .4); background: rgba(251, 113, 133, .08); }
+.booru-pill.cat-gen  { color: #38bdf8; border-color: rgba(56, 189, 248, .4); background: rgba(56, 189, 248, .08); }
+.booru-pill.cat-meta { color: #fb923c; border-color: rgba(251, 146, 60, .4); background: rgba(251, 146, 60, .08); }
+
+@media (max-width: 768px) {
+  .booru-modal-body { grid-template-columns: 1fr; }
+}
+
+
