@@ -29,13 +29,26 @@ function harness() {
   const suffixPromptEl = el();
   suffixPromptEl.id = 'promptSuffix';
 
+  const promptModal = { hidden: true };
+  const settingsModal = { hidden: true };
+
   const nodes = {
     '#prompt': mainPromptEl,
     '#promptPrefix': prefixPromptEl,
     '#promptSuffix': suffixPromptEl,
-    '#booruSource': { value: 'safebooru', append() {}, innerHTML: '' },
+    '#booruSource': { value: 'danbooru', append() {}, innerHTML: '' },
     '#booruStatus': { textContent: '', classList: { toggle() {} } },
     '#booruGrid': { innerHTML: '', append() {}, classList: { add() {}, remove() {} } },
+    '#booruPromptModal': promptModal,
+    '#booruSettingsModal': settingsModal,
+    '#booruCatChar': { checked: false },
+    '#booruCatCopy': { checked: false },
+    '#booruCatArt': { checked: false },
+    '#booruCatGen': { checked: false },
+    '#booruCatMeta': { checked: false },
+    '#booruReplaceUnderscores': { checked: false },
+    '#booruEscapeParentheses': { checked: false },
+    '#booruPromptBlacklist': { value: '' },
   };
 
   const toasts = [];
@@ -130,11 +143,11 @@ function harness() {
   context.globalThis = context;
 
   vm.runInContext(
-    source + '\nglobalThis.subject = { extractPromptTags, ratingBadge, togglePostPrompt, addPostPromptToMain, setSelectionMode, clearSelection, state, promptConfig, detailCache };',
+    source + '\nglobalThis.subject = { extractPromptTags, ratingBadge, togglePostPrompt, addPostPromptToMain, setSelectionMode, clearSelection, openPromptConfigDialog, openSettingsDialog, state, promptConfig, detailCache };',
     context,
     { filename: 'booru.js' }
   );
-  return { ...context.subject, mainPromptEl, appendCalls, removeCalls, toasts };
+  return { ...context.subject, mainPromptEl, appendCalls, removeCalls, toasts, promptModal, settingsModal };
 }
 
 test('extractPromptTags：按角色、作品、畫師、常規標籤順序提取並排除浮水印等噪音', () => {
@@ -276,3 +289,20 @@ test('togglePostPrompt：單選模式下換選新圖自動替換提示詞', asyn
   assert.equal(h.state.selectedPosts.has('safebooru:102'), true);
   assert.equal(h.state.selectedPosts.has('safebooru:101'), false);
 });
+
+test('畫廊預設來源應為 danbooru', () => {
+  const h = harness();
+  assert.equal(h.state.source, 'danbooru');
+});
+
+test('openPromptConfigDialog 與 openSettingsDialog：正常打開彈窗對話框', async () => {
+  const h = harness();
+  assert.equal(h.promptModal.hidden, true);
+  h.openPromptConfigDialog();
+  assert.equal(h.promptModal.hidden, false);
+
+  assert.equal(h.settingsModal.hidden, true);
+  await h.openSettingsDialog();
+  assert.equal(h.settingsModal.hidden, false);
+});
+

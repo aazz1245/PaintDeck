@@ -20,7 +20,7 @@ export const promptConfig = {
 };
 
 export const state = {
-  source: "safebooru",
+  source: "danbooru",
   query: "",
   rating: "",
   sort: "latest",
@@ -64,7 +64,7 @@ export async function fetchSources() {
 function renderSources() {
   const sel = $("#booruSource");
   if (!sel || !state.sources.length) return;
-  const cur = sel.value || state.source;
+  const cur = sel.value || state.source || "danbooru";
   sel.innerHTML = "";
   for (const s of state.sources) {
     const opt = el("option", { value: s.source }, `${s.displayName || s.source}`);
@@ -73,6 +73,9 @@ function renderSources() {
   if (state.sources.some((s) => s.source === cur)) {
     sel.value = cur;
     state.source = cur;
+  } else if (state.sources.some((s) => s.source === "danbooru")) {
+    sel.value = "danbooru";
+    state.source = "danbooru";
   } else if (state.sources.length) {
     sel.value = state.sources[0].source;
     state.source = state.sources[0].source;
@@ -422,8 +425,8 @@ function ensureHoverTooltip() {
 function positionHoverTooltip(cardEl, tipEl) {
   if (!cardEl || !tipEl) return;
   const cardRect = cardEl.getBoundingClientRect();
-  const tipWidth = 330;
-  const tipHeight = tipEl.offsetHeight || 400;
+  const tipWidth = tipEl.offsetWidth || 660;
+  const tipHeight = tipEl.offsetHeight || 520;
 
   let left;
   if (cardRect.right + tipWidth + 16 <= window.innerWidth) {
@@ -876,7 +879,7 @@ export function openPromptConfigDialog() {
   if (artCheck) artCheck.checked = promptConfig.categories.includes("artist");
   if (genCheck) genCheck.checked = promptConfig.categories.includes("general");
   if (metaCheck) metaCheck.checked = promptConfig.categories.includes("meta");
-  if (underCheck) underCheck.checked = promptConfig.replaceUnderscores !== false;
+  if (underCheck) underCheck.checked = !!promptConfig.replaceUnderscores;
   if (parenCheck) parenCheck.checked = !!promptConfig.escapeParentheses;
   if (blText) blText.value = (promptConfig.blacklist || []).join("\n");
 
@@ -892,7 +895,7 @@ export function savePromptConfigFromDialog() {
   if ($("#booruCatMeta")?.checked) categories.push("meta");
 
   promptConfig.categories = categories.length ? categories : ["general"];
-  promptConfig.replaceUnderscores = $("#booruReplaceUnderscores")?.checked ?? true;
+  promptConfig.replaceUnderscores = $("#booruReplaceUnderscores")?.checked ?? false;
   promptConfig.escapeParentheses = $("#booruEscapeParentheses")?.checked ?? false;
 
   const rawBl = $("#booruPromptBlacklist")?.value || "";
@@ -1044,9 +1047,14 @@ export function init() {
   state.selectionMode = savedMode;
   state.tooltipEnabled = store.get("booru_tooltip_enabled", true);
 
+  const savedSource = store.get("booru_source", "danbooru");
+  state.source = savedSource;
+  if ($("#booruSource")) $("#booruSource").value = savedSource;
+
   // 來源選擇
   $("#booruSource")?.addEventListener("change", (e) => {
     state.source = e.target.value;
+    store.set("booru_source", e.target.value);
     state.page = 1;
     searchPosts();
   });
