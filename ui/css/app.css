@@ -1933,7 +1933,9 @@ body.docking { cursor: grabbing; user-select: none; }
   width: 100%;
   max-height: 380px;
   border-radius: 6px;
-  background: #000;
+  background: var(--viewer);
+  background-image: radial-gradient(rgba(128, 128, 128, 0.18) 1px, transparent 1px);
+  background-size: 16px 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2000,11 +2002,24 @@ body.docking { cursor: grabbing; user-select: none; }
 }
 
 /* Danbooru 標籤色彩分類 */
-.booru-pill.cat-char { color: #4ade80; border-color: rgba(74, 222, 128, .4); background: rgba(74, 222, 128, .08); }
-.booru-pill.cat-copy { color: #c084fc; border-color: rgba(192, 132, 252, .4); background: rgba(192, 132, 252, .08); }
-.booru-pill.cat-art  { color: #fb7185; border-color: rgba(251, 113, 133, .4); background: rgba(251, 113, 133, .08); }
-.booru-pill.cat-gen  { color: #38bdf8; border-color: rgba(56, 189, 248, .4); background: rgba(56, 189, 248, .08); }
-.booru-pill.cat-meta { color: #fb923c; border-color: rgba(251, 146, 60, .4); background: rgba(251, 146, 60, .08); }
+.booru-pill.cat-char { color: #15803d; border-color: rgba(21, 128, 61, .35); background: rgba(21, 128, 61, .1); }
+.booru-pill.cat-copy { color: #7e22ce; border-color: rgba(126, 34, 206, .35); background: rgba(126, 34, 206, .1); }
+.booru-pill.cat-art  { color: #be123c; border-color: rgba(190, 18, 60, .35); background: rgba(190, 18, 60, .1); }
+.booru-pill.cat-gen  { color: #0369a1; border-color: rgba(3, 105, 161, .35); background: rgba(3, 105, 161, .1); }
+.booru-pill.cat-meta { color: #c2410c; border-color: rgba(194, 65, 12, .35); background: rgba(194, 65, 12, .1); }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .booru-pill.cat-char { color: #4ade80; border-color: rgba(74, 222, 128, .4); background: rgba(74, 222, 128, .12); }
+  :root:not([data-theme="light"]) .booru-pill.cat-copy { color: #c084fc; border-color: rgba(192, 132, 252, .4); background: rgba(192, 132, 252, .12); }
+  :root:not([data-theme="light"]) .booru-pill.cat-art  { color: #fb7185; border-color: rgba(251, 113, 133, .4); background: rgba(251, 113, 133, .12); }
+  :root:not([data-theme="light"]) .booru-pill.cat-gen  { color: #38bdf8; border-color: rgba(56, 189, 248, .4); background: rgba(56, 189, 248, .12); }
+  :root:not([data-theme="light"]) .booru-pill.cat-meta { color: #fb923c; border-color: rgba(251, 146, 60, .4); background: rgba(251, 146, 60, .12); }
+}
+:root[data-theme="dark"] .booru-pill.cat-char { color: #4ade80; border-color: rgba(74, 222, 128, .4); background: rgba(74, 222, 128, .12); }
+:root[data-theme="dark"] .booru-pill.cat-copy { color: #c084fc; border-color: rgba(192, 132, 252, .4); background: rgba(192, 132, 252, .12); }
+:root[data-theme="dark"] .booru-pill.cat-art  { color: #fb7185; border-color: rgba(251, 113, 133, .4); background: rgba(251, 113, 133, .12); }
+:root[data-theme="dark"] .booru-pill.cat-gen  { color: #38bdf8; border-color: rgba(56, 189, 248, .4); background: rgba(56, 189, 248, .12); }
+:root[data-theme="dark"] .booru-pill.cat-meta { color: #fb923c; border-color: rgba(251, 146, 60, .4); background: rgba(251, 146, 60, .12); }
 
 /* 卡片點擊加入提示詞閃爍回饋 */
 .booru-card.prompt-added {
@@ -2023,15 +2038,15 @@ body.docking { cursor: grabbing; user-select: none; }
   width: 660px;
   max-width: calc(100vw - 24px);
   max-height: calc(100vh - 30px);
-  background: var(--case-2, #18181c);
-  border: 1px solid var(--groove, rgba(255, 255, 255, 0.12));
-  border-radius: 8px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  background: var(--case);
+  color: var(--label);
+  border: 1px solid var(--case-lo);
+  border-radius: 10px;
+  box-shadow: 0 1px 0 var(--case-hi) inset, 0 4px 0 var(--case-lo), 0 20px 48px rgba(0, 0, 0, 0.45);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   pointer-events: auto;
-  backdrop-filter: blur(12px);
   animation: booruHoverIn 0.15s ease-out;
 }
 .booru-hover-tooltip[hidden] {
@@ -2047,7 +2062,9 @@ body.docking { cursor: grabbing; user-select: none; }
   width: 100%;
   max-height: 440px;
   min-height: 240px;
-  background: #000;
+  background: var(--viewer);
+  background-image: radial-gradient(rgba(128, 128, 128, 0.18) 1px, transparent 1px);
+  background-size: 16px 16px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -2071,12 +2088,13 @@ body.docking { cursor: grabbing; user-select: none; }
 }
 
 .booru-hover-content {
-  padding: 10px 12px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   overflow-y: auto;
   max-height: 380px;
+  background: var(--case);
 }
 .booru-hover-head {
   display: flex;
@@ -2085,34 +2103,35 @@ body.docking { cursor: grabbing; user-select: none; }
   gap: 6px;
 }
 .booru-hover-title {
-  font: 700 11px/1 var(--f-mono);
+  font: 700 12px/1 var(--f-mono);
   color: var(--label);
   letter-spacing: 0.5px;
 }
 .booru-hover-detail-btn {
-  border: 0;
-  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--groove);
+  background: var(--key);
   color: var(--label);
   border-radius: 4px;
-  padding: 2px 7px;
-  font: 11px/1.4 var(--f-ui);
+  padding: 3px 9px;
+  font: 11.5px/1.4 var(--f-ui);
   cursor: pointer;
-  transition: background .15s ease, color .15s ease;
+  transition: all .15s ease;
 }
 .booru-hover-detail-btn:hover {
   background: var(--acc);
   color: #fff;
+  border-color: var(--acc);
 }
 
 .booru-hover-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 5px;
 }
 .booru-pill.sm {
-  font-size: 10px;
-  padding: 2px 5px;
-  border-radius: 3px;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
 }
 
 .booru-hover-prompt-wrap {
@@ -2121,32 +2140,33 @@ body.docking { cursor: grabbing; user-select: none; }
   gap: 4px;
 }
 .booru-hover-prompt-lbl {
-  font: 700 10px/1 var(--f-ui);
+  font: 700 11px/1 var(--f-ui);
   color: var(--label-dim);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 .booru-hover-prompt-box {
-  font: 11px/1.45 var(--f-mono);
-  color: var(--label-hi);
-  background: var(--screen);
-  border: 1px solid var(--groove);
-  border-radius: 5px;
-  padding: 6px 8px;
-  max-height: 120px;
+  font: 12px/1.55 var(--f-mono);
+  color: var(--label);
+  background: var(--field);
+  border: 1px solid var(--field-line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  max-height: 180px;
   overflow-y: auto;
   user-select: all;
   word-break: break-all;
   white-space: pre-wrap;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .booru-hover-hint {
-  font: 11px/1.3 var(--f-ui);
-  color: var(--acc);
-  background: rgba(255, 255, 255, 0.05);
-  border-left: 2px solid var(--acc);
-  padding: 4px 6px;
-  border-radius: 2px;
+  font: 11.5px/1.3 var(--f-ui);
+  color: var(--label);
+  background: color-mix(in srgb, var(--acc) 14%, var(--field));
+  border-left: 3px solid var(--acc);
+  padding: 5px 8px;
+  border-radius: 3px;
 }
 
 .booru-hover-actions {
@@ -2156,23 +2176,24 @@ body.docking { cursor: grabbing; user-select: none; }
 .booru-hover-btn {
   flex: 1;
   border: 1px solid var(--groove);
-  background: var(--case);
+  background: var(--key);
   color: var(--label);
   border-radius: 4px;
-  padding: 4px 6px;
-  font: 11px/1.3 var(--f-ui);
+  padding: 5px 8px;
+  font: 11.5px/1.3 var(--f-ui);
   cursor: pointer;
   text-align: center;
   transition: all .15s ease;
 }
 .booru-hover-btn:hover {
   border-color: var(--acc);
-  color: var(--acc);
+  background: var(--acc);
+  color: #fff;
 }
 .booru-hover-btn.go {
-  background: var(--key-dark);
+  background: var(--acc);
   border-color: var(--acc);
-  color: var(--acc);
+  color: #fff;
 }
 .booru-hover-btn.go:hover {
   background: var(--acc);
