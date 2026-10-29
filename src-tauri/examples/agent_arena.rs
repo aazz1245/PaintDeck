@@ -113,6 +113,11 @@ fn grade(exp: &Value, a: &Map<String, Value>) -> (bool, Vec<String>) {
             why.push(format!("提示詞缺 {}", words.join("／")));
         }
     }
+    for w in exp.get("forbid").and_then(Value::as_array).into_iter().flatten().map(|w| tx(w).to_lowercase()) {
+        if prompt.contains(&w) {
+            why.push(format!("提示詞不該有 {w}"));
+        }
+    }
     if exp.get("check_has_no").and_then(Value::as_bool) == Some(true) {
         let no = a.get("check").and_then(Value::as_array).into_iter().flatten().any(|c| tx(c).to_lowercase().contains(": no"));
         if !no {
@@ -212,6 +217,13 @@ fn main() {
     let base_dir = Path::new(&args[1]).parent().unwrap().to_path_buf();
     let port = cfg["port"].as_u64().unwrap_or(8299) as u16;
     let runs = cfg["runs"].as_i64().unwrap_or(2);
+    // 2026-10-28 體位擂台的三個開關（都照生圖站的做法）：
+    //   pose_note：使用者那句話附上體位庫的 Term 註解（api_agent 的 user_ev）
+    //   ban_soft：請求加 logit_bias 擋軟詞（pe::ban_soft_words）
+    //   pose_fix：評分前照體位庫補正提示詞（agent::pose_fix＋fix_anima_tags，跟真的送去畫的一樣）
+    let flag = |k: &str| cfg[k].as_bool().unwrap_or(false);
+    let poses = (flag("pose_note") || flag("pose_fix")).then(|| anima_app::poses::Poses::load(Path::new(cfg["res"].as_str().unwrap_or("D:/AI/anima_app/resources"))));
+    let skill = cfg["skill"].as_str().map(|d| anima_app::skills::load(Path::new(d)).expect("讀不到 skill 資料夾（裡面要有 SKILL.md）"));
     let http = reqwest::blocking::Client::builder().timeout(Duration::from_secs(600)).build().unwrap();
     let mut rows: Vec<Row> = vec![];
     let mut model_notes: Vec<String> = vec![];
@@ -262,14 +274,45 @@ fn main() {
             };
             // 事件：題目有給 events 就照用，不然就是一句使用者的話（＋附圖）
             let user_imgs: Vec<String> = case["images"].as_array().into_iter().flatten().map(tx).collect();
-            let events: Vec<Value> = match case.get("events").and_then(Value::as_array) {
+            let mut events: Vec<Value> = match case.get("events").and_then(Value::as_array) {
                 Some(e) => e.clone(),
                 None => vec![json!({"kind": "user", "text": tx(&case["text"]),
                     "images": user_imgs.iter().enumerate().map(|(i, p)| json!({"n": i + 1, "name": p})).collect::<Vec<_>>()})],
             };
+            if let Some(p) = &poses {
+                for e in events.iter_mut().filter(|e| e["kind"] == "user") {
+                    if let Some(mut n) = p.term_note(&tx(&e["text"])) {
+                        // pose_brief：說明只給一句話的短版擺法（2026-10-29 比長短版）
+                        if flag("pose_brief") {
+                            n["geometry"] = n["brief"].clone();
+                        }
+                        e["pose"] = n;
+                    }
+                }
+            }
+            // 沒開 pose_note 但開了 pose_fix：補正要知道是哪個體位，事件留著 pose，只是不讓模型看到那行 Term
+            let shown: Vec<Value> = if flag("pose_note") {
+                events.clone()
+            } else {
+                events.iter().map(|e| {
+                    let mut e = e.clone();
+                    if let Some(m) = e.as_object_mut() {
+                        m.remove("pose");
+                    }
+                    e
+                }).collect()
+            };
             let uimgs: Vec<(i64, Value)> = user_imgs.iter().enumerate().map(|(i, p)| (i as i64 + 1, img(p))).collect();
             let look: Vec<(i64, Value)> = case["look"].as_array().into_iter().flatten().map(|l| (l["id"].as_i64().unwrap(), img(&tx(&l["path"])))).collect();
-            let mut system = ag::system_prompt(ag::default_text("agent").unwrap(), ag::default_text(ag::guide_id(&family)).unwrap(), &family, &ag::loras_text(&cat, &[], true));
+            // skill：題目檔給外掛寫法的資料夾，寫法後面照生圖站接上挑好的段＋目錄（api_agent 的做法，2026-10-29 A/B）
+            let mut guide = ag::default_text(ag::guide_id(&family)).unwrap().to_string();
+            if let Some(s) = &skill {
+                guide += "
+
+";
+                guide += &s.agent_block(ag::family_guide(&family), &ag::request_text(&events));
+            }
+            let mut system = ag::system_prompt(ag::default_text("agent").unwrap(), &guide, &family, &ag::loras_text(&cat, &[], true));
             if !user_imgs.is_empty() {
                 system = ag::with_images(&system, refs_mode);
             }
@@ -279,14 +322,17 @@ fn main() {
             let last = ag::last_generate(&events).cloned();
             for run in 0..runs {
                 let ask = ag::request_text(&events);
-                let mut msgs = ag::build_messages_with(&system, &events, &look, &uimgs, rounds_left, 2);
+                let mut msgs = ag::build_messages_with(&system, &shown, &look, &uimgs, rounds_left, 2);
                 let (mut nudged, mut rejects, mut first_ok, mut refused) = (false, 0usize, None, false);
                 let (mut secs, mut toks, mut gen_ms) = (0.0, 0i64, 0.0);
                 let mut final_action: Option<Map<String, Value>> = None;
                 let mut last_raw = String::new();
                 let mut fails = vec![];
                 for attempt in 0..=ag::MAX_REJECTS {
-                    let body = pe::tune_for(&tx(&m["file"]), pe::payload(&msgs, 0.7, 1000 + run * 7 + attempt as i64, false, Some(2048), false));
+                    let mut body = pe::tune_for(&tx(&m["file"]), pe::payload(&msgs, 0.7, 1000 + run * 7 + attempt as i64, false, Some(2048), false));
+                    if flag("ban_soft") {
+                        body = pe::ban_soft_words(body);
+                    }
                     let t0 = Instant::now();
                     let r: Value = match http.post(format!("http://127.0.0.1:{port}/v1/chat/completions")).json(&body).send().and_then(|r| r.json()) {
                         Ok(v) => v,
@@ -324,6 +370,18 @@ fn main() {
                                 a.push(json!({"role": "user", "content": format!("Rejected: {fb}")}));
                             }
                         }
+                    }
+                }
+                if let (Some(a), Some(p), true) = (final_action.as_mut(), &poses, flag("pose_fix")) {
+                    if a["action"] == "generate" {
+                        let raw_prompt = tx(&a.get("prompt").cloned().unwrap_or_default());
+                        let (mut used, msg) = ag::pose_fix(p, &events, &family, &raw_prompt);
+                        if family == "anima" {
+                            used = pe::fix_anima_tags(&used);
+                        }
+                        a.insert("raw_prompt".into(), json!(raw_prompt));
+                        a.insert("pose_fix".into(), json!(msg));
+                        a.insert("prompt".into(), json!(used));
                     }
                 }
                 let (pass, why) = match &final_action {

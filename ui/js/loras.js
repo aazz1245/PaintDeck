@@ -210,7 +210,8 @@ export function getLoraInfo(inputName) {
 const baseName = (name) => (name || "").replace(/\\/g, "/").split("/").pop().replace(/\.(safetensors|pt|bin|ckpt)$/i, "");
 const title = (l) => l.title || baseName(l.name);
 const famName = (l) => app.state?.models?.family_names?.[l.family] || "";
-const FAM_BADGE = { qwen21: "Qwen 2.1", moss: "MOSS", sdxl: "SDXL", sd15: "SD1.5", flux: "Flux", sd3: "SD3" };
+// 卡片的底模小標和「模型」篩選：照站上判斷的家族分組，名稱用 Civitai 的寫法（2026-10-28 使用者：同一個底模出現「Anima」「Anima（動漫）」、「MOSS」「MOSS Image」兩個選項）
+const FAM_LABEL = { anima: "Anima", moss: "MOSS Image", qwen21: "Qwen 2.1", sdxl: "SDXL", sd15: "SD1.5", flux: "Flux", sd3: "SD3" };
 const tagsOf = (l) => (Array.isArray(l.tags) ? l.tags.filter((x) => typeof x === "string" && x.trim()) : []);
 const categoryOf = (l) => {
   if (l.category) return l.category;
@@ -228,7 +229,7 @@ const categoryOf = (l) => {
   return clues.find(([, re]) => re.test(words))?.[0] || l.agent?.kind || "";
 };
 const categoryLabel = (c) => KIND_ZH[c] || c || "未分類";
-const modelLabel = (l) => l.base_model || FAM_BADGE[l.family] || famName(l) || l.family || "其他";
+const modelLabel = (l) => FAM_LABEL[l.family] || l.base_model || "其他";
 const match = (l, q) =>
   !q ||
   (
@@ -243,6 +244,14 @@ const match = (l, q) =>
     (l.agent?.desc || "")
   ).toLowerCase().includes(q.toLowerCase());
 
+// 生圖助手對這個 LoRA 的認識（agent.rs 的 parse_lora_desc 寫進 lora_meta.agent）
+function agentDesc(l) {
+  const a = l.agent;
+  if (!a?.desc) return null;
+  return el("div", { class: "agent-desc", title: (a.src === "user" ? "你寫的" : a.src === "probe" ? "助手試畫比較後寫的" : "助手讀線索寫的") + "（給助手挑 LoRA 用）\n" + a.desc },
+    el("span", { class: "ag-kind" + (a.sure === false ? " unsure" : "") }, "助手：" + (KIND_ZH[a.kind] || a.kind || "其他") + (a.sure === false ? "？" : "")), a.desc_zh || a.desc);
+}
+
 const preview = (l) => {
   if (l.lm_preview_url) {
     const u = l.lm_preview_url.startsWith("http") ? l.lm_preview_url : `${LM_ORIGIN}${l.lm_preview_url}`;
@@ -252,6 +261,22 @@ const preview = (l) => {
   if (l.local_preview) return `url(/api/loras/local-preview?name=${encodeURIComponent(l.name)})`;
   return "";
 };
+
+function fillFilters() {
+  const fill = (id, options) => {
+    const box = $(id), old = box.value;
+    box.replaceChildren(...options.map(([value, label]) => el("option", { value }, label)));
+    box.value = [...box.options].some((o) => o.value === old) ? old : "";
+  };
+  const families = [...new Set(list.map(modelLabel))].sort((a, b) => (a === "其他") - (b === "其他") || a.localeCompare(b));
+  const categories = [...new Set(list.map(categoryOf))].filter((c) => c && !KIND_ZH[c]).sort((a, b) => a.localeCompare(b));
+  const counts = new Map();
+  for (const l of list) for (const tag of tagsOf(l)) counts.set(tag, (counts.get(tag) || 0) + 1);
+  const tags = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  fill("#loraFamily", [["", "全部模型"], ...families.map((f) => [f, f])]);
+  fill("#loraCategory", [["", "全部分類"], ["_none", "未分類"], ...KINDS.map(([id, label]) => [id, label]), ...categories.map((c) => [c, c])]);
+  fill("#loraTag", [["", "常用標籤"], ...tags.slice(0, 100).map(([tag, n]) => [tag, `${tag} (${n})`])]);
+}
 
 // ---------------------------------------------------------------- 右鍵選單
 let pickerMenuEl = null;

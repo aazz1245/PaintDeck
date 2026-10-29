@@ -214,6 +214,10 @@ fn pe_core_matches_python() {
         // 刻意的差異：新版照官方模型卡不加重複懲罰（舊版 1.05），其他都要一樣
         let mut want = c[1].clone();
         want["repeat_penalty"] = json!(1.0);
+        // 思考預算新版另外用 pe::with_think_budget 加（2026-10-28 節點版也加了 thinking_budget_tokens）
+        if let Some(m) = want.as_object_mut() {
+            m.remove("thinking_budget_tokens");
+        }
         check(&mut fails, "payload", &c[0], &want, &got);
         if dumps(&got) != dumps(&want) {
             fails.push(format!(

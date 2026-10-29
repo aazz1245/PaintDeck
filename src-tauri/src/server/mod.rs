@@ -16,6 +16,7 @@ mod api_gen;
 mod api_h3;
 mod api_h3chain;
 mod api_shotsheet;
+mod api_skills;
 mod api_lib;
 mod api_misc;
 mod api_pe;
@@ -427,6 +428,13 @@ pub fn router(app: Shared) -> Router {
         )
         .route("/api/presets/{id}", delete(api_misc::delete_preset))
         // 提示詞庫（整套設定＋片段）
+        // 外掛寫法：使用者自備的提示詞 skill（api_skills.rs）
+        .route("/api/skills", get(api_skills::list))
+        .route("/api/skills/install", post(api_skills::install))
+        .route("/api/skills/bind", post(api_skills::bind))
+        .route("/api/skills/remove", post(api_skills::remove))
+        .route("/api/skills/open", post(api_skills::open))
+        .route("/api/skills/{id}", get(api_skills::get_one))
         .route("/api/lib", get(api_lib::list).post(api_lib::save))
         .route("/api/lib/used", post(api_lib::used))
         .route("/api/lib/order", post(api_lib::order))
@@ -451,6 +459,8 @@ pub fn router(app: Shared) -> Router {
         .route("/api/loras/delete", post(api_misc::lora_delete))
         .route("/lora_preview/{file}", get(api_misc::lora_preview))
         .route("/api/loras/local-preview", get(api_misc::lora_local_preview))
+        .route("/api/features/strip", get(api_misc::feature_strip))
+        .route("/api/features/strip/install", post(api_misc::feature_strip_install))
         .route("/api/civitai/bases", get(api_misc::civitai_bases))
         .route("/api/civitai/search", get(api_misc::civitai_search))
         .route("/api/civitai/download", post(api_misc::civitai_download))
@@ -503,6 +513,7 @@ pub fn router(app: Shared) -> Router {
         .route("/api/agent/sessions", get(api_agent::sessions))
         .route("/api/agent/session/new", post(api_agent::session_new))
         .route("/api/agent/session/settings", post(api_agent::session_settings))
+        .route("/api/agent/base/model", post(api_agent::base_model))
         .route("/api/agent/session/delete", post(api_agent::session_delete))
         .route("/api/agent/session/{id}", get(api_agent::session_get))
         .route("/api/agent/say", post(api_agent::say))

@@ -246,7 +246,7 @@ async function run(opts = {}) {
   if (refining && !prev) { toast("先改寫出第一版，才能微調", "err"); return null; }
   const body = {
     task: refining ? "refine" : t, base: t, idea, images, prev, instruction: opts.instruction || "", ratio: cur()?.wh_ratio || "",
-    seed: peSeed, zh: F("peZhOn").checked, think: F("peThinkOn").checked, noct_anime: isNoctAnime(),
+    seed: peSeed, zh: F("peZhOn").checked, think: F("peThinkOn").checked, noct_anime: isNoctAnime(), family: ctx.family(),
   };
   if (t === "adult") {
     const qwen = ctx.family() === "qwen21";

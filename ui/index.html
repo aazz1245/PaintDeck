@@ -73,7 +73,8 @@
       <button data-mode="outpaint" data-ic="expand" type="button" title="把畫面往上下左右延伸出去：橫圖變直圖、補出被裁掉的身體或背景">擴圖</button>
       <button data-mode="multiref" data-ic="multi" type="button" title="多張參考圖組合：換裝、換場景、照姿勢、合照…（Qwen 2.1）">多圖參考</button>
       <button data-mode="upscale" data-ic="zoom" type="button">放大</button>
-      <button data-mode="sheet" data-ic="multi" type="button" title="角色四視圖（設定稿）一次改：換衣服、改顏色，每個視角同步改（Qwen 2.1，不用切模型）">四視圖</button>
+      <button data-mode="strip" data-ic="i2i" type="button" hidden></button>
+      <button data-mode="sheet" data-ic="multi" type="button" title="角色四視圖（設定稿）一次改：換衣服、改顏色、脫衣，每個視角同步改（Qwen 2.1，不用切模型）">四視圖</button>
     </div>
 
     <section class="group" id="modelBox">
@@ -323,6 +324,22 @@
       <div id="upRefineRow" hidden><span class="fader-row"><span class="name">精修幅度</span><output id="upDenoiseOut" class="vfd"></output></span><input type="range" id="upDenoise" min="0.1" max="0.6" step="0.05" aria-label="精修幅度"></div>
     </section>
 
+    <!-- 「一鍵脫衣」的文案由外部內容補丁（feature_strip）在執行期填入，公開版原始碼不含這些文字 -->
+    <section class="group" id="stripBox" hidden>
+      <span class="lbl" id="stripLbl" data-silk="STRIP"></span>
+      <div class="grid2">
+        <div><span class="sub" id="stripTargetLbl"></span><select id="stripTarget"><option value="female"></option><option value="male"></option></select></div>
+        <div><span class="sub" id="stripKeepLbl"></span><select id="stripKeep"><option value="all"></option><option value="shoes"></option><option value="underwear"></option></select></div>
+      </div>
+      <label class="check"><input type="checkbox" id="stripRefine"> <span id="stripRefineLbl"></span></label>
+      <div id="stripRefineRow">
+        <div><span class="fader-row"><span class="name" id="stripDenoiseLbl"></span><output id="stripDenoiseOut" class="vfd"></output></span><input type="range" id="stripDenoise" min="0.2" max="0.6" step="0.05" aria-label="精修幅度"></div>
+        <label class="check"><input type="checkbox" id="stripMerge"> <span id="stripMergeLbl"></span></label>
+        <div><span class="sub" id="stripTagsLbl"></span><input type="text" id="stripTags"></div>
+      </div>
+      <div><span class="sub" id="stripExtraLbl"></span><input type="text" id="stripExtra"></div>
+      <div class="muted sm" id="stripNote"></div>
+    </section>
 
     <section class="group" id="sheetBox" hidden>
       <span class="lbl" data-silk="SHEET">四視圖編輯</span>
@@ -359,9 +376,9 @@
         <div class="grid2">
           <div><span class="sub">控制類型</span><select id="ctrlType">
             <option value="any">邊緣／線條（通用）</option><option value="lineart">線稿</option>
-            <option value="scribble">塗鴉草圖</option><option value="depth">深度（立體構圖）</option></select></div>
+            <option value="scribble">塗鴉草圖</option><option value="depth">深度（立體構圖）</option><option value="pose">姿勢骨架（OpenPose）</option></select></div>
           <div><span class="sub">前處理</span><select id="ctrlPre">
-            <option value="canny">自動抽邊緣</option><option value="depth">自動算深度</option><option value="none">直接使用這張圖</option></select></div>
+            <option value="canny">自動抽邊緣</option><option value="depth">自動算深度</option><option value="pose">自動抽骨架</option><option value="none">直接使用這張圖</option></select></div>
           <div><span class="fader-row"><span class="name">強度</span><output id="ctrlStrOut" class="vfd"></output></span><input type="range" id="ctrlStr" min="0.2" max="1.5" step="0.05" aria-label="強度"></div>
           <div><span class="fader-row"><span class="name">結束點</span><output id="ctrlEndOut" class="vfd"></output></span><input type="range" id="ctrlEnd" min="0.2" max="1" step="0.05" aria-label="結束點"></div>
         </div>
@@ -451,6 +468,7 @@
       <button class="akey" data-act="inpaint" data-ic="inpaint" type="button">局部重繪</button>
       <button class="akey" data-act="multiref" data-ic="multi" type="button">多圖參考</button>
       <button class="akey" data-act="upscale" data-ic="zoom" type="button">放大</button>
+      <button class="akey" data-act="strip" data-ic="i2i" type="button" hidden></button>
       <button class="akey" data-act="sheet" data-ic="multi" type="button" title="把這張圖送到「四視圖編輯」">四視圖</button>
       <button class="akey" data-act="charsheet" data-ic="multi" type="button" title="用這張圖當定稿，做角色設定圖（轉身圖＋臉部特寫），存成資產庫角色">做設定圖</button>
       <button class="akey" data-act="play" data-ic="star" type="button" title="擴圖、變體、修臉、修手、差分、一鍵去背" aria-haspopup="menu">玩法…</button>
@@ -497,7 +515,7 @@
     <button class="akey sm" id="galSelMode" type="button" title="多選（也可以 Ctrl＋點圖、Shift＋點圖選一段）">多選</button>
   </div>
   <div class="toolbar sub-toolbar" id="galFilters" hidden>
-    <select id="galMode" aria-label="模式"><option value="">所有模式</option><option value="txt2img">文生圖</option><option value="img2img">圖生圖</option><option value="inpaint">局部重繪</option><option value="multiref">多圖參考</option><option value="upscale">放大</option><option value="sheet">四視圖編輯</option><option value="outpaint">擴圖</option><option value="detail">修細節</option><option value="diff">差分</option><option value="rembg">去背</option><option value="xy">對照表</option><option value="video">影片</option><option value="imported">其他（ComfyUI）</option></select>
+    <select id="galMode" aria-label="模式"><option value="">所有模式</option><option value="txt2img">文生圖</option><option value="img2img">圖生圖</option><option value="inpaint">局部重繪</option><option value="multiref">多圖參考</option><option value="upscale">放大</option><option value="strip">一鍵脫衣</option><option value="sheet">四視圖編輯</option><option value="outpaint">擴圖</option><option value="detail">修細節</option><option value="diff">差分</option><option value="rembg">去背</option><option value="xy">對照表</option><option value="video">影片</option><option value="imported">其他（ComfyUI）</option></select>
     <select id="galFamily" aria-label="模型家族"><option value="">所有家族</option><option value="anima">Anima（動漫）</option><option value="qwen21">Qwen 2.1（編輯）</option><option value="moss">MOSS-Image（文生圖繪圖）</option><option value="custom">匯入的工作流</option></select>
     <select id="galModel" aria-label="模型"><option value="">所有模型</option></select>
     <select id="galLora" aria-label="LoRA"><option value="">所有 LoRA</option></select>
@@ -630,7 +648,7 @@
 <main id="page-civitai" class="page">
   <section class="panel lib screws">
   <div class="toolbar">
-    <input id="cvBase" list="cvBaseList" value="Anima" title="LoRA 要給哪個基底模型用；可輸入 Civitai 上其他模型名稱" aria-label="基底模型" autocomplete="off" spellcheck="false"><datalist id="cvBaseList"><option value="Anima"></option><option value="Qwen 2.1"></option><option value="MOSS Image"></option><option value="Krea 2"></option><option value="Krea 2 Turbo"></option></datalist>
+    <input id="cvBase" list="cvBaseList" value="全部基底" title="LoRA 要給哪個基底模型用；留「全部基底」會列出所有基底，可輸入 Civitai 上其他模型名稱" aria-label="基底模型" autocomplete="off" spellcheck="false"><datalist id="cvBaseList"><option value="全部基底"></option><option value="Anima"></option><option value="Qwen 2.1"></option><option value="MOSS Image"></option><option value="Krea 2"></option><option value="Krea 2 Turbo"></option></datalist>
     <div class="scr search-scr"><span data-ic="search" class="sic"></span><input type="search" id="cvQ" placeholder="搜尋 Civitai 上的 LoRA（英文關鍵字較準）" aria-label="搜尋 Civitai"></div>
     <select id="cvSort"><option>Most Downloaded</option><option>Highest Rated</option><option>Newest</option></select>
     <select id="cvPeriod"><option value="AllTime">全部時間</option><option value="Year">今年</option><option value="Month">本月</option><option value="Week">本週</option></select>
@@ -1187,8 +1205,19 @@
       <section class="box">
         <label>生圖設定</label>
         <div class="muted sm" id="agBaseInfo">還沒設定</div>
+        <div class="ag-base" id="agBaseEdit" hidden>
+          <div class="ag-base-model"><span class="sub">模型</span><select id="agBModel" title="換模型時步數、CFG、取樣器、反向詞會換成那個模型的預設；換到別的家族，固定掛的 LoRA 會拿掉"></select></div>
+          <div class="ag-base-row">
+            <div><span class="sub">步數</span><input type="number" id="agBSteps" min="1" max="80"></div>
+            <div><span class="sub">CFG</span><input type="number" id="agBCfg" min="1" max="15" step="0.1"></div>
+            <div><span class="sub">取樣器</span><select id="agBSampler"></select></div>
+            <div><span class="sub">排程</span><select id="agBSched"></select></div>
+          </div>
+          <div><span class="sub">反向提示詞</span><textarea id="agBNeg" rows="2"></textarea></div>
+          <div><span class="sub">固定掛的 LoRA</span><div class="ag-base-loras" id="agBLoras"></div></div>
+        </div>
         <div class="row gap wrap"><button class="akey sm" id="agBaseUse" type="button">用生成頁目前的設定</button></div>
-        <div class="muted sm">模型、步數、反向提示詞、固定掛的 LoRA 照生成頁；提示詞、尺寸、要不要多掛 LoRA 由助手決定。畫好的圖全部進圖庫，搜尋「助手」就找得到。</div>
+        <div class="muted sm">可以直接在這裡改，也可以按上面的按鈕整組照抄生成頁。提示詞、尺寸、要不要多掛 LoRA 由助手決定。畫好的圖全部進圖庫，搜尋「助手」就找得到。</div>
       </section>
       <section class="box" id="agCloudBox">
         <div class="row between"><label>雲端顯卡</label><button class="akey sm" id="agCloudCfg" type="button" title="選連法：RunPod 自動租卡、任何一家雲端的主機（SSH）、直接連網址">雲端設定…</button></div>
@@ -1298,6 +1327,21 @@
       <div class="muted sm" id="setPrDesc"></div>
       <textarea id="setPrText" rows="14" spellcheck="false"></textarea>
       <div class="row gap wrap"><button class="akey sm go" id="setPrSave" type="button">儲存</button><button class="akey sm" id="setPrReset" type="button">還原預設</button><span class="muted sm" id="setPrCount"></span></div>
+    </section>
+    <section class="box" id="setFeatures">
+      <label>外掛功能</label>
+      <div class="muted sm">有些成人向功能的內容不隨公開版一起發布，做成外部補丁檔。下載補丁檔後，用下面的「匯入」選它，或自己把它放進 <code>資料\plugins\</code> 底下的對應資料夾。只裝在這台電腦。</div>
+      <div class="row gap wrap" style="align-items:center"><span class="muted sm" id="featStripState"></span><input type="file" id="featStripFile" accept=".json,application/json" hidden><button class="akey sm" id="featStripImport" type="button">匯入補丁檔</button></div>
+    </section>
+
+    <section class="box" id="setSkills">
+      <label for="skUrl">外掛寫法（提示詞 skill）</label>
+      <div class="muted sm">把網路上別人寫的提示詞 skill（有 SKILL.md 的 GitHub 庫）裝進來、綁到模型上，生圖助手、AI 改寫、只寫詞寫那個模型的提示詞時就會照著用。skill 通常有好幾萬字，生圖站會切成小段，每次只挑跟需求有關的幾段給模型看，助手還能自己翻目錄再讀。只裝在這台電腦（data\skills），授權照各 skill 自己的規定。</div>
+      <div class="row gap wrap"><input type="text" id="skUrl" placeholder="https://github.com/作者/庫名（或指到 skill 資料夾的 …/tree/main/資料夾）" spellcheck="false"><button class="akey sm go" id="skInstall" type="button">從 GitHub 安裝</button><button class="akey sm" id="skOpen" type="button" title="自己把 skill 資料夾放進來也可以（資料夾裡要有 SKILL.md），放好按重新整理">打開資料夾</button><button class="akey sm" id="skReload" type="button">重新整理</button></div>
+      <div class="muted sm" id="skMsg"></div>
+      <div id="skList"></div>
+      <span class="sub">綁到哪個模型的寫法</span>
+      <div class="grid2" id="skBind"></div>
     </section>
     <section class="box" id="setVideo">
       <label for="setVidEngine">影片模型</label>
@@ -1481,6 +1525,7 @@
         <button class="akey sm" data-act="inpaint" data-ic="inpaint" type="button">局部重繪</button>
         <button class="akey sm" data-act="multiref" data-ic="multi" type="button">多圖參考</button>
         <button class="akey sm" data-act="upscale" data-ic="zoom" type="button">放大</button>
+        <button class="akey sm" data-act="strip" data-ic="i2i" type="button" hidden></button>
         <button class="akey sm" data-act="sheet" data-ic="multi" type="button" title="把這張圖送到「四視圖編輯」">四視圖</button>
         <button class="akey sm" data-act="charsheet" data-ic="multi" type="button" title="用這張圖當定稿，做角色設定圖（轉身圖＋臉部特寫），存成資產庫角色">做設定圖</button>
         <button class="akey sm" data-act="play" data-ic="star" type="button" title="擴圖、變體、修臉、修手、差分、一鍵去背" aria-haspopup="menu">玩法…</button>

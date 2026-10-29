@@ -345,15 +345,21 @@ def build_messages(task, idea="", images=(), prev="", instruction="", noct_anime
     return [{"role": "system", "content": sys_p}, {"role": "user", "content": content}]
 
 
+THINK_BUDGET = 1024  # 開思考時最多想幾個 token（llama-server 的 thinking_budget_tokens；跟生圖站 pe.rs 的 PE_THINK_BUDGET 一樣）
+
+
 def payload(messages, temperature=1.0, seed=0, think=False, max_tokens=None, stream=True):
     """取樣參數照 ComfyUI 官方 Qwen-Image 2.1 範本的 TextGenerate：temperature 1、top_k 20、top_p 0.95、重複懲罰 1.05。"""
-    return {
+    body = {
         "messages": messages, "stream": stream,
         "temperature": float(temperature), "top_k": 20, "top_p": 0.95, "min_p": 0.0, "repeat_penalty": 1.05,
         "seed": int(seed) % (2 ** 31), "max_tokens": int(max_tokens or (6144 if think else 2048)),
         "chat_template_kwargs": {"enable_thinking": bool(think)},
         "timings_per_token": False,
     }
+    if think:
+        body["thinking_budget_tokens"] = THINK_BUDGET
+    return body
 
 
 def sse_delta(line):

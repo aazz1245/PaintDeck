@@ -1,6 +1,7 @@
 # 繪匣 PaintDeck：給 AI 的全站操作說明
 
 使用者在自己的 Windows 電腦上用「繪匣 PaintDeck」生圖、生影片、做漫畫、剪片。生圖站背後是 ComfyUI，網址 {{ANIMA_URL}}（只接受本機）。
+
 你透過這個 MCP 伺服器（名字叫 anima）操作它：
 
 - `anima_status`：先呼叫。ComfyUI 有沒有連上、有哪些模型（依家族分）、LoRA、工作流。
@@ -19,7 +20,6 @@
 - 不要碰金鑰：Civitai 金鑰、RunPod 金鑰都在生圖站裡加密存著，API 不會回傳，也不要叫使用者貼給你。
 - 生圖站跟 ComfyUI 是同一台電腦、同一張顯示卡：一次送太多張會排很久。先送 1～2 張確認方向再加量。
 - 不要改使用者的預設負面詞、預設組、模型預設值，除非使用者明講。
-- 成人內容：生圖站是使用者私人用的，成人圖照使用者要求畫；寫實風格的成人圖要寫清楚是成年人（寫具體年紀或成熟身形）。
 - 沒做到的、沒驗證的，照實說。
 
 ## 快速上手
@@ -70,7 +70,7 @@
 
 附加功能：
 - `hires:{enabled:true, scale:1.5, denoise:0.4, upscaler}`：高解析修復（txt2img、img2img）。
-- `control:{enabled:true, type:"any"|"lineart"|"scribble"|"depth", preprocess:"canny"|"depth"|"none", strength, end, image, invert}`：構圖控制，**只對 anima 的 txt2img／img2img 有效**，其他家族會被忽略。
+- `control:{enabled:true, type:"any"|"lineart"|"scribble"|"depth"|"pose", preprocess:"canny"|"depth"|"pose"|"none", strength, end, image, invert}`：構圖控制，**只對 anima 的 txt2img／img2img 有效**，其他家族會被忽略。`type:"pose"` 用 `anima-lllite-pose-1`（吃 DWPose 樣式的彩色骨架圖，黑底；官方說效果比其他種弱，當「大致的姿勢」用）；`preprocess:"pose"` 從一般照片／圖自動抽骨架（SAM3 框人→SDPose 抽點→畫成骨架，要有 `sdpose_wholebody_fp16.safetensors` 與 SAM3）；自己畫好的骨架圖用 `preprocess:"none"`。
 - `pose_control`：Qwen 姿勢參考，只對 qwen21 有效。
 - `layout:[{type:"character"|"object"|"text", desc, text?, box:[x0,y0,x1,y1]}]`：MOSS 的版面框，座標是 0～1 的比例。
 - `count` 最多 32；送出途中某張失敗時，前面幾張已經在排隊，回應卻是錯誤，記得 `anima_jobs` 看一下。
@@ -114,6 +114,7 @@ ComfyUI 只讀它自己 input 資料夾裡的檔：
 
 **AI 改寫（不想自己寫時）**：`POST /api/pe/rewrite {text, …}` 是 SSE 串流（事件 status、reasoning、content、zh_delta、result、error），用 `anima_api` 呼叫會拿到整段串流文字，取最後的 result。改寫用本機 llama-server 的通用模型（9B／35B，設定 `pe_general`），第一次要載入幾十秒。2026-10-27 起預設不用官方 PE：設定 `pe_engine:"general"`（預設）｜`"official"`（官方 Qwen-Image 2.1 PE，非商用授權、安裝精靈的選配包「官方改寫模型」，沒裝就照樣用通用模型）。`GET /api/pe/status` 看狀態、`POST /api/pe/stop` 關掉讓出顯存。
 `GET /api/poses`：成人體位彙整（110 筆，含驗證過的 tag 和英文幾何描述），寫雙人體位先查這裡。
+**外掛寫法（使用者自備的提示詞 skill）**：`GET /api/skills`（已裝的、綁定 `bind`、可以綁的寫法 `guides`）、`GET /api/skills/{id}`（目錄 `toc`、每段 `part_list`）、`POST /api/skills/install {url}`（GitHub 網址，確認）、`POST /api/skills/bind {guide, skill}`（skill 空字串＝拿掉，確認）、`POST /api/skills/remove {id}`（搬到待刪除，確認）、`POST /api/skills/open`。綁好後助手、AI 改寫（要帶 `family`）、只寫詞寫那個模型時，會照需求挑幾段接在寫法後面；助手還能用 `guide {"name":"moss","part":N}` 讀別段。
 
 **反推**：`POST /api/tagger {id}`（圖庫編號）或 `{name}`（輸入檔名）→ Danbooru tag 和分數。
 
@@ -318,6 +319,7 @@ ComfyUI 只讀它自己 input 資料夾裡的檔：
 | 生圖玩法 | `GET /api/play/models`、`POST /api/play/save_grid` |
 | 停掉背景改寫／排分鏡 | `POST /api/pe/cancel {rid}`（排分鏡的 rid 是 `comic-<作品編號>`） |
 | 改寫的系統提示詞 | `GET,POST /api/pe/prompts`（確認） |
+| 外掛寫法（提示詞 skill） | `GET /api/skills`、`POST /api/skills/install｜bind｜remove`（確認），見「提示詞」 |
 | LoRA | `POST /api/loras/delete`（確認）、`POST /api/loras/meta` |
 | 安裝精靈（有掛才有） | `GET /api/setup/status`、`POST /api/setup/check`、`POST /api/setup/run` |
 

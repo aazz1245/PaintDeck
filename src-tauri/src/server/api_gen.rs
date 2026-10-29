@@ -55,7 +55,7 @@ pub async fn state(State(app): State<Shared>) -> ApiResult {
         .map(|n| {
             (
                 n.as_str(),
-                families::family_of(&lora_roots, n),
+                families::lora_family(&lora_roots, n, meta.get(n)),
             )
         })
         .collect();
@@ -486,15 +486,30 @@ fn prepare(app: &Shared, mut p: Map<String, Value>) -> Result<Prepared, super::A
         }
     }
     p.insert("family".into(), json!(fam));
+    // 一鍵脫衣：改圖指令和精修 tag 是外部內容補丁（feature_strip），這裡照 target／keep 算好塞進 params，
+    // graph 本身不含露骨文字；沒裝補丁就擋下。
+    if mode == "strip" {
+        let pack = crate::feature_strip::load(&paths.data, &paths.res).ok_or_else(|| {
+            bad("還沒安裝「一鍵脫衣」的內容補丁。到「設定 → 外掛功能」匯入，或把 pack.json 放進 <資料>\\plugins\\strip\\")
+        })?;
+        let st = p.get("strip").cloned().unwrap_or_else(|| json!({}));
+        let g = |k: &str, d: &str| st.get(k).and_then(Value::as_str).unwrap_or(d).to_string();
+        let (target, keep) = (g("target", "female"), g("keep", "all"));
+        let mut stm = st.as_object().cloned().unwrap_or_default();
+        stm.insert("qwen_prompt".into(), json!(pack.qwen_prompt(&target, &keep, &g("extra", ""))));
+        stm.insert("refine_tags".into(), json!(pack.refine_tags(&target, &keep, &g("tags", ""))));
+        p.insert("strip".into(), Value::Object(stm));
+    }
     // LoRA 照家族篩。工作流組認不出家族就全留；認得出家族時，家族看不出來（other）的 LoRA 也留（可能只是檔頭格式沒見過）
     let lora_roots = paths.lora_roots();
+    let lora_meta = app.db.lora_meta().unwrap_or_default();
     let (mut kept, mut skipped) = (vec![], vec![]);
     for l in p.get("loras").and_then(Value::as_array).into_iter().flatten() {
         let Some(name) = l["name"].as_str() else { continue };
         let fits = match &lora_fam {
             None => true,
             Some(f) => {
-                let lf = families::family_of(&lora_roots, name);
+                let lf = families::lora_family(&lora_roots, name, lora_meta.get(name));
                 lf == f || (from_set.is_some() && lf == families::OTHER)
             }
         };

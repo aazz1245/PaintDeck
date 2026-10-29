@@ -6,15 +6,15 @@ import { setIc } from "./deck.js";
 import * as gen from "./gen.js";
 import { app } from "./state.js";
 
-/** 差分用的改圖模型（跟四視圖同一顆）；生成頁選的是 Qwen 2.1 時改用生成頁的 */
+/** 差分用的改圖模型（跟一鍵脫衣、四視圖同一顆）；生成頁選的是 Qwen 2.1 時改用生成頁的 */
 const QWEN_EDIT = "qwen_image_2.1_turbo_int8_convrot.safetensors";
 const famOf = (m) => app.state?.models?.unet_family?.[m] || "anima";
 const curModel = () => $("#model").value;
 /** 這些欄位只跟原本那種模式有關，拿原圖參數重畫時要拿掉 */
-const DROP = ["refs", "mask", "inpaint", "upscale", "control", "sheet", "diff", "detail", "outpaint", "xy", "pose_control",
+const DROP = ["refs", "mask", "inpaint", "upscale", "control", "strip", "sheet", "diff", "detail", "outpaint", "xy", "pose_control",
   "video_preview", "poster", "idea", "pe_prompt", "prompt_resolved", "director", "agent", "comic", "hires"];
 /** 原圖是這些模式時，記的提示詞是給 Qwen 的改圖指令或根本沒有，不能拿來重畫 */
-const NO_REDRAW = ["rembg", "xy", "video", "sheet", "diff", "upscale"];
+const NO_REDRAW = ["rembg", "xy", "video", "strip", "sheet", "diff", "upscale"];
 
 // ---------------------------------------------------------------- 共用
 async function fullParams(rec) {
@@ -377,7 +377,7 @@ async function startXY() {
   let x, y;
   try { x = readAxis("X"); y = readAxis("Y"); } catch (e) { return toast(e.message, "err"); }
   const base = gen.collectParams();
-  if (["upscale", "sheet"].includes(base.mode)) return toast("這個模式不能做對照表：換成文生圖、圖生圖、局部重繪、擴圖或多圖參考", "err");
+  if (["upscale", "strip", "sheet"].includes(base.mode)) return toast("這個模式不能做對照表：換成文生圖、圖生圖、局部重繪、擴圖或多圖參考", "err");
   if (base.mode === "multiref" ? !base.refs?.length : base.mode !== "txt2img" && !base.init_image) return toast("請先放入圖片", "err");
   for (const ax of [x, y].filter(Boolean)) {
     if (ax.type === "denoise" && base.denoise == null) return toast("重繪強度只有圖生圖、局部重繪能比", "err");

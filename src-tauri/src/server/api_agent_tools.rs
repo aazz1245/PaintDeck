@@ -155,7 +155,7 @@ pub fn match_family<'a>(names: &'a [(String, String)], want: &str) -> Option<&'a
     of.iter().find(|(n, _)| n.to_lowercase().contains("turbo")).or(of.first()).copied()
 }
 
-async fn models(app: &Shared) -> Result<(Vec<(String, String)>, String), String> {
+pub(super) async fn models(app: &Shared) -> Result<(Vec<(String, String)>, String), String> {
     let st = call_api(app, "GET", "/api/state", &json!({}), &json!({})).await?;
     let mut list: Vec<(String, String)> = st["models"]["unet_family"]
         .as_object()
@@ -474,8 +474,20 @@ pub async fn exec(app: &Shared, cx: &Ctx<'_>, tool: &str, args: &Value, token: &
         "guide" => {
             let name = tx(&args["name"]);
             let id = crate::agent::guide_text_id(&name).ok_or_else(|| format!("沒有「{name}」這份寫法"))?;
-            out.text = format!("Prompt-writing guide \"{name}\". Follow it for everything you write for this model and task; if you were about to write one, write it again following this guide.\n\n{}", app.pe.agent_text(id));
-            out.zh = format!("讀「{}」的寫法", crate::agent::guide_zh(&name));
+            let skill = crate::skills::for_guide(&app.paths.data, &app.paths.settings, &name);
+            // 外掛寫法的第幾段
+            if let Some(n) = args["part"].as_u64() {
+                let s = skill.ok_or_else(|| format!("「{}」沒有接外掛寫法（到設定頁的「外掛寫法」綁）", crate::agent::guide_zh(&name)))?;
+                out.text = s.part_reply(n as usize)?;
+                out.zh = format!("讀外掛寫法「{}」第 {n} 段", s.name);
+            } else {
+                out.text = format!("Prompt-writing guide \"{name}\". Follow it for everything you write for this model and task; if you were about to write one, write it again following this guide.\n\n{}", app.pe.agent_text(id));
+                if let Some(s) = &skill {
+                    out.text += "\n\n";
+                    out.text += &s.agent_block(&name, "");
+                }
+                out.zh = format!("讀「{}」的寫法", crate::agent::guide_zh(&name));
+            }
         }
         "docs" => {
             let guide = std::fs::read_to_string(app.paths.res.join("extras").join("fablecut").join("anima-guide.md")).map_err(|e| format!("讀不了說明書：{e}"))?;

@@ -174,7 +174,7 @@ export function init() {
 
   // 滑桿數值顯示
   const outs = [["denoise", "denoiseOut"], ["ipGrow", "ipGrowOut"], ["ipBlur", "ipBlurOut"], ["ipPad", "ipPadOut"], ["upDenoise", "upDenoiseOut"],
-    ["hiresScale", "hiresScaleOut"], ["hiresDenoise", "hiresDenoiseOut"], ["ctrlStr", "ctrlStrOut"], ["ctrlEnd", "ctrlEndOut"],
+    ["hiresScale", "hiresScaleOut"], ["hiresDenoise", "hiresDenoiseOut"], ["ctrlStr", "ctrlStrOut"], ["ctrlEnd", "ctrlEndOut"], ["stripDenoise", "stripDenoiseOut"],
     ["opFeather", "opFeatherOut"], ["detailDenoise", "detailDenoiseOut"]];
   for (const [i, o] of outs) F(i).addEventListener("input", () => (F(o).textContent = F(i).value));
 
@@ -200,6 +200,7 @@ export function init() {
   F("ipMethod").onchange = () => { F("denoise").value = F("ipMethod").value === "lllite" ? 1 : 0.75; F("denoiseOut").textContent = F("denoise").value; save(); };
   F("ipArea").onchange = () => { F("ipPadRow").hidden = F("ipArea").value !== "masked"; save(); };
   F("upRefine").onchange = () => { F("upRefineRow").hidden = !F("upRefine").checked; save(); };
+  F("stripRefine").onchange = () => { F("stripRefineRow").hidden = !F("stripRefine").checked; save(); };
   // 四視圖：做新角色設定圖（工坊）；常用要求填進框裡；服裝參考圖（圖2）
   F("csOpen").onclick = async () => (await import("./charsheet.js")).open();
   F("sheetPreset").onchange = () => {
@@ -215,7 +216,7 @@ export function init() {
   F("sheetRefImg").onclick = () => setSheetRef(null);
   F("ctrlType").onchange = () => {
     const t = F("ctrlType").value;
-    F("ctrlPre").value = t === "depth" ? "depth" : t === "any" ? "canny" : "none";
+    F("ctrlPre").value = t === "depth" ? "depth" : t === "pose" ? "pose" : t === "any" ? "canny" : "none";
     F("ctrlInvert").checked = t === "any";
     save();
   };
@@ -679,7 +680,7 @@ function familyUI() {
   F("refFamilyWarn").hidden = q || fam() === "custom" || S.mode !== "multiref";
   // 工作流組：寬高只有文生圖照生成頁；遮罩擴張／柔化、放大模型這些都在工作流裡（「工作流參數」改），生成頁這幾塊沒作用就藏起來
   const cw = fam() === "custom";
-  F("sizeBox").hidden = ["inpaint", "upscale", "sheet", "outpaint"].includes(S.mode) || (cw && S.mode !== "txt2img");
+  F("sizeBox").hidden = ["inpaint", "upscale", "strip", "sheet", "outpaint"].includes(S.mode) || (cw && S.mode !== "txt2img");
   F("inpaintBox").hidden = S.mode !== "inpaint" || cw;
   F("upscaleBox").hidden = S.mode !== "upscale" || cw;
   F("denoiseHint").textContent = (q ? MODE_HINT_Q : fam() === "moss" ? MODE_HINT_M : MODE_HINT)[S.mode] || "";
@@ -695,7 +696,7 @@ function setMode(mode) {
   F("refBox").hidden = mode !== "multiref";
   F("initBox").hidden = !needInit;
   F("maskEdit").hidden = mode !== "inpaint";
-  F("sizeBox").hidden = mode === "inpaint" || mode === "upscale" || mode === "sheet" || mode === "outpaint";
+  F("sizeBox").hidden = mode === "inpaint" || mode === "upscale" || mode === "strip" || mode === "sheet" || mode === "outpaint";
   F("autoSizeRow").hidden = !(mode === "img2img" || mode === "multiref");
   F("autoSizeRow").lastChild.textContent = " " + (SIZE_AUTO_TEXT[mode] || SIZE_AUTO_TEXT.img2img);
   F("denoiseBox").hidden = !(mode === "img2img" || mode === "inpaint");
@@ -703,8 +704,9 @@ function setMode(mode) {
   F("inpaintBox").hidden = mode !== "inpaint";
   F("upscaleBox").hidden = mode !== "upscale";
   F("outpaintBox").hidden = mode !== "outpaint";
+  F("stripBox").hidden = mode !== "strip";
   F("sheetBox").hidden = mode !== "sheet";
-  F("promptBox").hidden = mode === "sheet";  // 四視圖不用提示詞框（指令寫在自己的區塊）
+  F("promptBox").hidden = mode === "strip" || mode === "sheet";  // 一鍵脫衣、四視圖不用提示詞框（指令寫在各自的區塊）
   F("hiresBox").hidden = !(mode === "txt2img" || mode === "img2img");  // 多圖參考先不開高解析修復：參考圖已經很吃顯存
   F("controlBox").hidden = !(mode === "txt2img" || mode === "img2img");
   if (mode === "img2img" && app.state) {
@@ -1327,6 +1329,8 @@ export function collectParams() {
     p.inpaint = { grow: 8, blur: 16 };
   }
   if (S.mode === "upscale") p.upscale = { upscaler: F("upModel").value, scale: +F("upScale").value, refine: F("upRefine").checked, denoise: num("upDenoise") };
+  if (S.mode === "strip") p.strip = { target: F("stripTarget").value, keep: F("stripKeep").value, refine: F("stripRefine").checked,
+    refine_denoise: num("stripDenoise"), merge: F("stripMerge").checked, extra: F("stripExtra").value.trim(), tags: F("stripTags").value.trim() };
   if (S.mode === "sheet") p.sheet = { req: F("sheetReq").value.trim(), ref: S.sheetRef?.name || null };
   if (S.mode === "txt2img" || S.mode === "img2img") {
     p.hires = { enabled: F("hiresOn").checked, scale: num("hiresScale"), denoise: num("hiresDenoise"), upscaler: F("hiresUpscaler").value };
@@ -1351,7 +1355,7 @@ export function baseParams() {
 
 const FORM_IDS = ["promptPrefix", "prompt", "promptSuffix", "negative", "width", "height", "autoSize", "denoise", "ipMethod", "ipArea", "ipGrow", "ipBlur", "ipPad", "upModel", "upScale", "upRefine", "upDenoise",
   "hiresOn", "hiresScale", "hiresDenoise", "hiresUpscaler", "ctrlOn", "ctrlType", "ctrlPre", "ctrlStr", "ctrlEnd", "ctrlInvert", "model", "steps", "cfg", "sampler", "scheduler", "turboLora", "seed", "count", "refPixels",
-  "sheetReq",
+  "stripTarget", "stripKeep", "stripRefine", "stripDenoise", "stripMerge", "stripExtra", "stripTags", "sheetReq",
   "opTop", "opBottom", "opLeft", "opRight", "opFeather", "autoDetail", "detailDenoise", "batchLines"];
 
 // 網頁剛打開時，模型、取樣器這些下拉選單還沒有選項（要等 onState 讀到清單）。
@@ -1383,6 +1387,7 @@ function applyForm(f) {
   if (f.locked !== undefined) { S.locked = Array.isArray(f.locked) ? f.locked : []; renderLocked(); }
   for (const o of $$("output", F("page-gen"))) { const inp = o.closest("div, section")?.querySelector("input[type=range]"); if (inp) o.textContent = inp.value; }
   F("upRefineRow").hidden = !F("upRefine").checked;
+  F("stripRefineRow").hidden = !F("stripRefine").checked;
   F("ipPadRow").hidden = F("ipArea").value !== "masked";
   if (app.state) S.family = fam();
   renderLoras(); showCtrl(); modelHint();
@@ -1405,7 +1410,7 @@ function restore() {
     width: 1024, height: 1536, autoSize: true, denoise: 0.6,
     ipMethod: "lllite", ipArea: "full", ipGrow: 8, ipBlur: 12, ipPad: 64, upScale: "2", upDenoise: 0.3,
     hiresScale: 1.5, hiresDenoise: 0.4, ctrlType: "any", ctrlPre: "canny", ctrlStr: 1, ctrlEnd: 1, ctrlInvert: true,
-    sheetReq: "",
+    stripTarget: "female", stripKeep: "all", stripRefine: true, stripDenoise: 0.35, stripMerge: true, stripExtra: "", stripTags: "", sheetReq: "",
     opTop: 0, opBottom: 0, opLeft: 0, opRight: 0, opFeather: 40, autoDetail: false, detailDenoise: 0.4, batchLines: false,
     steps: 8, cfg: 1, count: "4", mode: "txt2img",
   };
@@ -1430,6 +1435,12 @@ export function applyParams(p, withMode = true) {
   S.loras = (p.loras || []).map((l) => ({ ...l, enabled: true }));
   if (p.hires) { F("hiresOn").checked = !!p.hires.enabled; set("hiresScale", p.hires.scale); set("hiresDenoise", p.hires.denoise); }
   if (p.denoise != null) set("denoise", p.denoise);
+  if (p.strip) {
+    set("stripTarget", p.strip.target); set("stripKeep", p.strip.keep); set("stripDenoise", p.strip.refine_denoise);
+    set("stripExtra", p.strip.extra); set("stripTags", p.strip.tags);
+    F("stripRefine").checked = p.strip.refine !== false; F("stripMerge").checked = p.strip.merge !== false;
+    F("stripRefineRow").hidden = !F("stripRefine").checked;
+  }
   if (p.sheet) set("sheetReq", p.sheet.req);
   if (p.outpaint) { set("opTop", p.outpaint.top); set("opBottom", p.outpaint.bottom); set("opLeft", p.outpaint.left); set("opRight", p.outpaint.right); set("opFeather", p.outpaint.feather); }
   lay.set(p.layout || []); layCount();  // 重用參數＝重現那張圖：沒有框的圖會把框清掉
@@ -1437,8 +1448,8 @@ export function applyParams(p, withMode = true) {
   renderLoras(); modelHint();
   for (const o of $$("output", F("page-gen"))) { const inp = o.closest("div, section")?.querySelector("input[type=range]"); if (inp) o.textContent = inp.value; }
   if (p.mode === "multiref" && p.refs) refs.set(p.refs.map((r) => ({ name: r.image, width: r.width, height: r.height, role: r.role || "person" })));
-  // 文生圖、ComfyUI 匯入的、沒標模式的 → 文生圖；其餘（圖生圖、局部重繪、放大、四視圖、多圖參考）照原模式還原（輸入圖要自己再放一次）
-  if (withMode) setMode(["img2img", "inpaint", "outpaint", "upscale", "sheet", "multiref"].includes(p.mode) ? p.mode : "txt2img");
+  // 文生圖、ComfyUI 匯入的、沒標模式的 → 文生圖；其餘（圖生圖、局部重繪、放大、一鍵脫衣、四視圖、多圖參考）照原模式還原（輸入圖要自己再放一次）
+  if (withMode) setMode(["img2img", "inpaint", "outpaint", "upscale", "strip", "sheet", "multiref"].includes(p.mode) ? p.mode : "txt2img");
   pe.restore(p);
   save();
   toast("已套用參數（種子也一併帶入，要換構圖請按「隨機」）", "ok");
@@ -1473,7 +1484,7 @@ function applyLibSet(data) {
 
 // 圖片的生成參數 → 表單格式（「存到提示詞庫」用，不會動到目前的表單）
 function paramsToForm(p) {
-  const keepMode = ["multiref", "img2img", "inpaint", "outpaint", "upscale", "sheet"].includes(p.mode);
+  const keepMode = ["multiref", "img2img", "inpaint", "outpaint", "upscale", "strip", "sheet"].includes(p.mode);
   const f = { mode: keepMode ? p.mode : "txt2img", loras: (p.loras || []).map((l) => ({ ...l, enabled: true })) };
   const put = (k, v) => { if (v !== undefined && v !== null) f[k] = v; };
   put("promptPrefix", p.promptPrefix);
@@ -1485,6 +1496,11 @@ function paramsToForm(p) {
   f.turboLora = p.turbo_lora === true ? "anima-turbo-lora-v0.2.safetensors" : (p.turbo_lora || "");
   if (p.hires) { f.hiresOn = !!p.hires.enabled; put("hiresScale", p.hires.scale); put("hiresDenoise", p.hires.denoise); }
   if (p.mode === "img2img" && p.denoise != null) f.denoise = p.denoise;
+  if (p.strip) {
+    put("stripTarget", p.strip.target); put("stripKeep", p.strip.keep); put("stripDenoise", p.strip.refine_denoise);
+    put("stripExtra", p.strip.extra); put("stripTags", p.strip.tags);
+    f.stripRefine = p.strip.refine !== false; f.stripMerge = p.strip.merge !== false;
+  }
   if (p.sheet) put("sheetReq", p.sheet.req);
   if (p.outpaint) Object.assign(f, { opTop: p.outpaint.top, opBottom: p.outpaint.bottom, opLeft: p.outpaint.left, opRight: p.outpaint.right, opFeather: p.outpaint.feather });
   if (p.layout?.length) f.layout = p.layout;
@@ -1499,9 +1515,9 @@ async function generate() {
   if (F("genBtn").disabled) return;
   F("genBtn").disabled = true;
   let ok;
-  // 四視圖不用提示詞框，也就不跑 AI 改寫；「每行一句」（批次）也不跑（改寫會把整框換成一段）
+  // 一鍵脫衣、四視圖不用提示詞框，也就不跑 AI 改寫；「每行一句」（批次）也不跑（改寫會把整框換成一段）
   const batch = F("batchLines").checked && !F("promptBox").hidden;
-  try { ok = S.mode === "sheet" || batch || await pe.beforeGenerate(); } finally { F("genBtn").disabled = false; }
+  try { ok = S.mode === "strip" || S.mode === "sheet" || batch || await pe.beforeGenerate(); } finally { F("genBtn").disabled = false; }
   if (!ok) return;
   const p = collectParams();
   if (fam() === "custom") {
@@ -1512,7 +1528,7 @@ async function generate() {
   }
   if (S.mode === "outpaint" && !Object.values(opVals()).some((v) => v > 0)) return toast("擴圖：至少填一邊要往外擴幾像素（或按下面的快捷鈕）", "err");
   const refNames = () => (S.mode === "multiref" ? refs.get().map((r) => r.name) : []);
-  // 四視圖沒有提示詞框，不接
+  // 一鍵脫衣、四視圖沒有提示詞框，不接
   const full = (text) => fullPrompt(text);
   if (S.mode === "multiref") {
     if (fam() === "custom") {
@@ -1530,7 +1546,7 @@ async function generate() {
     if (!p.sheet.req) return toast("請先寫「修改要求」，或從常用要求挑一個", "err");
     if (/[图圖]\s*2/.test(p.sheet.req) && !p.sheet.ref) return toast("要求裡提到圖2，請先放服裝參考圖", "err");
   }
-  if (S.mode === "sheet" && !(app.state?.models?.unet_family || {})["qwen_image_2.1_turbo_int8_convrot.safetensors"] && fam() !== "qwen21")
+  if ((S.mode === "strip" || S.mode === "sheet") && !(app.state?.models?.unet_family || {})["qwen_image_2.1_turbo_int8_convrot.safetensors"] && fam() !== "qwen21")
     return toast(modeName[S.mode] + "要用 Qwen 2.1 官方 Turbo（qwen_image_2.1_turbo_int8_convrot），模型清單裡找不到", "err");
   const count = S.mode === "upscale" ? 1 : +F("count").value;
   // 批次：每一行各送一次（AI 改寫的紀錄只對整框有意義，拿掉）
@@ -1658,7 +1674,7 @@ export async function imageAction(act, rec, btn, quiet = false) {
       const full = await api(`/api/image/${rec.id}`);
       app.showPage("gen");
       applyParams(full.params);
-    } else if (act === "img2img" || act === "inpaint" || act === "outpaint" || act === "upscale" || act === "sheet") {
+    } else if (act === "img2img" || act === "inpaint" || act === "outpaint" || act === "upscale" || act === "strip" || act === "sheet") {
       useInput(act, await api("/api/to_input", { json: { id: rec.id } }));
     } else if (act === "charsheet") {
       (await import("./charsheet.js")).open({ gallery: rec });

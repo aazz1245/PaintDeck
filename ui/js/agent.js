@@ -6,6 +6,8 @@ import { openLightbox, pickFromGallery } from "./gallery.js";
 import * as gen from "./gen.js";
 import { mmprojFix } from "./pe.js";
 import * as drawer from "./assetdrawer.js";
+import * as loraPick from "./loras.js";
+import { app } from "./state.js";
 
 const F = (id) => document.getElementById(id);
 const BRAINS = ["9b", "35b", "cloud"];
@@ -152,6 +154,47 @@ function baseInfo() {
   if (S.settings.brain === "cloud" && b.family !== "moss") t += "\n雲端只能畫 MOSS-Image：換一個 MOSS 的模型，或把腦袋切回本機。";
   box.textContent = t;
   box.style.whiteSpace = "pre-wrap";
+  paintBaseEdit(b);
+}
+
+// 生圖設定直接在助手頁改：模型只列助手能用的三家；換模型走後端（家族預設跟助手自己換模型同一套）
+function paintBaseEdit(b) {
+  const box = F("agBaseEdit");
+  box.hidden = !b || S?.settings?.mode === "prompt";
+  if (box.hidden) return;
+  const m = app.state?.models || {};
+  const fams = m.unet_family || {};
+  const fill = (sel, items, cur, label = (x) => x) => {
+    sel.innerHTML = "";
+    const list = items.includes(cur) || !cur ? items : [cur, ...items];
+    for (const it of list) sel.append(el("option", { value: it }, label(it)));
+    sel.value = cur || "";
+  };
+  const models = Object.keys(fams).filter((n) => FAM_NAME[fams[n]]).sort();
+  fill(F("agBModel"), models, b.model, (n) => `${n.replace(/\.safetensors$/i, "")}（${FAM_NAME[fams[n]] || fams[n] || "?"}）`);
+  fill(F("agBSampler"), m.samplers || [], b.sampler);
+  fill(F("agBSched"), m.schedulers || [], b.scheduler);
+  F("agBSteps").value = b.steps ?? "";
+  F("agBCfg").value = b.cfg ?? "";
+  if (document.activeElement !== F("agBNeg")) F("agBNeg").value = b.negative || "";
+  const wrap = F("agBLoras");
+  wrap.innerHTML = "";
+  (b.loras || []).forEach((l, i) => {
+    const str = el("input", { type: "number", min: "-3", max: "3", step: "0.05", value: l.strength ?? 1, title: "強度" });
+    str.onchange = () => setBase({ loras: b.loras.map((x, k) => (k === i ? { ...x, strength: +str.value } : x)) });
+    wrap.append(el("span", { class: "ag-base-lora", title: l.name }, String(l.name).replace(/^.*[\\/]/, "").replace(/\.safetensors$/i, ""), str,
+      el("button", { class: "link", type: "button", title: "拿掉", onclick: () => setBase({ loras: b.loras.filter((_, k) => k !== i) }) }, "✕")));
+  });
+  wrap.append(el("button", { class: "akey sm", type: "button", onclick: () => loraPick.openPicker((l) => {
+    if ((b.loras || []).some((x) => x.name === l.name)) return toast("這個 LoRA 已經掛上了");
+    setBase({ loras: [...(b.loras || []), { name: l.name, strength: l.strength ?? 0.8 }] });
+  }, b.family) }, "＋ LoRA"));
+}
+
+// 只改生圖設定的幾個欄位，其他照舊
+function setBase(patch) {
+  const b = S?.settings?.base;
+  if (b) saveSettings({ base: { ...b, ...patch } });
 }
 
 async function saveSettings(patch) {
@@ -866,6 +909,19 @@ export function init() {
     toast("助手會用：" + b.model, "ok");
     if (familyOf() !== loraFam) loadLoras();
   };
+  F("agBModel").onchange = async (e) => {
+    try {
+      const r = await api("/api/agent/base/model", { json: { id: S.id, model: e.target.value } });
+      S.settings = r.settings;
+    } catch (err) { toast("換模型失敗：" + err.message, "err"); }
+    paintSettings();
+    if (familyOf() !== loraFam) loadLoras();
+  };
+  F("agBSteps").onchange = (e) => setBase({ steps: Math.max(1, Math.round(+e.target.value || 1)) });
+  F("agBCfg").onchange = (e) => setBase({ cfg: +e.target.value || 1 });
+  F("agBSampler").onchange = (e) => setBase({ sampler: e.target.value });
+  F("agBSched").onchange = (e) => setBase({ scheduler: e.target.value });
+  F("agBNeg").onchange = (e) => setBase({ negative: e.target.value });
   F("agCloudGpu").onchange = () => paintGpuNote();
   F("agCloudGpuRe").onclick = () => refreshGpus(loadCloud);
   // RunPod 要先看價格按確認才開機；自己的主機、網址不是生圖站在收錢，直接連

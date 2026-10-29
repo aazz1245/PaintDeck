@@ -444,7 +444,7 @@ async function lbAction(e) {
     return dropFromLb(rec);
   }
   const { imageAction } = await import("./gen.js");
-  if (["reuse", "img2img", "inpaint", "upscale", "multiref", "sheet", "charsheet", "frames"].includes(act)) closeModal("#lightbox");
+  if (["reuse", "img2img", "inpaint", "upscale", "multiref", "strip", "sheet", "charsheet", "frames"].includes(act)) closeModal("#lightbox");
   if (act === "video" || act === "frames") F("lbVid").pause();
   const r = await imageAction(act, rec, b);
   if (r === "deleted") dropFromLb(rec);

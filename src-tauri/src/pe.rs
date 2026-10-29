@@ -143,6 +143,37 @@ pub fn payload(
     })
 }
 
+/// 助手不准用的軟詞（模型拿來代替性行為的委婉字，2026-10-26／28 擂台一直出現）。llama-server 的 logit_bias 字串版
+/// 會用模型自己的分詞器換成 token：只放 Qwen 分詞器裡是單一 token 的寫法（前面帶空白）。
+/// 會拆成好幾段的（" Intimate"＝" Int"＋"imate"、" tasteful"）不放，不然會連帶擋掉別的字；剩下的交給 poses 的 SOFT_TAGS 事後拿掉
+pub const SOFT_WORDS: [&str; 4] = [" intimate", " sensual", " suggestive", " implied"];
+
+pub fn ban_soft_words(mut body: Value) -> Value {
+    body["logit_bias"] = json!(SOFT_WORDS.iter().map(|w| json!([w, false])).collect::<Vec<_>>());
+    body
+}
+
+/// AI 改寫開「思考」時的思考預算。沒給的話，官方 max_tokens 16256 幾乎等於整個 -c 16384，模型可以一路想到上下文用完
+/// （2026-10-28 有人回報「用 PE 直接雷霆大思考幾萬字」）。同一天實測 9B 三題（雨中撐傘、乳交、後入）：不限 4333～7702 token，
+/// 2048／1024／512 每次都想到上限才停，畫出來跟不限、不思考品質一樣（錯都出在 tag，不在想多久）；
+/// 在系統提示詞或使用者訊息叫它「想短一點」9B、35B 都不理。取 1024（約 20 秒）
+pub const PE_THINK_BUDGET: i64 = 1024;
+
+/// 模型鬼打牆：最後 LOOP_TAIL 個位元組在前面已經整段出現過兩次以上（2026-10-28 用擂台 356 份真實輸出校準：
+/// 只抓到 9B 把整份提示詞重抄到 max_tokens、gemma 一直重貼同一個 JSON 這兩份，正常的長輸出沒有誤判）
+const LOOP_TAIL: usize = 200;
+
+pub fn looping(text: &str) -> bool {
+    if text.len() < LOOP_TAIL * 3 {
+        return false;
+    }
+    let mut cut = text.len() - LOOP_TAIL;
+    while !text.is_char_boundary(cut) {
+        cut += 1;
+    }
+    text[..cut].matches(&text[cut..]).nth(1).is_some()
+}
+
 /// 思考預算：llama-server 每次請求的 thinking_budget_tokens（2026-10-27 用 build 11505 實測：64 會截斷、0＝不想、
 /// 不給就想到 max_tokens 用完都可能沒答案）。budget：None＝不想（body 本來就關掉 enable_thinking）、-1＝不限
 pub fn with_think_budget(mut body: Value, budget: Option<i64>) -> Value {
@@ -647,7 +678,7 @@ pub fn json_obj(text: &str) -> Option<Map<String, Value>> {
 }
 
 /// Anima 提示詞的「tag 段」到第一個英文句子為止（tag 全小寫、字數少）
-fn anima_split(p: &str) -> (Vec<String>, String) {
+pub(crate) fn anima_split(p: &str) -> (Vec<String>, String) {
     // 括號裡的逗號不切（"heterochromia (if applicable, or …)" 要當成同一個 tag）
     let mut parts: Vec<&str> = Vec::new();
     let (mut depth, mut start) = (0i32, 0);
@@ -815,6 +846,35 @@ pub fn result_note(res: &Parsed) -> &'static str {
         "輸出的 JSON 有小問題，已自動修補。"
     } else {
         ""
+    }
+}
+
+/// 改寫類型＋生成頁的模型家族 → 要用哪份寫法的外掛 skill（agent::GUIDES 的名稱）；文生圖版不知道家族就不接
+pub fn skill_guide(task: &str, family: &str) -> Option<&'static str> {
+    match (task, family) {
+        ("anima", _) => Some("anima"),
+        ("t2i", "moss") => Some("moss"),
+        ("t2i", "qwen21") => Some("qwen"),
+        ("i2i", _) => Some("qwen_edit"),
+        _ => None,
+    }
+}
+
+/// 在一則訊息後面接一段字（內容是字串，或附圖時的 [圖…, {"type":"text"}] 陣列）
+fn append_text(msg: &mut Value, t: &str) {
+    match &mut msg["content"] {
+        Value::String(u) => {
+            u.push_str("\n\n");
+            u.push_str(t);
+        }
+        Value::Array(parts) => match parts.iter().rposition(|p| p["type"] == "text") {
+            Some(i) => {
+                let old = parts[i]["text"].as_str().unwrap_or("").to_string();
+                parts[i]["text"] = json!(format!("{old}\n\n{t}"));
+            }
+            None => parts.push(json!({"type": "text", "text": t})),
+        },
+        _ => {}
     }
 }
 
@@ -2318,6 +2378,8 @@ impl Service {
         let mut stream = r.bytes_stream();
         let mut buf: Vec<u8> = vec![];
         let mut finished = false;
+        // 上次檢查鬼打牆時的長度：每多 256 個位元組看一次
+        let mut seen = (0, 0);
         while !finished {
             let chunk = tokio::select! {
                 _ = em.cancel.cancelled() => return Err(Fail::Cancelled),
@@ -2362,6 +2424,15 @@ impl Service {
                 }
             }
             finished |= last;
+            if !finished && (content.len() >= seen.0 + 256 || reasoning.len() >= seen.1 + 256) {
+                seen = (content.len(), reasoning.len());
+                if looping(&content) || looping(&reasoning) {
+                    // 斷線 llama-server 就停；寫到一半的交給呼叫的人照常解析（第一份通常是完整的，壞了就照原本的規則重試）
+                    eprintln!("模型一直重複同一段，提早停下（內容 {} 字、思考 {} 字）", content.chars().count(), reasoning.chars().count());
+                    em.emit("status", json!({"phase": "loop", "msg": "模型開始一直重複同一段，先停下來"})).await?;
+                    break;
+                }
+            }
         }
         crate::diagnostics::snapshot("llm_response", &json!({"content":content,"timings":timings,"visible_reasoning_chars":reasoning.chars().count()}));
         Ok((content, reasoning, timings))
@@ -2542,13 +2613,16 @@ impl Service {
                         core,
                         &tune_for(
                             &model_name,
-                            payload(
-                                &msgs,
-                                temperature,
-                                seed + attempt,
-                                think,
-                                Some(official_max_tokens(kind)),
-                                true,
+                            with_think_budget(
+                                payload(
+                                    &msgs,
+                                    temperature,
+                                    seed + attempt,
+                                    think,
+                                    Some(official_max_tokens(kind)),
+                                    true,
+                                ),
+                                think.then_some(PE_THINK_BUDGET),
                             ),
                         ),
                         em,
@@ -2713,6 +2787,21 @@ impl Service {
         if let Some(t) = core.override_text(&task) {
             parts.push(("system", json!(sha256_hex(t.as_bytes()))));
         }
+        // Anima 版、文生圖版也照助手的做法查體位庫（網頁選「自動」永遠不會走「成人（體位）」；2026-10-28 實測 9B 不認得乳交，
+        // 五種思考設定都寫成 nipple clamp、chest milking，畫出夾鍊子、兩根）：附 Term 那行，寫完照體位庫補正
+        let pose_note = matches!(task.as_str(), "anima" | "t2i").then(|| self.poses.term_note(&idea)).flatten();
+        if let Some(n) = &pose_note {
+            parts.push(("pose", n["id"].clone()));
+        }
+        // 外掛寫法（2026-10-29）：這個家族的寫法接了使用者的 skill，照想法挑段接在使用者訊息後面（快取鍵帶挑到的內容）
+        let skill_note = skill_guide(&task, &s("family"))
+            .zip(self.settings_path.parent())
+            .and_then(|(g, data)| crate::skills::for_guide(data, &self.settings_path, g))
+            .map(|sk| sk.pick_block(&format!("{idea} {instruction}"), crate::skills::PICK_WRITE))
+            .filter(|t| !t.is_empty());
+        if let Some(t) = &skill_note {
+            parts.push(("skill", json!(sha256_hex(t.as_bytes()))));
+        }
         let key = core.cache_key(&parts, Some(&images));
         let use_cache = truthy(Some(&body.get("cache").cloned().unwrap_or(json!(true))));
         let t0 = Instant::now();
@@ -2733,8 +2822,15 @@ impl Service {
                 hit
             }
             None => {
-                let msgs =
+                let mut msgs =
                     core.build_messages(&task, &idea, &images, &prev, &instruction, noct, &ratio)?;
+                if let (Some(t), Some(m)) = (&skill_note, msgs.get_mut(1)) {
+                    append_text(m, t);
+                }
+                if let (Some(n), Some(Value::String(u))) = (&pose_note, msgs.get_mut(1).map(|m| &mut m["content"])) {
+                    u.push_str("\n\n");
+                    u.push_str(&crate::poses::Poses::term_line(n));
+                }
                 let (load, (raw, reasoning, timings, parsed)) = {
                     let _g = self.acquire(em).await?;
                     let load = self.ensure(core, &kind, ngl, em).await?;
@@ -2793,12 +2889,14 @@ impl Service {
                         );
                     }
                     Some(p) => {
+                        let pose = pose_note.as_ref().and_then(|n| n["id"].as_str()).and_then(|id| self.poses.get(id));
+                        let (posed, pose_msg) = crate::agent::polish(pose, task == "anima", &p.prompt, &idea);
                         let prompt = if noct {
-                            fix_noct_anime(&p.prompt)
+                            fix_noct_anime(&posed)
                         } else if task == "anima" {
-                            fix_anima_tags(&p.prompt)
+                            fix_anima_tags(&posed)
                         } else {
-                            p.prompt.clone()
+                            posed
                         };
                         r.insert("prompt".into(), json!(prompt));
                         let ratio = if task == "caption_qwen" {
@@ -2809,7 +2907,9 @@ impl Service {
                         r.insert("wh_ratio".into(), json!(ratio));
                         r.insert("ratio_follow".into(), json!(p.ratio_follow));
                         r.insert("fallback".into(), json!(false));
-                        r.insert("note".into(), json!(result_note(&p)));
+                        // 體位庫補正寫在說明裡，使用者看得到改了什麼
+                        let note = [result_note(&p).to_string(), pose_msg.unwrap_or_default()].into_iter().filter(|s| !s.is_empty()).collect::<Vec<_>>().join("；");
+                        r.insert("note".into(), json!(note));
                         let keep: Map<String, Value> = [
                             "prompt",
                             "wh_ratio",
@@ -3276,7 +3376,7 @@ impl Service {
         self.hub_chat(&core, rid, "agent_llm", local, |em| async move {
             let core = c;
             let seed = (now() * 1000.0) as i64;
-            let body = |model: &str| tune_for(model, with_think_budget(payload(messages, temperature, seed, think.is_some(), Some(max_tokens), true), think));
+            let body = |model: &str| tune_for(model, ban_soft_words(with_think_budget(payload(messages, temperature, seed, think.is_some(), Some(max_tokens), true), think)));
             let busy = if think.is_some() { "思考中…" } else { "撰寫中…" };
             let out = match remote {
                 Some(r) => {
@@ -3290,6 +3390,7 @@ impl Service {
                             m.remove("timings_per_token");
                             m.remove("repeat_penalty");
                             m.remove("thinking_budget_tokens");
+                            m.remove("logit_bias"); // OpenAI 那種要 token id，字串版只有 llama.cpp 認得
                         }
                     }
                     self.chat_at(&r.base, r.key.as_deref(), &b, &em, false).await
@@ -3618,11 +3719,13 @@ mod tests {
         std::fs::write(llm.join("Huihui-Qwen3.5-9B-abliterated.mmproj-f16.gguf"), b"").unwrap();
         assert!(c.model_files("adult_vision@9b", None).unwrap().1.is_some());
         assert!(c.mmproj_download(Some("9b")).unwrap().is_none());
-        // 35B 是自己下載的：清單裡沒有來源，只教怎麼找，不給按鈕
+        // 2026-10-29 起 35B 是安裝精靈的選配包：缺看圖檔時也給下載按鈕，存到 35B 主檔旁邊
         std::fs::write(llm.join("Qwen3.6-35B-A3B-heretic.gguf"), b"").unwrap();
         let e = c.model_files("adult_vision@35b", None).unwrap_err().0;
-        assert!(e.contains("qwen3.6") && !e.contains(MMPROJ_BUTTON), "{e}");
-        assert!(c.mmproj_download(Some("35b")).is_err());
+        assert!(e.contains(MMPROJ_BUTTON) && e.contains("mmproj-Qwen3.6-35B"), "{e}");
+        let (dest, url, _, sha) = c.mmproj_download(Some("35b")).unwrap().unwrap();
+        assert!(dest.ends_with("mmproj-Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved-APEX-F16.gguf"), "{dest:?}");
+        assert!(url.contains("SC117/") && sha.is_some(), "{url}");
         let _ = std::fs::remove_dir_all(&base);
     }
 
@@ -3711,6 +3814,84 @@ mod tests {
         assert!(unlimited.get("thinking_budget_tokens").is_none());
         let off = with_think_budget(payload(&json!([]), 0.7, 1, false, Some(2000), true), None);
         assert!(off.get("thinking_budget_tokens").is_none() && off["chat_template_kwargs"]["enable_thinking"] == json!(false));
+    }
+
+    #[test]
+    fn skill_rules_go_after_the_users_words() {
+        assert_eq!((skill_guide("t2i", "moss"), skill_guide("t2i", "qwen21"), skill_guide("t2i", ""), skill_guide("anima", "")), (Some("moss"), Some("qwen"), None, Some("anima")));
+        let mut m = json!({"role": "user", "content": "海邊"});
+        append_text(&mut m, "RULES");
+        assert_eq!(m["content"], "海邊\n\nRULES");
+        let mut m = json!({"role": "user", "content": [{"type": "image_url"}, {"type": "text", "text": "改背景"}]});
+        append_text(&mut m, "RULES");
+        assert_eq!(m["content"][1]["text"], "改背景\n\nRULES");
+        let mut m = json!({"role": "user", "content": [{"type": "image_url"}]});
+        append_text(&mut m, "RULES");
+        assert_eq!(m["content"][1], json!({"type": "text", "text": "RULES"}));
+    }
+
+    #[test]
+    fn looping_catches_a_model_copying_itself() {
+        // 2026-10-28 擂台 9B 把整份提示詞一直重抄（節錄同樣的句型）
+        let block = "1girl, 1boy, hetero, long hair, red hair, large breasts, kneeling, on knees, upright torso, hands on breasts, holding breasts, thighs, bed, center, left pillow, upper right, downlooking, sunlight, warm colors, ";
+        let start = "{\"action\":\"generate\",\"prompt\":\"masterpiece, best quality, ";
+        assert!(!looping(&format!("{start}{block}")));
+        assert!(!looping(&format!("{start}{block}{block}")), "重複一次還不算");
+        assert!(looping(&format!("{start}{block}{block}{block}")));
+        // 短句一直循環、中文（多位元組）也抓得到，切點不會落在字中間
+        assert!(looping(&"好的，我再想一下。".repeat(40)));
+        assert!(looping(&format!("{}{}", "思考：", "等等，讓我重新確認構圖。".repeat(30))));
+        // 正常的長提示詞：用詞會重複，但不會整段一樣
+        let normal = (1..=40).map(|i| format!("detail number {i} of the scene, with its own lighting and color note")).collect::<Vec<_>>().join(", ");
+        assert!(!looping(&normal));
+        assert!(!looping(""));
+    }
+
+    /// 假的 llama-server 一直串流同一段：生圖站要自己斷線，不能等它寫到 max_tokens
+    #[tokio::test]
+    async fn chat_hangs_up_on_a_looping_model() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let base = format!("http://{}", listener.local_addr().unwrap());
+        let server = tokio::spawn(async move {
+            let (mut s, _) = listener.accept().await.unwrap();
+            let mut req = vec![0u8; 65536];
+            let _ = s.read(&mut req).await;
+            s.write_all(b"HTTP/1.1 200 OK\r\ncontent-type: text/event-stream\r\nconnection: close\r\n\r\n").await.unwrap();
+            let line = format!("data: {}\n\n", json!({"choices": [{"delta": {"content": "1girl, 1boy, kneeling, paizuri, red hair, large breasts, bed, sunlight, "}}]}));
+            let mut sent = 0;
+            for _ in 0..3000 {
+                if s.write_all(line.as_bytes()).await.is_err() {
+                    break;
+                }
+                sent += 1;
+                tokio::time::sleep(Duration::from_millis(2)).await;
+            }
+            sent
+        });
+        let dir = std::env::temp_dir().join(format!("anima_pe_loop_{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let hub = crate::hub::Hub::new();
+        let db = Arc::new(crate::db::Db::open(&dir.join("t.db")).unwrap());
+        let svc = Service::new(&dir, &dir, crate::comfy::Comfy::new("http://127.0.0.1:1", db, hub.clone()), &dir.join("settings.json"), hub, &dir);
+        let (tx, mut rx) = mpsc::channel(8192);
+        tokio::spawn(async move { while rx.recv().await.is_some() {} });
+        let em = Emitter { tx, cancel: CancellationToken::new() };
+        let Ok((content, _, _)) = svc.chat_at(&base, None, &json!({}), &em, false).await else { panic!("chat_at 失敗") };
+        assert!(looping(&content), "停下來的時候已經在重複");
+        assert!(content.len() < 2000, "最多多看一輪就要停：收了 {} 位元組", content.len());
+        let sent = server.await.unwrap();
+        assert!(sent < 3000, "斷線後假伺服器就寫不進去：寫了 {sent} 段");
+    }
+
+    #[test]
+    fn soft_words_are_banned_as_single_tokens() {
+        let b = ban_soft_words(payload(&json!([]), 0.7, 1, false, Some(2000), true));
+        let l = b["logit_bias"].as_array().unwrap();
+        assert!(l.contains(&json!([" intimate", false])));
+        // 每個都要前面帶空白（Qwen 分詞器裡帶空白的才是單一 token），也不能擋到 Anima 的評級 tag sensitive
+        assert!(l.iter().all(|x| x[0].as_str().unwrap().starts_with(' ') && x[1] == json!(false)));
+        assert!(!l.iter().any(|x| x[0].as_str().unwrap().contains("sensitive")));
     }
 
     #[test]

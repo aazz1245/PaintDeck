@@ -52,7 +52,7 @@ pub const TOOLS: &[Tool] = &[
     Tool { name: "comic", args: r#"{"story":"這一頁的劇情（中文）","title":"標題"}"#, desc: "Make a whole comic page: creates a comic project, splits the story into panels with dialogue, and draws the page with MOSS.", zh: "畫漫畫" },
     Tool { name: "assets", args: r#"{"kind":"char"}"#, desc: "List saved assets (kind: char, scene, outfit, prop, frame, fx, sound) with ids, names and looks.", zh: "看資產庫" },
     Tool { name: "trash", args: r#"{"ids":[123]}"#, desc: "Move gallery images to the recycle bin. The user has to approve first.", zh: "移到回收區" },
-    Tool { name: "guide", args: r#"{"name":"qwen_edit"}"#, desc: "Read the full prompt-writing guide for a model and task: anima, qwen, qwen_edit, qwen_multiref, moss, other, ltx_video, h3_video. Read the matching guide before you write an edit instruction, a video prompt, a prompt with refs, or a prompt for a model you just switched to.", zh: "讀寫法" },
+    Tool { name: "guide", args: r#"{"name":"qwen_edit"}"#, desc: "Read the full prompt-writing guide for a model and task: anima, qwen, qwen_edit, qwen_multiref, moss, other, ltx_video, h3_video. Read the matching guide before you write an edit instruction, a video prompt, a prompt with refs, or a prompt for a model you just switched to. When a guide lists the parts of an extra skill, read one part with \"part\":N.", zh: "讀寫法" },
     Tool { name: "docs", args: r#"{"section":"漫畫"}"#, desc: "Read the app manual (Chinese). Without section you get the table of contents. Read the matching section before you use api.", zh: "讀說明書" },
     Tool { name: "api", args: r#"{"method":"GET","path":"/api/comic/projects","query":{},"body":{}}"#, desc: "Call any HTTP API of the app (director, H3 video, long films, prompt library, LoRAs, Civitai, tagger, settings…); paths and fields are in docs. Spending money, deleting or changing settings waits for the user's approval; permanent deletion and factory reset are not possible.", zh: "直接呼叫 API" },
     Tool { name: "open_page", args: r#"{"page":"gallery"}"#, desc: "Show a page in the main window: gen, gallery, assets, loras, civitai, director, comic, settings.", zh: "切換頁面" },
@@ -107,6 +107,7 @@ static DANGER: LazyLock<Vec<(Regex, &'static str)>> = LazyLock::new(|| {
         (r"^/api/gallery/prune_missing$", "把檔案不見的紀錄從圖庫拿掉"),
         (r"/delete$", "刪除"),
         (r"^/api/jobs/clear$", "清除任務紀錄"),
+        (r"^/api/skills/(install|bind|remove)$", "安裝、綁定或移除外掛寫法"),
         (r"^/api/clear_queue$", "清空等待中的任務"),
         (r"^/api/settings(/import)?$", "改生圖站設定"),
         (r"^/api/feature_flows$", "改內建功能要用的流程"),
@@ -202,6 +203,13 @@ pub fn check_call(tool: &str, args: &Value) -> Result<(Value, Level, String), St
                 return Err(format!("guide needs \"name\": one of {}.", crate::agent::GUIDES.iter().map(|g| g.0).collect::<Vec<_>>().join(", ")));
             };
             out.insert("name".into(), json!(g.0));
+            // 外掛寫法的第幾段（從 1 起）
+            if let Some(p) = int_of(a.get("part").or(a.get("section"))) {
+                if p < 1 {
+                    return Err("guide \"part\" starts at 1.".into());
+                }
+                out.insert("part".into(), json!(p));
+            }
         }
         "models" | "assets" => {
             if t.name == "assets" {
@@ -439,6 +447,8 @@ mod tests {
         assert_eq!(lv("POST", "/api/comic/project/delete", json!({})), Level::Confirm);
         assert_eq!(lv("DELETE", "/api/lib/3", json!({})), Level::Confirm);
         assert_eq!(lv("POST", "/api/comic/run", json!({})), Level::Normal);
+        assert_eq!(lv("POST", "/api/skills/install", json!({})), Level::Confirm);
+        assert_eq!(lv("GET", "/api/skills", json!({})), Level::Normal);
     }
 
     #[test]
@@ -462,6 +472,11 @@ mod tests {
         assert!(check_call("open_page", &json!({"page": "../etc"})).is_err());
         // 9B 會寫成 Upscale、remove-bg
         assert!(check_call("Upscale", &json!({"id": 1})).is_ok() && check_call("remove-bg", &json!({"id": 1})).is_ok());
+        // 外掛寫法按段讀
+        let (a, _, _) = check_call("guide", &json!({"name": "MOSS", "part": "7"})).unwrap();
+        assert_eq!((a["name"].clone(), a["part"].clone()), (json!("moss"), json!(7)));
+        assert!(check_call("guide", &json!({"name": "moss", "part": 0})).is_err());
+        assert!(check_call("guide", &json!({"name": "moss"})).unwrap().0.get("part").is_none());
     }
 
     #[test]
