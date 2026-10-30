@@ -23,7 +23,7 @@ export const ROLES = [
   ["pose", "姿勢"], ["outfit", "服裝"], ["other", "其他"],
 ];
 const LAYOUT = [["top", "上方"], ["bottom", "下方"], ["left", "左邊"], ["right", "右邊"], ["fg", "前景"], ["mid", "中景"], ["bg", "遠景"], ["light", "光線"]];
-const TEXT_KINDS = new Set(["frame", "outfit", "prop", "fx", "sound", "少女", "萝莉", "假小子", "肉感", "厚涂", "强烈质感设计", "后缀", "anima"]);
+const TEXT_KINDS = new Set(["frame", "outfit", "prop", "fx", "sound", "snippet", "set", "少女", "萝莉", "假小子", "肉感", "厚涂", "强烈质感设计", "后缀", "anima"]);
 
 let items = [];        // /api/lib 的全部（含整套設定、片段）
 let kind = "all";      // 目前的分類晶片
@@ -99,7 +99,8 @@ function paint() {
 // ---------------------------------------------------------------- 右邊：編輯區
 function open(it) {
   if (busy) return;
-  if (!MEDIA.has(it.kind)) return library.edit(it);  // 整套設定、片段：沿用提示詞庫的編輯窗
+  const isCustomFolder = !VALID_BACKEND_KINDS.has(it.kind) || (!VALID_BACKEND_KINDS.has(it.folder) && it.folder);
+  if (!MEDIA.has(it.kind) && !isCustomFolder) return library.edit(it);  // 整套設定、片段：沿用提示詞庫的編輯窗
   cur = structuredClone(it);
   fill();
 }
@@ -107,8 +108,8 @@ function open(it) {
 function newOne() {
   if (busy) return;
   if (kind === "set" || kind === "snippet") return library.saveDialog({ kind });
-  const isCustomFolder = !VALID_MEDIA_KINDS.has(kind) && kind !== "all";
-  const defaultKind = VALID_MEDIA_KINDS.has(kind) ? kind : "char";
+  const isCustomFolder = !VALID_BACKEND_KINDS.has(kind) && kind !== "all";
+  const defaultKind = KINDS.some(([k]) => k === kind) ? kind : "char";
   const defaultFolder = isCustomFolder ? kind : "";
   cur = { id: null, kind: defaultKind, name: "", folder: defaultFolder, tags: [], fav: 0, note: "", data: {} };
   fill();
@@ -122,8 +123,17 @@ function fill() {
   const d = cur.data || {};
   F("asName").value = cur.name || "";
   const k = cur.kind;
-  F("asKind").value = VALID_MEDIA_KINDS.has(k) ? k : "char";
-  F("asFolder").value = cur.folder || (!VALID_MEDIA_KINDS.has(k) && k !== "all" ? k : "");
+  const customKinds = new Set(KINDS.map(([key]) => key).filter((key) => !VALID_BACKEND_KINDS.has(key)));
+  if (customKinds.has(cur.folder) && (kind === cur.folder || !VALID_BACKEND_KINDS.has(k))) {
+    F("asKind").value = cur.folder;
+  } else if (KINDS.some(([key]) => key === k)) {
+    F("asKind").value = k;
+  } else if (customKinds.has(cur.folder)) {
+    F("asKind").value = cur.folder;
+  } else {
+    F("asKind").value = "char";
+  }
+  F("asFolder").value = cur.folder || (!VALID_BACKEND_KINDS.has(k) && k !== "all" ? k : "");
   F("asLabels").value = (cur.tags || []).join(", ");
   F("asFav").checked = !!cur.fav;
   F("asLookZh").value = d.look_zh || "";
@@ -133,7 +143,7 @@ function fill() {
   F("asLang").value = d.lang || "";
   F("asText").value = d.text || "";
   F("asNote").value = cur.note || "";
-  for (const [k] of LAYOUT) F("asL_" + k).value = d.layout?.[k] || "";
+  for (const [key] of LAYOUT) F("asL_" + key).value = d.layout?.[key] || "";
   F("asUnver").hidden = true;
   F("asDel").hidden = !cur.id;
   paintImgs();
@@ -234,7 +244,12 @@ function collect() {
 
   if (!VALID_BACKEND_KINDS.has(k)) {
     if (!folder) folder = k;
-    k = (d.text && !d.look_zh && !d.look_en && !d.tags_anima?.length && !d.images?.length) ? "snippet" : "char";
+    const hasCharFeatures = d.look_zh || d.look_en || (d.tags_anima && d.tags_anima.length) || (d.images && d.images.length);
+    k = (d.text && !hasCharFeatures) ? "snippet" : "char";
+  }
+
+  if (k === "snippet" && !d.text) {
+    d.text = d.tags_anima?.join(", ") || F("asName").value.trim() || "-";
   }
 
   return { id: cur.id || undefined, kind: k, name: F("asName").value.trim(), folder,
@@ -337,10 +352,20 @@ async function del() {
 }
 
 export function init() {
-  F("asKind").replaceChildren(...KINDS.filter(([k]) => VALID_MEDIA_KINDS.has(k)).map(([k, name]) => el("option", { value: k }, name)));
+  F("asKind").replaceChildren(...KINDS.map(([k, name]) => el("option", { value: k }, name)));
   F("asRole").replaceChildren(...ROLES.map(([r, name]) => el("option", { value: r }, "新圖片用途：", name)));
   F("asLayout").replaceChildren(...LAYOUT.map(([k, name]) => el("label", {}, el("span", { class: "sub" }, name), el("input", { type: "text", id: "asL_" + k }))));
-  F("asKind").onchange = byKind;
+  F("asKind").onchange = () => {
+    const k = F("asKind").value;
+    if (!VALID_BACKEND_KINDS.has(k)) {
+      const curFolder = F("asFolder").value.trim();
+      const customKinds = new Set(KINDS.map(([key]) => key).filter((key) => !VALID_BACKEND_KINDS.has(key)));
+      if (!curFolder || customKinds.has(curFolder)) {
+        F("asFolder").value = k;
+      }
+    }
+    byKind();
+  };
   F("asQ").oninput = paint;
   F("asNew").onclick = newOne;
   F("asSave").onclick = () => save();
@@ -370,7 +395,7 @@ export function init() {
   };
   F("asAudioUp").onclick = pickAudio;
   // 「存成資產」小視窗
-  F("asSaveKind").replaceChildren(...KINDS.filter(([k]) => VALID_MEDIA_KINDS.has(k) && k !== "shot").map(([k, name]) => el("option", { value: k }, name)));
+  F("asSaveKind").replaceChildren(...KINDS.filter(([k]) => k !== "shot").map(([k, name]) => el("option", { value: k }, name)));
   F("asSaveRole").replaceChildren(...ROLES.map(([r, name]) => el("option", { value: r }, name)));
   $$("input[name=asSaveTo]").forEach((r) => (r.onchange = syncSaveTo));
   F("asAudioDel").onclick = () => { const a = cur?.data?.audio?.file; if (a) removeFile(a); };
@@ -398,7 +423,10 @@ export async function saveFromGallery(rec) {
     if (!toOld && !name) { F("asSaveName").focus(); return toast("新資產要有名字", "err"); }
     F("asSaveGo").disabled = true;
     try {
-      const id = toOld ? +F("asSaveTarget").value : (await api("/api/lib", { json: { kind: F("asSaveKind").value, name, data: {} } })).id;
+      const rawKind = F("asSaveKind").value;
+      const kind = VALID_BACKEND_KINDS.has(rawKind) ? rawKind : "char";
+      const folder = VALID_BACKEND_KINDS.has(rawKind) ? "" : rawKind;
+      const id = toOld ? +F("asSaveTarget").value : (await api("/api/lib", { json: { kind, folder, name, data: {} } })).id;
       const r = await api(`/api/assets/${id}/file`, { json: { gallery_id: rec.id, role } });
       closeModal("#asSaveModal");
       await load();
