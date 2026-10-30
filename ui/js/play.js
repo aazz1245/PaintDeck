@@ -83,14 +83,14 @@ export async function vary(rec) {
 
 // ---------------------------------------------------------------- 修臉／修手（SAM3 找位置 → 每處裁下來放大重畫 → 貼回）
 const WHAT = { face: "臉", hand: "手", both: "臉和手" };
-export async function detail(rec, what = "face", quiet = false) {
+export async function detail(rec, what = "face", quiet = false, customDenoise = null) {
   try {
     const p = await fullParams(rec);
     if (["rembg", "xy", "video"].includes(p.mode)) return toast("這張圖不能修細節", "err");
     const r = await toInput(rec);
     p.init_image = r.name;
     if (!quiet) toast(`正在找${WHAT[what]}…（第一次要載入偵測模型，多等十幾秒）`);
-    const denoise = +($("#detailDenoise")?.value || 0.4);
+    const denoise = customDenoise != null ? customDenoise : +($("#detailDenoise")?.value || 0.4);
     const res = await api("/api/detail", { json: { params: p, what, denoise } });
     track(res.jobs);
     toast(`找到 ${res.found} 處${WHAT[what]}，已排進佇列重畫（重繪 ${denoise}）`, "ok");
@@ -422,7 +422,14 @@ function progress() {
 /** main.js 收到新圖時呼叫（要在 gen.onImage 之前） */
 export function onImage(job, rec) {
   if (run?.jobs.has(job)) { run.cells.set(run.jobs.get(job), rec); progress(); check(); }
-  else if (gen.S.pending.has(job) && ["txt2img", "img2img"].includes(rec?.mode) && $("#autoDetail")?.checked && !rec?.params?.xy) detail(rec, "face", true);
+  else if (gen.S.pending.has(job) && !rec?.params?.xy) {
+    const pInfo = gen.S.pending.get(job);
+    const shouldDetail = pInfo?.autoDetail !== undefined ? pInfo.autoDetail : $("#autoDetail")?.checked;
+    if (shouldDetail && !["rembg", "xy", "video", "detail"].includes(rec?.mode)) {
+      const denoise = pInfo?.detailDenoise != null ? pInfo.detailDenoise : +($("#detailDenoise")?.value || 0.4);
+      detail(rec, "face", true, denoise);
+    }
+  }
 }
 /** main.js 收到任務結束時呼叫（要在 gen.onFinish 之前）：失敗、取消的格子也算完成 */
 export function onFinish(m) {

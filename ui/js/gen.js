@@ -710,9 +710,60 @@ function familyUI() {
 }
 
 // ---------------------------------------------------------------- 模式
+let modeForms = null;
+
+export function getModeForms() {
+  if (!modeForms) modeForms = store.get("modeForms", {}) || {};
+  return modeForms;
+}
+
+export function saveModeForm(mode) {
+  if (!mode) return;
+  const mf = getModeForms();
+  mf[mode] = collectForm();
+  store.set("modeForms", mf);
+}
+
+export function loadModeForm(mode) {
+  if (!mode) return;
+  const mf = getModeForms();
+  if (mf[mode]) {
+    applyModeForm(mf[mode]);
+  } else {
+    initModeDefaults(mode);
+    mf[mode] = collectForm();
+    store.set("modeForms", mf);
+  }
+}
+
+export function initModeDefaults(mode) {
+  if (mode === "inpaint") {
+    if (fam() === "qwen21") F("denoise").value = 0.9;
+    else if (fam() === "anima" && F("ipMethod")?.value === "lllite") F("denoise").value = 1;
+    else F("denoise").value = 0.75;
+    if (F("denoiseOut")) F("denoiseOut").textContent = F("denoise").value;
+  } else if (mode === "img2img") {
+    if (fam() === "qwen21") F("denoise").value = 1;
+    else if (!(num("denoise") < 1)) F("denoise").value = 0.6;
+    if (F("denoiseOut")) F("denoiseOut").textContent = F("denoise").value;
+  } else if (mode === "upscale") {
+    if (F("count")) F("count").value = "1";
+    if (F("upScale")) F("upScale").value = "2";
+    if (F("upRefine")) F("upRefine").checked = true;
+    if (F("upDenoise")) F("upDenoise").value = "0.3";
+    if (F("upDenoiseOut")) F("upDenoiseOut").textContent = "0.3";
+    if (F("upRefineRow")) F("upRefineRow").hidden = false;
+  }
+}
+
 export function setMode(mode) {
+  const prevMode = S.mode;
+  if (prevMode && prevMode !== mode) {
+    saveModeForm(prevMode);
+  }
   S.mode = mode;
   $$("#modeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.mode === mode));
+  loadModeForm(mode);
   const needInit = mode !== "txt2img" && mode !== "multiref" && mode !== "booru";
   F("refBox").hidden = mode !== "multiref";
   F("initBox").hidden = !needInit;
@@ -735,11 +786,11 @@ export function setMode(mode) {
   F("promptBox").hidden = mode === "strip" || mode === "sheet";  // 一鍵脫衣、四視圖不用提示詞框（指令寫在各自的區塊）
   F("hiresBox").hidden = !(mode === "txt2img" || mode === "img2img");  // 多圖參考先不開高解析修復：參考圖已經很吃顯存
   F("controlBox").hidden = !(mode === "txt2img" || mode === "img2img");
-  if (mode === "img2img" && app.state) {
+  if (false && mode === "img2img" && app.state) {
     if (fam() === "qwen21") F("denoise").value = 1;
     else if (!(num("denoise") < 1)) F("denoise").value = 0.6;
   }
-  if (mode === "inpaint") F("denoise").value = fam() === "qwen21" ? 0.9 : fam() === "anima" && F("ipMethod").value === "lllite" ? 1 : 0.75;
+  // 模式專屬重繪幅度已由 loadModeForm 或 initModeDefaults 設定
   F("denoiseOut").textContent = F("denoise").value;
   familyUI();
   syncSize();
@@ -992,7 +1043,7 @@ async function sweep(l) {
   try {
     for (const v of vals) {
       const r = await api("/api/generate", { json: { params: { ...p, prompt: fullPrompt(p.prompt), loras: v ? [...others, { name: l.name, strength: v }] : others }, count: 1 } });
-      for (const j of r.jobs) S.pending.set(j.job, { seed: j.seed });
+      for (const j of r.jobs) S.pending.set(j.job, { seed: j.seed, autoDetail: F("autoDetail")?.checked, detailDenoise: +F("detailDenoise")?.value, mode: S.mode });
     }
     S.lastSeed = p.seed;
     renderStrip();
@@ -1389,15 +1440,17 @@ const FORM_IDS = ["promptPrefix", "prompt", "promptSuffix", "negative", "width",
 const pendingSel = {};
 
 function collectForm() {
-  const f = { mode: S.mode, loras: S.loras, init: S.init, ctrl: S.ctrl, refs: refs.get(), sheetRef: S.sheetRef, layout: lay?.get() || [], locked: S.locked };
-  for (const id of FORM_IDS) { const e = F(id); f[id] = e.type === "checkbox" ? e.checked : (id in pendingSel ? pendingSel[id] : e.value); }
+  const f = { mode: S.mode, loras: S.loras, init: S.init, mask: S.mask, ctrl: S.ctrl, refs: refs.get(), sheetRef: S.sheetRef, layout: lay?.get() || [], locked: S.locked };
+  for (const id of FORM_IDS) { const e = F(id); if (e) f[id] = e.type === "checkbox" ? e.checked : (id in pendingSel ? pendingSel[id] : e.value); }
   return f;
 }
 
-function applyForm(f) {
+export function applyModeForm(f) {
+  if (!f) return;
   for (const id of FORM_IDS) {
     if (!(id in f)) continue;
     const e = F(id);
+    if (!e) continue;
     if (e.type === "checkbox") e.checked = !!f[id];
     else if (e.tagName === "SELECT" && f[id] !== "" && f[id] != null && ![...e.options].some((o) => o.value === String(f[id]))) pendingSel[id] = f[id];
     else { e.value = f[id]; delete pendingSel[id]; }
@@ -1407,20 +1460,38 @@ function applyForm(f) {
   S.loras = (f.loras || []).map((l) => ({ ...l }));
   if (f.ctrl !== undefined) S.ctrl = f.ctrl;
   if (f.init !== undefined) S.init = f.init;
+  if (f.mask !== undefined) S.mask = f.mask;
   if (f.refs !== undefined) refs.set(f.refs);
   if (f.sheetRef !== undefined) { S.sheetRef = f.sheetRef; showSheetRef(); }
   if (f.layout !== undefined) { lay.set(f.layout); layCount(); }
   if (f.locked !== undefined) { S.locked = Array.isArray(f.locked) ? f.locked : []; renderLocked(); }
   for (const o of $$("output", F("page-gen"))) { const inp = o.closest("div, section")?.querySelector("input[type=range]"); if (inp) o.textContent = inp.value; }
-  F("upRefineRow").hidden = !F("upRefine").checked;
-  F("stripRefineRow").hidden = !F("stripRefine").checked;
-  F("ipPadRow").hidden = F("ipArea").value !== "masked";
+  if (F("upRefineRow") && F("upRefine")) F("upRefineRow").hidden = !F("upRefine").checked;
+  if (F("stripRefineRow") && F("stripRefine")) F("stripRefineRow").hidden = !F("stripRefine").checked;
+  if (F("ipPadRow") && F("ipArea")) F("ipPadRow").hidden = F("ipArea").value !== "masked";
   if (app.state) S.family = fam();
   renderLoras(); showCtrl(); modelHint();
+  if (F("hiresBox") && f.hiresOn !== undefined) F("hiresBox").open = !!f.hiresOn;
+  if (F("controlBox") && f.ctrlOn !== undefined) F("controlBox").open = !!f.ctrlOn;
+  if (F("detailBox") && f.autoDetail !== undefined) F("detailBox").open = !!f.autoDetail;
+}
+
+function applyForm(f) {
+  applyModeForm(f);
+  if (app.state) S.family = fam();
   setMode(f.mode || "txt2img");
 }
 
-const save = () => { store.set("form", collectForm()); promptx.refresh?.(); };
+const save = () => {
+  const currentForm = collectForm();
+  store.set("form", currentForm);
+  if (S.mode) {
+    const mf = getModeForms();
+    mf[S.mode] = currentForm;
+    store.set("modeForms", mf);
+  }
+  promptx.refresh?.();
+};
 
 // 鎖定角色標籤列：換模型、動參考圖時滑過去看的全文跟著變
 function renderLocked() {
@@ -1440,12 +1511,22 @@ function restore() {
     opTop: 0, opBottom: 0, opLeft: 0, opRight: 0, opFeather: 40, autoDetail: false, detailDenoise: 0.4, batchLines: false,
     steps: 8, cfg: 1, count: "4", mode: "txt2img",
   };
-  applyForm({ ...d, ...store.get("form", {}) });
+  const saved = store.get("form", {});
+  const activeMode = saved.mode || d.mode;
+  const mf = getModeForms();
+  if (!mf[activeMode] && Object.keys(saved).length > 0) {
+    mf[activeMode] = { ...d, ...saved };
+    store.set("modeForms", mf);
+  }
+  const modeData = mf[activeMode] || saved;
+  applyForm({ ...d, ...modeData, mode: activeMode });
 }
 
 // 從圖庫或圖片讀到的參數套回表單
 export function applyParams(p, withMode = true) {
   if (!p) return toast("這張圖沒有可用的生成參數", "err");
+  const targetMode = ["img2img", "inpaint", "outpaint", "upscale", "strip", "sheet", "multiref"].includes(p.mode) ? p.mode : "txt2img";
+  if (withMode && S.mode !== targetMode) setMode(targetMode);
   const set = (id, v) => { if (v !== undefined && v !== null && F(id)) F(id).value = v; };
   set("promptPrefix", p.promptPrefix || "");
   set("prompt", p.prompt || "");
@@ -1465,7 +1546,7 @@ export function applyParams(p, withMode = true) {
     set("stripTarget", p.strip.target); set("stripKeep", p.strip.keep); set("stripDenoise", p.strip.refine_denoise);
     set("stripExtra", p.strip.extra); set("stripTags", p.strip.tags);
     F("stripRefine").checked = p.strip.refine !== false; F("stripMerge").checked = p.strip.merge !== false;
-    F("stripRefineRow").hidden = !F("stripRefine").checked;
+    if (F("stripRefineRow") && F("stripRefine")) F("stripRefineRow").hidden = !F("stripRefine").checked;
   }
   if (p.sheet) set("sheetReq", p.sheet.req);
   if (p.outpaint) { set("opTop", p.outpaint.top); set("opBottom", p.outpaint.bottom); set("opLeft", p.outpaint.left); set("opRight", p.outpaint.right); set("opFeather", p.outpaint.feather); }
@@ -1475,7 +1556,7 @@ export function applyParams(p, withMode = true) {
   for (const o of $$("output", F("page-gen"))) { const inp = o.closest("div, section")?.querySelector("input[type=range]"); if (inp) o.textContent = inp.value; }
   if (p.mode === "multiref" && p.refs) refs.set(p.refs.map((r) => ({ name: r.image, width: r.width, height: r.height, role: r.role || "person" })));
   // 文生圖、ComfyUI 匯入的、沒標模式的 → 文生圖；其餘（圖生圖、局部重繪、放大、一鍵脫衣、四視圖、多圖參考）照原模式還原（輸入圖要自己再放一次）
-  if (withMode) setMode(["img2img", "inpaint", "outpaint", "upscale", "strip", "sheet", "multiref"].includes(p.mode) ? p.mode : "txt2img");
+
   pe.restore(p);
   save();
   toast("已套用參數（種子也一併帶入，要換構圖請按「隨機」）", "ok");
@@ -1494,6 +1575,7 @@ function applyLibSet(data) {
   const f = { ...data }, warn = [];
   for (const id of FORM_IDS) {
     const e = F(id);
+    if (!e) continue;
     if (!(id in f) || e.tagName !== "SELECT" || [...e.options].some((o) => o.value === String(f[id]))) continue;
     if (id === "model") warn.push(`模型「${f[id]}」不在這台電腦上，模型維持目前的`);
     else if (id === "turboLora" && f[id]) warn.push(`加速 LoRA「${f[id]}」不在這台電腦上，改成不使用`);
@@ -1593,7 +1675,7 @@ async function generate() {
     for (const line of lines) {
       const q = batch ? { ...p, prompt: full(line), idea: undefined, pe_prompt: undefined } : { ...p, prompt: full(p.prompt) };
       const r = await api("/api/generate", { json: { params: q, count } });
-      for (const j of r.jobs) S.pending.set(j.job, { seed: j.seed });
+      for (const j of r.jobs) S.pending.set(j.job, { seed: j.seed, autoDetail: F("autoDetail")?.checked, detailDenoise: +F("detailDenoise")?.value, mode: S.mode });
       S.lastSeed = r.jobs[0]?.seed;
       sent++;
       renderStrip();
