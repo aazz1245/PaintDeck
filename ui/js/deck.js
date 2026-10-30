@@ -33,6 +33,7 @@ export const ICONS = {
   starOn: `<path class="a" d="${STAR}"/>`,
   cmp: '<rect x="3" y="4" width="18" height="16" rx="2"/><rect class="af" x="4" y="5" width="7" height="14"/><path d="M12 2v20"/>',
   floppy: '<path d="M4 3h13l3 3v15H4z"/><path d="M8 3v5h7V3"/><rect class="a" x="7" y="13" width="10" height="8"/>',
+  folder: '<path d="M3 5a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v2H3V5z"/><path class="a" d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/>',
   die: '<rect x="3" y="3" width="18" height="18" rx="4"/><circle class="f" cx="8" cy="8" r="1.7"/><circle class="f" cx="16" cy="8" r="1.7"/><circle class="af" cx="12" cy="12" r="1.7"/><circle class="f" cx="8" cy="16" r="1.7"/><circle class="f" cx="16" cy="16" r="1.7"/>',
   spk: SPK + '<path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>',
   mute: SPK + '<path d="M16 9l5 6M21 9l-5 6"/>',

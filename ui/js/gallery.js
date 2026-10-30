@@ -74,6 +74,18 @@ export function init() {
   F("lbNext").onclick = () => step(1);
   document.addEventListener("keydown", onKey);
   for (const box of ["#lbActions", "#lbTrashActions"]) $(box).addEventListener("click", lbAction);
+  const handleLbContextMenu = async (e) => {
+    const rec = lb.list[lb.i];
+    if (rec) {
+      e.preventDefault();
+      e.stopPropagation();
+      const { openImageFolder, openImageContextMenu } = await import("./gen.js");
+      if (e.shiftKey || e.ctrlKey) openImageFolder(rec);
+      else openImageContextMenu(e, rec);
+    }
+  };
+  F("lbImg")?.addEventListener("contextmenu", handleLbContextMenu);
+  F("lbVid")?.addEventListener("contextmenu", handleLbContextMenu);
 
   restoreFilters();
   initCompare();
@@ -252,6 +264,13 @@ function tile(rec) {
     rec.gen_seconds != null ? el("span", { class: "dur", title: "從開始畫到存進圖庫（排隊不算）" }, fmtSecs(rec.gen_seconds)) : null,
     el("div", { class: "cap", translate: "no" }, rec.idea ? `💡 ${rec.idea}` : rec.prompt || ""));
   t.addEventListener("click", (e) => onTileClick(e, rec));
+  t.addEventListener("contextmenu", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { openImageFolder, openImageContextMenu } = await import("./gen.js");
+    if (e.shiftKey || e.ctrlKey) openImageFolder(rec);
+    else openImageContextMenu(e, rec);
+  });
   t.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onTileClick(e, rec); } });
   return t;
 }

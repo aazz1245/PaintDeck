@@ -320,6 +320,16 @@ export function init() {
 
   // 預覽圖動作
   F("viewImg").onclick = () => S.current && openLightboxRecord(S.current, S.results);
+  const handlePreviewContextMenu = (e) => {
+    if (S.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.shiftKey || e.ctrlKey) openImageFolder(S.current);
+      else openImageContextMenu(e, S.current);
+    }
+  };
+  F("viewImg").addEventListener("contextmenu", handlePreviewContextMenu);
+  F("viewVid")?.addEventListener("contextmenu", handlePreviewContextMenu);
   F("viewActions").addEventListener("click", (e) => {
     const b = e.target.closest("[data-act]");
     if (b && S.current && b.dataset.act !== "download") imageAction(b.dataset.act, S.current, b);
@@ -1664,13 +1674,202 @@ function show(rec) {
   $$("#strip img").forEach((i) => i.classList.toggle("sel", +i.dataset.id === rec.id));
 }
 
+// ---------------------------------------------------------------- 本機檔案路徑與開啟資料夾
+let cachedOutputDir = null;
+
+export async function getComfyOutputDir() {
+  if (cachedOutputDir) return cachedOutputDir;
+  const comfyOrigin = (window.app?.state?.comfy_url || "http://127.0.0.1:8188").replace(/\/+$/, "");
+  try {
+    const stats = await fetch(`${comfyOrigin}/system_stats`, { signal: AbortSignal.timeout(2000) }).then((r) => r.json());
+    const argv = stats?.system?.argv || [];
+    const outIdx = argv.indexOf("--output-directory");
+    if (outIdx !== -1 && argv[outIdx + 1]) {
+      cachedOutputDir = argv[outIdx + 1].replace(/[\\/]+$/, "");
+      return cachedOutputDir;
+    }
+    if (argv[0]) {
+      const mainPath = argv[0].replace(/\\/g, "/");
+      const dir = mainPath.substring(0, mainPath.lastIndexOf("/"));
+      cachedOutputDir = (dir + "/output").replace(/\//g, "\\");
+      return cachedOutputDir;
+    }
+  } catch (_) {}
+
+  try {
+    const d = await api("/api/models/dirs");
+    if (d?.comfy_models) {
+      const norm = d.comfy_models.replace(/\\/g, "/").replace(/\/models\/?$/, "");
+      cachedOutputDir = (norm + "/output").replace(/\//g, "\\");
+      return cachedOutputDir;
+    }
+  } catch (_) {}
+
+  return "E:\\AI\\ComfyUI-aki\\ComfyUI-aki-v1.6\\ComfyUI\\output";
+}
+
+export async function resolveImageFilePath(rec) {
+  if (!rec) return null;
+  let filename = rec.filename;
+  let subfolder = rec.subfolder;
+  if (!filename) {
+    try {
+      const full = await api(`/api/image/${rec.id}`);
+      filename = full?.filename;
+      subfolder = full?.subfolder;
+    } catch (_) {}
+  }
+  if (!filename) return null;
+
+  const outputDir = await getComfyOutputDir();
+  const sub = subfolder ? `${subfolder}\\` : "";
+  const fullPath = `${outputDir}\\${sub}${filename}`.replace(/\\+/g, "\\");
+  return fullPath;
+}
+
+export async function openImageFolder(rec) {
+  if (!rec) return;
+  try {
+    const fullPath = await resolveImageFilePath(rec);
+    if (!fullPath) {
+      toast("無法取得圖片路徑", "err");
+      return;
+    }
+
+    const comfyOrigin = (window.app?.state?.comfy_url || "http://127.0.0.1:8188").replace(/\/+$/, "");
+    const res = await fetch(`${comfyOrigin}/api/lm/open-file-location`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file_path: fullPath }),
+      signal: AbortSignal.timeout(3000),
+    });
+
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (data.success !== false) {
+        toast("已在檔案總管開啟儲存資料夾", "ok");
+        return;
+      }
+    }
+
+    navigator.clipboard?.writeText(fullPath);
+    toast(`無法直接開啟檔案總管，已複製路徑：${fullPath}`, "warn");
+  } catch (err) {
+    try {
+      const fullPath = await resolveImageFilePath(rec);
+      if (fullPath) {
+        navigator.clipboard?.writeText(fullPath);
+        toast(`無法連線至 ComfyUI，已複製路徑：${fullPath}`, "warn");
+        return;
+      }
+    } catch (_) {}
+    toast("開啟資料夾失敗：" + err.message, "err");
+  }
+}
+
+let imageMenuEl = null;
+
+export function closeImageMenu() {
+  imageMenuEl?.remove();
+  imageMenuEl = null;
+}
+
+if (typeof document !== "undefined") {
+  document.addEventListener("pointerdown", (e) => {
+    if (imageMenuEl && !imageMenuEl.contains(e.target)) closeImageMenu();
+  }, true);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeImageMenu();
+  });
+}
+if (typeof window !== "undefined") {
+  window.addEventListener("scroll", closeImageMenu, true);
+}
+
+export function openImageContextMenu(e, rec) {
+  closeImageMenu();
+  if (!rec) return;
+
+  const item = (label, fn, isPrimary = false) =>
+    el("button", {
+      type: "button",
+      role: "menuitem",
+      class: isPrimary ? "primary" : "",
+      onclick: (ev) => {
+        ev.stopPropagation();
+        closeImageMenu();
+        fn();
+      },
+    }, label);
+
+  const dispName = rec.filename || `圖片 #${rec.id}`;
+
+  const m = el(
+    "div",
+    {
+      class: "play-menu image-context-menu",
+      role: "menu",
+      style: "z-index: 99999; min-width: 200px; box-shadow: 0 8px 28px rgba(0,0,0,.65), 0 0 0 1px var(--case-hi);",
+    },
+    el(
+      "div",
+      {
+        class: "muted sm",
+        style: "padding: 5px 9px 4px; font-weight: bold; border-bottom: 1px solid var(--edge, rgba(128,128,128,.2)); margin-bottom: 3px; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;",
+      },
+      dispName
+    ),
+    item("📂 開啟儲存資料夾", () => openImageFolder(rec), true),
+    item("📋 複製檔案路徑", async () => {
+      const p = await resolveImageFilePath(rec);
+      if (p) {
+        navigator.clipboard?.writeText(p);
+        toast(`已複製路徑：${p}`, "ok");
+      }
+    }),
+    item("📋 複製提示詞", async () => {
+      const full = await api(`/api/image/${rec.id}`).catch(() => rec);
+      if (full?.prompt) {
+        navigator.clipboard?.writeText(full.prompt);
+        toast("已複製提示詞", "ok");
+      } else {
+        toast("無提示詞資料", "warn");
+      }
+    }),
+    item("🔍 放大檢視", () => openLightboxRecord(rec, S.results)),
+    item(rec.fav ? "★ 取消收藏" : "☆ 設為收藏", () => imageAction("fav", rec)),
+    item("🗑️ 移到回收區", () => imageAction("delete", rec))
+  );
+
+  document.body.append(m);
+  imageMenuEl = m;
+  const mw = m.offsetWidth || 200, mh = m.offsetHeight || 220;
+  const x = Math.max(8, Math.min(innerWidth - mw - 8, e.clientX));
+  const y = Math.max(8, Math.min(innerHeight - mh - 8, e.clientY));
+  m.style.left = `${x}px`;
+  m.style.top = `${y}px`;
+  m.querySelector("button")?.focus();
+}
+
 export function renderStrip() {
   const s = F("strip");
   s.innerHTML = "";
   for (let i = 0; i < S.pending.size; i++) s.append(el("div", { class: "pending" }, "等待中"));
   for (const r of S.results) {
     const cls = [S.current?.id === r.id && "sel", !stripSeen.has(r.id) && "new"].filter(Boolean).join(" ");
-    s.append(el("img", { src: `/thumb/${r.id}`, "data-id": r.id, class: cls, onclick: () => show(r) }));
+    s.append(el("img", {
+      src: `/thumb/${r.id}`,
+      "data-id": r.id,
+      class: cls,
+      title: `${r.filename || "圖片"}\n【點擊：在預覽區顯示】\n【右鍵：選單 / 開啟資料夾】\n【Shift+右鍵：直接在檔案總管開啟】`,
+      onclick: () => show(r),
+      oncontextmenu: (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.shiftKey || e.ctrlKey) openImageFolder(r);
+        else openImageContextMenu(e, r);
+      }
+    }));
     stripSeen.add(r.id);
   }
 }
@@ -1734,6 +1933,8 @@ export async function imageAction(act, rec, btn, quiet = false) {
       await api(`/api/image/${rec.id}`, { json: { fav: !!rec.fav } });
       if (btn) btn.textContent = rec.fav ? "★ 已收藏" : "☆ 收藏";
       if (S.current?.id === rec.id) $("#viewActions [data-act=fav]").textContent = rec.fav ? "★ 已收藏" : "☆ 收藏";
+    } else if (act === "open_folder") {
+      await openImageFolder(rec);
     } else if (act === "delete") {
       if (!confirm("把這張圖移到回收區？（圖庫的「回收區」可以還原）")) return false;
       await api(`/api/image/${rec.id}`, { method: "DELETE" });

@@ -9,6 +9,9 @@
   background: var(--case); box-shadow: 0 1px 0 var(--case-hi) inset, 0 14px 30px -8px rgba(0,0,0,.6), 0 0 0 1px var(--case-lo); }
 .play-menu button { text-align: left; border: 0; background: none; color: var(--label); font: 13px/1.4 var(--f-ui); padding: 7px 10px; border-radius: 5px; cursor: pointer; }
 .play-menu button:hover, .play-menu button:focus-visible { background: var(--acc); color: #fff; outline: none; }
+.image-context-menu hr { border: 0; height: 1px; background: var(--case-lo, rgba(0,0,0,.3)); margin: 3px 0; }
+.image-context-menu button.primary { font-weight: bold; color: var(--acc, #ffb547); }
+.image-context-menu button.primary:hover { color: #fff; }
 
 /* 塗鴉畫布 */
 .sk-stage { position: relative; align-self: center; max-width: 100%; line-height: 0; }
