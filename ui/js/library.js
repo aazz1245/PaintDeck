@@ -1,7 +1,7 @@
 // 提示詞庫：整套設定（生成頁的表單）和片段放在一起管理。
 // 分資料夾、標籤、適用模型（沒指定＝通用；舊的預設組照當初用的模型自動分）、置頂收藏、縮圖（存的時候自動抓目前預覽的圖）。
 // 取代舊的「預設組」（伺服器第一次開新版時抄進來）和存在瀏覽器裡的「我的片段」（這裡第一次載入時搬進來，瀏覽器裡那份不刪）。
-import { $, $$, el, api, toast, store, openModal, closeModal, debounce } from "./util.js";
+import { $, $$, el, api, toast, store, openModal, closeModal, debounce, pickFile, makeDrop } from "./util.js";
 import { app } from "./state.js";
 import { pickFromGallery } from "./gallery.js";
 // 排序跟著介面語言：簡中照拼音、繁中照筆畫（模組載入時 i18n 還沒設好 <html lang>，所以每次用時再看）
@@ -72,6 +72,44 @@ export function init(c) {
   F("leThumbCur").onclick = () => { const r = ctx.current(); if (r) { E.imageId = r.id; E.clear = false; thumbUi(); } };
   F("leThumbPick").onclick = () => pickFromGallery((rec) => { E.imageId = rec.id; E.clear = false; thumbUi(); });
   F("leThumbDel").onclick = () => { E.imageId = null; E.clear = true; thumbUi(); };
+
+  const uploadThumb = async (file) => {
+    if (!file) return;
+    const btn = F("leThumbUp");
+    if (btn) btn.disabled = true;
+    try {
+      const fd = new FormData();
+      fd.append("image", file, file.name || "thumb.png");
+      fd.append("meta", JSON.stringify({ prompt: F("leName").value.trim() || "縮圖" }));
+      const img = await api("/api/play/save_grid", { method: "POST", body: fd });
+      if (img?.id) {
+        E.imageId = img.id;
+        E.clear = false;
+        if (!F("leName").value.trim()) {
+          const autoName = (file.name || "").replace(/\.[^/.]+$/, "").trim();
+          if (autoName) F("leName").value = autoName;
+        }
+        thumbUi();
+        toast("已設定預覽圖", "ok");
+      }
+    } catch (e) {
+      toast("上傳圖片失敗：" + e.message, "err");
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  };
+
+  const thumbUp = F("leThumbUp");
+  if (thumbUp) {
+    thumbUp.onclick = async () => {
+      const f = await pickFile("image/*");
+      if (f) await uploadThumb(f);
+    };
+  }
+  const thumbBox = F("leThumb");
+  if (thumbBox) {
+    makeDrop(thumbBox, uploadThumb);
+  }
   F("leUseCur").onclick = () => { E.setData = ctx.collect(); editKindUi(); toast("已換成生成頁目前的設定（按「儲存」才會存進去）", "ok"); };
   F("leSave").onclick = saveEdit;
   F("leDel").onclick = deleteEdit;
