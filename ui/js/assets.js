@@ -263,7 +263,16 @@ async function save(quiet = false) {
 
 async function saveCurrent(quiet = false) {
   const body = collect();
-  if (!body.name) { F("asName").focus(); toast("資產要有名字", "err"); return null; }
+  if (!body.name) {
+    if (quiet) {
+      body.name = "未命名资产";
+      F("asName").value = body.name;
+    } else {
+      F("asName").focus();
+      toast("資產要有名字", "err");
+      return null;
+    }
+  }
   try {
     const r = await api("/api/lib", { json: body });
     cur = r;
@@ -294,6 +303,9 @@ async function attach(it, body) {
 
 async function addFile(body, target = cur) {
   if (cur !== target) return;
+  if (!F("asName").value.trim()) {
+    F("asName").value = "未命名资产";
+  }
   return editAction(async () => {
     const it = await saveCurrent(true);
     if (it) await attach(it, body);
@@ -327,6 +339,10 @@ function pickAudio() {
     const f = inp.files[0];
     inp.remove();
     if (!f || cur !== target) return;
+    if (!F("asName").value.trim()) {
+      const autoName = (f.name || "").replace(/\.[^/.]+$/, "").trim() || "未命名资产";
+      F("asName").value = autoName;
+    }
     await editAction(async () => {
       const it = await saveCurrent(true);
       if (!it) return;
@@ -375,6 +391,10 @@ export function init() {
     const target = cur, role = F("asRole").value;
     const f = await pickFile();
     if (!f || cur !== target) return;
+    if (!F("asName").value.trim()) {
+      const autoName = (f.name || "").replace(/\.[^/.]+$/, "").trim() || "未命名资产";
+      F("asName").value = autoName;
+    }
     await editAction(async () => {
       const it = await saveCurrent(true);
       if (!it) return;
@@ -391,7 +411,13 @@ export function init() {
   F("asImgGal").onclick = () => {
     if (busy || !cur) return;
     const target = cur, role = F("asRole").value;
-    pickFromGallery((rec) => addFile({ gallery_id: rec.id, role }, target));
+    pickFromGallery((rec) => {
+      if (!F("asName").value.trim()) {
+        const autoName = (rec.name || rec.filename || "").replace(/\.[^/.]+$/, "").trim() || "未命名资产";
+        F("asName").value = autoName;
+      }
+      addFile({ gallery_id: rec.id, role }, target);
+    });
   };
   F("asAudioUp").onclick = pickAudio;
   // 「存成資產」小視窗

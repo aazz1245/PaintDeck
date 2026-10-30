@@ -116,3 +116,46 @@ test('assets.js: 下拉選單選取非標準 kind（如「少女」），collect
   assert.equal(sentPayload.folder, '少女', '「少女」必須被保留在 folder 欄位');
   assert.equal(sentPayload.name, '野生的大魔王');
 });
+
+test('assets.js: 新增資產未輸入名字時點「+ 從電腦」或「+ 從圖庫」，自動以圖檔名或未命名資產命名，不跳「資產要有名字」錯誤', async () => {
+  const nodes = new Map();
+  const node = (id) => {
+    if (!nodes.has(id)) nodes.set(id, element('input'));
+    return nodes.get(id);
+  };
+  node('asForm').querySelectorAll = () => [...nodes.values()].filter((e) => e !== node('asForm'));
+
+  const savedCalls = [];
+  const toastErrors = [];
+  const sub = moduleContext('assets.js', {
+    api: (url, opts) => {
+      if (url === '/api/lib') {
+        savedCalls.push(opts.json);
+        return Promise.resolve({ id: 101, ...opts.json });
+      }
+      if (url.includes('/file')) {
+        return Promise.resolve({ id: 101, ...savedCalls[0], data: { images: [{ file: '101_1.png', role: 'src' }] } });
+      }
+      return Promise.resolve({});
+    },
+    pickFile: () => Promise.resolve({ name: 'cute_girl.png' }),
+    uploadFile: () => Promise.resolve({ name: 'cute_girl.png' }),
+    toast: (msg, type) => { if (type === 'err') toastErrors.push(msg); },
+    el: element, $: node, $$: () => [],
+    library: {}, document: { getElementById: node, addEventListener() {}, body: element('body') },
+  }, 'init, newOne, current: () => cur');
+
+  sub.init();
+  sub.newOne();
+  // 名字目前為空
+  assert.equal(node('asName').value, '');
+
+  // 模擬點擊「+ 從電腦」
+  await node('asImgUp').onclick();
+
+  assert.equal(toastErrors.length, 0, '不應彈出「資產要有名字」的錯誤訊息');
+  assert.equal(node('asName').value, 'cute_girl', '應自動從檔名取得並填入資產名字');
+  assert.equal(savedCalls.length, 1);
+  assert.equal(savedCalls[0].name, 'cute_girl');
+});
+
