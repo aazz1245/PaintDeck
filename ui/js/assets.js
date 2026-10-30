@@ -14,6 +14,8 @@ export const KINDS = [
   ["厚涂", "厚涂"], ["强烈质感设计", "强烈质感"], ["后缀", "后缀"], ["anima", "Anima"],
 ];
 export const KIND_NAME = Object.fromEntries(KINDS);
+export const VALID_BACKEND_KINDS = new Set(["char", "scene", "frame", "outfit", "prop", "fx", "sound", "snippet", "set", "shot"]);
+export const VALID_MEDIA_KINDS = new Set(["char", "scene", "frame", "outfit", "prop", "fx", "sound", "shot"]);
 const MEDIA = new Set(["char", "scene", "frame", "outfit", "prop", "fx", "sound", "shot", "少女", "萝莉", "假小子", "肉感", "厚涂", "强烈质感设计", "后缀", "anima"]);
 /** 圖片用途：鍵、中文名（順序就是拿去用時的排序） */
 export const ROLES = [
@@ -70,7 +72,7 @@ export function show() { load(); }
 // ---------------------------------------------------------------- 左邊：分類、搜尋、卡片
 function paintKinds() {
   const box = F("asKinds");
-  const count = (k) => items.filter((x) => k === "all" || x.kind === k).length;
+  const count = (k) => items.filter((x) => k === "all" || x.kind === k || x.folder === k).length;
   box.replaceChildren(...[["all", "全部"], ...KINDS].map(([k, name]) =>
     el("button", { class: "chip" + (kind === k ? " on" : ""), type: "button", role: "tab", "aria-selected": String(kind === k),
       onclick: () => { kind = k; paint(); } }, name, ` ${count(k)}`)));
@@ -82,7 +84,7 @@ const hay = (it) => [it.name, it.folder, ...(it.tags || []), it.note, it.data?.l
 function paint() {
   paintKinds();
   const q = F("asQ").value.trim().toLowerCase();
-  const shown = items.filter((x) => (kind === "all" || x.kind === kind) && (!q || hay(x).includes(q)));
+  const shown = items.filter((x) => (kind === "all" || x.kind === kind || x.folder === kind) && (!q || hay(x).includes(q)));
   F("asTotal").textContent = shown.length ? String(shown.length) : "";
   const g = F("asGrid");
   g.replaceChildren(...shown.map((it) => el("div", { class: "card pick as-card" + (cur?.id === it.id ? " on" : ""), onclick: () => open(it) },
@@ -105,7 +107,10 @@ function open(it) {
 function newOne() {
   if (busy) return;
   if (kind === "set" || kind === "snippet") return library.saveDialog({ kind });
-  cur = { id: null, kind: MEDIA.has(kind) ? kind : "char", name: "", folder: "", tags: [], fav: 0, note: "", data: {} };
+  const isCustomFolder = !VALID_MEDIA_KINDS.has(kind) && kind !== "all";
+  const defaultKind = VALID_MEDIA_KINDS.has(kind) ? kind : "char";
+  const defaultFolder = isCustomFolder ? kind : "";
+  cur = { id: null, kind: defaultKind, name: "", folder: defaultFolder, tags: [], fav: 0, note: "", data: {} };
   fill();
   F("asName").focus();
 }
@@ -116,8 +121,9 @@ function fill() {
   if (!cur) return paint();
   const d = cur.data || {};
   F("asName").value = cur.name || "";
-  F("asKind").value = cur.kind;
-  F("asFolder").value = cur.folder || "";
+  const k = cur.kind;
+  F("asKind").value = VALID_MEDIA_KINDS.has(k) ? k : "char";
+  F("asFolder").value = cur.folder || (!VALID_MEDIA_KINDS.has(k) && k !== "all" ? k : "");
   F("asLabels").value = (cur.tags || []).join(", ");
   F("asFav").checked = !!cur.fav;
   F("asLookZh").value = d.look_zh || "";
@@ -218,13 +224,20 @@ function paintAudio() {
 
 /** 表單 → 送出的內容（圖片、音檔沿用 cur 裡的，用途可能剛改過） */
 function collect() {
-  const k = F("asKind").value;
+  let k = F("asKind").value;
+  let folder = F("asFolder").value.trim();
   const d = { ...(cur.data || {}) };
   Object.assign(d, { look_zh: F("asLookZh").value, look_en: F("asLookEn").value, tags_anima: splitList(F("asAnima").value) });
   if (k === "char") Object.assign(d, { voice: F("asVoice").value, lang: F("asLang").value });
   if (k === "scene") d.layout = Object.fromEntries(LAYOUT.map(([key]) => [key, F("asL_" + key).value]));
   if (TEXT_KINDS.has(k)) d.text = F("asText").value;
-  return { id: cur.id || undefined, kind: k, name: F("asName").value.trim(), folder: F("asFolder").value.trim(),
+
+  if (!VALID_BACKEND_KINDS.has(k)) {
+    if (!folder) folder = k;
+    k = (d.text && !d.look_zh && !d.look_en && !d.tags_anima?.length && !d.images?.length) ? "snippet" : "char";
+  }
+
+  return { id: cur.id || undefined, kind: k, name: F("asName").value.trim(), folder,
     tags: splitList(F("asLabels").value), fav: F("asFav").checked, note: F("asNote").value.trim(), data: d };
 }
 
@@ -324,7 +337,7 @@ async function del() {
 }
 
 export function init() {
-  F("asKind").replaceChildren(...KINDS.filter(([k]) => MEDIA.has(k)).map(([k, name]) => el("option", { value: k }, name)));
+  F("asKind").replaceChildren(...KINDS.filter(([k]) => VALID_MEDIA_KINDS.has(k)).map(([k, name]) => el("option", { value: k }, name)));
   F("asRole").replaceChildren(...ROLES.map(([r, name]) => el("option", { value: r }, "新圖片用途：", name)));
   F("asLayout").replaceChildren(...LAYOUT.map(([k, name]) => el("label", {}, el("span", { class: "sub" }, name), el("input", { type: "text", id: "asL_" + k }))));
   F("asKind").onchange = byKind;
@@ -357,7 +370,7 @@ export function init() {
   };
   F("asAudioUp").onclick = pickAudio;
   // 「存成資產」小視窗
-  F("asSaveKind").replaceChildren(...KINDS.filter(([k]) => MEDIA.has(k) && k !== "shot").map(([k, name]) => el("option", { value: k }, name)));
+  F("asSaveKind").replaceChildren(...KINDS.filter(([k]) => VALID_MEDIA_KINDS.has(k) && k !== "shot").map(([k, name]) => el("option", { value: k }, name)));
   F("asSaveRole").replaceChildren(...ROLES.map(([r, name]) => el("option", { value: r }, name)));
   $$("input[name=asSaveTo]").forEach((r) => (r.onchange = syncSaveTo));
   F("asAudioDel").onclick = () => { const a = cur?.data?.audio?.file; if (a) removeFile(a); };

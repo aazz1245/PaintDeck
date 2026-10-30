@@ -59,7 +59,7 @@ async function paint(d) {
   d.items = items;
 
   if (!d.tags) d.tags = new Set();
-  const countOf = (k) => (k === "all" ? items.length : items.filter((x) => x.kind === k).length);
+  const countOf = (k) => (k === "all" ? items.length : items.filter((x) => x.kind === k || x.folder === k).length);
   const visibleKinds = KINDS.filter((k) => countOf(k) > 0 || k === "all" || k === d.kind);
 
   const search = el("input", { type: "search", class: "adr-q", placeholder: "搜尋…", value: d.q, "aria-label": "搜尋資產" });
@@ -76,7 +76,7 @@ async function paint(d) {
   );
 
   // 標籤多選篩選列（範圍逐漸縮小）
-  const inCat = items.filter((x) => d.kind === "all" || x.kind === d.kind);
+  const inCat = items.filter((x) => d.kind === "all" || x.kind === d.kind || x.folder === d.kind);
   const allCatTags = new Set();
   for (const it of inCat) {
     for (const t of it.tags || []) allCatTags.add(t);
@@ -150,7 +150,7 @@ async function paint(d) {
 
 function paintCards(d, box, items, shown) {
   const q = d.q.trim().toLowerCase();
-  const matchKind = (x) => d.kind === "all" || x.kind === d.kind;
+  const matchKind = (x) => d.kind === "all" || x.kind === d.kind || x.folder === d.kind;
   const matchQ = (x) => !q || [x.name, ...(x.tags || []), x.data?.look_zh, x.data?.look_en, x.data?.text].join("\n").toLowerCase().includes(q);
   const matchTags = (x) => !d.tags?.size || Array.from(d.tags).every((t) => (x.tags || []).includes(t));
 
