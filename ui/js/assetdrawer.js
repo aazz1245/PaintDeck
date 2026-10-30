@@ -15,8 +15,7 @@ const HINT = {
   comic: "漫畫：插外觀文字和 tag",
 };
 const KINDS = [
-  "all", "少女", "萝莉", "肉感", "厚涂", "强烈质感设计", "假小子", "后缀", "anima",
-  "char", "scene", "frame", "outfit", "prop", "fx", "sound", "snippet"
+  "all", "char", "scene", "frame", "outfit", "prop", "fx", "sound", "snippet"
 ];
 
 const drawers = [];
@@ -59,7 +58,7 @@ async function paint(d) {
   d.items = items;
 
   if (!d.tags) d.tags = new Set();
-  const countOf = (k) => (k === "all" ? items.length : items.filter((x) => x.kind === k || x.folder === k).length);
+  const countOf = (k) => (k === "all" ? items.length : items.filter((x) => x.kind === k).length);
   const visibleKinds = KINDS.filter((k) => countOf(k) > 0 || k === "all" || k === d.kind);
 
   const search = el("input", { type: "search", class: "adr-q", placeholder: "搜尋…", value: d.q, "aria-label": "搜尋資產" });
@@ -69,14 +68,43 @@ async function paint(d) {
     ...visibleKinds.map((k) => el("button", {
       class: "chip" + (d.kind === k ? " on" : ""),
       type: "button",
-      onclick: () => { d.kind = k; paint(d); }
+      onclick: () => { d.kind = k; if (k !== "snippet") d.snippetFolder = "all"; paint(d); }
     }, (k === "all" ? "全部" : (assets.KIND_NAME[k] || k)) + (k === "all" ? "" : " " + countOf(k)))),
     search,
     el("button", { class: "akey sm", type: "button", title: "重新讀資產庫", onclick: async () => { await assets.load(); paint(d); } }, "↻")
   );
 
+  let subRow = "";
+  if (d.kind === "snippet") {
+    if (!d.snippetFolder) d.snippetFolder = "all";
+    const snippetItems = items.filter((x) => x.kind === "snippet");
+    const countFolder = (f) => f === "all" ? snippetItems.length : snippetItems.filter((x) => x.folder === f).length;
+    const known = ["少女", "萝莉", "假小子", "肉感", "厚涂", "强烈质感设计", "后缀", "anima"];
+    const found = new Set(snippetItems.map((x) => x.folder).filter(Boolean));
+    const folders = ["all", ...known.filter((f) => found.has(f) || countFolder(f) > 0), ...[...found].filter((f) => !known.includes(f))];
+    subRow = el("div", { class: "row wrap adr-subkinds gap", style: "width: 100%; margin-top: 4px; padding: 2px 4px; background: rgba(0,0,0,0.05); border-radius: 4px; align-items: center;" },
+      el("span", { class: "muted sm", style: "font-size: 11px;" }, "子选项："),
+      ...folders.map((f) => el("button", {
+        class: "chip sm" + ((d.snippetFolder || "all") === f ? " on" : ""),
+        type: "button",
+        onclick: () => { d.snippetFolder = f; paint(d); }
+      }, (f === "all" ? "全部片段" : (assets.KIND_NAME[f] || f)) + ` ${countFolder(f)}`))
+    );
+  }
+
+  const matchKind = (x) => {
+    if (d.kind === "all") return true;
+    if (d.kind === "snippet") {
+      if (d.snippetFolder && d.snippetFolder !== "all") {
+        return x.kind === "snippet" && x.folder === d.snippetFolder;
+      }
+      return x.kind === "snippet";
+    }
+    return x.kind === d.kind;
+  };
+
   // 標籤多選篩選列（範圍逐漸縮小）
-  const inCat = items.filter((x) => d.kind === "all" || x.kind === d.kind || x.folder === d.kind);
+  const inCat = items.filter(matchKind);
   const allCatTags = new Set();
   for (const it of inCat) {
     for (const t of it.tags || []) allCatTags.add(t);
@@ -141,6 +169,7 @@ async function paint(d) {
   d.box.replaceChildren(
     head,
     kindsBox,
+    subRow || "",
     sortedTags.length ? tagRow : "",
     cards,
     d.menu || ""
@@ -150,7 +179,16 @@ async function paint(d) {
 
 function paintCards(d, box, items, shown) {
   const q = d.q.trim().toLowerCase();
-  const matchKind = (x) => d.kind === "all" || x.kind === d.kind || x.folder === d.kind;
+  const matchKind = (x) => {
+    if (d.kind === "all") return true;
+    if (d.kind === "snippet") {
+      if (d.snippetFolder && d.snippetFolder !== "all") {
+        return x.kind === "snippet" && x.folder === d.snippetFolder;
+      }
+      return x.kind === "snippet";
+    }
+    return x.kind === d.kind;
+  };
   const matchQ = (x) => !q || [x.name, ...(x.tags || []), x.data?.look_zh, x.data?.look_en, x.data?.text].join("\n").toLowerCase().includes(q);
   const matchTags = (x) => !d.tags?.size || Array.from(d.tags).every((t) => (x.tags || []).includes(t));
 

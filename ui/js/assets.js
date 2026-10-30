@@ -10,23 +10,26 @@ const F = (id) => document.getElementById(id);
 export const KINDS = [
   ["char", "角色"], ["scene", "場景"], ["frame", "首幀／姿勢"], ["outfit", "服裝"], ["prop", "道具"],
   ["fx", "特效"], ["sound", "聲音"], ["snippet", "提示詞片段"], ["set", "整套設定"], ["shot", "拍攝單範本"],
+];
+export const SNIPPET_FOLDERS = [
   ["少女", "少女"], ["萝莉", "萝莉"], ["假小子", "假小子"], ["肉感", "肉感"],
   ["厚涂", "厚涂"], ["强烈质感设计", "强烈质感"], ["后缀", "后缀"], ["anima", "Anima"],
 ];
-export const KIND_NAME = Object.fromEntries(KINDS);
+export const KIND_NAME = Object.fromEntries([...KINDS, ...SNIPPET_FOLDERS]);
 export const VALID_BACKEND_KINDS = new Set(["char", "scene", "frame", "outfit", "prop", "fx", "sound", "snippet", "set", "shot"]);
 export const VALID_MEDIA_KINDS = new Set(["char", "scene", "frame", "outfit", "prop", "fx", "sound", "shot"]);
-const MEDIA = new Set(["char", "scene", "frame", "outfit", "prop", "fx", "sound", "shot", "少女", "萝莉", "假小子", "肉感", "厚涂", "强烈质感设计", "后缀", "anima"]);
+const MEDIA = new Set(["char", "scene", "frame", "outfit", "prop", "fx", "sound", "shot"]);
 /** 圖片用途：鍵、中文名（順序就是拿去用時的排序） */
 export const ROLES = [
   ["src", "原圖"], ["portrait", "正面特寫"], ["sheet", "多視圖（穿衣）"], ["face", "臉部特寫表"], ["sheet_nude", "多視圖（裸體）"], ["detail", "細節"],
   ["pose", "姿勢"], ["outfit", "服裝"], ["other", "其他"],
 ];
 const LAYOUT = [["top", "上方"], ["bottom", "下方"], ["left", "左邊"], ["right", "右邊"], ["fg", "前景"], ["mid", "中景"], ["bg", "遠景"], ["light", "光線"]];
-const TEXT_KINDS = new Set(["frame", "outfit", "prop", "fx", "sound", "snippet", "set", "少女", "萝莉", "假小子", "肉感", "厚涂", "强烈质感设计", "后缀", "anima"]);
+const TEXT_KINDS = new Set(["frame", "outfit", "prop", "fx", "sound", "snippet", "set"]);
 
 let items = [];        // /api/lib 的全部（含整套設定、片段）
 let kind = "all";      // 目前的分類晶片
+let snippetFolder = "all"; // 當 kind === "snippet" 時的子選項晶片
 let cur = null;        // 編輯中的那一筆（新的還沒存：id 是 null）
 let loaded = false;
 let busy = false;
@@ -72,10 +75,55 @@ export function show() { load(); }
 // ---------------------------------------------------------------- 左邊：分類、搜尋、卡片
 function paintKinds() {
   const box = F("asKinds");
-  const count = (k) => items.filter((x) => k === "all" || x.kind === k || x.folder === k).length;
-  box.replaceChildren(...[["all", "全部"], ...KINDS].map(([k, name]) =>
-    el("button", { class: "chip" + (kind === k ? " on" : ""), type: "button", role: "tab", "aria-selected": String(kind === k),
-      onclick: () => { kind = k; paint(); } }, name, ` ${count(k)}`)));
+  const count = (k) => items.filter((x) => k === "all" || x.kind === k).length;
+  
+  const mainChips = [["all", "全部"], ...KINDS].map(([k, name]) =>
+    el("button", {
+      class: "chip" + (kind === k ? " on" : ""),
+      type: "button",
+      role: "tab",
+      "aria-selected": String(kind === k),
+      onclick: () => {
+        kind = k;
+        if (k !== "snippet") snippetFolder = "all";
+        paint();
+      }
+    }, name, ` ${count(k)}`)
+  );
+
+  const elements = [el("div", { class: "row wrap gap as-main-kinds" }, ...mainChips)];
+
+  if (kind === "snippet") {
+    const snippetItems = items.filter((x) => x.kind === "snippet");
+    const countFolder = (f) => f === "all" ? snippetItems.length : snippetItems.filter((x) => x.folder === f).length;
+    const knownFolders = SNIPPET_FOLDERS.map(([k]) => k);
+    const allFoundFolders = new Set(snippetItems.map((x) => x.folder).filter(Boolean));
+    const folderList = [
+      "all",
+      ...knownFolders.filter((f) => allFoundFolders.has(f) || countFolder(f) > 0),
+      ...[...allFoundFolders].filter((f) => !knownFolders.includes(f))
+    ];
+
+    const subChips = folderList.map((f) =>
+      el("button", {
+        class: "chip sm as-sub-chip" + (snippetFolder === f ? " on" : ""),
+        type: "button",
+        role: "tab",
+        "aria-selected": String(snippetFolder === f),
+        onclick: () => {
+          snippetFolder = f;
+          paint();
+        }
+      }, (f === "all" ? "全部片段" : (KIND_NAME[f] || f)), ` ${countFolder(f)}`)
+    );
+
+    elements.push(el("div", {
+      class: "row wrap gap as-sub-kinds",
+      style: "width: 100%; padding: 4px 6px; margin-top: 4px; background: rgba(0,0,0,0.06); border-radius: 6px; align-items: center;"
+    }, el("span", { class: "muted sm", style: "margin-right: 4px; font-weight: bold;" }, "片段子选项："), ...subChips));
+  }
+
+  box.replaceChildren(...elements);
 }
 
 const hay = (it) => [it.name, it.folder, ...(it.tags || []), it.note, it.data?.look_zh, it.data?.look_en, it.data?.text, it.data?.prompt,
@@ -84,7 +132,17 @@ const hay = (it) => [it.name, it.folder, ...(it.tags || []), it.note, it.data?.l
 function paint() {
   paintKinds();
   const q = F("asQ").value.trim().toLowerCase();
-  const shown = items.filter((x) => (kind === "all" || x.kind === kind || x.folder === kind) && (!q || hay(x).includes(q)));
+  const shown = items.filter((x) => {
+    if (kind === "all") return true;
+    if (kind === "snippet") {
+      if (snippetFolder !== "all") {
+        return x.kind === "snippet" && x.folder === snippetFolder;
+      }
+      return x.kind === "snippet";
+    }
+    return x.kind === kind;
+  }).filter((x) => !q || hay(x).includes(q));
+
   F("asTotal").textContent = shown.length ? String(shown.length) : "";
   const g = F("asGrid");
   g.replaceChildren(...shown.map((it) => el("div", { class: "card pick as-card" + (cur?.id === it.id ? " on" : ""), onclick: () => open(it) },
@@ -92,6 +150,7 @@ function paint() {
     el("div", { class: "bd" },
       el("div", { class: "t" }, (it.fav ? "★ " : "") + it.name),
       el("div", { class: "row wrap as-tags" }, el("span", { class: "badge-s" }, KIND_NAME[it.kind] || it.kind),
+        it.folder ? el("span", { class: "badge-s muted" }, it.folder) : "",
         ...(it.tags || []).slice(0, 3).map((t) => el("span", { class: "muted sm" }, "#" + t)))))));
   if (!shown.length) g.append(el("div", { class: "muted sm pad" }, items.length ? "沒有符合的資產" : "還沒有資產：按右上「＋ 新增」"));
 }
@@ -99,19 +158,19 @@ function paint() {
 // ---------------------------------------------------------------- 右邊：編輯區
 function open(it) {
   if (busy) return;
-  const isCustomFolder = !VALID_BACKEND_KINDS.has(it.kind) || (!VALID_BACKEND_KINDS.has(it.folder) && it.folder);
-  if (!MEDIA.has(it.kind) && !isCustomFolder) return library.edit(it);  // 整套設定、片段：沿用提示詞庫的編輯窗
+  if (!MEDIA.has(it.kind)) return library.edit(it);  // 整套設定、片段：沿用提示詞庫的編輯窗
   cur = structuredClone(it);
   fill();
 }
 
 function newOne() {
   if (busy) return;
-  if (kind === "set" || kind === "snippet") return library.saveDialog({ kind });
-  const isCustomFolder = !VALID_BACKEND_KINDS.has(kind) && kind !== "all";
-  const defaultKind = KINDS.some(([k]) => k === kind) ? kind : "char";
-  const defaultFolder = isCustomFolder ? kind : "";
-  cur = { id: null, kind: defaultKind, name: "", folder: defaultFolder, tags: [], fav: 0, note: "", data: {} };
+  if (kind === "set") return library.saveDialog({ kind: "set" });
+  if (kind === "snippet") {
+    const folder = snippetFolder !== "all" ? snippetFolder : "";
+    return library.saveDialog({ kind: "snippet", folder });
+  }
+  cur = { id: null, kind: VALID_MEDIA_KINDS.has(kind) ? kind : "char", name: "", folder: "", tags: [], fav: 0, note: "", data: {} };
   fill();
   F("asName").focus();
 }
@@ -123,17 +182,8 @@ function fill() {
   const d = cur.data || {};
   F("asName").value = cur.name || "";
   const k = cur.kind;
-  const customKinds = new Set(KINDS.map(([key]) => key).filter((key) => !VALID_BACKEND_KINDS.has(key)));
-  if (customKinds.has(cur.folder) && (kind === cur.folder || !VALID_BACKEND_KINDS.has(k))) {
-    F("asKind").value = cur.folder;
-  } else if (KINDS.some(([key]) => key === k)) {
-    F("asKind").value = k;
-  } else if (customKinds.has(cur.folder)) {
-    F("asKind").value = cur.folder;
-  } else {
-    F("asKind").value = "char";
-  }
-  F("asFolder").value = cur.folder || (!VALID_BACKEND_KINDS.has(k) && k !== "all" ? k : "");
+  F("asKind").value = VALID_BACKEND_KINDS.has(k) ? k : "char";
+  F("asFolder").value = cur.folder || "";
   F("asLabels").value = (cur.tags || []).join(", ");
   F("asFav").checked = !!cur.fav;
   F("asLookZh").value = d.look_zh || "";
@@ -243,9 +293,7 @@ function collect() {
   if (TEXT_KINDS.has(k)) d.text = F("asText").value;
 
   if (!VALID_BACKEND_KINDS.has(k)) {
-    if (!folder) folder = k;
-    const hasCharFeatures = d.look_zh || d.look_en || (d.tags_anima && d.tags_anima.length) || (d.images && d.images.length);
-    k = (d.text && !hasCharFeatures) ? "snippet" : "char";
+    k = "char";
   }
 
   if (k === "snippet" && !d.text) {
@@ -371,17 +419,7 @@ export function init() {
   F("asKind").replaceChildren(...KINDS.map(([k, name]) => el("option", { value: k }, name)));
   F("asRole").replaceChildren(...ROLES.map(([r, name]) => el("option", { value: r }, "新圖片用途：", name)));
   F("asLayout").replaceChildren(...LAYOUT.map(([k, name]) => el("label", {}, el("span", { class: "sub" }, name), el("input", { type: "text", id: "asL_" + k }))));
-  F("asKind").onchange = () => {
-    const k = F("asKind").value;
-    if (!VALID_BACKEND_KINDS.has(k)) {
-      const curFolder = F("asFolder").value.trim();
-      const customKinds = new Set(KINDS.map(([key]) => key).filter((key) => !VALID_BACKEND_KINDS.has(key)));
-      if (!curFolder || customKinds.has(curFolder)) {
-        F("asFolder").value = k;
-      }
-    }
-    byKind();
-  };
+  F("asKind").onchange = byKind;
   F("asQ").oninput = paint;
   F("asNew").onclick = newOne;
   F("asSave").onclick = () => save();

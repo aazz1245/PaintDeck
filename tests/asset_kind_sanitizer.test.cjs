@@ -23,101 +23,77 @@ function moduleContext(file, globals, exposed) {
   return context.subject;
 }
 
-test('assets.js: VALID_BACKEND_KINDS 和 VALID_MEDIA_KINDS 定義正確，且不包含非標準分類', () => {
+test('assets.js: KINDS 僅包含 10 種標準資產類型，少女/蘿莉等為 SNIPPET_FOLDERS（片段子選項）', () => {
   const sub = moduleContext('assets.js', {
     api: () => {}, el: element, $: () => element('div'), $$: () => [], toast: () => {},
     library: {}, document: { getElementById: () => element('div'), addEventListener() {}, body: element('body') },
-  }, 'VALID_BACKEND_KINDS, VALID_MEDIA_KINDS, KINDS');
+  }, 'KINDS, SNIPPET_FOLDERS, VALID_BACKEND_KINDS, VALID_MEDIA_KINDS');
 
-  const backendKinds = Array.from(sub.VALID_BACKEND_KINDS).sort();
-  const mediaKinds = sub.VALID_MEDIA_KINDS;
+  const kindsKeys = sub.KINDS.map(([k]) => k).sort();
+  const expectedKinds = ['char', 'frame', 'fx', 'outfit', 'prop', 'scene', 'set', 'shot', 'snippet', 'sound'].sort();
+  assert.equal(JSON.stringify(kindsKeys), JSON.stringify(expectedKinds), '頂層 KINDS 應純粹為 10 種資產類型');
 
-  // 驗證後端白名單只有 Rust 允許的 10 種
-  const expectedBackend = ['char', 'frame', 'fx', 'outfit', 'prop', 'scene', 'set', 'shot', 'snippet', 'sound'].sort();
-  assert.deepEqual(backendKinds, expectedBackend);
-
-  // 驗證自定義資料夾如「少女」、「萝莉」不在 VALID_BACKEND_KINDS 和 VALID_MEDIA_KINDS 中
-  assert.equal(sub.VALID_BACKEND_KINDS.has('少女'), false);
-  assert.equal(sub.VALID_BACKEND_KINDS.has('萝莉'), false);
-  assert.equal(mediaKinds.has('少女'), false);
-  assert.equal(mediaKinds.has('萝莉'), false);
+  const snippetFolderKeys = sub.SNIPPET_FOLDERS.map(([k]) => k);
+  assert.ok(snippetFolderKeys.includes('少女'));
+  assert.ok(snippetFolderKeys.includes('萝莉'));
+  assert.ok(snippetFolderKeys.includes('假小子'));
+  assert.ok(snippetFolderKeys.includes('肉感'));
+  assert.ok(snippetFolderKeys.includes('厚涂'));
+  assert.ok(snippetFolderKeys.includes('强烈质感设计'));
+  assert.ok(snippetFolderKeys.includes('后缀'));
+  assert.ok(snippetFolderKeys.includes('anima'));
 });
 
-test('assets.js: init() 產生的 asKind 下拉選單必須涵蓋 KINDS 中的所有分類（包括少女、蘿莉、提示詞片段等）', () => {
+test('assets.js: 提示詞片段（snippet）點選時，產生片段子選項晶片（全部片段、少女、蘿莉…）', () => {
   const nodes = new Map();
   const node = (id) => {
     if (!nodes.has(id)) nodes.set(id, element('input'));
     return nodes.get(id);
   };
+  const mockItems = [
+    { id: 1, kind: 'snippet', name: 'A', folder: '少女' },
+    { id: 2, kind: 'snippet', name: 'B', folder: '萝莉' },
+    { id: 3, kind: 'char', name: 'C', folder: '' }
+  ];
   const sub = moduleContext('assets.js', {
-    api: () => {}, el: element, $: node, $$: () => [], toast: () => {},
+    api: () => Promise.resolve(mockItems), el: element, $: node, $$: () => [], toast: () => {},
     library: {}, document: { getElementById: node, addEventListener() {}, body: element('body') },
-  }, 'init, KINDS');
+  }, 'paintKinds: () => paintKinds(), setKind: (k) => { kind = k; }, setItems: (it) => { items = it; }');
 
-  sub.init();
-  const options = node('asKind').children;
-  assert.equal(options.length, sub.KINDS.length, '下拉選單選項數目必須與 KINDS 全部項目一致');
-  
-  const optionValues = options.map((opt) => opt.value);
-  for (const [k] of sub.KINDS) {
-    assert.ok(optionValues.includes(k), `下拉選單必須包含分類：${k}`);
-  }
-  assert.ok(optionValues.includes('少女'));
-  assert.ok(optionValues.includes('萝莉'));
-  assert.ok(optionValues.includes('snippet'));
+  sub.setItems(mockItems);
+  sub.setKind('snippet');
+  sub.paintKinds();
+
+  const asKindsBox = node('asKinds');
+  assert.equal(asKindsBox.children.length, 2, '應包含主選項列與子選項列');
+  const subKindsRow = asKindsBox.children[1];
+  assert.ok(subKindsRow.children.length > 2, '子選項列應包含全部片段以及對應資料夾按鈕');
 });
 
-test('assets.js: 在自訂分類（如「少女」）下 newOne()，asKind 預設為「少女」且 folder 為「少女」', () => {
+test('assets.js: 在提示詞片段子選項下點「+ 新增」，調用 library.saveDialog 存成片段，不被當作資產保存', () => {
   const nodes = new Map();
   const node = (id) => {
     if (!nodes.has(id)) nodes.set(id, element('input'));
     return nodes.get(id);
   };
+  let saveDialogArgs = null;
   const sub = moduleContext('assets.js', {
-    api: () => {}, el: element, $: node, $$: () => [], toast: () => {},
-    library: {}, document: { getElementById: node, addEventListener() {}, body: element('body') },
-  }, 'newOne, fill, current: () => cur, setKind: (k) => { kind = k; }');
+    api: () => Promise.resolve([]), el: element, $: node, $$: () => [], toast: () => {},
+    library: { saveDialog: (args) => { saveDialogArgs = args; } },
+    document: { getElementById: node, addEventListener() {}, body: element('body') },
+  }, 'newOne, setKind: (k) => { kind = k; }, setSnippetFolder: (f) => { snippetFolder = f; }, current: () => cur');
 
-  sub.setKind('少女');
+  sub.setKind('snippet');
+  sub.setSnippetFolder('少女');
   sub.newOne();
-  const cur = sub.current();
-  assert.equal(cur.kind, '少女');
-  assert.equal(cur.folder, '少女');
-  assert.equal(node('asKind').value, '少女');
-  assert.equal(node('asFolder').value, '少女');
+
+  assert.ok(saveDialogArgs, '應調用提示詞庫的 saveDialog 彈窗');
+  assert.equal(saveDialogArgs.kind, 'snippet');
+  assert.equal(saveDialogArgs.folder, '少女');
+  assert.equal(sub.current(), null, '不應建立媒體資產編輯實例');
 });
 
-test('assets.js: 下拉選單選取非標準 kind（如「少女」），collect() 與 save() 自動清洗為合法後端 kind 並保留 folder', async () => {
-  const nodes = new Map();
-  const node = (id) => {
-    if (!nodes.has(id)) nodes.set(id, element('input'));
-    return nodes.get(id);
-  };
-  node('asForm').querySelectorAll = () => [...nodes.values()].filter((e) => e !== node('asForm'));
-
-  let sentPayload = null;
-  const sub = moduleContext('assets.js', {
-    api: (url, opts) => { sentPayload = opts.json; return Promise.resolve({ id: 99, ...opts.json }); },
-    el: element, $: node, $$: () => [], toast: () => {},
-    library: {}, document: { getElementById: node, addEventListener() {}, body: element('body') },
-  }, 'save, newOne, current: () => cur, setKind: (k) => { kind = k; }');
-
-  sub.setKind('少女');
-  sub.newOne();
-  node('asName').value = '野生的大魔王';
-  node('asKind').value = '少女';
-  node('asFolder').value = '';
-  node('asAnima').value = '@yahako';
-
-  await sub.save();
-
-  assert.ok(sentPayload);
-  assert.equal(sentPayload.kind, 'char', '自訂分類「少女」有角色標籤時必須自動清洗為後端合法的「char」');
-  assert.equal(sentPayload.folder, '少女', '「少女」必須被保留在 folder 欄位');
-  assert.equal(sentPayload.name, '野生的大魔王');
-});
-
-test('assets.js: 新增資產未輸入名字時點「+ 從電腦」或「+ 從圖庫」，自動以圖檔名或未命名資產命名，不跳「資產要有名字」錯誤', async () => {
+test('assets.js: 新增資產未輸入名字時點「+ 從電腦」，自動以圖檔名命名，不跳「資產要有名字」錯誤', async () => {
   const nodes = new Map();
   const node = (id) => {
     if (!nodes.has(id)) nodes.set(id, element('input'));
@@ -147,10 +123,8 @@ test('assets.js: 新增資產未輸入名字時點「+ 從電腦」或「+ 從�
 
   sub.init();
   sub.newOne();
-  // 名字目前為空
   assert.equal(node('asName').value, '');
 
-  // 模擬點擊「+ 從電腦」
   await node('asImgUp').onclick();
 
   assert.equal(toastErrors.length, 0, '不應彈出「資產要有名字」的錯誤訊息');
@@ -158,4 +132,3 @@ test('assets.js: 新增資產未輸入名字時點「+ 從電腦」或「+ 從�
   assert.equal(savedCalls.length, 1);
   assert.equal(savedCalls[0].name, 'cute_girl');
 });
-
