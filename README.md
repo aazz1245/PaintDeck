@@ -69,7 +69,7 @@
 ### 📝 更新日誌 (Changelog)
 
 #### [2026-11-04]
-- **fix(gen)**: 徹底實現「直接開啟保存資料夾」，優先走 PaintDeck 8190 原生 `/api/reveal` 系統級開窗通道（100% 獨立於 ComfyUI 運行狀態，即使暖機中亦秒級彈窗打開檔案總管），並解除 ComfyUI 跨域 403 阻斷，拒絕單純拷貝路徑。
+- **fix(gen)**: 徹底實現「直接開啟保存資料夾」，優先走 PaintDeck 8190 原生 `/api/reveal` 系統級通道，預置預設輸出路徑快取消除初次調用 2000ms 超時延遲，並移除多餘 Toast 提示實現零延遲、純靜默開窗。
 - **feat(skill)**: 新增 `paintdeck-dev` 開發維護技能（MCP 控制、`/plan` 規劃、上游衝突分析及同步交付規範）。
 - **feat(desktop)**: 在 Windows 桌面建立「繪匣 PaintDeck」快捷方式。
 - **docs(readme)**: 在 Fork `README.md` 中建立客製功能專區與持續更新日誌。

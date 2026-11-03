@@ -1757,7 +1757,7 @@ function show(rec) {
 }
 
 // ---------------------------------------------------------------- 本機檔案路徑與開啟資料夾
-let cachedOutputDir = null;
+let cachedOutputDir = "E:\\AI\\ComfyUI-aki\\ComfyUI-aki-v1.6\\ComfyUI\\output";
 
 export async function getComfyOutputDir() {
   if (cachedOutputDir) return cachedOutputDir;
@@ -1833,7 +1833,6 @@ export async function openImageFolder(rec) {
       try {
         const r = await api("/api/reveal", { json: { path: cand } }).catch(() => null);
         if (r && r.ok) {
-          toast("已在檔案總管開啟儲存資料夾", "ok");
           return;
         }
       } catch (_) {}
@@ -1852,7 +1851,6 @@ export async function openImageFolder(rec) {
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
         if (data.success !== false) {
-          toast("已在檔案總管開啟儲存資料夾", "ok");
           return;
         }
       }

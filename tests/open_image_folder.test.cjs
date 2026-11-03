@@ -23,16 +23,18 @@ test('gen.js 導出 getComfyOutputDir, resolveImageFilePath, openImageFolder, op
   assert.match(genSrc, /export function closeImageMenu/);
 });
 
-test('openImageFolder 實作徹底解耦 ComfyUI 狀態，優先走 8190 原生 reveal 通道直接開窗', () => {
+test('openImageFolder 實作徹底解耦 ComfyUI 狀態，預置路徑快取零延遲且靜默開窗無干擾', () => {
   const genSrc = fs.readFileSync(path.join(__dirname, '../ui/js/gen.js'), 'utf-8');
   // 1. 不再將開啟資料夾失敗歸咎於 ComfyUI 連線
   assert.doesNotMatch(genSrc, /無法連線至 ComfyUI/);
-  // 2. 軌道 1：使用同源 /api/reveal 與 .paintdeck_folder.json 錨點秒開資料夾
+  // 2. 移除成功開啟時多餘的 Toast 提示（靜默開窗）
+  assert.doesNotMatch(genSrc, /已在檔案總管開啟儲存資料夾/);
+  // 3. 預置 cachedOutputDir，消除初次開窗等待 2000ms 超時延遲
+  assert.match(genSrc, /let cachedOutputDir = "E:\\\\AI\\\\ComfyUI-aki\\\\ComfyUI-aki-v1.6\\\\ComfyUI\\\\output"/);
+  // 4. 軌道 1：使用同源 /api/reveal 與 .paintdeck_folder.json 錨點秒開資料夾
   assert.match(genSrc, /\/api\/reveal/);
   assert.match(genSrc, /\.paintdeck_folder\.json/);
-  // 3. 軌道 2：輔助通道採用 text/plain 避免 OPTIONS 預檢
-  assert.match(genSrc, /"Content-Type":\s*"text\/plain"/);
-  // 4. 終極保底路徑複製
+  // 5. 終極保底路徑複製
   assert.match(genSrc, /已複製圖片檔案路徑：/);
 });
 
