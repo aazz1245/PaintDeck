@@ -23,6 +23,16 @@ test('gen.js 導出 getComfyOutputDir, resolveImageFilePath, openImageFolder, op
   assert.match(genSrc, /export function closeImageMenu/);
 });
 
+test('openImageFolder 實作徹底解耦 ComfyUI 狀態且使用免 CORS 請求頭', () => {
+  const genSrc = fs.readFileSync(path.join(__dirname, '../ui/js/gen.js'), 'utf-8');
+  // 不再將開啟資料夾失敗歸咎於 ComfyUI 連線
+  assert.doesNotMatch(genSrc, /無法連線至 ComfyUI/);
+  // 使用 text/plain 避免觸發 aiohttp OPTIONS 預檢 403
+  assert.match(genSrc, /"Content-Type":\s*"text\/plain"/);
+  // 回退或複製時提示正確路徑
+  assert.match(genSrc, /已複製圖片檔案路徑：/);
+});
+
 test('renderStrip 在幻燈片匣圖片上綁定右鍵選單與快捷鍵', () => {
   const genSrc = fs.readFileSync(path.join(__dirname, '../ui/js/gen.js'), 'utf-8');
   assert.match(genSrc, /oncontextmenu:\s*\(e\)\s*=>/);

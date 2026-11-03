@@ -1818,34 +1818,34 @@ export async function openImageFolder(rec) {
       return;
     }
 
-    const comfyOrigin = (window.app?.state?.comfy_url || "http://127.0.0.1:8188").replace(/\/+$/, "");
-    const res = await fetch(`${comfyOrigin}/api/lm/open-file-location`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ file_path: fullPath }),
-      signal: AbortSignal.timeout(3000),
-    });
+    // 1. 優先嘗試免 CORS 簡單請求喚起本機檔案總管選取檔案（避免觸發瀏覽器 OPTIONS 預檢 403）
+    try {
+      const comfyOrigin = (window.app?.state?.comfy_url || "http://127.0.0.1:8188").replace(/\/+$/, "");
+      const res = await fetch(`${comfyOrigin}/api/lm/open-file-location`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ file_path: fullPath }),
+        signal: AbortSignal.timeout(2000),
+      });
 
-    if (res.ok) {
-      const data = await res.json().catch(() => ({}));
-      if (data.success !== false) {
-        toast("已在檔案總管開啟儲存資料夾", "ok");
-        return;
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data.success !== false) {
+          toast("已在檔案總管開啟儲存資料夾", "ok");
+          return;
+        }
       }
+    } catch (_) {
+      // 本機喚起服務離線或未響應時靜默略過，不將開啟資料夾強綁定至 ComfyUI
     }
 
-    navigator.clipboard?.writeText(fullPath);
-    toast(`無法直接開啟檔案總管，已複製路徑：${fullPath}`, "warn");
+    // 2. 若未能直接由桌面程序拉起，平滑拷貝檔案完整路徑至剪貼簿供快速訪問
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(fullPath).catch(() => {});
+    }
+    toast(`已複製圖片檔案路徑：${fullPath}`, "ok");
   } catch (err) {
-    try {
-      const fullPath = await resolveImageFilePath(rec);
-      if (fullPath) {
-        navigator.clipboard?.writeText(fullPath);
-        toast(`無法連線至 ComfyUI，已複製路徑：${fullPath}`, "warn");
-        return;
-      }
-    } catch (_) {}
-    toast("開啟資料夾失敗：" + err.message, "err");
+    toast("開啟資料夾失敗：" + (err?.message || err), "err");
   }
 }
 
