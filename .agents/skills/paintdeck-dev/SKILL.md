@@ -136,12 +136,13 @@ node --test tests/*.test.cjs
 ```
 - **通過標準**：全部測試 pass（包含原版測試與我方擴展測試，如 `tests/assets_custom.test.cjs`, `tests/gen_mode_params.test.cjs`, `tests/library_thumb_upload.test.cjs` 等），**0 fail**。
 
-### 步驟 3：全域同步版本號
-上游若提升了版本號（如 `26.1031.4`），必須在以下檔案中同步對齊：
-- `src-tauri/Cargo.toml` (`version = "..."`)
-- `src-tauri/tauri.conf.json` (`"version": "..."`)
-- `ui/index.html` (`<span id="verText">V...</span>`)
-- `ui/manual.html`
+### 步驟 3：全域同步版本號與更新 README.md 日誌
+1. **版本號同步**：上游若提升了版本號（如 `26.1031.4`），必須在以下檔案中同步對齊：
+   - `src-tauri/Cargo.toml` (`version = "..."`)
+   - `src-tauri/tauri.conf.json` (`"version": "..."`)
+   - `ui/index.html` (`<span id="verText">V...</span>`)
+   - `ui/manual.html`
+2. **README 更新日誌同步**：每次自訂修改或合併更新後，必須在 `README.md` 的「📝 更新日誌 (Changelog)」章節追加本次更新內容、日期與關鍵改動說明。
 
 ### 步驟 4：鏡像同步至本機工作區
 將 Git 樹中的 `ui/`, `resources/`, `tests/`, `src-tauri/`, `tools/` 等檔案完整同步複製至工作區目錄 `E:\AI\ComfyUI-aki\繪匣 PaintDeck`。刪除上游已棄用的殘留檔案（如已刪除的 `civitai.js`）。
