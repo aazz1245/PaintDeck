@@ -1818,7 +1818,28 @@ export async function openImageFolder(rec) {
       return;
     }
 
-    // 1. 優先嘗試免 CORS 簡單請求喚起本機檔案總管選取檔案（避免觸發瀏覽器 OPTIONS 預檢 403）
+    const lastSlash = Math.max(fullPath.lastIndexOf("\\"), fullPath.lastIndexOf("/"));
+    const dir = lastSlash > 0 ? fullPath.substring(0, lastSlash) : fullPath;
+    const outputDir = await getComfyOutputDir().catch(() => "");
+
+    // 軌道 1 (主通道)：PaintDeck 8190 原生檔案總管喚起通道（100% 獨立於 ComfyUI 狀態）
+    // 透過目錄中的錨點設定調用本機 /api/reveal，即使 ComfyUI 暖機中或關閉亦可秒開資料夾
+    const candidates = [
+      `${dir}\\.paintdeck_folder.json`,
+      outputDir ? `${outputDir}\\.paintdeck_folder.json` : null
+    ].filter(Boolean);
+
+    for (const cand of candidates) {
+      try {
+        const r = await api("/api/reveal", { json: { path: cand } }).catch(() => null);
+        if (r && r.ok) {
+          toast("已在檔案總管開啟儲存資料夾", "ok");
+          return;
+        }
+      } catch (_) {}
+    }
+
+    // 軌道 2 (輔助通道)：嘗試呼叫本機端點精確高亮選中該圖檔
     try {
       const comfyOrigin = (window.app?.state?.comfy_url || "http://127.0.0.1:8188").replace(/\/+$/, "");
       const res = await fetch(`${comfyOrigin}/api/lm/open-file-location`, {
@@ -1835,11 +1856,9 @@ export async function openImageFolder(rec) {
           return;
         }
       }
-    } catch (_) {
-      // 本機喚起服務離線或未響應時靜默略過，不將開啟資料夾強綁定至 ComfyUI
-    }
+    } catch (_) {}
 
-    // 2. 若未能直接由桌面程序拉起，平滑拷貝檔案完整路徑至剪貼簿供快速訪問
+    // 軌道 3：終極保底，複製路徑至剪貼簿
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(fullPath).catch(() => {});
     }

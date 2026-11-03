@@ -23,13 +23,16 @@ test('gen.js 導出 getComfyOutputDir, resolveImageFilePath, openImageFolder, op
   assert.match(genSrc, /export function closeImageMenu/);
 });
 
-test('openImageFolder 實作徹底解耦 ComfyUI 狀態且使用免 CORS 請求頭', () => {
+test('openImageFolder 實作徹底解耦 ComfyUI 狀態，優先走 8190 原生 reveal 通道直接開窗', () => {
   const genSrc = fs.readFileSync(path.join(__dirname, '../ui/js/gen.js'), 'utf-8');
-  // 不再將開啟資料夾失敗歸咎於 ComfyUI 連線
+  // 1. 不再將開啟資料夾失敗歸咎於 ComfyUI 連線
   assert.doesNotMatch(genSrc, /無法連線至 ComfyUI/);
-  // 使用 text/plain 避免觸發 aiohttp OPTIONS 預檢 403
+  // 2. 軌道 1：使用同源 /api/reveal 與 .paintdeck_folder.json 錨點秒開資料夾
+  assert.match(genSrc, /\/api\/reveal/);
+  assert.match(genSrc, /\.paintdeck_folder\.json/);
+  // 3. 軌道 2：輔助通道採用 text/plain 避免 OPTIONS 預檢
   assert.match(genSrc, /"Content-Type":\s*"text\/plain"/);
-  // 回退或複製時提示正確路徑
+  // 4. 終極保底路徑複製
   assert.match(genSrc, /已複製圖片檔案路徑：/);
 });
 
@@ -58,7 +61,6 @@ test('gallery.js 在燈箱與卡片上綁定右鍵選單', () => {
 });
 
 test('檔案路徑解析與開啟邏輯驗證', async () => {
-  // 模擬 resolveImageFilePath
   function mockResolveImageFilePath(rec, outputDir) {
     if (!rec || !rec.filename) return null;
     const sub = rec.subfolder ? `${rec.subfolder}\\` : '';

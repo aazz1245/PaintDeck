@@ -69,7 +69,7 @@
 ### 📝 更新日誌 (Changelog)
 
 #### [2026-11-04]
-- **fix(gen)**: 修復點擊「開啟保存資料夾」報錯無法連線至 ComfyUI 的問題，徹底解耦本機檔案管理與 ComfyUI 連線狀態，改採免 CORS 簡單請求協議避免瀏覽器預檢 403 攔截，並完善平滑複製檔案路徑回退機制。
+- **fix(gen)**: 徹底實現「直接開啟保存資料夾」，優先走 PaintDeck 8190 原生 `/api/reveal` 系統級開窗通道（100% 獨立於 ComfyUI 運行狀態，即使暖機中亦秒級彈窗打開檔案總管），並解除 ComfyUI 跨域 403 阻斷，拒絕單純拷貝路徑。
 - **feat(skill)**: 新增 `paintdeck-dev` 開發維護技能（MCP 控制、`/plan` 規劃、上游衝突分析及同步交付規範）。
 - **feat(desktop)**: 在 Windows 桌面建立「繪匣 PaintDeck」快捷方式。
 - **docs(readme)**: 在 Fork `README.md` 中建立客製功能專區與持續更新日誌。
