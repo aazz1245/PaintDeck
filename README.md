@@ -59,8 +59,8 @@
   - 卡片點選反白高亮（`adr-card on`）與滾動條位置記憶。
 - **圖片燈箱右鍵「開啟所在資料夾」 (Lightbox Open Containing Folder)**：
   - 大圖燈箱右鍵選單支援一鍵開啟 Windows 檔案總管並定位該圖。
-- **LoRA 觸發詞自動同步與清理 (LoRA Trigger Word Sync)**：
-  - 選擇 LoRA 自動填入觸發詞，移除 LoRA 時自動清理關聯詞。
+- **LoRA 觸發詞管理 (LoRA Trigger Word Management)**：
+  - 下載與管理頁儲存觸發詞，供反推和漫畫功能使用；生圖卡匣不會自動改寫提示詞。
 - **PaintDeck 專屬開發維護技能 (`paintdeck-dev`)**：
   - 內建全域與專案級開發維護技能，整合 anima MCP 操控、`/plan` 前置規劃、上游三路衝突分析與自動化測試發布標準。
 
@@ -69,6 +69,7 @@
 ### 📝 更新日誌 (Changelog)
 
 #### [2026-11-08]
+- **fix(gen)**: LoRA 卡匣不再自動插入或移除觸發詞，避免重複提示詞，也保護使用者手動輸入的內容。
 - **fix(comfy)**: ComfyUI 回傳 LoRA 清單為 null 時查詢目前合法選項，修正子資料夾 LoRA 的斜線格式後重新送出。
 
 #### [2026-11-04]

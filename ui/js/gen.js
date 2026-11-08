@@ -286,7 +286,7 @@ export function init() {
   F("ctrlImg").onclick = () => { S.ctrl = null; showCtrl(); save(); };
 
   // LoRA
-  F("addLora").onclick = () => loras.openPicker((l, triggers) => addLora(l, triggers), pickerFam());
+  F("addLora").onclick = () => loras.openPicker((l) => addLora(l), pickerFam());
 
   // 種子、提示詞庫的整套設定
   F("seedRandom").onclick = () => { F("seed").value = ""; save(); };
@@ -909,7 +909,7 @@ const loraDisplayTitle = (l) => {
 };
 
 // ---------------------------------------------------------------- LoRA 疊加
-export function addLora(l, insertIntoPrompt = true) {
+export function addLora(l) {
   const t = l.title || baseName(l.name);
   const existing = S.loras.find((x) => x.name === l.name);
   const meta = (app.state?.models?.loras || []).find((x) => x.name === l.name);
@@ -944,19 +944,13 @@ export function addLora(l, insertIntoPrompt = true) {
     });
   }
 
-  // 默認將卡匣內的提示詞放入主體提示詞框
-  if (insertIntoPrompt && uniqueTrigs.length) {
-    prependTriggers(uniqueTrigs, F("prompt"));
-  }
-
   renderLoras();
   save();
 }
 
-export function applyLoraRecipe(recipe, insertIntoPrompt = true) {
+export function applyLoraRecipe(recipe) {
   if (!recipe || !Array.isArray(recipe.loras)) return;
   let added = 0;
-  const allTrigs = [];
   for (const item of recipe.loras) {
     if (!item.name) continue;
     const existing = S.loras.find((x) => x.name === item.name);
@@ -987,10 +981,6 @@ export function applyLoraRecipe(recipe, insertIntoPrompt = true) {
       existing.enabled = true;
       if (uniqueTrigs.length) existing.triggers = uniqueTrigs;
     }
-    if (uniqueTrigs.length) allTrigs.push(...uniqueTrigs);
-  }
-  if (insertIntoPrompt && allTrigs.length) {
-    prependTriggers([...new Set(allTrigs)], F("prompt"));
   }
   renderLoras();
   save();
@@ -1000,27 +990,10 @@ export function applyLoraRecipe(recipe, insertIntoPrompt = true) {
 export function removeLora(index) {
   const l = S.loras[index];
   if (!l) return;
-  const meta = (app.state?.models?.loras || []).find((x) => x.name === l.name);
-  const info = loras.getLoraInfo?.(l.name);
-  const triggers = [
-    ...(l.triggers || []),
-    ...(meta?.triggers || []),
-    ...(info?.triggers || [])
-  ].flatMap((x) => (typeof x === "string" ? x.split(",") : [])).map((s) => s.trim()).filter(Boolean);
-  const uniqueTriggers = [...new Set(triggers)];
-
-  if (uniqueTriggers.length) {
-    removePrompt(uniqueTriggers);
-  }
-
   S.loras.splice(index, 1);
   renderLoras();
   save();
-  if (uniqueTriggers.length) {
-    toast(`已移除「${l.title || l.name}」及相應提示詞`, "ok");
-  } else {
-    toast(`已移除「${l.title || l.name}」`, "ok");
-  }
+  toast(`已移除「${l.title || l.name}」`, "ok");
 }
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -1073,37 +1046,6 @@ export function renderLoras() {
         : `這個 LoRA 是 ${famLabel(loraFam(l))} 用的，目前的模型用不了，生成時會略過。`)
       : meta[l.name]?.note || "";
     const dispName = loraDisplayTitle(l);
-    const info = loras.getLoraInfo?.(l.name);
-    const allTrigs = [
-      ...(l.triggers || []),
-      ...(meta[l.name]?.triggers || []),
-      ...(info?.triggers || [])
-    ].flatMap((x) => (typeof x === "string" ? x.split(",") : [])).map((s) => s.trim()).filter(Boolean);
-    const uniqueTriggers = [...new Set(allTrigs)];
-    l.triggers = uniqueTriggers;
-
-    const trigPreview = el("div", { class: "lora-trig-preview" },
-      el("span", { class: "trig-lbl" }, "提示詞："),
-      uniqueTriggers.length
-        ? uniqueTriggers.map((tw) => {
-            const inPrompt = hasPrompt(tw);
-            return el("span", {
-              class: "trig-tag" + (inPrompt ? " in-prompt" : ""),
-              title: inPrompt ? "已在提示詞框中（點擊移除）" : "尚未在提示詞框中（點擊加入主體提示詞框）",
-              onclick: (e) => {
-                e.stopPropagation();
-                if (inPrompt) {
-                  removePrompt(tw);
-                } else {
-                  prependTriggers([tw], F("prompt"));
-                }
-                renderLoras();
-              }
-            }, tw);
-          })
-        : el("span", { class: "trig-none" }, "（無專屬提示詞）")
-    );
-
     const row = el("div", { class: "lora-item" + (l.enabled && !bad ? "" : " off") + (bad ? " mismatch" : "") },
       el("input", { type: "checkbox", checked: l.enabled, title: "暫時停用", onchange: (e) => { l.enabled = e.target.checked; renderLoras(); save(); } }),
       el("span", { class: "nm", title: (note ? note + "\n\n" : "") + l.name }, dispName),
@@ -1114,8 +1056,7 @@ export function renderLoras() {
       el("button", { class: "icon", title: "強度對照：同一個種子，用幾種強度各畫一張", onclick: () => sweep(l) }, "⇆"),
       el("button", { class: "icon", title: "移除", onclick: () => removeLora(i) }, "✕"),
       note ? el("div", { class: "lora-note" + (S.openNotes.has(l.name) ? " open" : ""), title: "點一下展開／收合",
-        onclick: (e) => { S.openNotes.has(l.name) ? S.openNotes.delete(l.name) : S.openNotes.add(l.name); e.currentTarget.classList.toggle("open"); } }, note) : null,
-      trigPreview);
+        onclick: (e) => { S.openNotes.has(l.name) ? S.openNotes.delete(l.name) : S.openNotes.add(l.name); e.currentTarget.classList.toggle("open"); } }, note) : null);
     box.append(row);
   });
 }
@@ -1160,27 +1101,6 @@ function renderTrig() {
   if (wrap) wrap.hidden = true;
 }
 
-function toggleTrigger(w, on) {
-  if (on) removePrompt(w);
-  else appendPrompt(w);
-  save();
-  renderTrig();
-  renderLoras();
-}
-
-// 觸發詞插在開頭的品質／評級詞後面（masterpiece, best quality, safe, jgdxstyle, …）：放越前面 LoRA 越穩；沒有品質詞就放最前面
-const QUALITY = /^(masterpiece|best quality|amazing quality|high quality|very aesthetic|aesthetic|absurdres|highres|newest|recent|score_\d+(_up)?|year \d{4}|safe|sensitive|nsfw|explicit)$/i;
-export function insertAfterQuality(cur, words) {
-  const parts = cur.trim().replace(/,\s*$/, "").split(",");
-  const have = new Set(parts.map((s) => s.trim().toLowerCase()));
-  const add = words.map((w) => w.trim()).filter((w) => w && !have.has(w.toLowerCase()));
-  if (!add.length) return cur;
-  let i = 0;
-  while (i < parts.length && QUALITY.test(parts[i].trim())) i++;
-  const rest = parts.slice(i).join(",").trim();
-  return [...parts.slice(0, i).map((s) => s.trim()), ...add, ...(rest ? [rest] : [])].join(", ");
-}
-
 export function getRawPrompt() {
   const parts = [
     F("promptPrefix")?.value?.trim() || "",
@@ -1203,38 +1123,6 @@ export function setActivePrompt(id) {
     const sec = F(pid === "prompt" ? "secPrompt" : pid === "promptPrefix" ? "secPromptPrefix" : "secPromptSuffix");
     if (sec) sec.classList.toggle("active", pid === id);
   }
-}
-
-export function prependTriggers(words, targetBox = null) {
-  const flat = (Array.isArray(words) ? words : [words])
-    .flatMap((x) => (typeof x === "string" ? x.split(",") : []))
-    .map((s) => s.trim())
-    .filter(Boolean);
-  if (!flat.length) return;
-
-  const target = targetBox || F("prompt") || getActivePromptEl();
-  const cur = target.value.trim();
-  if (!cur) {
-    target.value = flat.join(", ");
-    save();
-    renderTrig?.();
-    promptx.refresh?.();
-    return;
-  }
-
-  const curParts = cur.split(",").map((s) => s.trim()).filter(Boolean);
-  const have = new Set(curParts.map(normTag));
-  const add = flat.filter((w) => !have.has(normTag(w)));
-  if (!add.length) return;
-
-  target.value = add.join(", ") + ", " + cur;
-  save();
-  renderTrig?.();
-  promptx.refresh?.();
-}
-
-function insertTriggers(words) {
-  prependTriggers(words);
 }
 
 const normTag = (s) => (s || "").trim().replace(/\\([()\[\]])/g, "$1").toLowerCase();
@@ -1288,24 +1176,10 @@ export function removePrompt(text) {
   return true;
 }
 
-export function withLoraTriggers(prompt) {
-  const words = triggerWords();
-  if (!words.length) return (prompt || "").trim();
-  const body = (prompt || "").trim();
-  const have = new Set(body.split(",").map(normTag).filter(Boolean));
-  const strippedHave = new Set(body.split(",").map(stripTag).filter(Boolean));
-  const toAdd = words.filter((w) => !have.has(normTag(w)) && !strippedHave.has(stripTag(w)));
-  if (!toAdd.length) return body;
-  const head = toAdd.join(", ");
-  if (!body) return head;
-  return `${head}, ${body.replace(/^,\s*/, "")}`;
-}
-
 export function fullPrompt(text) {
   if (F("promptBox")?.hidden) return text;
   const refNames = () => (S.mode === "multiref" ? refs.get().map((r) => r.name) : []);
-  const lockedText = lk.withLocked(text, S.locked, fam(), refNames());
-  return withLoraTriggers(lockedText);
+  return lk.withLocked(text, S.locked, fam(), refNames());
 }
 
 export function appendPrompt(text, targetTa = null) {

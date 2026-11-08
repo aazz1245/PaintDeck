@@ -57,12 +57,9 @@ export function init() {
         strength: 1.0,
         title: title,
         triggers: flatTriggers
-      }, true);
+      });
       app.showPage("gen");
-      const trigMsg = flatTriggers.length
-        ? `已將「${title}」加入生圖卡匣（已將 ${flatTriggers.length} 個提示詞加入主體提示詞框）！`
-        : `已將「${title}」加入生圖卡匣！`;
-      toast(trigMsg, "ok");
+      toast(`已將「${title}」加入生圖卡匣！`, "ok");
     } else if (e.data?.type === "PAINTDECK_LM_RECIPES") {
       if (Array.isArray(e.data.recipes)) {
         lmRecipes = e.data.recipes;
@@ -380,7 +377,7 @@ function openPickerMenu(e, l) {
       toast(`已複製路徑：${l.name}`, "ok");
     }),
     item("➕ 插入此 LoRA", () => {
-      pickCb(l, $("#lpTrig")?.checked);
+      pickCb(l);
       closeModal("#loraPicker");
     })
   );
@@ -554,7 +551,7 @@ function renderPicker() {
         class: "card pick",
         title: (fPath ? `${fPath} / ${title(l)}` : title(l)) + "\n【右鍵：更多工具／重命名】",
         onclick: () => {
-          pickCb(l, $("#lpTrig")?.checked);
+          pickCb(l);
           closeModal("#loraPicker");
         },
       },
