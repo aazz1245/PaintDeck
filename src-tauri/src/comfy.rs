@@ -6,6 +6,7 @@ use crate::hub::Hub;
 use crate::py::dumps;
 use futures_util::StreamExt;
 use serde_json::{json, Value};
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 use tokio_tungstenite::tungstenite::Message;
@@ -179,9 +180,12 @@ impl Comfy {
         let payload = |n: &Value| json!({"prompt": n, "client_id": CLIENT_ID.as_str(), "extra_data": {"extra_pnginfo": extra_pnginfo}});
         let (mut ok, mut r) = self.post_raw("/prompt", &payload(&nodes)).await?;
         // 模型檔名只差在斜線方向、子資料夾（別台電腦的工作流）：照 ComfyUI 附的清單換成同一個檔，再送一次
-        if !ok && fix_listed_names(&mut nodes, &r) {
-            crate::diagnostics::snapshot("workflow_retry_resolved_names", &nodes);
-            (ok, r) = self.post_raw("/prompt", &payload(&nodes)).await?;
+        if !ok {
+            let options = validation_options(self, &r).await;
+            if fix_listed_names(&mut nodes, &r, &options) {
+                crate::diagnostics::snapshot("workflow_retry_resolved_names", &nodes);
+                (ok, r) = self.post_raw("/prompt", &payload(&nodes)).await?;
+            }
         }
         match r.get("prompt_id").and_then(Value::as_str) {
             // 有 prompt_id＝已經排進佇列：node_errors 只是某些輸出節點跑不了（其他的照跑），記下來就好
@@ -206,7 +210,7 @@ impl Comfy {
     /// 某個節點某個欄位的選項（模型清單、取樣器…）
     pub async fn options(&self, node: &str, field: &str) -> Result<Vec<Value>, ComfyError> {
         let info = self.object_info(node).await?;
-        let spec = &info["input"]["required"][field];
+        let spec = info["input"]["required"].get(field).unwrap_or(&info["input"]["optional"][field]);
         if let Some(list) = spec[0].as_array() {
             return Ok(list.clone());
         }
@@ -582,7 +586,29 @@ pub fn match_listed(cur: &str, have: &[String]) -> Option<String> {
 
 /// /prompt 回的 value_not_in_list：照 ComfyUI 附的清單（extra_info.input_config，舊格式 [清單, {…}]、新格式 ["COMBO", {"options": 清單}]）
 /// 把對得上的檔名換掉。有換到回 true
-fn fix_listed_names(nodes: &mut Value, r: &Value) -> bool {
+async fn validation_options(comfy: &Comfy, response: &Value) -> HashMap<(String, String), Vec<Value>> {
+    let mut options = HashMap::new();
+    for node in response["node_errors"].as_object().into_iter().flatten().map(|(_, node)| node) {
+        let Some(class) = node["class_type"].as_str() else { continue };
+        for error in node["errors"].as_array().into_iter().flatten().filter(|error| error["type"] == "value_not_in_list") {
+            let extra = &error["extra_info"];
+            let config = &extra["input_config"];
+            if config[0].as_array().is_some() || config[1]["options"].as_array().is_some() {
+                continue;
+            }
+            let Some(field) = extra["input_name"].as_str() else { continue };
+            let key = (class.to_owned(), field.to_owned());
+            if !options.contains_key(&key) {
+                if let Ok(values) = comfy.options(&key.0, &key.1).await {
+                    options.insert(key, values);
+                }
+            }
+        }
+    }
+    options
+}
+
+fn fix_listed_names(nodes: &mut Value, r: &Value, fallback: &HashMap<(String, String), Vec<Value>>) -> bool {
     let mut changed = false;
     for (id, n) in r["node_errors"].as_object().into_iter().flatten() {
         for e in n["errors"].as_array().into_iter().flatten().filter(|e| e["type"] == "value_not_in_list") {
@@ -591,7 +617,10 @@ fn fix_listed_names(nodes: &mut Value, r: &Value) -> bool {
                 continue;
             };
             let cfg = &x["input_config"];
-            let have: Vec<String> = cfg[0].as_array().or_else(|| cfg[1]["options"].as_array()).into_iter().flatten()
+            let class = n["class_type"].as_str().unwrap_or_default();
+            let have: Vec<String> = cfg[0].as_array().or_else(|| cfg[1]["options"].as_array())
+                .or_else(|| fallback.get(&(class.to_owned(), field.to_owned())))
+                .into_iter().flatten()
                 .filter_map(|v| v.as_str().map(str::to_owned)).collect();
             let Some(h) = match_listed(cur, &have) else { continue };
             // 只改送出去的那個值（節點、欄位要真的存在）
@@ -775,11 +804,52 @@ mod tests {
                   "extra_info": {"input_name": "lora_name", "received_value": "nope.safetensors", "input_config": ["COMBO", {"options": ["x.safetensors"]}]}}]},
             "9": {"class_type": "Ghost", "errors": [{"type": "value_not_in_list",
                   "extra_info": {"input_name": "f", "received_value": "x.safetensors", "input_config": ["COMBO", {"options": ["y\\x.safetensors"]}]}}]}}});
-        assert!(fix_listed_names(&mut nodes, &r));
+        assert!(fix_listed_names(&mut nodes, &r, &HashMap::new()));
         assert_eq!(nodes["4"]["inputs"]["ckpt_name"], "SDXL\\juggernaut.safetensors");
         assert_eq!(nodes["5"]["inputs"]["lora_name"], "nope.safetensors");
         assert!(nodes.get("9").is_none(), "不存在的節點不能被建出來");
-        assert!(!fix_listed_names(&mut nodes, &json!({"node_errors": {}})));
+        assert!(!fix_listed_names(&mut nodes, &json!({"node_errors": {}}), &HashMap::new()));
+    }
+
+    #[tokio::test]
+    async fn listed_lora_name_retries_when_comfy_omits_input_config() {
+        let received = "anima/人物/my_anima_lora-step00001250.safetensors";
+        let listed = "anima\\人物\\my_anima_lora-step00001250.safetensors";
+        let mut nodes = json!({"2": {"class_type": "LoraLoaderModelOnly", "inputs": {"lora_name": received}}});
+        let response = json!({"node_errors": {
+            "2": {"class_type": "LoraLoaderModelOnly", "errors": [{"type": "value_not_in_list",
+                "extra_info": {"input_name": "lora_name", "received_value": received, "input_config": null}}]}
+        }});
+
+        let options = vec![listed, "人物\\my_anima_lora-step00001250.safetensors"];
+        let router = axum::Router::new().route(
+            "/object_info/LoraLoaderModelOnly",
+            axum::routing::get(move || {
+                let options = options.clone();
+                async move {
+                    axum::Json(json!({"LoraLoaderModelOnly": {"input": {"required": {
+                        "lora_name": [options, {}]
+                    }}}}))
+                }
+            }),
+        );
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move { axum::serve(listener, router).await.unwrap() });
+        let dir = std::env::temp_dir().join(format!(
+            "anima_comfy_lora_retry_{}",
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        let db = Arc::new(Db::open(&dir.join("test.db")).unwrap());
+        let comfy = Comfy::new(&format!("http://{address}"), db, Hub::new());
+        let fallback = validation_options(&comfy, &response).await;
+        assert_eq!(fallback[&("LoraLoaderModelOnly".into(), "lora_name".into())].len(), 2);
+        assert!(fix_listed_names(&mut nodes, &response, &fallback));
+        assert_eq!(nodes["2"]["inputs"]["lora_name"], listed);
+        drop(comfy);
+        server.abort();
+        std::fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
