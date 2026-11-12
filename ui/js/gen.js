@@ -541,9 +541,12 @@ function modelDefaults() {
   if (fam() === "moss") { F("steps").value = fastOn() ? MOSS_FAST.steps : MOSS_FAST.normal; F("cfg").value = 5; pick("sampler", "euler"); pick("scheduler", "sgm_uniform"); }
   else if (fam() === "qwen21") { F("steps").value = isOfficialTurbo() ? 8 : isTurboModel() ? 6 : 25; F("cfg").value = isOfficialTurbo() || isTurboModel() ? 1 : 3; }
   else if (fam() === "custom") { /* 步數、CFG 照工作流，這裡的不用 */ }
-  else if (isTurboModel()) { F("steps").value = 8; F("cfg").value = 1; }
-  else if (F("turboLora").value) { F("steps").value = /anima-turbo-lora/i.test(F("turboLora").value) ? 10 : 12; F("cfg").value = 1; }
-  else { F("steps").value = 30; F("cfg").value = 4; }
+  else {
+    if (isTurboModel()) { F("steps").value = 10; F("cfg").value = 1; }
+    else if (F("turboLora").value) { F("steps").value = /anima-turbo-lora/i.test(F("turboLora").value) ? 10 : 12; F("cfg").value = 1; }
+    else { F("steps").value = 30; F("cfg").value = 5; }
+    pick("sampler", "euler_ancestral"); pick("scheduler", "normal");
+  }
   modelHint();
 }
 
@@ -589,8 +592,8 @@ function modelHint() {
         ? "Noct Q Anime：提示詞開頭寫 An anime illustration of…（沒寫 anime 會畫成照片）。25 步、CFG 3。想快：加「Pruna 加速 8 步」LoRA，步數 8、CFG 1、取樣器 er_sde、排程 beta（畫面會偏灰，適合打草稿）。"
         : "Qwen 2.1：25 步、CFG 3（負面提示詞有效、較慢）；CFG 改 1 快一倍，但負面詞失效。想快可加「Pruna 加速 8 步」LoRA。")
     : isTurboModel()
-      ? "turbo 模型：8 步、CFG 1（光影張力較強）。不要再疊 Turbo LoRA。"
-      : F("turboLora").value ? "加速 LoRA 開啟：8～12 步、CFG 1。" : "未加速：約 30 步、CFG 4（品質優先、較慢）。";
+      ? "Anima Turbo：10 步、CFG 1、euler_ancestral＋normal。不要再疊 Turbo LoRA。"
+      : F("turboLora").value ? "加速 LoRA 開啟：10～12 步、CFG 1、euler_ancestral＋normal。" : "Anima 普通版：30 步、CFG 5、euler_ancestral＋normal。";
   familyUI();
   syncWf();
 }

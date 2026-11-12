@@ -68,6 +68,9 @@
 
 ### 📝 更新日誌 (Changelog)
 
+#### [2026-11-13] — 26.1113.4
+- **update(gen)**: 選模型時自動套用采樣參數：Anima 普通版 30 步／CFG 5、Turbo 10 步／CFG 1，皆用 euler_ancestral＋normal；MOSS 維持 30 步／CFG 5、euler＋sgm_uniform。
+
 #### [2026-11-13] — 26.1113.3
 - **update(moss)**: MOSS 一般預設改為 30 步、CFG 5，更新介面說明；確認內建工作流使用 qwen3.5_9b_w4a8_gptq.safetensors 文字編碼器。
 
