@@ -467,9 +467,9 @@ const MOSS_NEG = "worst quality, bad anatomy, watermark, jpeg artifact";
 // 生圖工作流：負面詞空白＝照工作流自己寫的
 const defaultNeg = () => (fam() === "qwen21" ? (isQwenAnime() ? QWEN_ANIME_NEG : QWEN_NEG) : fam() === "moss" ? MOSS_NEG : fam() === "custom" ? "" : (app.state?.settings?.negative || ""));
 
-// MOSS 快速：lodestones 的 8 步 DMD 加速 LoRA 掛 0.35、步數 10（2026-10-17 實測 3070：25 步約 40 秒 → 約 16 秒，構圖畫風接近）
+// MOSS 快速：lodestones 的 DMD 加速 LoRA 掛 0.35、步數 10；一般預設 30 步。
 // 勾選狀態不另外存：清單裡有啟用這顆 LoRA 就算開著（手動移除它，勾勾也會跟著取消）
-const MOSS_FAST = { re: /(^|[\\/])moss_speed_dmd[^\\/]*\.safetensors$/i, strength: 0.35, steps: 10, normal: 25 };
+const MOSS_FAST = { re: /(^|[\\/])moss_speed_dmd[^\\/]*\.safetensors$/i, strength: 0.35, steps: 10, normal: 30 };
 const fastLora = () => (app.state?.models?.loras || []).find((x) => MOSS_FAST.re.test(x.name));
 const fastOn = () => S.loras.some((l) => l.enabled && MOSS_FAST.re.test(l.name));
 
@@ -538,7 +538,7 @@ function modelDefaults() {
     S.loras = S.loras.filter((x) => !MOSS_FAST.re.test(x.name));
     renderLoras();
   }
-  if (fam() === "moss") { F("steps").value = fastOn() ? MOSS_FAST.steps : MOSS_FAST.normal; F("cfg").value = 3; pick("sampler", "euler"); pick("scheduler", "sgm_uniform"); }
+  if (fam() === "moss") { F("steps").value = fastOn() ? MOSS_FAST.steps : MOSS_FAST.normal; F("cfg").value = 5; pick("sampler", "euler"); pick("scheduler", "sgm_uniform"); }
   else if (fam() === "qwen21") { F("steps").value = isOfficialTurbo() ? 8 : isTurboModel() ? 6 : 25; F("cfg").value = isOfficialTurbo() || isTurboModel() ? 1 : 3; }
   else if (fam() === "custom") { /* 步數、CFG 照工作流，這裡的不用 */ }
   else if (isTurboModel()) { F("steps").value = 8; F("cfg").value = 1; }
@@ -577,8 +577,8 @@ function modelHint() {
       (wfFam() ? `模型家族：${famLabel(wfFam())}，LoRA 只會接同家族的。` : "看不出這組工作流的模型家族，LoRA 都會接上去。")
     : fam() === "moss"
     ? (fastOn()
-      ? "MOSS 快速開著：加速 LoRA 0.35＋10 步（CFG 3、euler＋sgm_uniform 照舊），3070 一張約 16 秒。構圖畫風跟 25 步接近，衣服花紋、小配件等細節會換樣子；要最細的那張就取消快速、用 25 步。"
-      : "MOSS-Image：25 步、CFG 3、euler＋sgm_uniform（官方 50 步；實測 25 步看不出差別、快一倍。負面提示詞有效）。3070 一張 1024 約 40 秒。") +
+      ? "MOSS 快速開著：加速 LoRA 0.35＋10 步（CFG 5、euler＋sgm_uniform）；取消快速可恢復原步數，未設定時使用 30 步。"
+      : "MOSS-Image：30 步、CFG 5、euler＋sgm_uniform；文字編碼器 qwen3.5_9b_w4a8_gptq（負面提示詞有效）。") +
       "擅長排版和畫字（中英文都行），提示詞用完整句子描述；要畫的字放在引號裡。不支援 Anima 的 LoRA、構圖控制。"
     : q
     ? (official
