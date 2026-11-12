@@ -23,7 +23,7 @@ function element(tag, attrs = {}, ...children) {
 function moduleContext(file, globals, exposed) {
   const source = fs.readFileSync(path.join(__dirname, '../ui/js', file), 'utf8')
     .replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '');
-  const context = vm.createContext({ structuredClone, console, Event, ...globals });
+  const context = vm.createContext({ structuredClone, console, Event, store: { get: (k, d) => d, set() {} }, ...globals });
   vm.runInContext(source + `\nglobalThis.subject = {${exposed}};`, context, { filename: file });
   return context.subject;
 }

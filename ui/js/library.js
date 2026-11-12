@@ -479,10 +479,10 @@ let E = null;
 export function edit(it) { openEdit({ it }); }
 
 /** 存新的一筆：kind＝set（沒給 data 就拿生成頁目前的設定）或 snippet（data.text）；imageId＝縮圖用哪張（整套設定預設抓目前預覽的圖） */
-export function saveDialog({ kind = "set", data, imageId, name, folder } = {}) {
+export function saveDialog({ kind = "set", data, imageId, name, folder, tags } = {}) {
   if (kind === "set" && !data) data = ctx.collect();
   if (kind === "set" && imageId === undefined) imageId = ctx.current()?.id ?? null;
-  openEdit({ kind, data, imageId, name, folder });
+  openEdit({ kind, data, imageId, name, folder, tags });
 }
 
 function suggestName(kind, data) {
@@ -493,8 +493,8 @@ function suggestName(kind, data) {
   return (parts.slice(0, 3).join(", ") || (kind === "set" ? "我的設定" : "我的片段")).slice(0, 40);
 }
 
-function openEdit({ it, kind, data, imageId, name, folder }) {
-  E = { id: it?.id ?? null, kind: it?.kind || kind, it, imageId: imageId ?? null, clear: false, tags: [...(it?.tags || [])],
+function openEdit({ it, kind, data, imageId, name, folder, tags }) {
+  E = { id: it?.id ?? null, kind: it?.kind || kind, it, imageId: imageId ?? null, clear: false, tags: [...(it?.tags || tags || [])],
     setData: (it?.kind || kind) === "set" ? structuredClone(it ? it.data : data) : null };
   const text = it ? (it.kind === "snippet" ? it.data?.text : "") : kind === "snippet" ? data?.text : "";
   F("leTitle").textContent = it ? `編輯「${it.name}」` : E.kind === "set" ? "把設定存進提示詞庫" : "存成片段";
