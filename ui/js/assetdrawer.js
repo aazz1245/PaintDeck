@@ -14,16 +14,13 @@ const HINT = {
   ltx: "導演分鏡（LTX）：插外觀文字；第一格用角色卡的原圖",
   comic: "漫畫：插外觀文字和 tag",
 };
-const KINDS = [
-  "all", "char", "scene", "frame", "outfit", "prop", "fx", "sound", "snippet"
-];
-
 const drawers = [];
 const isOpen = () => store.get("assetDrawer", false);
 
 export function mount(box, ctx) {
-  const d = { box, ctx, kind: "all", tags: new Set(), q: "", menu: null, items: [] };
+  const d = { box, ctx, kind: "all", snippetFolder: null, tags: new Set(), q: "", menu: null, items: [] };
   drawers.push(d);
+  document.addEventListener("assets-updated", () => paint(d));
   box.classList.add("adr");
   paint(d);
   return {
@@ -58,57 +55,52 @@ async function paint(d) {
   d.items = items;
 
   if (!d.tags) d.tags = new Set();
-  const countOf = (k) => (k === "all" ? items.length : items.filter((x) => x.kind === k).length);
-  const visibleKinds = KINDS.filter((k) => countOf(k) > 0 || k === "all" || k === d.kind);
+  const categories = assets.categoryList();
+  if (d.kind !== "all" && !categories.some((c) => c.id === d.kind)) {
+    d.kind = "all";
+    d.snippetFolder = null;
+    d.tags.clear();
+  }
+  const countOf = (k) => items.filter((x) => assets.inCategory(x, k)).length;
 
   const search = el("input", { type: "search", class: "adr-q", placeholder: "搜尋…", value: d.q, "aria-label": "搜尋資產" });
   search.oninput = () => { d.q = search.value; paintCards(d, cards, items); };
 
   const kindsBox = el("div", { class: "row wrap adr-kinds" },
-    ...visibleKinds.map((k) => el("button", {
+    ...[["all", "全部"], ...categories.map((c) => [c.id, c.name])].map(([k, name]) => el("button", {
       class: "chip" + (d.kind === k ? " on" : ""),
       type: "button",
-      onclick: () => { d.kind = k; if (k !== "snippet") d.snippetFolder = "all"; paint(d); }
-    }, (k === "all" ? "全部" : (assets.KIND_NAME[k] || k)) + (k === "all" ? "" : " " + countOf(k)))),
+      onclick: () => { d.kind = k; d.snippetFolder = null; d.tags.clear(); return paint(d); }
+    }, name + (k === "all" ? "" : " " + countOf(k)))),
     search,
     el("button", { class: "akey sm", type: "button", title: "重新讀資產庫", onclick: async () => { await assets.load(); paint(d); } }, "↻")
   );
 
   let subRow = "";
-  if (d.kind === "snippet") {
-    if (!d.snippetFolder) d.snippetFolder = "all";
-    const snippetItems = items.filter((x) => x.kind === "snippet");
-    const countFolder = (f) => f === "all" ? snippetItems.length : snippetItems.filter((x) => x.folder === f).length;
-    const known = ["少女", "萝莉", "假小子", "肉感", "厚涂", "强烈质感设计", "后缀", "anima"];
-    const found = new Set(snippetItems.map((x) => x.folder).filter(Boolean));
-    const folders = ["all", ...known.filter((f) => found.has(f) || countFolder(f) > 0), ...[...found].filter((f) => !known.includes(f))];
+  if (assets.backendKind(d.kind) === "snippet") {
+    const snippetItems = items.filter((x) => assets.inCategory(x, d.kind));
+    const countFolder = (f) => f === null ? snippetItems.length : snippetItems.filter((x) => (x.folder || "") === f).length;
+    const known = assets.SNIPPET_FOLDERS.map(([key]) => key);
+    const found = new Set(assets.folderNames());
+    if (d.snippetFolder && !found.has(d.snippetFolder)) d.snippetFolder = null;
+    const folders = [null, "", ...known.filter((f) => found.has(f)), ...[...found].filter((f) => !known.includes(f))];
     subRow = el("div", { class: "row wrap adr-subkinds gap", style: "width: 100%; margin-top: 4px; padding: 2px 4px; background: rgba(0,0,0,0.05); border-radius: 4px; align-items: center;" },
       el("span", { class: "muted sm", style: "font-size: 11px;" }, "子选项："),
       ...folders.map((f) => el("button", {
-        class: "chip sm" + ((d.snippetFolder || "all") === f ? " on" : ""),
+        class: "chip sm" + (d.snippetFolder === f ? " on" : ""),
         type: "button",
-        onclick: () => { d.snippetFolder = f; paint(d); }
-      }, (f === "all" ? "全部片段" : (assets.KIND_NAME[f] || f)) + ` ${countFolder(f)}`))
+        onclick: () => { d.snippetFolder = f; d.tags.clear(); return paint(d); }
+      }, (f === null ? "全部片段" : f === "" ? "未分類" : assets.folderLabel(f)) + ` ${countFolder(f)}`))
     );
   }
 
-  const matchKind = (x) => {
-    if (d.kind === "all") return true;
-    if (d.kind === "snippet") {
-      if (d.snippetFolder && d.snippetFolder !== "all") {
-        return x.kind === "snippet" && x.folder === d.snippetFolder;
-      }
-      return x.kind === "snippet";
-    }
-    return x.kind === d.kind;
-  };
-
   // 標籤多選篩選列（範圍逐漸縮小）
-  const inCat = items.filter(matchKind);
+  const inCat = items.filter((x) => inView(x, d));
   const allCatTags = new Set();
   for (const it of inCat) {
-    for (const t of it.tags || []) allCatTags.add(t);
+    for (const t of it.tags || []) if (!categories.some((c) => c.kind === it.kind && c.tag === t)) allCatTags.add(t);
   }
+  for (const t of d.tags) if (!allCatTags.has(t)) d.tags.delete(t);
 
   // 計算每個標籤在當前交集條件下的符合筆數
   const tagCounts = new Map();
@@ -177,22 +169,15 @@ async function paint(d) {
   paintCards(d, cards, items);
 }
 
+const inView = (it, d) => assets.inCategory(it, d.kind)
+  && (assets.backendKind(d.kind) !== "snippet" || d.snippetFolder === null || (it.folder || "") === d.snippetFolder);
+
 function paintCards(d, box, items, shown) {
   const q = d.q.trim().toLowerCase();
-  const matchKind = (x) => {
-    if (d.kind === "all") return true;
-    if (d.kind === "snippet") {
-      if (d.snippetFolder && d.snippetFolder !== "all") {
-        return x.kind === "snippet" && x.folder === d.snippetFolder;
-      }
-      return x.kind === "snippet";
-    }
-    return x.kind === d.kind;
-  };
   const matchQ = (x) => !q || [x.name, ...(x.tags || []), x.data?.look_zh, x.data?.look_en, x.data?.text].join("\n").toLowerCase().includes(q);
   const matchTags = (x) => !d.tags?.size || Array.from(d.tags).every((t) => (x.tags || []).includes(t));
 
-  shown = shown || items.filter((x) => matchKind(x) && matchQ(x) && matchTags(x));
+  shown = shown || items.filter((x) => inView(x, d) && matchQ(x) && matchTags(x));
   box.replaceChildren(...shown.map((it) => {
     const pText = it.data?.text || it.data?.look_en || "";
     const active = !!((pText && d.ctx.has && d.ctx.has(pText)) || (d.ctx.isLocked && d.ctx.isLocked(it.id)));

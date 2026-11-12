@@ -65,6 +65,7 @@ const splitList = (s) => s.split(/[,，、\n]/).map((t) => t.trim()).filter(Bool
 export async function load() {
   try { items = await api("/api/lib"); loaded = true; } catch (e) { return toast("讀不到資產庫：" + e.message, "err"); }
   paint();
+  document.dispatchEvent(new Event("assets-updated"));
 }
 
 /** 給其他頁用（抽屜）：只要資產，不要整套設定 */
@@ -76,15 +77,17 @@ export async function list() {
 export function show() { load(); }
 
 const categoryOf = (id) => categories.find((c) => c.id === id);
-const backendKind = (id) => categoryOf(id)?.kind || id;
-const inCategory = (it, id) => id === "all" || (it.kind === backendKind(id) && (!categoryOf(id)?.tag || it.tags?.includes(categoryOf(id).tag)));
-const folderNames = () => [...new Set([...savedFolders, ...items.filter((x) => x.kind === "snippet").map((x) => x.folder)].filter(Boolean))];
-const folderLabel = (f) => SNIPPET_FOLDERS.find(([key]) => key === f)?.[1] || f;
+export const categoryList = () => categories;
+export const backendKind = (id) => categoryOf(id)?.kind || id;
+export const inCategory = (it, id) => id === "all" || (it.kind === backendKind(id) && (!categoryOf(id)?.tag || it.tags?.includes(categoryOf(id).tag)));
+export const folderNames = () => [...new Set([...savedFolders, ...items.filter((x) => x.kind === "snippet").map((x) => x.folder)].filter(Boolean))];
+export const folderLabel = (f) => SNIPPET_FOLDERS.find(([key]) => key === f)?.[1] || f;
 
 function keepCategories() {
   store.set("assetCategories", categories);
   store.set("assetSnippetFolders", savedFolders);
   for (const [id, name] of KINDS) KIND_NAME[id] = categoryOf(id)?.name || name;
+  document.dispatchEvent(new Event("assets-updated"));
 }
 
 function categoryOptions() {

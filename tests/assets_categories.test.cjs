@@ -19,7 +19,7 @@ function walk(root) {
 }
 function harness(initial = [], settings = new Map(), intercept = () => {}) {
   let records = structuredClone(initial);
-  const nodes = new Map(), calls = [], messages = [], events = [], dialogs = [];
+  const nodes = new Map(), calls = [], messages = [], events = [], dialogs = [], listeners = new Map();
   const node = (id) => {
     id = id.replace(/^#/, '');
     if (!nodes.has(id)) nodes.set(id, element('input'));
@@ -32,7 +32,10 @@ function harness(initial = [], settings = new Map(), intercept = () => {}) {
     el: element, $: node, $$: () => [], toast: (m) => messages.push(m), confirm: () => true,
     library: { saveDialog: (opts) => dialogs.push(opts), edit() {} },
     openModal() {}, closeModal() {}, app: { state: null },
-    document: { getElementById: node, body, addEventListener() {}, dispatchEvent: (e) => events.push(e.type), documentElement: { lang: 'zh-Hans' } },
+    document: { getElementById: node, body,
+      addEventListener(type, fn) { if (!listeners.has(type)) listeners.set(type, []); listeners.get(type).push(fn); },
+      dispatchEvent(e) { events.push(e.type); for (const fn of listeners.get(e.type) || []) fn(e); },
+      documentElement: { lang: 'zh-Hans' } },
     api: async (url, options) => {
       calls.push([url, options?.json]);
       await intercept(url, options);
@@ -46,14 +49,15 @@ function harness(initial = [], settings = new Map(), intercept = () => {}) {
       return structuredClone(updated);
     },
   };
-  function module(file, exposed) {
+  function module(file, exposed, extras = {}) {
     const source = fs.readFileSync(path.join(__dirname, '../ui/js', file), 'utf8')
       .replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '');
-    const context = vm.createContext({ ...globals });
+    const context = vm.createContext({ ...globals, ...extras });
     vm.runInContext(source + `\nglobalThis.subject = {${exposed}};`, context);
     return context.subject;
   }
-  const subject = module('assets.js', `init, load, paintKinds, newOne, open, collect, addCategory, changeCategory, manageCategories, inCategory, folderNames,
+  const subject = module('assets.js', `init, load, list, paintKinds, newOne, open, collect, addCategory, changeCategory, manageCategories,
+    categoryList, backendKind, inCategory, folderNames, folderLabel, SNIPPET_FOLDERS, KIND_NAME,
     categories: () => categories, selection: () => [kind, snippetFolder], choose: (k, f = null) => { kind = k; snippetFolder = f; }`);
   subject.init();
   return { subject, module, node, body, settings, calls, messages, events, dialogs, records: () => records };
@@ -198,4 +202,81 @@ test('分類改名保留編輯區尚未儲存的內容和其他標籤', async ()
   assert.deepEqual([...h.subject.collect().tags], ['人物', '尚未儲存']);
   assert.equal(h.subject.collect().name, '正在編輯');
   assert.equal(h.records()[0].name, '角色1');
+});
+
+function drawer(h) {
+  const subject = h.module('assetdrawer.js', 'paint, mount', {
+    assets: h.subject, store: { get: () => true, set() {} },
+  });
+  const box = element('div');
+  const ctx = { family: () => 'anima' };
+  const d = { box, ctx, kind: 'all', snippetFolder: null, tags: new Set(), q: '' };
+  return { subject, d, box, ctx };
+}
+const row = (box, cls) => walk(box).find((e) => e.class?.split(' ').includes(cls));
+const texts = (root) => root.children.filter((e) => e?.tag === 'button').map((e) => e.children.join(''));
+const cardNames = (box) => walk(row(box, 'adr-cards')).filter((e) => e.class === 'adr-name').map((e) => e.children[0]);
+
+test('文生圖與資產庫共用全部一級分類，空分類仍顯示，負面不再重複顯示為標籤', async () => {
+  const h = harness([char(1), snippet(2, '', ['負面', '常用']), snippet(3, '', ['正面'])]);
+  await h.subject.load();
+  h.subject.addCategory('負面', 'snippet');
+  h.subject.addCategory('空分類', 'prop');
+  const { subject, d, box } = drawer(h);
+  await subject.paint(d);
+  assert.deepEqual(texts(row(box, 'adr-kinds')).filter((t) => t !== '↻'),
+    ['全部', ...h.subject.categoryList().map((c) => `${c.name} ${h.records().filter((it) => h.subject.inCategory(it, c.id)).length}`)]);
+  assert.ok(texts(row(box, 'adr-kinds')).includes('場景 0'));
+  assert.ok(texts(row(box, 'adr-kinds')).includes('空分類 0'));
+  assert.ok(!texts(row(box, 'adr-tags')).some((t) => t.startsWith('#負面')));
+  await button(row(box, 'adr-kinds'), '負面 1').onclick();
+  assert.deepEqual(cardNames(box), ['片段2']);
+  assert.ok(texts(row(box, 'adr-tags')).includes('#常用 1'));
+  const search = row(box, 'adr-kinds').children.find((e) => e.tag === 'input');
+  search.value = '片段3'; search.oninput();
+  assert.deepEqual(cardNames(box), []);
+});
+
+test('文生圖沿用改名和刪除後的分類，不補回使用者移除的分類', async () => {
+  const h = harness([char(1)]);
+  await h.subject.changeCategory('main', 'char', '人物');
+  await h.subject.changeCategory('main', 'scene', null);
+  const { subject, d, box } = drawer(h);
+  d.kind = 'scene';
+  await subject.paint(d);
+  assert.equal(d.kind, 'all');
+  assert.ok(texts(row(box, 'adr-kinds')).includes('人物 1'));
+  assert.ok(!texts(row(box, 'adr-kinds')).includes('場景 0'));
+});
+
+test('文生圖片段子分類保留空分類，all 可作資料夾名，未分類獨立篩選', async () => {
+  const h = harness([snippet(1, 'all'), snippet(2)], new Map([['assetSnippetFolders', ['空資料夾']]]));
+  await h.subject.load();
+  const { subject, d, box } = drawer(h);
+  d.kind = 'snippet';
+  await subject.paint(d);
+  assert.ok(texts(row(box, 'adr-subkinds')).includes('空資料夾 0'));
+  await button(row(box, 'adr-subkinds'), 'all 1').onclick();
+  assert.deepEqual(cardNames(box), ['片段1']);
+  await button(row(box, 'adr-subkinds'), '未分類 1').onclick();
+  assert.deepEqual(cardNames(box), ['片段2']);
+});
+
+test('資產庫新增、改名及刪除分類時，已開啟的文生圖抽屜立即同步', async () => {
+  const h = harness([snippet(1, '', ['負面'])]);
+  await h.subject.load();
+  const { subject, box, ctx } = drawer(h);
+  subject.mount(box, ctx);
+  await new Promise(setImmediate);
+  h.subject.addCategory('負面', 'snippet');
+  await new Promise(setImmediate);
+  assert.ok(texts(row(box, 'adr-kinds')).includes('負面 1'));
+  const category = h.subject.categoryList().find((c) => c.name === '負面');
+  await h.subject.changeCategory('main', category.id, '負面詞');
+  await new Promise(setImmediate);
+  assert.ok(texts(row(box, 'adr-kinds')).includes('負面詞 1'));
+  assert.ok(!texts(row(box, 'adr-kinds')).includes('負面 1'));
+  await h.subject.changeCategory('main', category.id, null);
+  await new Promise(setImmediate);
+  assert.ok(!texts(row(box, 'adr-kinds')).some((s) => s.startsWith('負面詞')));
 });
