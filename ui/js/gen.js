@@ -61,6 +61,17 @@ const QWEN_NEG = "artifacts, gpt-image, washed-out colors, low quality, low reso
 // Noct Q Anime 作者附的負面詞：多了 photograph、photorealistic，免得畫成照片
 const QWEN_ANIME_NEG = "low quality, low resolution, blurry, jpeg artifacts, washed-out colors, sloppy lines, messy line art, extra fingers, missing fingers, badly drawn hands, deformed anatomy, 3d render, photograph, photorealistic";
 
+const MODEL_PROMPTS = {
+  anima: {
+    promptPrefix: "masterpiece, best quality, score_9, score_8, score_7, year 2025, newest, highres, absurdres, very aesthetic, scenery, ",
+    negative: "worst quality, low quality, early, old, score_1, score_2, score_3, artist name, watermark, signature, bad hands, missing fingers, extra fingers, extra digits, fewer digits, speech bubble",
+  },
+  moss: {
+    promptPrefix: "masterpiece, best quality, very aesthetic, ultra-detailed, high contrast, ",
+    negative: "deformed hands, extra fingers, bad hands, mutated fingers, extra toes, lowres, (bad), text, error, fewer, extra, missing, worst quality, jpeg artifacts, low quality, watermark, unfinished, displeasing, oldest, early, signature, artistic error, username, bad feet, scan, [abstract], english text, shiny hair",
+  },
+};
+
 export const S = {
   mode: "txt2img", init: null, mask: null, ctrl: null,
   loras: [], openNotes: new Set(), results: [], current: null, lastSeed: null, pending: new Map(), running: null, previewUrl: null,
@@ -196,6 +207,7 @@ export function init() {
   for (const id of ["sketchOpen", "initSketch", "ctrlSketch"]) F(id).onclick = () => play.openSketch();
 
   F("model").onchange = () => { modelDefaults(); familySwitch(); save(); swapCart(); assetDrawer?.refresh(); };
+  for (const id of ["promptPrefix", "negative"]) F(id).addEventListener("input", () => rememberModelPrompts([id]));
   // 工作流參數面板（選了「⚙ 生圖工作流」才出現）、把內建功能匯出成 ComfyUI 工作流
   wfpanel.init({ adopt: adoptSampler });
   F("exportGraph").onclick = exportBuiltin;
@@ -462,10 +474,21 @@ async function checkBasic(m) {
 }
 
 const isQwenAnime = () => fam() === "qwen21" && /anime/i.test(F("model").value || "");
-// MOSS-Image：官方使用說明建議的負面詞拿掉 nsfw（設定頁的預設負面詞是 Anima 用的 tag）
-const MOSS_NEG = "worst quality, bad anatomy, watermark, jpeg artifact";
 // 生圖工作流：負面詞空白＝照工作流自己寫的
-const defaultNeg = () => (fam() === "qwen21" ? (isQwenAnime() ? QWEN_ANIME_NEG : QWEN_NEG) : fam() === "moss" ? MOSS_NEG : fam() === "custom" ? "" : (app.state?.settings?.negative || ""));
+const defaultNeg = () => (fam() === "qwen21" ? (isQwenAnime() ? QWEN_ANIME_NEG : QWEN_NEG) : fam() === "custom" ? "" : (MODEL_PROMPTS[fam()]?.negative || app.state?.settings?.negative || ""));
+
+function rememberModelPrompts(ids = ["promptPrefix", "negative"]) {
+  const f = fam(), defaults = MODEL_PROMPTS[f];
+  if (!defaults) return;
+  const profiles = store.get("modelPrompts", {}), profile = { ...profiles[f] };
+  for (const id of ids) {
+    if (F(id).value === defaults[id]) delete profile[id];
+    else profile[id] = F(id).value;
+  }
+  if (Object.keys(profile).length) profiles[f] = profile;
+  else delete profiles[f];
+  store.set("modelPrompts", profiles);
+}
 
 // MOSS 快速：lodestones 的 DMD 加速 LoRA 掛 0.35、步數 10；一般預設 30 步。
 // 勾選狀態不另外存：清單裡有啟用這顆 LoRA 就算開著（手動移除它，勾勾也會跟著取消）
@@ -494,11 +517,18 @@ function setMossFast(on) {
   save();
 }
 
-// 換模型：負面詞若還是某個模型的預設值，就換成新模型的預設（自己改過的不動）；換家族時圖生圖重繪幅度也換成建議值
+// Anima／MOSS 分別記住手動修改的前綴和負面詞；其他家族沿用原本的負面詞切換。
 function familySwitch() {
   const f = fam();
-  const neg = F("negative").value.trim();
-  if (!neg || [app.state?.settings?.negative || "", QWEN_NEG, QWEN_ANIME_NEG, MOSS_NEG].some((d) => d.trim() === neg)) F("negative").value = defaultNeg();
+  if (MODEL_PROMPTS[f]) {
+    const profile = store.get("modelPrompts", {})[f] || {};
+    for (const id of ["promptPrefix", "negative"]) F(id).value = profile[id] ?? MODEL_PROMPTS[f][id];
+    S.promptFamily = f;
+  } else {
+    const neg = F("negative").value.trim();
+    if (!neg || [app.state?.settings?.negative || "", QWEN_NEG, QWEN_ANIME_NEG, ...Object.values(MODEL_PROMPTS).map((p) => p.negative)].some((d) => d.trim() === neg)) F("negative").value = defaultNeg();
+    S.promptFamily = null;
+  }
   // 換到另一組工作流（家族都是 custom）也要重新檢查 LoRA 合不合
   const wfChanged = f === "custom" && S.wfModel !== F("model").value;
   if (S.family && S.family !== f) {
@@ -1360,6 +1390,7 @@ function applyForm(f) {
 }
 
 const save = () => {
+  if (S.promptFamily === fam()) rememberModelPrompts();
   const currentForm = collectForm();
   store.set("form", currentForm);
   if (S.mode) {

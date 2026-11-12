@@ -83,14 +83,14 @@ async function paint(d) {
     const known = assets.SNIPPET_FOLDERS.map(([key]) => key);
     const found = new Set(assets.folderNames());
     if (d.snippetFolder && !found.has(d.snippetFolder)) d.snippetFolder = null;
-    const folders = [null, "", ...known.filter((f) => found.has(f)), ...[...found].filter((f) => !known.includes(f))];
+    const folders = [null, ...(countFolder("") ? [""] : []), ...known.filter((f) => found.has(f)), ...[...found].filter((f) => !known.includes(f))];
     subRow = el("div", { class: "row wrap adr-subkinds gap", style: "width: 100%; margin-top: 4px; padding: 2px 4px; background: rgba(0,0,0,0.05); border-radius: 4px; align-items: center;" },
       el("span", { class: "muted sm", style: "font-size: 11px;" }, "子选项："),
       ...folders.map((f) => el("button", {
         class: "chip sm" + (d.snippetFolder === f ? " on" : ""),
         type: "button",
         onclick: () => { d.snippetFolder = f; d.tags.clear(); return paint(d); }
-      }, (f === null ? "全部片段" : f === "" ? "未分類" : assets.folderLabel(f)) + ` ${countFolder(f)}`))
+      }, (f === null ? "全部片段" : assets.folderLabel(f)) + ` ${countFolder(f)}`))
     );
   }
 

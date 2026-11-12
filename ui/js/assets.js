@@ -81,7 +81,8 @@ export const categoryList = () => categories;
 export const backendKind = (id) => categoryOf(id)?.kind || id;
 export const inCategory = (it, id) => id === "all" || (it.kind === backendKind(id) && (!categoryOf(id)?.tag || it.tags?.includes(categoryOf(id).tag)));
 export const folderNames = () => [...new Set([...savedFolders, ...items.filter((x) => x.kind === "snippet").map((x) => x.folder)].filter(Boolean))];
-export const folderLabel = (f) => SNIPPET_FOLDERS.find(([key]) => key === f)?.[1] || f;
+export const folderLabel = (f) => f === "" ? (folderNames().some((name) => name === "未分类" || name === "未分類") ? "未分類（無資料夾）" : "未分類")
+  : SNIPPET_FOLDERS.find(([key]) => key === f)?.[1] || f;
 
 function keepCategories() {
   store.set("assetCategories", categories);
@@ -265,7 +266,7 @@ function paintKinds() {
     const knownFolders = SNIPPET_FOLDERS.map(([k]) => k);
     const allFoundFolders = new Set(folderNames());
     const folderList = [
-      null, "",
+      null, ...(countFolder("") ? [""] : []),
       ...knownFolders.filter((f) => allFoundFolders.has(f) || countFolder(f) > 0),
       ...[...allFoundFolders].filter((f) => !knownFolders.includes(f))
     ];
@@ -280,7 +281,7 @@ function paintKinds() {
           snippetFolder = f;
           paint();
         }
-      }, (f === null ? "全部片段" : f === "" ? "未分類" : folderLabel(f)), ` ${countFolder(f)}`)
+      }, (f === null ? "全部片段" : folderLabel(f)), ` ${countFolder(f)}`)
     );
 
     elements.push(el("div", {

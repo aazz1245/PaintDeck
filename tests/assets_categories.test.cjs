@@ -280,3 +280,43 @@ test('資產庫新增、改名及刪除分類時，已開啟的文生圖抽屜�
   await new Promise(setImmediate);
   assert.ok(!texts(row(box, 'adr-kinds')).some((s) => s.startsWith('負面詞')));
 });
+
+test('名為未分類的資料夾有內容時，不顯示空的系統未分類項，資產庫與文生圖一致', async () => {
+  const h = harness([snippet(1, '未分类'), snippet(2, '未分类')]);
+  await h.subject.load();
+  h.subject.choose('snippet'); h.subject.paintKinds();
+  const sub = row(h.node('asKinds'), 'as-sub-kinds');
+  assert.ok(button(sub, '未分类'));
+  assert.equal(button(sub, '未分類'), undefined);
+  const { subject, d, box } = drawer(h);
+  d.kind = 'snippet';
+  await subject.paint(d);
+  assert.ok(texts(row(box, 'adr-subkinds')).includes('未分类 2'));
+  assert.ok(!texts(row(box, 'adr-subkinds')).includes('未分類 0'));
+});
+
+test('實際未分類資料夾與系統未分類都有內容時，名稱可區分且各自篩選', async () => {
+  const h = harness([snippet(1, '未分类'), snippet(2)]);
+  await h.subject.load();
+  h.subject.choose('snippet'); h.subject.paintKinds();
+  assert.ok(button(row(h.node('asKinds'), 'as-sub-kinds'), '未分類（無資料夾）'));
+  const { subject, d, box } = drawer(h);
+  d.kind = 'snippet';
+  await subject.paint(d);
+  await button(row(box, 'adr-subkinds'), '未分類（無資料夾） 1').onclick();
+  assert.deepEqual(cardNames(box), ['片段2']);
+  await button(row(box, 'adr-subkinds'), '未分类 1').onclick();
+  assert.deepEqual(cardNames(box), ['片段1']);
+});
+
+test('可以移除使用者建立的空未分類資料夾，系統不補回空項', async () => {
+  const h = harness([], new Map([['assetSnippetFolders', ['未分类']]]));
+  h.subject.choose('snippet');
+  await h.subject.changeCategory('folder', '未分类', null);
+  assert.ok(!h.subject.folderNames().includes('未分类'));
+  assert.equal(button(row(h.node('asKinds'), 'as-sub-kinds'), '未分類'), undefined);
+  const { subject, d, box } = drawer(h);
+  d.kind = 'snippet';
+  await subject.paint(d);
+  assert.deepEqual(texts(row(box, 'adr-subkinds')), ['全部片段 0']);
+});
