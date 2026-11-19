@@ -77,6 +77,10 @@ const DANGER = [
   [/^\/api\/agent\/cloud\/start$/, "雲端開機會開始計費（價格先用 GET /api/agent/cloud 看，或看生圖站畫面）"],
   [/^\/api\/agent\/cloud\/stop$/, "雲端關機＝刪機，下次開機要重下約 32GB 的模型"],
   [/^\/api\/h3\/chain\/run$/, "H3 長片開拍：雲端一段一段拍，每 1 秒影片約 25 秒雲端計費（重拍也是）"],
+  // 2026-10-29 盤點：這三條助手那邊（agent_tools.rs 的 DANGER）早就有，這裡漏了
+  [/^\/api\/h3\/generate$/, "H3 影片（選雲端或 RunningHub 會花錢）"],
+  [/^\/api\/runninghub\/config$/, "改 RunningHub 設定"],
+  [/^\/api\/skills\/(install|bind|remove)$/, "安裝、綁定或移除外掛寫法"],
   [/^\/api\/agent\/cloud\/(config|idle)$/, "改雲端設定"],
   [/^\/api\/trash\/empty$/, "把回收區永久清空，救不回來"],
   [/^\/api\/reset(\/undo)?$/, "恢復原廠／復原（整個資料搬走）"],
@@ -87,10 +91,23 @@ const DANGER = [
   [/^\/api\/settings(\/import)?$/, "改生圖站設定"],
   [/^\/api\/feature_flows$/, "改內建功能要用的流程"],
   [/^\/api\/pe\/prompts$/, "改 AI 改寫的系統提示詞"],
-  [/^\/api\/models\/(dirs\/(add|remove)|scan\/apply|download|import|place|classify|restart_comfy)$/, "改模型資料夾、下載或搬模型檔、重開 ComfyUI"],
+  [/^\/api\/models\/(dirs\/(add|remove)|scan\/apply|download|fetch_listed|import|place|classify|restart_comfy)$/, "改模型資料夾、下載或搬模型檔、重開 ComfyUI"],
   [/^\/api\/civitai\/download$/, "從 Civitai 下載檔案（大檔，會寫進模型資料夾）"],
+  // 2026-10-29 下載中心：助手那邊（agent_tools.rs 的 DANGER）同一天一起加
+  [/^\/api\/hub\/download$/, "從 C 站或魔塔下載模型檔（大檔，會寫進模型資料夾）"],
+  [/^\/api\/hub\/modelscope$/, "改魔塔金鑰"],
+  [/^\/api\/agent\/llm_api(\/test)?$/, "改外接 API 設定，或送一次測試（會花一點點 token）"],
+  // 2026-11-02 API 頁：助手那邊（agent_tools.rs 的 DANGER）同一天一起加
+  [/^\/api\/llm\/(profile|preset|routes)(\/[a-z]+)?$/, "改 API 頁的大模型連線、指令預設或對照表，或送一次測試（會花一點點 token）"],
+  [/^\/api\/hub\/rh_run$/, "在 RunningHub 跑工作流（照秒扣 RH 幣）"],
+  // 2026-11-02 工作節點：助手那邊（agent_tools.rs 的 DANGER）同一天一起加
+  [/^\/api\/nodes(\/test)?$/, "改工作節點（多張顯卡、遠端 ComfyUI）的設定，或連一台遠端 ComfyUI 測試"],
   [/^\/api\/(image|video)\/workflows/, "新增或改動匯入的工作流"],
   [/^\/api\/voices\/tts_workflow$/, "換掉或拿掉聲音庫的 TTS 工作流"],
+  // 2026-11-11 訓練台：助手那邊（agent_tools.rs 的 DANGER）同一天一起加
+  [/^\/api\/train\/trainer\/(install|remove)$/, "安裝（下載約 8GB）或移除本機訓練器"],
+  [/^\/api\/train\/[^/]+\/(start|quote)$/, "開始煉 LoRA 或報價（雲端顯卡、C 站會花錢；C 站報價會先把訓練圖上傳；本機會把顯卡占滿）"],
+  [/^\/api\/train\/[^/]+\/images\/remove$/, "從訓練專案移除訓練圖"],
 ];
 
 function danger(method, p, body) {
@@ -313,7 +330,7 @@ const TOOLS = [
     description: "把這台電腦上的檔案放進生圖站的輸入資料夾（img2img、局部重繪、多圖參考、H3 素材要用）。回傳的 name 填進 params 的 init_image、refs[].image、mask。圖庫裡的圖不用上傳：POST /api/to_input {id}。",
     inputSchema: {
       type: "object",
-      properties: { path: { type: "string", description: "絕對路徑" }, kind: { type: "string", description: "image（預設）／mask／video" } },
+      properties: { path: { type: "string", description: "絕對路徑" }, kind: { type: "string", description: "image（預設）／mask（只收圖；影片素材走 /api/h3/media 或 /api/video/media/upload）" } },
       required: ["path"],
     },
   },
@@ -367,7 +384,7 @@ async function call(name, a) {
       const { p, filled, family } = await withDefaults(a.params);
       const r = await api("POST", "/api/generate", { params: p, count: a.count || 1 });
       const ids = (r.jobs || []).map((j) => j.job);
-      const head = { family, model: p.model, filled_defaults: filled, jobs: r.jobs, skipped_loras: r.skipped || undefined };
+      const head = { family, model: p.model, filled_defaults: filled, jobs: r.jobs, skipped_loras: r.jobs?.[0]?.skipped_loras || undefined, notes: r.jobs?.[0]?.notes || undefined };
       if (a.wait === false) return json({ ...head, note: "已送出；用 anima_jobs {jobs, wait:true} 等結果" });
       const w = await waitJobs(ids, a.timeout_s || 600);
       const text = json({ ...head, ...w });

@@ -1,5 +1,5 @@
 // LoRA 管理器（內嵌 ComfyUI-Lora-Manager 獨立頁面）與生圖卡匣挑選視窗
-import { $, el, api, toast, openModal, closeModal, debounce } from "./util.js";
+import { $, el, api, toast, openModal, closeModal, debounce, store, pickFile, makeDrop } from "./util.js";
 import { app } from "./state.js";
 
 const LM_ORIGIN = "http://127.0.0.1:8188";
@@ -11,6 +11,8 @@ let pickFam = null;
 let pickAll = false;
 let pickShown = 0;
 let shown = 0;
+// 卡片／列表兩種排法（2026-11-17 網友：「或者是列表化选择」）：LoRA 庫和挑選視窗各記各的
+const view = { page: store.get("lora_view", "grid"), pick: store.get("lora_pick_view", "grid") };
 const PAGE = 60;
 let pickerTab = "single"; // "single" | "recipe"
 
@@ -96,6 +98,33 @@ export function init() {
     if (folderSel) folderSel.style.display = pickerTab === "recipe" ? "none" : "";
     renderPicker();
   });
+  const lmTools = $("#lmTools"), lmOpenBtn = $("#lmOpenBtn");
+  const syncLmToggle = () => lmOpenBtn?.setAttribute("aria-expanded", String(!!lmTools?.open));
+  lmOpenBtn?.addEventListener("click", () => {
+    if (!lmTools) return;
+    lmTools.open = !lmTools.open;
+    syncLmToggle();
+    if (lmTools.open) showPage();
+  });
+  lmTools?.addEventListener("toggle", () => {
+    syncLmToggle();
+    if (lmTools.open) showPage();
+  });
+  $("#loraQ")?.addEventListener("input", debounce(() => renderPage(true), 150));
+  for (const id of ["#loraFamily", "#loraCategory", "#loraTag", "#loraFav"]) $(id)?.addEventListener("change", () => renderPage(true));
+  $("#loraMore")?.addEventListener("click", () => renderPage(false));
+  $("#loraLearn")?.addEventListener("click", () => $("#assistBtn")?.click());
+  $("#loraRefresh")?.addEventListener("click", async () => { await app.refreshState(); toast("已重新整理", "ok"); });
+  $("#loraView")?.addEventListener("click", () => { view.page = view.page === "list" ? "grid" : "list"; store.set("lora_view", view.page); renderPage(true); });
+  $("#lpView")?.addEventListener("click", () => { view.pick = view.pick === "list" ? "grid" : "list"; store.set("lora_pick_view", view.pick); pickShown = 0; renderPicker(); });
+  initPreviewDialog();
+}
+
+// 切換鈕寫「現在按下去會變成什麼」
+function syncViewBtn(btn, mode, box) {
+  btn.textContent = mode === "list" ? "▦ 卡片" : "☰ 列表";
+  btn.title = mode === "list" ? "改回大卡片（看得到大預覽圖）" : "改成一行一個的列表（一次看比較多）";
+  box.classList.toggle("as-list", mode === "list");
 }
 
 export function onState(st) {
@@ -112,6 +141,7 @@ export function showPage() {
   const frame = $("#loraManagerFrame");
   const offline = $("#loraManagerOffline");
   if (!frame || !offline) return;
+  if (!$("#lmTools")?.open) return;
 
   const isOnline = app.state?.online !== false;
 
@@ -252,16 +282,57 @@ function agentDesc(l) {
   return el("div", { class: "agent-desc", title: (a.src === "user" ? "你寫的" : a.src === "probe" ? "助手試畫比較後寫的" : "助手讀線索寫的") + "（給助手挑 LoRA 用）\n" + a.desc },
     el("span", { class: "ag-kind" + (a.sure === false ? " unsure" : "") }, "助手：" + (KIND_ZH[a.kind] || a.kind || "其他") + (a.sure === false ? "？" : "")), a.desc_zh || a.desc);
 }
+// 預覽圖的順序：自己下載／抓過存的 → 模型旁邊的同名圖 → 程式附的封面縮圖（cover_file，2026-11-08：不用連網）
+// 換過的預覽圖檔名不變（custom_<雜湊>.jpg），用 preview_t 讓瀏覽器重抓
+const previewUrl = (l) => l.lm_preview_url
+  ? `${l.lm_preview_url.startsWith("http") ? "" : LM_ORIGIN}${l.lm_preview_url}`
+  : l.preview ? `/lora_preview/${encodeURIComponent(l.preview)}` + (l.preview_t ? `?v=${Math.round(l.preview_t)}` : "")
+  : l.local_preview ? `/api/loras/local-preview?name=${encodeURIComponent(l.name)}`
+  : l.cover_file ? `/api/loras/bundled-cover/${encodeURIComponent(l.cover_file)}` : "";
+const preview = (l) => previewUrl(l) ? `url("${previewUrl(l)}")` : "";
+// 模糊成人預覽圖：LoRA 標成人的，或封面那張圖 C 站的尺度等級大於 1（同下載中心的 cover_nsfw）
+const blurOf = (l) => !!app.state?.settings?.blur_nsfw && (!!l.nsfw || (l.preview_nsfw ?? l.cover_nsfw ?? 1) > 1);
 
-const preview = (l) => {
-  if (l.lm_preview_url) {
-    const u = l.lm_preview_url.startsWith("http") ? l.lm_preview_url : `${LM_ORIGIN}${l.lm_preview_url}`;
-    return `url("${u}")`;
+// 卡片上方的圖：有圖用 <img>（載不出來換成寫著名字的替代卡）；還在抓封面的先寫名字＋「正在抓封面…」（2026-11-07：預載的 LoRA 整片黑不好找）
+function ph(l, attrs = {}) {
+  const box = el("div", { class: "ph", "data-lora": l.name, ...attrs });
+  fillPh(box, l);
+  return box;
+}
+function fillPh(box, l) {
+  const url = previewUrl(l);
+  const noImg = (waiting) => [el("div", { class: "ph-name" }, title(l)), el("div", { class: "ph-note" }, waiting ? "正在抓封面…" : "沒有預覽圖")];
+  box.classList.toggle("blur", blurOf(l));
+  if (!url) return box.replaceChildren(...noImg(l.cover && !l.coverFailed));
+  const img = el("img", { class: "ph-img", src: url, loading: "lazy", alt: "" });
+  img.onerror = () => box.replaceChildren(...noImg(false));
+  box.replaceChildren(img);
+}
+// 沒預覽圖、抓得到封面的（/api/state 的 cover）：後端在背景抓，抓完廣播 lora_cover（main.js 轉給 onCover）
+const coverAsked = new Set();
+const COVER_WAIT = 120000;
+function askCovers(items) {
+  const names = items.filter((l) => l.cover && !l.preview && !coverAsked.has(l.name)).map((l) => l.name);
+  if (!names.length) return;
+  for (const n of names) coverAsked.add(n);
+  api("/api/loras/covers", { json: { names } }).catch(() => { for (const n of names) coverAsked.delete(n); });
+  // 連不上（例如大陸連 C 站）又一直沒消息：兩分鐘後改寫「沒有預覽圖」，不要永遠停在「正在抓封面…」
+  setTimeout(() => {
+    for (const n of names) {
+      const l = list.find((x) => x.name === n);
+      if (l && !l.preview && !l.coverFailed) onCover({ name: n, failed: true });
+    }
+  }, COVER_WAIT);
+}
+export function onCover(m) {
+  for (const l of [list.find((x) => x.name === m.name), app.state?.models?.loras?.find((x) => x.name === m.name)]) {
+    if (!l) continue;
+    if (m.failed) l.coverFailed = true;
+    else Object.assign(l, { preview: m.preview, preview_nsfw: m.nsfw });
   }
-  if (l.preview) return `url(/lora_preview/${encodeURIComponent(l.preview)})`;
-  if (l.local_preview) return `url(/api/loras/local-preview?name=${encodeURIComponent(l.name)})`;
-  return "";
-};
+  const l = list.find((x) => x.name === m.name);
+  if (l) for (const box of document.querySelectorAll(".ph[data-lora]")) if (box.dataset.lora === m.name) fillPh(box, l);
+}
 
 function fillFilters() {
   const fill = (id, options) => {
@@ -288,17 +359,46 @@ export function renderPage(reset = true) {
   const items = filtered(), g = $("#loraGrid");
   if (!g) return;
   if (reset) { shown = 0; g.replaceChildren(); }
+  syncViewBtn($("#loraView"), view.page, g);
   const end = Math.min(items.length, shown + PAGE);
-  for (const l of items.slice(shown, end)) g.append(card(l));
+  for (const l of items.slice(shown, end)) g.append(view.page === "list" ? row(l) : card(l));
+  askCovers(items.slice(shown, end));
   shown = end;
   if ($("#loraMore")) $("#loraMore").hidden = shown >= items.length;
   if ($("#loraTotal")) $("#loraTotal").textContent = `${items.length} / ${list.length} 個`;
 }
 
+// 預覽圖可以直接拖一張圖上去換掉
+function dropPh(l, attrs) {
+  const box = ph(l, { title: "把圖拖到這裡就能換成這個 LoRA 的預覽圖", ...attrs });
+  makeDrop(box, (f) => setPreview(l, f, isAdult(l)));
+  return box;
+}
+const isAdult = (l) => !!l.nsfw || (l.preview_nsfw ?? l.cover_nsfw ?? 1) > 1;
+
+// 列表模式的一行：小縮圖（滑過放大）＋名稱、觸發詞＋強度＋按鈕
+function row(l) {
+  const add = () => import("./gen.js").then((g) => { g.addLora(l, true); app.showPage("gen"); toast(`已加入「${title(l)}」`, "ok"); });
+  return el("div", { class: "card lrow" },
+    dropPh(l),
+    el("div", { class: "bd" },
+      el("div", { class: "t" }, (l.fav ? "★ " : "") + title(l), modelLabel(l) ? el("span", { class: "badge fam" }, modelLabel(l)) : null,
+        el("span", { class: "badge" + (!l.category ? " auto" : "") }, categoryLabel(categoryOf(l)))),
+      el("div", { class: "st", title: l.name }, l.name),
+      l.triggers?.length ? el("div", { class: "trig", title: l.triggers.join(", ") }, "觸發詞：" + l.triggers.join(", ")) : null),
+    el("div", { class: "ft" },
+      el("span", { class: "sub" }, "強度"),
+      el("input", { type: "number", step: 0.05, min: -2, max: 3, value: l.strength ?? 0.8, style: "width:62px", "aria-label": "預設強度", onchange: (e) => setMeta(l, { strength: +e.target.value }) }),
+      el("button", { class: "btn sm primary", onclick: add }, "加到生成"),
+      el("button", { class: "btn sm", onclick: () => openPreview(l) }, "換預覽圖"),
+      el("button", { class: "btn sm", onclick: () => editTriggers(l) }, "改觸發詞"),
+      el("button", { class: "icon", title: "收藏", onclick: () => setMeta(l, { fav: !l.fav }, true) }, l.fav ? "★" : "☆"),
+      l.url ? el("a", { class: "icon", href: l.url, target: "_blank", title: "在 Civitai 開啟" }, "↗") : null));
+}
+
 function card(l) {
-  const blur = app.state?.settings?.blur_nsfw && l.nsfw;
   return el("div", { class: "card" },
-    el("div", { class: "ph" + (blur ? " blur" : ""), style: preview(l) ? `background-image:${preview(l)}` : "" }, preview(l) ? "" : "沒有預覽圖"),
+    dropPh(l),
     el("div", { class: "bd" },
       el("div", { class: "t" }, (l.fav ? "★ " : "") + title(l), modelLabel(l) ? el("span", { class: "badge fam" }, modelLabel(l)) : null),
       el("div", { class: "st" }, l.name),
@@ -307,9 +407,20 @@ function card(l) {
         ...tagsOf(l).slice(0, 8).map((tag) => el("button", { class: "chip", type: "button", title: `只看標籤 ${tag}`, onclick: () => { const box = $("#loraTag"); if (![...box.options].some((o) => o.value === tag)) box.append(el("option", { value: tag }, tag)); box.value = tag; renderPage(true); } }, tag))),
       l.triggers?.length ? el("div", { class: "trig", title: "觸發詞" }, "觸發詞：" + l.triggers.join(", ")) : el("div", { class: "st" }, "沒有觸發詞"),
       l.note ? el("div", { class: "st", style: "white-space:pre-wrap" }, l.note) : null,
-      agentDesc(l)
-    )
-  );
+      agentDesc(l),
+      el("div", { class: "ft" },
+        el("span", { class: "sub" }, "預設強度"),
+        el("input", { type: "number", step: 0.05, min: -2, max: 3, value: l.strength ?? 0.8, style: "width:70px", onchange: (e) => setMeta(l, { strength: +e.target.value }) })),
+      el("div", { class: "ft" },
+        el("button", { class: "btn sm primary", onclick: () => { import("./gen.js").then((g) => { g.addLora(l, true); app.showPage("gen"); toast(`已加入「${title(l)}」`, "ok"); }); } }, "加到生成"),
+        el("button", { class: "btn sm", onclick: () => editTriggers(l) }, "改觸發詞"),
+        el("button", { class: "btn sm", title: "選一張圖、貼上或拖進來，當這個 LoRA 的預覽圖", onclick: () => openPreview(l) }, "換預覽圖"),
+        el("button", { class: "btn sm", onclick: () => editCategory(l) }, "分類"),
+        el("button", { class: "btn sm", onclick: () => editTags(l) }, "標籤"),
+        el("button", { class: "btn sm", title: "生圖助手靠這句話決定什麼時候掛這個 LoRA", onclick: () => editAgentDesc(l) }, "改用途"),
+        el("button", { class: "icon", title: "收藏", onclick: () => setMeta(l, { fav: !l.fav }, true) }, l.fav ? "★" : "☆"),
+        l.url ? el("a", { class: "icon", href: l.url, target: "_blank", title: "在 Civitai 開啟" }, "↗") : null,
+        el("button", { class: "btn sm danger", title: "把這個 LoRA 檔搬到「待刪除」資料夾（不是真的刪，搬回去就能再用）", onclick: () => remove(l) }, "移到待刪除"))));
 }
 
 // ---------------------------------------------------------------- 右鍵選單
@@ -320,7 +431,7 @@ export function closePickerMenu() {
   pickerMenuEl = null;
 }
 
-if (typeof document !== "undefined") {
+if (typeof document !== "undefined" && typeof document.addEventListener === "function") {
   document.addEventListener("pointerdown", (e) => {
     if (pickerMenuEl && !pickerMenuEl.contains(e.target)) closePickerMenu();
   }, true);
@@ -438,7 +549,101 @@ async function editTriggers(l) {
 }
 
 // ---------------------------------------------------------------- 挑選視窗
-export function openPicker(cb, fam) {
+// 用途說明：生圖助手挑 LoRA 時看的那一句。自己寫的會蓋掉助手猜的；清空＝讓助手重新認識
+async function editAgentDesc(l) {
+  const a = l.agent || {};
+  const v = prompt("這個 LoRA 是做什麼用的？一句話（中文、英文都可以）。\n例：把畫面變成雪夜發光的柔焦畫風，適合冬天、夜景。\n清空＝讓助手之後重新認識。", a.desc_zh || a.desc || "");
+  if (v === null) return;
+  const t = v.trim();
+  await setMeta(l, { agent: t ? { ...a, desc: t, desc_zh: t, kind: a.kind || "other", sure: true, src: "user", t: Date.now() / 1000 } : {} }, true);
+}
+
+// ---------------------------------------------------------------- 換預覽圖（2026-11-17）
+// 後端縮成長邊 640 的 JPEG 存進 previews\custom_<雜湊>.jpg；原本的預覽圖（C 站抓的）記著，按「還原」換回去
+let prevLora = null;
+function initPreviewDialog() {
+  makeDrop($("#lpvDrop"), (f) => prevLora && setPreview(prevLora, f, $("#lpvNsfw").checked));
+  $("#lpvPick").onclick = async () => { const f = await pickFile("image/png,image/jpeg,image/webp"); if (f && prevLora) setPreview(prevLora, f, $("#lpvNsfw").checked); };
+  $("#lpvReset").onclick = async () => {
+    if (!prevLora) return;
+    const name = prevLora.name;
+    try {
+      applyMeta(prevLora, await api("/api/loras/preview/set", { json: { name, reset: true } }));
+      // 本來沒有預覽圖的：重抓清單，才拿得到內建縮圖（cover_file）或抓封面的標記
+      await app.refreshState();
+      prevLora = list.find((x) => x.name === name) || prevLora;
+      fillPreviewDialog();
+      toast("已還原原本的預覽圖", "ok");
+    } catch (e) { toast(e.message, "err"); }
+  };
+  document.addEventListener("paste", (e) => {
+    if ($("#loraPrev").hidden || !prevLora) return;
+    const f = [...(e.clipboardData?.files || [])].find((x) => x.type.startsWith("image/"));
+    if (!f) return;
+    e.preventDefault();
+    setPreview(prevLora, f, $("#lpvNsfw").checked);
+  });
+}
+function openPreview(l) {
+  prevLora = l;
+  $("#lpvTitle").textContent = `換預覽圖：${title(l)}`;
+  $("#lpvNsfw").checked = isAdult(l);
+  fillPreviewDialog();
+  openModal("#loraPrev");
+  setTimeout(() => $("#lpvDrop").focus(), 50);
+}
+function fillPreviewDialog() {
+  const l = prevLora;
+  if (!l) return;
+  const box = $("#lpvPh");
+  box.dataset.lora = l.name;
+  fillPh(box, l);
+  $("#lpvReset").hidden = !l.preview_custom;
+}
+// 後端回的 LoRA 資訊蓋回清單（還原後沒有 preview 的欄位也要拿掉），重畫畫面上這個 LoRA 的所有預覽圖
+function applyMeta(l, meta) {
+  for (const x of [l, list.find((y) => y.name === l.name), app.state?.models?.loras?.find((y) => y.name === l.name)]) {
+    if (!x) continue;
+    for (const k of ["preview", "preview_nsfw", "preview_custom", "preview_t", "preview_orig", "preview_orig_nsfw"]) delete x[k];
+    Object.assign(x, meta, { name: l.name });
+  }
+  for (const box of document.querySelectorAll(".ph[data-lora]")) if (box.dataset.lora === l.name) fillPh(box, l);
+  if (prevLora?.name === l.name) fillPreviewDialog();
+}
+async function setPreview(l, file, nsfw) {
+  const fd = new FormData();
+  fd.append("image", file, file.name || "preview.png");
+  try {
+    applyMeta(l, await api(`/api/loras/preview?name=${encodeURIComponent(l.name)}&nsfw=${nsfw ? 1 : 0}`, { method: "POST", body: fd }));
+    toast(`已換上「${title(l)}」的預覽圖`, "ok");
+  } catch (e) { toast(e.message, "err"); }
+}
+
+/** 圖庫／生成結果的「設為 LoRA 預覽圖」：這張圖用了哪些 LoRA 就從那幾個挑（只用一個就直接問要不要換） */
+export async function previewFromImage(rec) {
+  let used = rec.params?.loras;
+  if (!used) used = (await api(`/api/image/${rec.id}`)).params?.loras;
+  const names = new Set((used || []).map((x) => x.name).filter(Boolean));
+  const apply = async (l) => {
+    try {
+      applyMeta(l, await api("/api/loras/preview/set", { json: { name: l.name, id: rec.id, nsfw: isAdult(l) } }));
+      toast(`已把這張圖設成「${title(l)}」的預覽圖`, "ok");
+    } catch (e) { toast(e.message, "err"); }
+  };
+  const mine = list.filter((l) => names.has(l.name));
+  if (mine.length === 1) {
+    if (confirm(`把這張圖設成「${title(mine[0])}」的預覽圖？`)) await apply(mine[0]);
+    return;
+  }
+  // 用了好幾個（或一個都沒用）：開挑選視窗，先只列這張圖用到的
+  openPicker(apply, mine.length ? (x) => names.has(x.name) : null, { title: "這張圖要當哪個 LoRA 的預覽圖？" });
+}
+
+// ---------------------------------------------------------------- 挑選視窗
+// fam：只列出這個家族的 LoRA（Anima 的 LoRA 套在 Qwen 2.1 上沒有用，反之亦然）。
+// 也可以給判斷函式 (l) => 能不能用（匯入的工作流組：同家族或家族不明的都能接）；用函式時列表下面有「顯示全部」可以看被藏起來的
+// opts：{title}（圖庫「設為 LoRA 預覽圖」借用這個視窗時換標題）
+export function openPicker(cb, fam, opts = {}) {
   closePickerMenu();
   pickCb = cb;
   pickFam = fam || null;
@@ -451,6 +656,8 @@ export function openPicker(cb, fam) {
   const usable = pickAll ? list : list.filter(fits);
   fillPickerFolders(usable);
 
+  const pickerTitle = $("#lpTitle");
+  if (pickerTitle) pickerTitle.textContent = opts.title || "選擇 LoRA 卡匣";
   renderPicker();
   openModal("#loraPicker");
   setTimeout(() => $("#lpQ")?.focus(), 50);
@@ -532,43 +739,33 @@ function renderPicker() {
   const g = $("#lpGrid");
   if (!g) return;
   g.innerHTML = "";
-
+  syncViewBtn($("#lpView"), view.pick, g);
+  const asList = view.pick === "list";
   const fits = (x) => !pickFam || (typeof pickFam === "function" ? pickFam(x) : (x.family || "anima") === pickFam);
   const usable = pickAll ? list : list.filter(fits);
-
-  if (!usable.length) {
-    g.append(el("div", { class: "muted pad" }, "還沒有這個模型能用的 LoRA。"));
-    return;
-  }
-
+  if (!usable.length) g.append(el("div", { class: "muted pad" }, "還沒有這個模型能用的 LoRA。到「Civitai」分頁搜尋下載（記得選對基底模型）。"));
   const matches = usable.filter((x) => matchFolder(x, folder) && match(x, q));
+  askCovers(matches.slice(0, pickShown + 80));
   for (const l of matches.slice(0, pickShown + 80)) {
-    const blur = app.state?.settings?.blur_nsfw && l.nsfw;
-    const fPath = l.folder || folderOf(l.name);
-    const cardEl = el(
-      "div",
-      {
-        class: "card pick",
-        title: (fPath ? `${fPath} / ${title(l)}` : title(l)) + "\n【右鍵：更多工具／重命名】",
-        onclick: () => {
-          pickCb(l);
-          closeModal("#loraPicker");
-        },
-      },
-      el("div", { class: "ph" + (blur ? " blur" : ""), style: preview(l) ? `background-image:${preview(l)};aspect-ratio:1` : "aspect-ratio:1" }, preview(l) ? "" : "無預覽"),
-      el("div", { class: "bd" },
-        el("div", { class: "t" }, (l.fav ? "★ " : "") + title(l)),
-        l.triggers?.length ? el("div", { class: "trig" }, l.triggers.slice(0, 4).join(", ")) : null,
-        l.note ? el("div", { class: "pick-note", title: l.note }, l.note) : null
-      )
-    );
-
-    cardEl.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      openPickerMenu(e, l);
-    });
-
+    const pick = () => { closeModal("#loraPicker"); pickCb(l); };
+    if (asList) {
+      // 列表：一行一個，小縮圖＋名稱＋家族＋觸發詞，按整行就選
+      g.append(el("div", { class: "card pick lrow", onclick: pick },
+        ph(l),
+        el("div", { class: "bd" },
+          el("div", { class: "t" }, (l.fav ? "★ " : "") + title(l), modelLabel(l) ? el("span", { class: "badge fam" }, modelLabel(l)) : null),
+          l.triggers?.length ? el("div", { class: "trig", title: l.triggers.join(", ") }, l.triggers.slice(0, 6).join(", ")) : null,
+          l.note ? el("div", { class: "st", title: l.note }, l.note) : null)));
+      const row = g.lastElementChild;
+      row?.addEventListener("contextmenu", (e) => { e.preventDefault(); e.stopPropagation(); openPickerMenu(e, l); });
+      continue;
+    }
+    const cardEl = el("div", { class: "card pick", onclick: pick,
+      title: `${l.folder || folderOf(l.name) ? `${l.folder || folderOf(l.name)} / ` : ""}${title(l)}\n【右鍵：更多工具／重命名】` },
+      ph(l, { style: "aspect-ratio:1" }),
+      el("div", { class: "bd" }, el("div", { class: "t" }, title(l)), l.triggers?.length ? el("div", { class: "trig" }, l.triggers.slice(0, 4).join(", ")) : null,
+        l.note ? el("div", { class: "pick-note", title: l.note }, l.note) : null));
+    cardEl.addEventListener("contextmenu", (e) => { e.preventDefault(); e.stopPropagation(); openPickerMenu(e, l); });
     g.append(cardEl);
   }
 

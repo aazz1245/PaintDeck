@@ -42,7 +42,7 @@ pub const TOOLS: &[Tool] = &[
     Tool { name: "gallery", args: r#"{"q":"words in the prompt","mode":"txt2img","fav":false,"limit":10}"#, desc: "Search the gallery, newest first: ids, mode, size and the start of each prompt. With no q you get the latest images.", zh: "查圖庫" },
     Tool { name: "image_info", args: r#"{"id":123}"#, desc: "Full details of one gallery image: prompt, negative, model, LoRAs, seed, size.", zh: "看圖的參數" },
     Tool { name: "look", args: r#"{"ids":[123,124]}"#, desc: "See up to 4 gallery images yourself in the next turn (to judge them, compare them, or pick the best).", zh: "看圖" },
-    Tool { name: "edit", args: r#"{"id":123,"instruction":"把背景換成夜晚的海邊，其他保持不變"}"#, desc: "Edit one picture by instruction with Qwen 2.1 (change clothes, background, expression, add or remove things; keeps the person). Use \"ref\":N instead of id for user image N. The instruction may be Chinese.", zh: "改圖" },
+    Tool { name: "edit", args: r#"{"id":123,"instruction":"把背景換成夜晚的海邊，其他保持不變"}"#, desc: "Edit one picture by instruction with Qwen 2.1 (change clothes, background, expression, the pose of the arms or hands, add or remove things; keeps the person and the style). Use \"ref\":N instead of id for user image N: to change the user's own picture, always edit it with ref, not a picture you drew. The instruction may be Chinese.", zh: "改圖" },
     Tool { name: "upscale", args: r#"{"id":123,"scale":2}"#, desc: "Upscale an image (scale 1.5 to 4).", zh: "放大" },
     Tool { name: "remove_bg", args: r#"{"id":123}"#, desc: "Cut out the subject onto a transparent background.", zh: "去背" },
     Tool { name: "fix", args: r#"{"id":123,"what":"face"}"#, desc: "Repaint the faces (\"face\"), hands (\"hand\") or both (\"both\") of an image to fix them.", zh: "修臉修手" },
@@ -52,7 +52,7 @@ pub const TOOLS: &[Tool] = &[
     Tool { name: "comic", args: r#"{"story":"這一頁的劇情（中文）","title":"標題"}"#, desc: "Make a whole comic page: creates a comic project, splits the story into panels with dialogue, and draws the page with MOSS.", zh: "畫漫畫" },
     Tool { name: "assets", args: r#"{"kind":"char"}"#, desc: "List saved assets (kind: char, scene, outfit, prop, frame, fx, sound) with ids, names and looks.", zh: "看資產庫" },
     Tool { name: "trash", args: r#"{"ids":[123]}"#, desc: "Move gallery images to the recycle bin. The user has to approve first.", zh: "移到回收區" },
-    Tool { name: "guide", args: r#"{"name":"qwen_edit"}"#, desc: "Read the full prompt-writing guide for a model and task: anima, qwen, qwen_edit, qwen_multiref, moss, other, ltx_video, h3_video. Read the matching guide before you write an edit instruction, a video prompt, a prompt with refs, or a prompt for a model you just switched to. When a guide lists the parts of an extra skill, read one part with \"part\":N.", zh: "讀寫法" },
+    Tool { name: "guide", args: r#"{"name":"qwen_edit"}"#, desc: "Read the full prompt-writing guide for a model and task: anima, qwen, qwen_edit, qwen_multiref, moss, other, h3_video. Read the matching guide before you write an edit instruction, a video prompt, a prompt with refs, or a prompt for a model you just switched to. When a guide lists the parts of an extra skill, read one part with \"part\":N.", zh: "讀寫法" },
     Tool { name: "docs", args: r#"{"section":"漫畫"}"#, desc: "Read the app manual (Chinese). Without section you get the table of contents. Read the matching section before you use api.", zh: "讀說明書" },
     Tool { name: "api", args: r#"{"method":"GET","path":"/api/comic/projects","query":{},"body":{}}"#, desc: "Call any HTTP API of the app (director, H3 video, long films, prompt library, LoRAs, Civitai, tagger, settings…); paths and fields are in docs. Spending money, deleting or changing settings waits for the user's approval; permanent deletion and factory reset are not possible.", zh: "直接呼叫 API" },
     Tool { name: "open_page", args: r#"{"page":"gallery"}"#, desc: "Show a page in the main window: gen, gallery, assets, loras, civitai, director, comic, settings.", zh: "切換頁面" },
@@ -112,10 +112,22 @@ static DANGER: LazyLock<Vec<(Regex, &'static str)>> = LazyLock::new(|| {
         (r"^/api/settings(/import)?$", "改生圖站設定"),
         (r"^/api/feature_flows$", "改內建功能要用的流程"),
         (r"^/api/pe/prompts$", "改 AI 改寫的系統提示詞"),
-        (r"^/api/models/(dirs/(add|remove)|scan/apply|download|import|place|classify|restart_comfy)$", "改模型資料夾、下載或搬模型檔、重開 ComfyUI"),
+        (r"^/api/models/(dirs/(add|remove)|scan/apply|download|fetch_listed|import|place|classify|restart_comfy)$", "改模型資料夾、下載或搬模型檔、重開 ComfyUI"),
         (r"^/api/civitai/download$", "從 Civitai 下載檔案"),
-        (r"^/api/(image|video)/workflows", "新增或改動匯入的工作流"),
+        // 2026-10-29 下載中心：MCP 那邊（anima-tools.js 的 DANGER）同一天一起加
+        (r"^/api/hub/download$", "從 C 站或魔塔下載模型檔"),
+        (r"^/api/hub/modelscope$", "改魔塔金鑰"),
+        // 2026-11-02 API 頁：MCP 那邊（anima-tools.js 的 DANGER）同一天一起加
+        (r"^/api/llm/(profile|preset|routes)(/[a-z]+)?$", "改 API 頁的大模型連線、指令預設或對照表，或送一次測試（會花一點點 token）"),
+        (r"^/api/hub/rh_run$", "在 RunningHub 跑工作流（照秒扣 RH 幣）"),
+        // 2026-11-02 工作節點：MCP 那邊（anima-tools.js 的 DANGER）同一天一起加
+        (r"^/api/nodes(/test)?$", "改工作節點（多張顯卡、遠端 ComfyUI）的設定，或連一台遠端 ComfyUI 測試"),
+        (r"^/api/(image|video)/workflows","新增或改動匯入的工作流"),
         (r"^/api/voices/tts_workflow$", "換掉或拿掉聲音庫的 TTS 工作流"),
+        // 2026-11-11 訓練台：MCP 那邊（anima-tools.js 的 DANGER）同一天一起加
+        (r"^/api/train/trainer/(install|remove)$", "安裝（下載約 8GB）或移除本機訓練器"),
+        (r"^/api/train/[^/]+/(start|quote)$", "開始煉 LoRA 或報價（雲端顯卡、C 站會花錢；C 站報價會先把訓練圖上傳；本機會把顯卡占滿）"),
+        (r"^/api/train/[^/]+/images/remove$", "從訓練專案移除訓練圖"),
     ]
     .into_iter()
     .map(|(r, why)| (Regex::new(r).expect("DANGER"), why))
@@ -412,12 +424,12 @@ pub fn page_of(tool: &str, args: &Value) -> Option<&'static str> {
             let p = tx(&args["path"]);
             let seg = p.trim_start_matches("/api/").split('/').next().unwrap_or("");
             match seg {
-                "comic" => "comic",
+                "comic" | "colorbook" => "comic",
                 "director" | "h3" | "studio" | "shotsheet" => "director",
                 "lib" | "assets" | "charsheet" => "assets",
                 "gallery" | "image" | "images" => "gallery",
                 "loras" => "loras",
-                "civitai" | "downloads" => "civitai",
+                "civitai" | "downloads" | "hub" => "civitai",
                 "settings" | "models" => "settings",
                 "generate" | "detail" => "gen",
                 _ => return None,
@@ -436,6 +448,14 @@ mod tests {
         let lv = |m: &str, p: &str, b: Value| api_level(m, p, &b).0;
         assert_eq!(lv("GET", "/api/agent/cloud", json!({})), Level::Normal);
         assert_eq!(lv("POST", "/api/agent/cloud/start", json!({})), Level::Confirm);
+        assert_eq!(lv("POST", "/api/agent/llm_api", json!({})), Level::Forbidden);
+        assert_ne!(lv("POST", "/api/llm/profile", json!({})), Level::Normal);
+        assert_ne!(lv("POST", "/api/llm/preset/import", json!({})), Level::Normal);
+        assert_ne!(lv("POST", "/api/llm/routes", json!({})), Level::Normal);
+        assert_eq!(lv("GET", "/api/llm", json!({})), Level::Normal);
+        assert_eq!(lv("POST", "/api/nodes", json!({})), Level::Confirm);
+        assert_eq!(lv("POST", "/api/nodes/test", json!({})), Level::Confirm);
+        assert_eq!(lv("GET", "/api/nodes", json!({})), Level::Normal);
         assert_eq!(lv("POST", "/api/reset", json!({})), Level::Forbidden);
         assert_eq!(lv("GET", "/api/reset/undo", json!({})), Level::Forbidden);
         assert_eq!(lv("POST", "/api/images/batch", json!({"action":"purge"})), Level::Forbidden);
@@ -447,8 +467,24 @@ mod tests {
         assert_eq!(lv("POST", "/api/comic/project/delete", json!({})), Level::Confirm);
         assert_eq!(lv("DELETE", "/api/lib/3", json!({})), Level::Confirm);
         assert_eq!(lv("POST", "/api/comic/run", json!({})), Level::Normal);
+        // 整本上色：本機顯卡上色不花錢（跟漫畫台一樣）；整本搬到待刪除要確認
+        assert_eq!(lv("POST", "/api/colorbook/cb_1/run", json!({})), Level::Normal);
+        assert_eq!(lv("POST", "/api/colorbook/cb_1/delete", json!({})), Level::Confirm);
         assert_eq!(lv("POST", "/api/skills/install", json!({})), Level::Confirm);
         assert_eq!(lv("GET", "/api/skills", json!({})), Level::Normal);
+        // 下載中心：下載、改金鑰要確認；搜尋、看金鑰有沒有填不用
+        assert_eq!(lv("POST", "/api/hub/download", json!({})), Level::Confirm);
+        assert_eq!(lv("POST", "/api/hub/modelscope", json!({})), Level::Confirm);
+        assert_eq!(lv("GET", "/api/hub/modelscope", json!({})), Level::Normal);
+        assert_eq!(lv("GET", "/api/hub/search", json!({})), Level::Normal);
+        assert_eq!(lv("POST", "/api/hub/rh_run", json!({"dry": true})), Level::Confirm);
+        // 訓練台：開始、報價（C 站報價會先上傳訓練圖）、裝或移除訓練器、移除訓練圖要確認；看清單、寫描述不用
+        for p in ["/api/train/t0123456789ab/start", "/api/train/t0123456789ab/quote", "/api/train/trainer/install", "/api/train/trainer/remove", "/api/train/t0123456789ab/images/remove"] {
+            assert_eq!(lv("POST", p, json!({})), Level::Confirm, "{p}");
+        }
+        assert_eq!(lv("GET", "/api/train", json!({})), Level::Normal);
+        assert_eq!(lv("POST", "/api/train/t0123456789ab/captions", json!({})), Level::Normal);
+        assert_eq!(lv("POST", "/api/train/t0123456789ab/images", json!({})), Level::Normal);
     }
 
     #[test]
@@ -494,6 +530,8 @@ mod tests {
         assert!(TOOLS.iter().all(|x| t.contains(&format!("- {} ", x.name))));
         assert!(with_tools("OLD").contains("\n\nTOOLS\n"));
         assert_eq!(page_of("api", &json!({"path": "/api/comic/run"})), Some("comic"));
+        assert_eq!(page_of("api", &json!({"path": "/api/colorbook/cb_1/run"})), Some("comic"));
+        assert_eq!(page_of("api", &json!({"path": "/api/hub/search"})), Some("civitai"));
         assert_eq!(page_of("open_page", &json!({"page": "loras"})), Some("loras"));
         assert_eq!(clip("一二三四五", 3), "一二三…（後面省略）");
     }

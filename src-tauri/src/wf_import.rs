@@ -6,7 +6,7 @@
 //! - "api"：ComfyUI「匯出（API）」存的 JSON（也收 {"prompt": {…}} 這種包一層的），原樣收下
 //! - "ui"：一般「儲存」的工作流 JSON（有 nodes、links），照前端 graphToPrompt 的做法轉換，要靠 /object_info 把
 //!   widgets_values 對回欄位名稱
-//! - "png"／"webp"：ComfyUI 生成的圖，讀裡面的 "prompt"（API 格式，優先）或 "workflow"（UI 格式，轉換）
+//! - "png"／"webp"／"jpeg"：ComfyUI 生成的圖，讀裡面的 "prompt"（API 格式，優先）或 "workflow"（UI 格式，轉換）
 //!
 //! UI 格式的轉換規則：
 //! - 停用（mode 2，Mute）的節點拿掉；下游因此少了必要連線的節點一路連鎖拿掉，並報警告
@@ -16,14 +16,12 @@
 //! - 子圖（definitions.subgraphs）、群組節點（workflow>…）沒辦法轉：請使用者在 ComfyUI 用「匯出（API）」
 //! - object_info 裡找不到的節點（沒裝的自訂節點）全部列出來，不要匯入後才在生成時炸掉
 //! - 節點標題寫進 _meta.title（跟 ComfyUI 匯出（API）一樣；標題沒改過就用節點的顯示名稱），工作流裡的 {{image}} 這類標記就寫在標題上
-use crate::imgmeta::png_text;
+use crate::imgmeta;
 use serde_json::{json, Map, Value};
 use std::collections::{HashMap, HashSet};
-use std::io::Cursor;
 
 type R<T> = Result<T, String>;
 
-const PNG_MAGIC: &[u8] = b"\x89PNG\r\n\x1a\n";
 /// seed 後面那個「生成後」控制欄位（fixed／increment／decrement／randomize）會佔一格 widgets_values
 const CONTROL: [&str; 4] = ["fixed", "increment", "decrement", "randomize"];
 /// 載入圖片節點最後那個上傳按鈕也會佔一格 widgets_values
@@ -52,7 +50,7 @@ pub struct Imported {
     pub graph: Value,
     /// 給使用者看的提醒（拿掉了哪些節點、哪些連線斷了…），沒有就是空的
     pub warnings: Vec<String>,
-    /// 原本是什麼格式："api"、"ui"、"png"、"webp"
+    /// 原本是什麼格式："api"、"ui"、"png"、"webp"、"jpeg"
     pub source: &'static str,
 }
 
@@ -63,13 +61,9 @@ pub fn to_api(bytes: &[u8], file_name: &str, object_info: &Value) -> R<Imported>
     if bytes.is_empty() {
         return Err("這個檔案是空的".into());
     }
-    if bytes.starts_with(PNG_MAGIC) {
-        let (text, _) = png_text(Cursor::new(bytes)).ok_or("這張 PNG 讀不出來：檔案可能壞了")?;
-        return from_embedded(text.get("prompt").map(String::as_str), text.get("workflow").map(String::as_str), object_info, "png");
-    }
-    if is_webp(bytes) {
-        let (prompt, workflow) = webp_metadata(bytes);
-        return from_embedded(prompt.as_deref(), workflow.as_deref(), object_info, "webp");
+    if let Some(kind) = imgmeta::image_kind(bytes) {
+        let (text, _) = imgmeta::meta_text(bytes).ok_or("這張圖讀不出來：檔案可能壞了")?;
+        return from_embedded(text.get("prompt").map(String::as_str), text.get("workflow").map(String::as_str), object_info, kind);
     }
     let body = bytes.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(bytes);
     let v: Value = serde_json::from_slice(body).map_err(|_| unsupported(file_name))?;
@@ -149,86 +143,6 @@ fn from_embedded(prompt: Option<&str>, workflow: Option<&str>, oi: &Value, sourc
         }
         Kind::Unknown => Err("圖裡的 workflow 看不懂".into()),
     }
-}
-
-fn is_webp(b: &[u8]) -> bool {
-    b.len() >= 12 && &b[..4] == b"RIFF" && &b[8..12] == b"WEBP"
-}
-
-/// WebP 的 EXIF 區塊：ComfyUI（PIL）把 "prompt:{…}"、"workflow:{…}" 當文字寫進 TIFF 目錄的 Make／Model 這幾個欄位
-fn webp_metadata(b: &[u8]) -> (Option<String>, Option<String>) {
-    let (mut prompt, mut workflow) = (None, None);
-    let mut pos = 12;
-    while pos + 8 <= b.len() {
-        let size = u32::from_le_bytes([b[pos + 4], b[pos + 5], b[pos + 6], b[pos + 7]]) as usize;
-        let start = pos + 8;
-        let end = start.saturating_add(size).min(b.len());
-        if &b[pos..pos + 4] == b"EXIF" {
-            for t in exif_texts(&b[start..end]) {
-                if let Some(rest) = t.strip_prefix("prompt:") {
-                    prompt = Some(rest.to_string());
-                } else if let Some(rest) = t.strip_prefix("workflow:") {
-                    workflow = Some(rest.to_string());
-                }
-            }
-        }
-        // 區塊長度是奇數時後面補一個位元組
-        pos = start.saturating_add(size).saturating_add(size & 1);
-    }
-    (prompt, workflow)
-}
-
-/// TIFF 目錄（IFD）裡所有 ASCII 型別的欄位文字。EXIF 區塊前面可能有 "Exif\0\0"，也可能沒有
-fn exif_texts(data: &[u8]) -> Vec<String> {
-    let tiff = data.strip_prefix(b"Exif\0\0").unwrap_or(data);
-    let le = match tiff.get(..2) {
-        Some(b"II") => true,
-        Some(b"MM") => false,
-        _ => return vec![],
-    };
-    let u16_at = |o: usize| -> Option<u16> {
-        let b: [u8; 2] = tiff.get(o..o.checked_add(2)?)?.try_into().ok()?;
-        Some(if le { u16::from_le_bytes(b) } else { u16::from_be_bytes(b) })
-    };
-    let u32_at = |o: usize| -> Option<u32> {
-        let b: [u8; 4] = tiff.get(o..o.checked_add(4)?)?.try_into().ok()?;
-        Some(if le { u32::from_le_bytes(b) } else { u32::from_be_bytes(b) })
-    };
-    let mut out = vec![];
-    if u16_at(2) != Some(42) {
-        return out;
-    }
-    let mut ifd = u32_at(4).map(|o| o as usize);
-    // 目錄一個接一個，最多看幾個，免得壞檔繞圈
-    for _ in 0..4 {
-        let Some(off) = ifd.filter(|o| *o != 0) else {
-            break;
-        };
-        let Some(n) = u16_at(off) else {
-            break;
-        };
-        for i in 0..n as usize {
-            let e = off + 2 + i * 12;
-            let (Some(ty), Some(count)) = (u16_at(e + 2), u32_at(e + 4)) else {
-                break;
-            };
-            if ty != 2 {
-                continue;
-            }
-            let count = count as usize;
-            // 4 個位元組放得下就直接放在欄位裡，否則欄位裡放的是位移
-            let raw = if count <= 4 {
-                tiff.get(e + 8..e + 8 + count)
-            } else {
-                u32_at(e + 8).and_then(|p| tiff.get(p as usize..(p as usize).checked_add(count)?))
-            };
-            if let Some(raw) = raw {
-                out.push(String::from_utf8_lossy(raw).trim_end_matches('\0').to_string());
-            }
-        }
-        ifd = u32_at(off + 2 + n as usize * 12).map(|o| o as usize);
-    }
-    out
 }
 
 // ---------------------------------------------------------------- UI 格式 → API 格式
@@ -412,6 +326,15 @@ fn parse_links(v: Option<&Value>) -> HashMap<i64, (String, usize)> {
         .collect()
 }
 
+/// 跳過（Bypass）的節點：第 slot 個輸出改接它的第幾個輸入。同型別的才接，優先同序號，再來是第一個同型別的
+fn bypass_input(n: &Value, slot: usize) -> Option<usize> {
+    let out_ty = n["outputs"].get(slot).and_then(|o| o["type"].as_str()).unwrap_or("*");
+    let inputs = n["inputs"].as_array().map(Vec::as_slice).unwrap_or(&[]);
+    // 帶 widget 的是欄位轉成的連線孔，不是資料的入口
+    let fits = |i: &Value| i.get("widget").is_none() && same_type(i["type"].as_str().unwrap_or("*"), out_ty);
+    inputs.iter().enumerate().find(|&(k, i)| k == slot && fits(i)).or_else(|| inputs.iter().enumerate().find(|&(_, i)| fits(i))).map(|(k, _)| k)
+}
+
 fn mode(n: &Value) -> i64 {
     n["mode"].as_i64().unwrap_or(0)
 }
@@ -494,12 +417,8 @@ impl<'a> Ui<'a> {
     fn bypass(&self, n: &Value, slot: usize, depth: usize) -> Src {
         let name = short(label(n));
         let out_ty = n["outputs"].get(slot).and_then(|o| o["type"].as_str()).unwrap_or("*");
-        let inputs = n["inputs"].as_array().map(Vec::as_slice).unwrap_or(&[]);
-        // 帶 widget 的是欄位轉成的連線孔，不是資料的入口
-        let fits = |i: &Value| i.get("widget").is_none() && same_type(i["type"].as_str().unwrap_or("*"), out_ty);
-        let pick = inputs.iter().enumerate().find(|&(k, i)| k == slot && fits(i)).or_else(|| inputs.iter().enumerate().find(|&(_, i)| fits(i)));
-        match pick {
-            Some((k, _)) => self
+        match bypass_input(n, slot) {
+            Some(k) => self
                 .upstream(n, k, depth)
                 .unwrap_or_else(|| Src::Gone(format!("接到被跳過（Bypass）的節點「{name}」，但它對應的輸入沒有接線"))),
             None => Src::Gone(format!("接到被跳過（Bypass）的節點「{name}」，但它沒有跟輸出同型別（{out_ty}）的輸入可以接")),
@@ -521,14 +440,25 @@ impl<'a> Ui<'a> {
         }
     }
 
-    /// 這個節點的輸出有沒有（直接或繞幾個節點之後）通到終點節點。被停用的節點當作斷開
+    /// 這個節點的輸出有沒有（直接或繞幾個節點之後）通到終點節點。被停用的節點當作斷開；
+    /// 被跳過（Bypass）的節點只有「會直通到某個有接線的輸出」的那幾個輸入算通（跟 bypass 同一條規則），
+    /// 其餘輸入（例如被跳過的 FaceDetailer 的偵測器輸入）實際上已經沒人用：
+    /// 2026-11-10 以前一律算通，只接到這種輸入的沒裝節點會害整個工作流匯不進來
     fn reaches_output(&self, start: &str) -> bool {
         let mut fwd: HashMap<&str, Vec<&str>> = HashMap::new();
         for (id, n) in &self.nodes {
             if mode(n) == 2 {
                 continue;
             }
-            for inp in n["inputs"].as_array().into_iter().flatten() {
+            let through: Option<Vec<usize>> = (mode(n) == 4).then(|| {
+                let outs = n["outputs"].as_array().map(Vec::as_slice).unwrap_or(&[]);
+                let linked = |o: &Value| o["links"].as_array().is_some_and(|l| !l.is_empty());
+                outs.iter().enumerate().filter(|&(_, o)| linked(o)).filter_map(|(s, _)| bypass_input(n, s)).collect()
+            });
+            for (k, inp) in n["inputs"].as_array().into_iter().flatten().enumerate() {
+                if through.as_ref().is_some_and(|t| !t.contains(&k)) {
+                    continue;
+                }
                 if let Some((origin, _)) = link_id(&inp["link"]).and_then(|l| self.links.get(&l)) {
                     fwd.entry(origin.as_str()).or_default().push(id.as_str());
                 }
@@ -1441,6 +1371,38 @@ mod tests {
         assert!(convert(&wf).is_ok());
     }
 
+    /// VAEDecode → 被跳過的 FaceDetailer → SaveImage，沒裝的偵測器只接到 FaceDetailer 的偵測器輸入
+    fn bypassed_detailer(detector_into: &str) -> Value {
+        let mut wf = lora_chain(0);
+        {
+            let nodes = wf["nodes"].as_array_mut().unwrap();
+            nodes.push(node(30, "FaceDetailer", 4,
+                            json!([{"name": "image", "type": "IMAGE", "link": 10}, {"name": "bbox_detector", "type": detector_into, "link": 33}]),
+                            json!([{"name": "IMAGE", "type": "IMAGE", "links": [32]}]), json!([])));
+            nodes.push(node(33, "UltralyticsDetectorProvider", 0, json!([]), json!([{"name": "OUT", "type": detector_into, "links": [33]}]), json!([])));
+            nodes[9]["inputs"][0]["link"] = json!(32);
+        }
+        let links = wf["links"].as_array_mut().unwrap();
+        links[9] = json!([10, 9, 0, 30, 0, "IMAGE"]);
+        links.push(json!([32, 30, 0, 10, 0, "IMAGE"]));
+        links.push(json!([33, 33, 0, 30, 1, detector_into]));
+        wf
+    }
+
+    #[test]
+    fn missing_node_behind_bypassed_input_is_dropped() {
+        // 被跳過的節點只把圖直通出去，偵測器輸入沒人用：缺的偵測器不擋匯入
+        let r = convert(&bypassed_detailer("BBOX_DETECTOR")).unwrap();
+        assert!(r.warnings.iter().any(|w| w.contains("沒有接到存圖或預覽") && w.contains("UltralyticsDetectorProvi")), "{:?}", r.warnings);
+        assert_eq!(r.graph.as_object().map(Map::len), Some(10));
+        // 缺的節點接在會直通的那個輸入上（圖從它來）：照舊擋
+        let mut wf = bypassed_detailer("BBOX_DETECTOR");
+        wf["nodes"].as_array_mut().unwrap().push(node(34, "MissingImageMaker", 0, json!([]), json!([{"name": "IMAGE", "type": "IMAGE", "links": [10]}]), json!([])));
+        wf["links"][9] = json!([10, 34, 0, 30, 0, "IMAGE"]);
+        let e = convert(&wf).unwrap_err();
+        assert!(e.contains("MissingImageMaker") && !e.contains("UltralyticsDetectorProvider"), "{e}");
+    }
+
     #[test]
     fn subgraph_asks_for_api_export() {
         let uuid = "6e0f2a3c-1b4d-4c5e-9f70-1234567890ab";
@@ -1496,7 +1458,7 @@ mod tests {
         assert!(to_api(&png_with(&[("parameters", "1girl\nSteps: 20")]), "a.png", &oi()).unwrap_err().starts_with("這張圖裡沒有 ComfyUI 工作流"));
         assert!(to_api(&png_with(&[("workflow", "[1]")]), "a.png", &oi()).unwrap_err().contains("看不懂"));
         // 檔頭是 PNG 但後面壞了
-        assert!(to_api(PNG_MAGIC, "a.png", &oi()).is_err());
+        assert!(to_api(b"\x89PNG\r\n\x1a\n", "a.png", &oi()).is_err());
     }
 
     #[test]

@@ -26,7 +26,39 @@ pub struct Paths {
     pub res: PathBuf,
 }
 
-/// resources 資料夾：環境變數 ANIMA_RES → 程式旁邊的 resources（安裝版）→ 開發時的 anima_app\resources
+/// 執行檔的檔名：Windows 加 .exe，Linux 原樣（llama-server、ffmpeg、node…）
+pub fn exe(name: &str) -> String {
+    format!("{name}{}", std::env::consts::EXE_SUFFIX)
+}
+
+/// 資料夾 d 裡的 Python 可能放的位置。venv＝d 是 venv（Windows：Scripts\python.exe）；
+/// 不是 venv 的（Windows 的 python_embeded、秋葉的 python、conda 環境）python.exe 直接在 d 裡。
+/// Linux 不分：venv、conda 都是 d/bin/python（有的只有 python3）
+pub fn python_paths(d: &Path, venv: bool) -> Vec<PathBuf> {
+    if cfg!(windows) {
+        vec![if venv { d.join("Scripts").join("python.exe") } else { d.join("python.exe") }]
+    } else {
+        vec![d.join("bin").join("python"), d.join("bin").join("python3")]
+    }
+}
+
+/// venv 的 Python（要建 venv、或只要一個位置時用；Linux 是 bin/python）
+pub fn venv_python(venv: &Path) -> PathBuf {
+    python_paths(venv, true).swap_remove(0)
+}
+
+/// 是不是 Python 執行檔的檔名：Windows 只認 python.exe；Linux 認 python、python3、python3.12 這類
+pub fn is_python_name(name: &str) -> bool {
+    if cfg!(windows) {
+        name.eq_ignore_ascii_case("python.exe")
+    } else {
+        name == "python"
+            || name.strip_prefix("python3").is_some_and(|v| v.is_empty() || (v.starts_with('.') && v[1..].chars().all(|c| c.is_ascii_digit()) && v.len() > 1))
+    }
+}
+
+/// resources 資料夾：環境變數 ANIMA_RES → 程式旁邊的 resources（Windows 安裝版）→
+/// Linux 安裝版（deb：/usr/bin/anima-app 配 /usr/lib/<產品名>/resources；AppImage 同樣在 usr/lib 底下）→ 開發時的 anima_app\resources
 pub fn default_res() -> PathBuf {
     if let Some(p) = std::env::var_os("ANIMA_RES").filter(|v| !v.is_empty()) {
         return PathBuf::from(p);
@@ -38,9 +70,34 @@ pub fn default_res() -> PathBuf {
     {
         return p;
     }
+    if let Some(p) = linux_lib_dir().map(|d| d.join("resources")).filter(|p| p.join("poses").is_dir()) {
+        return p;
+    }
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("resources")
+}
+
+/// Linux 安裝版放附帶檔案的資料夾：程式在 <prefix>/bin，附帶檔在 <prefix>/lib/<產品名>（Tauri 的 deb、AppImage 都這樣擺）。
+/// 產品名有中文和空白，直接找 lib 底下有 resources/poses 的那一個。Windows、找不到都回 None
+pub fn linux_lib_dir() -> Option<PathBuf> {
+    if cfg!(windows) {
+        return None;
+    }
+    let exe = std::env::current_exe().ok()?;
+    let lib = exe.parent()?.parent()?.join("lib");
+    // 26.1108.2 起 Linux 的 productName 是 PaintDeck（deb 的套件名不能有中文）；舊包是「繪匣 PaintDeck」
+    for name in ["PaintDeck", "繪匣 PaintDeck"] {
+        let named = lib.join(name);
+        if named.join("resources").join("poses").is_dir() {
+            return Some(named);
+        }
+    }
+    std::fs::read_dir(&lib)
+        .ok()?
+        .flatten()
+        .map(|e| e.path())
+        .find(|d| d.join("resources").join("poses").is_dir() && d.join("ui").is_dir())
 }
 
 impl Paths {
@@ -76,10 +133,13 @@ impl Paths {
         }
     }
 
-    /// 主模型的資料夾：生圖站的 ComfyUI＋外部模型資料夾（model_dirs.rs）。順序跟 ComfyUI 找檔一樣，自己的先
+    /// 主模型的資料夾：生圖站的 ComfyUI＋外部模型資料夾（model_dirs.rs）。順序跟 ComfyUI 找檔一樣，自己的先。
+    /// 最後接 ComfyUI 自己的 models\checkpoints：SDXL 是整包 checkpoint（內建流程用 CheckpointLoaderSimple 載），
+    /// 要找得到檔才判得出家族（外部的 checkpoints 資料夾 model_dirs::effective 本來就算主模型資料夾）
     pub fn unet_roots(&self) -> Vec<PathBuf> {
         let mut v = self.unet_dirs.clone();
         v.extend(crate::model_dirs::roots("diffusion_models"));
+        v.push(self.comfy_root.join("models").join("checkpoints"));
         v
     }
 

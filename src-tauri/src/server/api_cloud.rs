@@ -186,7 +186,7 @@ struct Catalog {
 
 /// 開機前、讀不到實際價格時用的價格（預設那張卡）
 pub const PRICE_HINT: f64 = 0.59;
-const IMAGE: &str = "runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404";
+pub(super) const IMAGE: &str = "runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404";
 const REST: &str = "https://rest.runpod.io/v1";
 const POD_NAME: &str = "anima-agent";
 const LLM_LOCAL: u16 = 18199;
@@ -202,7 +202,7 @@ const START_LIMIT: Duration = Duration::from_secs(50 * 60);
 /// 三種連法
 pub const PROVIDERS: [&str; 3] = ["runpod", "ssh", "url"];
 /// cloud.json 裡的金鑰欄位（存檔時加密成 <名稱>_dpapi）
-const SECRETS: [&str; 3] = ["runpod_key", "comfy_key", "llm_key"];
+const SECRETS: [&str; 4] = ["runpod_key", "comfy_key", "llm_key", "api_key"];
 /// RunPod 機器上的工作資料夾與埠（新的乾淨機器）
 const RUNPOD_DIR: &str = "/workspace/agent";
 /// 自己租的主機上用的埠：避開 8188、8080 這些雲端範本常已經占用的
@@ -535,6 +535,26 @@ fn url_missing(comfy: &str, llm: &str, packs: Packs) -> Result<(), &'static str>
     Ok(())
 }
 
+/// 看圖測試的回答（左紅右藍）裡兩個顏色都有才算看得到：沒看到圖的模型頂多猜中一個
+fn vision_answer(body: &str) -> bool {
+    let v: Value = serde_json::from_str(body).unwrap_or(Value::Null);
+    let a = tx(&v["choices"][0]["message"]["content"]).to_lowercase();
+    (a.contains("red") || a.contains('红') || a.contains('紅')) && (a.contains("blue") || a.contains('蓝') || a.contains('藍'))
+}
+
+/// 外接 API 回錯時給人看的話（金鑰、餘額最常見；其他附對方原文）
+fn api_failure(status: u16, body: &str) -> String {
+    let v: Value = serde_json::from_str(body).unwrap_or(Value::Null);
+    let said = [&v["error"]["message"], &v["message"], &v["msg"]].iter().map(|x| tx(x)).find(|s| !s.is_empty()).unwrap_or_else(|| body.chars().take(200).collect());
+    match status {
+        401 | 403 => format!("金鑰不對或沒有權限（{status}）：{said}"),
+        402 => format!("帳戶餘額不足（402）：{said}"),
+        429 => format!("額度用完或太頻繁（429）：{said}"),
+        404 => format!("網址或模型名稱不對（404）：{said}"),
+        _ => format!("外接 API 回應 {status}：{said}"),
+    }
+}
+
 /// /object_info/MiniMaxH3ReferenceToVideo 的回應裡有這個節點
 fn h3_node_ok(v: &Value) -> bool {
     v.get("MiniMaxH3ReferenceToVideo").is_some()
@@ -556,7 +576,7 @@ pub struct Endpoints {
 
 impl Endpoints {
     pub fn remote(&self) -> crate::pe::Remote {
-        crate::pe::Remote { base: self.llm.clone(), key: self.llm_key.clone(), model: self.model.clone() }
+        crate::pe::Remote { base: self.llm.clone(), key: self.llm_key.clone(), model: self.model.clone(), api: false }
     }
 }
 
@@ -748,6 +768,8 @@ impl Cloud {
     pub fn new(dir: &Path) -> Cloud {
         let pod = std::fs::read(dir.join("pod.json")).ok().and_then(|b| serde_json::from_slice::<Value>(&b).ok()).and_then(|v| Pod::from_value(&v));
         let left = pod.as_ref().map(|p| p.kind.clone());
+        // 上次選的顯卡、閒置幾分鐘自動關（prefs.json）：2026-11-10 以前只在記憶體，重開繪匣就回預設（長片設 240 分鐘會默默變回 20）
+        let prefs = std::fs::read(dir.join("prefs.json")).ok().and_then(|b| serde_json::from_slice::<Value>(&b).ok()).unwrap_or(Value::Null);
         Cloud {
             dir: dir.to_path_buf(),
             st: Mutex::new(St {
@@ -759,9 +781,9 @@ impl Cloud {
                 },
                 pod,
                 last_used: now(),
-                idle_min: IDLE_MIN,
+                idle_min: prefs["idle_min"].as_i64().map_or(IDLE_MIN, |m| m.clamp(5, 240)),
                 loras: HashMap::new(),
-                gpu: GPUS[0].key.to_string(),
+                gpu: prefs["gpu"].as_str().filter(|g| !g.is_empty()).unwrap_or(GPUS[0].key).to_string(),
                 inputs: Default::default(),
             }),
             cfg: Mutex::new(load_cfg(dir)),
@@ -832,6 +854,16 @@ impl Cloud {
 
     fn st(&self) -> std::sync::MutexGuard<'_, St> {
         self.st.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// 把選的顯卡、閒置分鐘寫進 prefs.json（寫不進去不擋事，下次開站回預設而已）
+    fn save_prefs(&self) {
+        let v = {
+            let s = self.st();
+            json!({"gpu": s.gpu, "idle_min": s.idle_min})
+        };
+        let _ = std::fs::create_dir_all(&self.dir);
+        let _ = crate::director::write_atomic(&self.dir.join("prefs.json"), &v);
     }
 
     fn cfg(&self) -> Map<String, Value> {
@@ -920,6 +952,51 @@ impl Cloud {
         v.insert("has_comfy_key".into(), json!(has("comfy_key")));
         v.insert("has_llm_key".into(), json!(has("llm_key")));
         Value::Object(v)
+    }
+
+    // ---------------------------------------------------------------- 外接 API（DeepSeek、GLM…當助手的腦袋，生圖照樣走本機）
+    /// 2026-11-02 起外接 API 的連線存在 brains.rs（llm_profiles.json，可以多組）；
+    /// cloud.json 裡舊的 api_* 只在第一次開站時搬過去，之後不再讀寫（留著給降版用）。給 brains 搬家用
+    pub fn cfg_snapshot(&self) -> Map<String, Value> {
+        self.cfg()
+    }
+
+    /// 送一張左紅右藍的小圖問顏色。回得出兩個顏色才算看得到（有的服務收了圖卻默默丟掉，只看有沒有報錯不準）。
+    /// 只回結果，記不記下來由呼叫端（brains 的 set_vision）決定
+    pub async fn api_detect(&self, r: &crate::pe::Remote) -> Result<bool, String> {
+        let mut im = image::RgbImage::new(64, 64);
+        for (x, _, p) in im.enumerate_pixels_mut() {
+            *p = if x < 32 { image::Rgb([220, 20, 20]) } else { image::Rgb([20, 20, 220]) };
+        }
+        let mut png = std::io::Cursor::new(Vec::new());
+        im.write_to(&mut png, image::ImageFormat::Png).map_err(|e| format!("做測試圖失敗：{e}"))?;
+        let part = crate::pe::image_part(png.get_ref());
+        let ask = json!([part, {"type": "text", "text": "What two colors are in this image? Answer with the two color names only."}]);
+        let (status, body) = self.api_ask(r, ask).await?;
+        let vision = match status {
+            200 => vision_answer(&body),
+            // 400 可能是不收圖，也可能是模型名稱打錯：用純文字再問一次分開
+            400 | 415 | 422 => {
+                let (s2, b2) = self.api_ask(r, json!("Reply with OK.")).await?;
+                if s2 != 200 {
+                    return Err(api_failure(s2, &b2));
+                }
+                false
+            }
+            _ => return Err(api_failure(status, &body)),
+        };
+        Ok(vision)
+    }
+
+    async fn api_ask(&self, r: &crate::pe::Remote, content: Value) -> Result<(u16, String), String> {
+        let body = json!({"model": r.model, "messages": [{"role": "user", "content": content}], "stream": false, "max_tokens": 1024});
+        let mut req = self.http.post(crate::pe::chat_url(&r.base)).timeout(Duration::from_secs(120)).json(&body);
+        if let Some(k) = &r.key {
+            req = req.bearer_auth(k);
+        }
+        let resp = req.send().await.map_err(|e| format!("連不到外接 API：{}", e.without_url()))?;
+        let status = resp.status().as_u16();
+        Ok((status, resp.text().await.unwrap_or_default()))
     }
 
     /// 閒置自動關有沒有作用：RunPod 一定有；自己的主機要勾「順便關主機」；網址模式沒有
@@ -1132,6 +1209,11 @@ impl Cloud {
         let llm = !agent || get(format!("http://127.0.0.1:{LLM_LOCAL}/health")).await.is_ok_and(|r| r.status().is_success());
         let comfy = get(format!("http://127.0.0.1:{COMFY_LOCAL}/system_stats")).await.is_ok_and(|r| r.status().is_success());
         (llm, comfy)
+    }
+
+    /// 訓練台開「訓練機」用：同一把 RunPod 金鑰的 REST 請求
+    pub(super) async fn rp(&self, method: reqwest::Method, path: &str, body: Option<&Value>) -> Result<Value, String> {
+        self.api(method, path, body).await
     }
 
     async fn api(&self, method: reqwest::Method, path: &str, body: Option<&Value>) -> Result<Value, String> {
@@ -1733,7 +1815,8 @@ pub async fn test(State(app): State<Shared>) -> ApiResult {
 pub async fn start(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let cloud = &app.agent.cloud;
     let renting = cloud.st().pod.is_none() && cloud.provider() == "runpod";
-    let key = match b.get("gpu").and_then(Value::as_str) {
+    // 網頁選單選不到東西時會送空字串：當成沒送，用上次選的
+    let key = match b.get("gpu").and_then(Value::as_str).filter(|k| !k.is_empty()) {
         Some(k) => k.to_string(),
         None => cloud.st().gpu.clone(),
     };
@@ -1764,6 +1847,7 @@ pub async fn start(State(app): State<Shared>, Body(b): Body) -> ApiResult {
                 s.gpu = opt.key.clone();
             }
         }
+        cloud.save_prefs();
         let mut j = cloud.job.lock().unwrap_or_else(|e| e.into_inner());
         let t = CancellationToken::new();
         *j = Some(t.clone());
@@ -1817,6 +1901,7 @@ pub async fn stop(State(app): State<Shared>) -> ApiResult {
 pub async fn idle(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     let m = b.get("minutes").and_then(crate::py::int).ok_or_else(|| bad("minutes 要是整數"))?.clamp(5, 240);
     app.agent.cloud.st().idle_min = m;
+    app.agent.cloud.save_prefs();
     app.agent.cloud.touch();
     ok(app.agent.cloud.status())
 }
@@ -1858,14 +1943,18 @@ async fn ensure_lora(app: &Shared, pod: &Pod, name: &str) -> Result<String, Stri
         .chars()
         .map(|c| if c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-') { c } else { '_' })
         .collect();
+    // 傳完把原本的狀態文字（「已開機幾分鐘、約多少錢」那句）放回去：2026-11-10 以前傳過一次 LoRA 就永遠變成「雲端好了」
+    let before = app.agent.cloud.st().msg.clone();
     app.agent.cloud.set(app, "ready", format!("上傳 LoRA {}…", super::basename(name)));
     let d = format!("{}/ComfyUI/models/loras", pod.dir);
-    app.agent
+    let sent = app
+        .agent
         .cloud
         .ssh(pod, &format!("cat > '{d}/{remote}.part' && mv '{d}/{remote}.part' '{d}/{remote}'"), Some(&local), Duration::from_secs(30 * 60))
-        .await?;
+        .await;
+    app.agent.cloud.set(app, "ready", if before.is_empty() { "雲端好了".to_string() } else { before });
+    sent?;
     app.agent.cloud.st().loras.insert(name.to_string(), remote.clone());
-    app.agent.cloud.set(app, "ready", "雲端好了");
     Ok(remote)
 }
 
@@ -1910,6 +1999,23 @@ pub async fn remote_options(app: &Shared, node: &str, field: &str) -> Vec<String
         Err(_) => Value::Null,
     };
     combo(&v, node, field)
+}
+
+/// 雲端 ComfyUI 有沒有這個節點（INT 欄位的節點沒有選項清單，不能用 remote_options 判斷）
+pub async fn remote_has_node(app: &Shared, node: &str) -> bool {
+    let cloud = &app.agent.cloud;
+    let Some(ep) = cloud.endpoints() else {
+        return false;
+    };
+    let r = cloud
+        .req(reqwest::Method::GET, format!("{}/object_info/{node}", ep.comfy), ep.comfy_key.as_deref())
+        .timeout(Duration::from_secs(20))
+        .send()
+        .await;
+    match r {
+        Ok(r) => r.json::<Value>().await.is_ok_and(|v| v.get(node).is_some()),
+        Err(_) => false,
+    }
 }
 
 /// 網址模式：LoRA 沒辦法上傳，要遠端已經有（照原名、斜線方向、只看檔名依序找）
@@ -2001,10 +2107,26 @@ pub async fn render(app: &Shared, mut q: Map<String, Value>, count: i64, token: 
     let mut ids = vec![];
     // 停止時連同這一輪還在排隊的一起刪（同一台可能還有 H3 的工作：不清整個佇列）
     let pids: Vec<String> = jobs.iter().map(|j| j.0.clone()).collect();
+    // 連續幾張等不到（不是使用者按停止）：2026-11-10 以前第一張等不到就整輪丟掉，已經畫好進圖庫的也不回報、後面的沒人收
+    let mut wait_fails = 0;
     for (k, (pid, params, info)) in jobs.into_iter().enumerate() {
         let result = wait_done(cloud, &ep, &pid, &pids[k + 1..], token, &|_| {}).await;
         if let Err(e)=&result {crate::diagnostics::failure(e);}
-        let entry=result?;
+        let entry = match result {
+            Ok(e) => e,
+            // 按了停止：wait_done 已經把後面排隊的刪掉，照舊整輪收工
+            Err(e) if token.is_cancelled() => return Err(e),
+            Err(e) => {
+                errors.push(e);
+                wait_fails += 1;
+                // 連兩張都等不到多半是整台掛了：不要每張再等 90 秒
+                if wait_fails >= 2 {
+                    break;
+                }
+                continue;
+            }
+        };
+        wait_fails = 0;
         app.diagnostics.job_event(&format!("cloud-{pid}"),"history_snapshot",&entry);
         app.diagnostics.job_event(&format!("cloud-{pid}"),if entry["status"]["status_str"]=="success" {"execution_success"} else {"execution_error"},&entry["status"]);
         if entry["status"]["status_str"] != "success" {
@@ -2254,6 +2376,16 @@ fn chain_nodes_cmd(dir: &str) -> String {
     )
 }
 
+/// 雲端 ComfyUI 有沒有繪匣的參考圖節點（h3chain::REF_NODE）；沒有就照舊只把參考圖給文字編碼器
+pub async fn chain_ref_node_ready(app: &Shared) -> bool {
+    let cloud = &app.agent.cloud;
+    let Some(ep) = cloud.endpoints() else {
+        return false;
+    };
+    let n = crate::h3chain::REF_NODE;
+    get_json(cloud, &ep, &format!("/object_info/{n}")).await.is_some_and(|v| v.get(n).is_some())
+}
+
 /// 雲端 ComfyUI 有沒有長片的節點
 async fn chain_nodes_ready(cloud: &Cloud) -> bool {
     let Some(ep) = cloud.endpoints() else {
@@ -2267,18 +2399,41 @@ async fn chain_nodes_ready(cloud: &Cloud) -> bool {
 pub async fn ensure_chain_nodes(app: &Shared, on_status: &(dyn Fn(String) + Send + Sync)) -> Result<(), String> {
     let cloud = &app.agent.cloud;
     cloud.endpoints().ok_or("雲端斷線了：到「雲端」那裡看狀態")?;
-    if chain_nodes_ready(cloud).await {
+    let have_chain = chain_nodes_ready(cloud).await;
+    let ref_node = app.paths.res.join("extras").join(crate::setup::H3_NODES).join("__init__.py");
+    let need_ref = ref_node.is_file() && !chain_ref_node_ready(app).await;
+    if have_chain && !need_ref {
         return Ok(());
     }
-    let pod = cloud.st().pod.clone().ok_or("長片目前只能用雲端（要能 ssh 的雲端主機）")?;
+    let pod = match cloud.st().pod.clone() {
+        Some(p) => p,
+        // 接續節點已經有、只是少了參考圖節點：沒有 ssh 補不上去就算了，那一輪參考圖照舊只給文字編碼器
+        None if have_chain => return Ok(()),
+        None => return Err("這台雲端沒有 ssh，裝不了長片的接續節點：改用能 ssh 的雲端主機，或把「在哪拍」改成本機".into()),
+    };
     let tgz = app.paths.res.join("extras").join("h3_infinite.tar.gz");
     if !tgz.is_file() {
         return Err(format!("找不到 {}：重新安裝生圖站", tgz.display()));
     }
     let d = pod.dir.clone();
-    on_status("第一次拍長片：把接續用的節點裝到雲端…".into());
-    cloud.ssh(&pod, &format!("cat > '{d}/h3_infinite.tgz'"), Some(&tgz), Duration::from_secs(120)).await?;
-    cloud.ssh(&pod, &chain_nodes_cmd(&d), None, Duration::from_secs(60)).await?;
+    if !have_chain {
+        on_status("第一次拍長片：把接續用的節點裝到雲端…".into());
+        cloud.ssh(&pod, &format!("cat > '{d}/h3_infinite.tgz'"), Some(&tgz), Duration::from_secs(120)).await?;
+        cloud.ssh(&pod, &chain_nodes_cmd(&d), None, Duration::from_secs(60)).await?;
+    }
+    // 繪匣自己的參考圖節點（只有一個檔）；放不上去不擋拍片，那一輪參考圖照舊只給文字編碼器
+    if need_ref {
+        if have_chain {
+            on_status("把參考圖節點裝到雲端…".into());
+        }
+        let n = format!("{d}/ComfyUI/custom_nodes/{}", crate::setup::H3_NODES);
+        if let Err(e) = cloud.ssh(&pod, &format!("mkdir -p '{n}' && cat > '{n}/__init__.py'"), Some(&ref_node), Duration::from_secs(60)).await {
+            eprintln!("[長片] 參考圖節點放不上雲端：{e}");
+            if have_chain {
+                return Ok(());
+            }
+        }
+    }
     on_status("重新啟動雲端 ComfyUI（約 1 分鐘）…".into());
     cloud
         .ssh(&pod, &format!("cd '{d}' && (setsid nohup bash '{d}/run.sh' < /dev/null > run.log 2>&1 &) && echo started"), None, Duration::from_secs(60))
@@ -2296,7 +2451,7 @@ pub async fn ensure_chain_nodes(app: &Shared, on_status: &(dyn Fn(String) + Send
 }
 
 /// ComfyUI history 裡的錯誤訊息（execution_error 那一筆）
-fn exec_error(entry: &Value) -> String {
+pub(super) fn exec_error(entry: &Value) -> String {
     let msgs = entry["status"]["messages"].as_array().cloned().unwrap_or_default();
     if let Some(m) = msgs.iter().find(|m| m[0] == "execution_error") {
         let d = &m[1];
@@ -2377,6 +2532,8 @@ pub async fn run_graph(
     if let (Some(a), Some(b)) = (stamp("execution_start"), stamp("execution_success")) {
         let _ = app.db.run("UPDATE jobs SET started=? WHERE id=?", rusqlite::params![now() - (b - a).max(0.0) / 1000.0, job]);
     }
+    // 下載、存檔失敗也要把工作記成失敗：2026-11-10 以前直接跳出，工作永遠停在「排隊中」
+    let fetched = async {
     let mut ids = vec![];
     for out in entry["outputs"].as_object().into_iter().flat_map(|o| o.values()) {
         for im in ["images", "gifs"].into_iter().flat_map(|k| out[k].as_array().into_iter().flatten()) {
@@ -2398,6 +2555,16 @@ pub async fn run_graph(
             ids.extend(keep_output(app, &sub, &base, &bytes, params, info, &job)?);
         }
     }
+    Ok::<Vec<i64>, String>(ids)
+    }
+    .await;
+    let ids = match fetched {
+        Ok(v) => v,
+        Err(e) => {
+            let _ = app.db.set_job(&job, "error", Some(&e));
+            return Err(e);
+        }
+    };
     let _ = app.db.set_job(&job, "done", None);
     Ok((job, ids))
 }
@@ -2590,12 +2757,25 @@ mod tests {
     }
 
     #[test]
+    fn vision_needs_both_colors() {
+        let say = |t: &str| json!({"choices": [{"message": {"content": t}}]}).to_string();
+        assert!(vision_answer(&say("Red and blue.")));
+        assert!(vision_answer(&say("红色和蓝色")));
+        assert!(!vision_answer(&say("I can't see any image, maybe red?")));
+        assert!(!vision_answer(""));
+        assert!(api_failure(401, r#"{"error":{"message":"bad key"}}"#).contains("bad key"));
+        assert!(api_failure(402, "").contains("餘額"));
+    }
+
+    #[test]
     fn secrets_are_sealed_on_disk() {
         let mut m = Map::new();
         m.insert("provider".into(), json!("url"));
         m.insert("llm_key".into(), json!("SECRET-TEST-VALUE"));
+        m.insert("api_key".into(), json!("SECRET-TEST-VALUE"));
         let disk = sealed(&m).unwrap();
         assert!(disk.get("llm_key").is_none());
+        assert!(disk.get("api_key").is_none());
         let text = Value::Object(disk.clone()).to_string();
         #[cfg(windows)]
         assert!(!text.contains("SECRET-TEST-VALUE"), "Windows 上金鑰要加密");

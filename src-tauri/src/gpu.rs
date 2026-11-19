@@ -178,6 +178,7 @@ pub fn nv_legacy(name: &str, cap: Option<&str>) -> bool {
 /// WMI 列出現在插著的顯示卡（Win32_VideoController），顯存另外從顯示卡類別的登錄檔讀：
 /// AdapterRAM 是 32 位元，4GB 以上的卡都只顯示 4GB；驅動寫的 HardwareInformation.qwMemorySize（舊驅動是 MemorySize）才準。
 /// AMD 驅動另外寫了 RadeonSoftwareVersion（Adrenalin 的版號，比 Windows 的驅動版號好認）
+#[cfg_attr(not(windows), allow(dead_code))] // 只有 Windows 用（Linux 沒有這個機制）
 const WMI_GPUS: &str = r#"$ErrorActionPreference='SilentlyContinue'
 [Console]::OutputEncoding=[Text.Encoding]::UTF8
 $cls='HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}'
@@ -224,9 +225,57 @@ pub(crate) fn wmi_json() -> Option<Value> {
     let v: Value = serde_json::from_slice(&b[start..]).ok()?;
     v["vc"].is_array().then_some(v)
 }
+/// Linux 沒有 WMI：照 sysfs（/sys/bus/pci/devices 裡顯示類的裝置）組出一樣格式的結果，後面 gpus_from_wmi 照用。
+/// 名字問 lspci（沒裝就用「廠商 顯示卡 (vvvv:dddd)」），顯存只有 amdgpu 有（mem_info_vram_total），驅動版號看 /sys/module
 #[cfg(not(windows))]
 pub(crate) fn wmi_json() -> Option<Value> {
-    None
+    let rd = |p: &Path| std::fs::read_to_string(p).ok().map(|s| s.trim().to_string());
+    let hex = |s: Option<String>| s.map(|v| v.trim_start_matches("0x").to_lowercase());
+    let mut vc = vec![];
+    let mut reg = vec![];
+    for e in std::fs::read_dir("/sys/bus/pci/devices").ok()?.flatten() {
+        let d = e.path();
+        // PCI class 0x03xxxx＝顯示控制器
+        if !rd(&d.join("class")).is_some_and(|c| c.starts_with("0x03")) {
+            continue;
+        }
+        let (Some(ven), Some(dev)) = (hex(rd(&d.join("vendor"))), hex(rd(&d.join("device")))) else { continue };
+        let slot = e.file_name().to_string_lossy().to_string();
+        let name = std::process::Command::new("lspci")
+            .args(["-mm", "-s", &slot])
+            .output()
+            .ok()
+            .and_then(|o| lspci_name(&String::from_utf8_lossy(&o.stdout)))
+            .unwrap_or_else(|| {
+                let brand = match ven.as_str() {
+                    "10de" => "NVIDIA",
+                    "1002" => "AMD Radeon",
+                    "8086" => "Intel",
+                    _ => "",
+                };
+                format!("{brand} 顯示卡 ({ven}:{dev})").trim().to_string()
+            });
+        let driver = std::fs::read_link(d.join("driver"))
+            .ok()
+            .and_then(|l| l.file_name().map(|n| n.to_string_lossy().to_string()))
+            .map(|drv| rd(&Path::new("/sys/module").join(&drv).join("version")).map(|v| format!("{drv} {v}")).unwrap_or(drv))
+            .unwrap_or_default();
+        let pnp = format!("PCI\\VEN_{}&DEV_{}", ven.to_uppercase(), dev.to_uppercase());
+        vc.push(json!({"name": name, "pnp": pnp, "vendor": "", "driver": driver, "ram": null}));
+        if let Some(bytes) = rd(&d.join("mem_info_vram_total")).and_then(|s| s.parse::<u64>().ok()) {
+            reg.push(json!({"id": format!("pci\\ven_{ven}&dev_{dev}"), "desc": "", "qw": bytes, "mem": null, "radeon": ""}));
+        }
+    }
+    Some(json!({"vc": vc, "reg": reg}))
+}
+
+/// `lspci -mm -s <slot>` 的一行（slot "class" "vendor" "device" …）→「vendor device」，例如 "Advanced Micro Devices, Inc. [AMD/ATI] Navi 31 [Radeon RX 7900 XT/7900 XTX]"
+#[cfg(not(windows))]
+fn lspci_name(line: &str) -> Option<String> {
+    let f: Vec<&str> = line.split('"').collect();
+    // f = [slot, class, " ", vendor, " ", device, ...]
+    let (vendor, device) = (f.get(3)?.trim(), f.get(5)?.trim());
+    (!device.is_empty()).then(|| format!("{vendor} {device}"))
 }
 
 /// 顯示卡是哪一家：PCI 的廠商代號（VEN_10DE＝NVIDIA、VEN_1002＝AMD、VEN_8086＝Intel），沒有再看名字。
@@ -459,6 +508,9 @@ pub const AMD_GFX_CHOICES: &[(&str, &str)] = &[
 /// ROCm 10 PyTorch 要下載多少（2026-10-21 實測：gfx1031 那組 pip download 共 1,118,840,273 位元組，
 /// 其中跟架構無關的 1,021,729,915；各架構的 device 套件用 HEAD 查大小）
 pub fn rocm10_bytes(devices: &[String]) -> u64 {
+    if gfx103_family(devices) {
+        return GFX103_BYTES;
+    }
     const COMMON: u64 = 1_021_729_915;
     let one = |g: &str| -> u64 {
         match g {
@@ -498,12 +550,82 @@ pub fn rocm10_needed(layout: &ComfyLayout, plan: &GpuPlan) -> bool {
     }
     match torch_build(&layout.python) {
         None => true,
-        Some(b) if b.starts_with("rocm7.2") || b.starts_with("rocm10") => {
+        Some(b) if b.starts_with("rocm7.2") || b.starts_with("rocm10") || b == format!("rocm{GFX103_ROCM}") => {
+            if gfx103_family(&plan.rocm10) {
+                return !gfx103_installed(&layout.python);
+            }
             let have = rocm10_devices(&layout.python);
             !plan.rocm10.iter().all(|d| have.contains(d))
         }
         Some(_) => false,
     }
+}
+
+// ---------------------------------------------------------------- A 卡：RX 6000（gfx103x）專用套件
+/// RX 6000 這一族（gfx1030～1036，含 680M／610M 內顯）改用 AMD 的 gfx103X 專用 nightly，不走多架構 ROCm 10。
+/// 2026-11-05 回報：RX 6750 GRE（gfx1031）用多架構 ROCm 10.0.0，每個 kernel 都 hipErrorInvalidImage，補裝 device 套件也一樣。
+/// 這組版本是 comfyui-rinsei（github.com/eviscerations/comfyui-rinsei）在 RX 6700 XT＋Windows 確認能跑 ComfyUI 的；
+/// kernel 直接編在套件裡（不是 kpack），舊的 gfx103X-dgpu 庫 gfx1031 的 kernel 是壞的，所以用 gfx103X-all。
+/// 每個都 --no-deps（不然 pip 會在幾個月的 nightly 裡來回找）。rocm-sdk-devel（1.8GB，編譯用）不裝
+pub const GFX103_INDEX: &str = "https://rocm.nightlies.amd.com/v2-staging/gfx103X-all/";
+pub const GFX103_ROCM: &str = "7.14.0a20260603";
+/// 下面六個檔加起來（2026-11-05 用 HEAD 查）
+pub const GFX103_BYTES: u64 = 1_127_216_670;
+
+pub fn is_gfx103(g: &str) -> bool {
+    g.starts_with("gfx103")
+}
+
+/// 這些架構都是 RX 6000 這一族：整組改裝 gfx103X 專用套件
+pub fn gfx103_family(devices: &[String]) -> bool {
+    !devices.is_empty() && devices.iter().all(|d| is_gfx103(d))
+}
+
+pub fn gfx103_specs() -> Vec<String> {
+    let v = GFX103_ROCM;
+    vec![
+        format!("torch==2.10.0+rocm{v}"),
+        // torchvision 0.27 配 torch 2.10 會 DLL 載入失敗（comfyui-rinsei 的紀錄），固定 0.25
+        format!("torchvision==0.25.0+rocm{v}"),
+        format!("torchaudio==2.11.0+rocm{v}"),
+        format!("rocm=={v}"),
+        format!("rocm-sdk-core=={v}"),
+        format!("rocm-sdk-libraries-gfx103X-all=={v}"),
+    ]
+}
+
+/// gfx103X 專用套件裝好了：torch 是這一版，函式庫套件在、RECORD 列的檔都在
+pub fn gfx103_installed(python: &Path) -> bool {
+    let Some(sp) = site_packages(python) else { return false };
+    let want = format!("rocm{GFX103_ROCM}");
+    torch_build(python).is_some_and(|b| b == want)
+        && std::fs::read_dir(&sp)
+            .into_iter()
+            .flatten()
+            .flatten()
+            .map(|e| e.file_name().to_string_lossy().to_lowercase())
+            .find(|n| n.starts_with("rocm_sdk_libraries_gfx103x_all-") && n.ends_with(".dist-info"))
+            .is_some_and(|d| record_complete(&sp, &sp.join(d)))
+}
+
+/// 換成 gfx103X 專用套件之後要移掉的多架構 ROCm 10 套件（同一個 site-packages 裡兩套 ROCm 函式庫會互搶）：pip 的套件名稱
+pub fn rocm10_leftovers(python: &Path) -> Vec<String> {
+    let Some(sp) = site_packages(python) else { return vec![] };
+    let mut v: Vec<String> = std::fs::read_dir(sp)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter_map(|e| {
+            let n = e.file_name().to_string_lossy().to_lowercase();
+            let (name, _) = n.strip_suffix(".dist-info")?.split_once('-')?;
+            // 多架構 ROCm 10 的 device／函式庫套件、免安裝版原本 ROCm 7.2 的函式庫套件；rocm-sdk-devel 我們不裝，版本對不上的留著只會亂
+            let old = ["amd_torch_device_", "amd_torchvision_device_", "rocm_sdk_device_", "rocm_sdk_libraries", "rocm_sdk_devel"].iter().any(|p| name.starts_with(p))
+                && name != "rocm_sdk_libraries_gfx103x_all";
+            old.then(|| name.to_string())
+        })
+        .collect();
+    v.sort();
+    v
 }
 
 // ---------------------------------------------------------------- Intel
@@ -736,13 +858,22 @@ pub fn check_python(s: &str) -> Result<String, String> {
         return Ok(String::new());
     }
     let p = Path::new(s);
-    if !p.file_name().is_some_and(|n| n.eq_ignore_ascii_case("python.exe")) {
-        return Err(format!("Python 位置要選 python.exe 這個檔（你填的是 {s}）：conda 環境通常在 …\\envs\\環境名稱\\python.exe，venv 在 …\\Scripts\\python.exe"));
+    if !p.file_name().is_some_and(|n| crate::paths::is_python_name(&n.to_string_lossy())) {
+        return Err(if cfg!(windows) {
+            format!("Python 位置要選 python.exe 這個檔（你填的是 {s}）：conda 環境通常在 …\\envs\\環境名稱\\python.exe，venv 在 …\\Scripts\\python.exe")
+        } else {
+            format!("Python 位置要選 python（或 python3）這個檔（你填的是 {s}）：conda 環境通常在 …/envs/環境名稱/bin/python，venv 在 …/venv/bin/python")
+        });
     }
     if !p.is_file() {
         return Err(format!("找不到這個 python.exe：{s}。請確認路徑對不對（可以用旁邊的「選檔案…」選）"));
     }
     Ok(s.to_string())
+}
+
+/// comfy.json 旁邊的另一個檔（還沒設定 comfy.json 的位置＝None）
+pub fn prefs_sibling(name: &str) -> Option<PathBuf> {
+    PREFS_FILE.get().map(|f| f.with_file_name(name))
 }
 
 pub fn save_prefs(p: &Prefs) -> Result<(), String> {
@@ -807,12 +938,30 @@ pub fn split_args(s: &str) -> Result<Vec<String>, String> {
 
 // ---------------------------------------------------------------- 認得 ComfyUI 用的是哪一種 PyTorch
 /// Python 旁邊的 Lib\site-packages（venv 的 python.exe 在 Scripts 裡，要再往上一層）
+/// Linux：<環境>/bin/python 配 <環境>/lib/python3.X/site-packages（有好幾個就挑有 torch 的，再挑版本新的）
 pub fn site_packages(python: &Path) -> Option<PathBuf> {
     let mut base = python.parent()?;
-    if base.file_name().is_some_and(|n| n.eq_ignore_ascii_case("Scripts")) {
+    if cfg!(windows) {
+        if base.file_name().is_some_and(|n| n.eq_ignore_ascii_case("Scripts")) {
+            base = base.parent()?;
+        }
+        return Some(base.join("Lib").join("site-packages"));
+    }
+    if base.file_name().is_some_and(|n| n == "bin") {
         base = base.parent()?;
     }
-    Some(base.join("Lib").join("site-packages"))
+    let lib = base.join("lib");
+    let minor = |p: &Path| -> Option<u32> { p.parent()?.file_name()?.to_str()?.strip_prefix("python3.")?.parse().ok() };
+    let mut found: Vec<PathBuf> = std::fs::read_dir(&lib)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter(|e| e.file_name().to_string_lossy().starts_with("python3"))
+        .map(|e| e.path().join("site-packages"))
+        .filter(|p| p.is_dir())
+        .collect();
+    found.sort_by_key(|p| (p.join("torch").is_dir(), minor(p)));
+    found.pop().or_else(|| Some(lib.join("python3").join("site-packages")))
 }
 
 /// site-packages 裡 <名稱>-<版本>.dist-info 的版本（名稱用 pip 的寫法，- 和 _ 都認）
@@ -848,18 +997,63 @@ pub fn torch_kind(python: &Path) -> Option<&'static str> {
     torch_build(python).map(|b| torch_kind_of(&b))
 }
 
-/// 已經裝的 ROCm 10 架構套件（amd_torch_device_gfx1031 → "gfx1031"）
+/// 已經裝好的 ROCm 10 架構套件（amd_torch_device_gfx1031 → "gfx1031"）。只看 dist-info 在不在不準：
+/// 檔案不完整（torch\.kpack\torch_gfx1031.kpack 不見）時 PyTorch 一個 kernel 都跑不了（hipErrorInvalidImage）。
+/// 所以 amd_torch_device 和它依賴的 rocm_sdk_device 都要在、RECORD 列的檔都要在，才算裝好
 pub fn rocm10_devices(python: &Path) -> Vec<String> {
     let Some(sp) = site_packages(python) else { return vec![] };
-    std::fs::read_dir(sp)
-        .into_iter()
-        .flatten()
-        .flatten()
-        .filter_map(|e| {
-            let n = e.file_name().to_string_lossy().to_lowercase();
-            n.strip_prefix("amd_torch_device_")?.split_once('-').map(|(g, _)| g.to_string())
+    let names: Vec<String> = std::fs::read_dir(&sp).into_iter().flatten().flatten().map(|e| e.file_name().to_string_lossy().to_lowercase()).collect();
+    let dist = |prefix: &str| names.iter().find(|n| n.starts_with(prefix) && n.ends_with(".dist-info")).cloned();
+    names
+        .iter()
+        .filter_map(|n| n.strip_prefix("amd_torch_device_")?.split_once('-').map(|(g, _)| (g.to_string(), n)))
+        .filter(|(g, torch_dev)| {
+            torch_dev.ends_with(".dist-info")
+                && record_complete(&sp, &sp.join(torch_dev))
+                && dist(&format!("rocm_sdk_device_{g}-")).is_some_and(|d| record_complete(&sp, &sp.join(d)))
         })
+        .map(|(g, _)| g)
         .collect()
+}
+
+/// dist-info 的 RECORD 列的檔（.pyc 和 dist-info 自己的檔除外）都在。沒有 RECORD＝當作完整（不是 pip 裝的）
+fn record_complete(sp: &Path, dist_info: &Path) -> bool {
+    let Ok(rec) = std::fs::read_to_string(dist_info.join("RECORD")) else { return true };
+    rec.lines()
+        .filter_map(|l| l.split(',').next())
+        .map(str::trim)
+        .filter(|p| !p.is_empty() && !p.ends_with(".pyc") && !p.contains(".dist-info/") && !p.starts_with(".."))
+        .all(|p| sp.join(p).is_file())
+}
+
+/// 重裝這些架構的 device 套件（pip install --force-reinstall --no-deps）：版本照這份 Python 已經裝的 torch／torchvision／rocm-sdk-core。
+/// torch 不是 ROCm 10 版＝None
+pub fn rocm10_device_specs(python: &Path, devices: &[String]) -> Option<Vec<String>> {
+    let sp = site_packages(python)?;
+    let torch = dist_version(&sp, "torch").filter(|v| v.contains("+rocm10"))?;
+    let sdk = dist_version(&sp, "rocm_sdk_core").or_else(|| torch.split_once("+rocm").map(|(_, r)| r.to_string()))?;
+    let tv = dist_version(&sp, "torchvision").filter(|v| v.contains("+rocm10"));
+    Some(
+        devices
+            .iter()
+            .flat_map(|g| {
+                [Some(format!("amd-torch-device-{g}=={torch}")), Some(format!("rocm-sdk-device-{g}=={sdk}")), tv.as_ref().map(|v| format!("amd-torchvision-device-{g}=={v}"))]
+            })
+            .flatten()
+            .collect(),
+    )
+}
+
+/// 開站時要補裝哪些 ROCm 10 架構：偵測到的 A 卡（auto_plan 挑的那張；認不出型號時照精靈手動選的）有、PyTorch 還沒裝好的。
+/// 精靈手動選的架構跟偵測到的對不上（2026-11-05 回報：RX 6750 GRE 的人不確定當時選對沒）時，第二個值＝要改成的選擇（""＝照偵測）
+pub fn rocm10_repair(gpus: &[Value], detected: bool, prefs: &Prefs, have: &[String]) -> (Vec<String>, Option<String>) {
+    let auto = auto_plan(gpus, detected);
+    let found: Vec<String> = if auto.variant == "amd" { auto.gfx.as_deref().unwrap_or("").split(',').filter(|g| !g.is_empty()).map(str::to_string).collect() } else { vec![] };
+    let picked: Vec<&str> = prefs.amd_gfx.split(',').filter(|g| !g.is_empty()).collect();
+    let fix = (prefs.gpu == "amd" && !found.is_empty() && !picked.is_empty() && !picked.iter().any(|p| found.iter().any(|f| f == p)))
+        .then(|| AMD_GFX_CHOICES.iter().find(|(g, _)| *g == found.join(",")).map(|(g, _)| g.to_string()).unwrap_or_default());
+    let want: Vec<String> = if found.is_empty() { picked.iter().map(|g| g.to_string()).collect() } else { found };
+    (want.into_iter().filter(|g| ROCM10_GFX.contains(&g.as_str()) && !have.contains(g)).collect(), fix)
 }
 
 /// 有沒有裝 torch-directml（DirectML 版：任何 DirectX 12 顯示卡都能跑、很慢，ComfyUI 要加 --directml）。
@@ -895,6 +1089,76 @@ pub fn zluda_patched(python: &Path) -> bool {
     let Some(lib) = site_packages(python).map(|sp| sp.join("torch").join("lib")) else { return false };
     lib.join("nvrtc_cuda.dll").is_file()
         || std::fs::metadata(lib.join("cublas64_11.dll")).is_ok_and(|m| m.len() < 10 << 20)
+}
+
+// ---------------------------------------------------------------- A 卡：好幾張卡時挑 ComfyUI 要用的那張
+/// 問 ROCm 版 PyTorch 看得到哪些卡、它本身編了哪些架構。印一行 ANIMA_HIP={"arch": [...], "dev": [{name, arch, mem}]}
+const HIP_PROBE: &str = r#"import json, torch
+c = torch.cuda
+d = [{"name": p.name, "arch": getattr(p, "gcnArchName", ""), "mem": p.total_memory} for p in (c.get_device_properties(i) for i in range(c.device_count()))] if c.is_available() else []
+try:
+    a = c.get_arch_list()
+except Exception:
+    a = []
+print("ANIMA_HIP=" + json.dumps({"arch": a, "dev": d}))"#;
+
+/// ROCm 看到好幾張卡時要用哪一號（HIP_VISIBLE_DEVICES 的值）。probe＝HIP_PROBE 的結果，want＝精靈裝的那張卡的架構（"gfx1101"，可能是空的）。
+/// Ryzen 7000／9000 桌機的 610M、筆電的 780M 這類內顯也會被 ROCm 列進來，常常排在 0 號；ComfyUI 預設用 0 號，
+/// PyTorch 又沒編那個架構 → 第一個用到顯示卡的節點就 hipErrorInvalidKernelFile（invalid kernel file）。
+/// 挑法：PyTorch 有編的架構（"gfx1100:xnack-" 只看冒號前）→ 精靈裝的那張優先 → 顯存最大。只有一張、或一張都不能用＝None（照原樣開）
+pub fn pick_hip_device(probe: &Value, want: Option<&str>) -> Option<usize> {
+    let base = |s: &str| s.split(':').next().unwrap_or("").trim().to_lowercase();
+    let built: Vec<String> = probe["arch"].as_array().into_iter().flatten().filter_map(|a| a.as_str().map(base)).collect();
+    let devs: Vec<(usize, String, u64)> = probe["dev"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .enumerate()
+        .map(|(i, d)| (i, base(d["arch"].as_str().unwrap_or("")), d["mem"].as_u64().unwrap_or(0)))
+        .collect();
+    if devs.len() < 2 {
+        return None;
+    }
+    let want: Vec<String> = want.unwrap_or("").split(',').map(base).filter(|g| !g.is_empty()).collect();
+    devs.iter()
+        .filter(|(_, a, _)| built.is_empty() || built.contains(a))
+        .max_by_key(|(_, a, mem)| (want.contains(a), *mem))
+        .map(|(i, _, _)| *i)
+}
+
+/// 跑 HIP_PROBE（最多等 2 分鐘：第一次 import torch 在傳統硬碟上很慢）。PyTorch 開不起來、逾時＝None
+pub fn hip_probe(layout: &ComfyLayout) -> Option<Value> {
+    use std::io::Read;
+    let mut cmd = std::process::Command::new(&layout.python);
+    cmd.args(["-s", "-c", HIP_PROBE])
+        .current_dir(&layout.cwd)
+        .env("PYTHONUTF8", "1")
+        .env("PYTHONIOENCODING", "utf-8")
+        .env_remove("HIP_VISIBLE_DEVICES")
+        .env_remove("CUDA_VISIBLE_DEVICES")
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::null());
+    win::no_window(&mut cmd);
+    let mut child = cmd.spawn().ok()?;
+    let mut out = child.stdout.take()?;
+    let reader = std::thread::spawn(move || {
+        let mut b = Vec::new();
+        let _ = out.read_to_end(&mut b);
+        b
+    });
+    let t0 = Instant::now();
+    while child.try_wait().ok()?.is_none() {
+        if t0.elapsed() > Duration::from_secs(120) {
+            let _ = child.kill();
+            let _ = child.wait();
+            return None;
+        }
+        std::thread::sleep(Duration::from_millis(200));
+    }
+    let b = reader.join().ok()?;
+    let text = String::from_utf8_lossy(&b);
+    text.lines().find_map(|l| l.trim().strip_prefix("ANIMA_HIP=")).and_then(|j| serde_json::from_str(j).ok())
 }
 
 #[cfg(test)]
@@ -1108,6 +1372,7 @@ mod tests {
     }
 
     /// PyTorch 是哪一種：免安裝版（python_embeded）、venv（Scripts 外一層）、沒裝 torch、DirectML、ZLUDA、ROCm 10 的架構套件
+    #[cfg(windows)] // 測的是 Windows 的擺法（python.exe、Scripts、Lib\site-packages）；Linux 的在 linux_layouts
     #[test]
     fn torch_kinds() {
         let d = std::env::temp_dir().join(format!("anima_torch_test_{}", std::process::id()));
@@ -1130,7 +1395,22 @@ mod tests {
             std::fs::create_dir_all(amd_sp.join(x)).unwrap();
         }
         assert_eq!(torch_build(&amd).as_deref(), Some("rocm10.0.0"));
+        assert!(rocm10_devices(&amd).is_empty(), "依賴的 rocm_sdk_device 不在");
+        std::fs::create_dir_all(amd_sp.join("rocm_sdk_device_gfx1031-10.0.0.dist-info")).unwrap();
         assert_eq!(rocm10_devices(&amd), vec!["gfx1031".to_string()]);
+        // 2026-11-05 回報：dist-info 在、kpack 不見＝PyTorch 一個 kernel 都跑不了，不能算裝好
+        let rec = amd_sp.join("amd_torch_device_gfx1031-2.13.0+rocm10.0.0.dist-info").join("RECORD");
+        std::fs::write(&rec, "torch/.kpack/torch_gfx1031.kpack,sha256=x,45053513\namd_torch_device_gfx1031-2.13.0+rocm10.0.0.dist-info/RECORD,,\n").unwrap();
+        assert!(rocm10_devices(&amd).is_empty(), "kpack 不見");
+        std::fs::create_dir_all(amd_sp.join("torch").join(".kpack")).unwrap();
+        std::fs::write(amd_sp.join("torch").join(".kpack").join("torch_gfx1031.kpack"), b"KPAK").unwrap();
+        assert_eq!(rocm10_devices(&amd), vec!["gfx1031".to_string()]);
+        std::fs::create_dir_all(amd_sp.join("torchvision-0.28.0+rocm10.0.0.dist-info")).unwrap();
+        assert_eq!(
+            rocm10_device_specs(&amd, &["gfx1031".into()]).unwrap(),
+            ["amd-torch-device-gfx1031==2.13.0+rocm10.0.0", "rocm-sdk-device-gfx1031==10.0.0", "amd-torchvision-device-gfx1031==0.28.0+rocm10.0.0"]
+        );
+        std::fs::remove_dir_all(amd_sp.join("torchvision-0.28.0+rocm10.0.0.dist-info")).unwrap();
         // 要不要換 ROCm 10：官方 AMD 免安裝版（外層有 run_amd_gpu.bat）、架構還沒裝齊；老手自己換的別種 ROCm 版不碰；torch 不見了要補
         let portable = ComfyLayout {
             root: d.join("amd").join("ComfyUI"),
@@ -1143,7 +1423,7 @@ mod tests {
         let plan = |g: &str| plan_for("amd", g, &[], true);
         assert!(!rocm10_needed(&portable, &plan("gfx1031")), "沒有 run_amd_gpu.bat 不是官方 AMD 版");
         std::fs::write(d.join("amd").join("run_amd_gpu.bat"), b"").unwrap();
-        assert!(!rocm10_needed(&portable, &plan("gfx1031")), "gfx1031 已經裝了");
+        assert!(rocm10_needed(&portable, &plan("gfx1031")), "多架構的 gfx1031 裝了也要換成 RX 6000 專用版（gfx103_stack 測詳細的）");
         assert!(rocm10_needed(&portable, &plan("gfx1010")));
         assert!(!rocm10_needed(&portable, &plan("gfx1100")), "免安裝版本身就有的不用換");
         assert!(!rocm10_needed(&portable, &plan_for("own", "", &[], true)));
@@ -1198,5 +1478,84 @@ mod tests {
         let g = gpus_from_wmi(&raw);
         println!("顯示卡：{g:?}\n自動：{:?}　Windows 組建：{:?}", auto_plan(&g, true), windows_build());
         assert!(raw["vc"].is_array());
+    }
+
+    /// A 卡好幾張：內顯排 0 號、PyTorch 沒編它的架構 → 挑獨顯（2026-11-04 回報 invalid kernel file）
+    /// 2026-11-05：RX 6000（gfx103x）改裝 gfx103X 專用 PyTorch；裝好的判斷、要移掉的舊 ROCm 套件、要不要換
+    #[cfg(windows)] // 測的是 Windows 的擺法（python.exe、Scripts、Lib\site-packages）；Linux 的在 linux_layouts
+    #[test]
+    fn gfx103_stack() {
+        let s = |v: &[&str]| v.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+        assert!(gfx103_family(&s(&["gfx1031"])) && gfx103_family(&s(&["gfx1030", "gfx1036"])));
+        assert!(!gfx103_family(&[]) && !gfx103_family(&s(&["gfx1031", "gfx1100"])) && !gfx103_family(&s(&["gfx1010"])));
+        assert_eq!(rocm10_bytes(&s(&["gfx1031"])), GFX103_BYTES);
+        assert!(gfx103_specs().iter().all(|x| x.ends_with(GFX103_ROCM)) && gfx103_specs()[1].starts_with("torchvision==0.25.0"));
+        let d = std::env::temp_dir().join(format!("anima_gfx103_test_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        let py = d.join("python_embeded").join("python.exe");
+        let sp = d.join("python_embeded").join("Lib").join("site-packages");
+        std::fs::create_dir_all(&sp).unwrap();
+        std::fs::write(&py, b"").unwrap();
+        std::fs::write(d.join("run_amd_gpu.bat"), b"").unwrap();
+        let layout = ComfyLayout { root: d.join("ComfyUI"), main: d.join("ComfyUI").join("main.py"), python: py.clone(), portable: true, desktop: false, cwd: d.clone() };
+        let plan = plan_for("amd", "gfx1031", &[], true);
+        // 網友現在的樣子：多架構 ROCm 10＋gfx1031 device 套件（RECORD 齊全）→ 還是要換
+        for x in ["torch-2.13.0+rocm10.0.0.dist-info", "amd_torch_device_gfx1031-2.13.0+rocm10.0.0.dist-info", "rocm_sdk_device_gfx1031-10.0.0.dist-info", "rocm_sdk_libraries-10.0.0.dist-info", "rocm_sdk_core-10.0.0.dist-info"] {
+            std::fs::create_dir_all(sp.join(x)).unwrap();
+        }
+        assert!(!gfx103_installed(&py));
+        assert!(rocm10_needed(&layout, &plan), "RX 6000 不認多架構 ROCm 10");
+        assert_eq!(rocm10_leftovers(&py), s(&["amd_torch_device_gfx1031", "rocm_sdk_device_gfx1031", "rocm_sdk_libraries"]));
+        // 換好：torch 是 gfx103X 這一版、函式庫套件在
+        std::fs::remove_dir_all(sp.join("torch-2.13.0+rocm10.0.0.dist-info")).unwrap();
+        std::fs::create_dir_all(sp.join(format!("torch-2.10.0+rocm{GFX103_ROCM}.dist-info"))).unwrap();
+        let lib = sp.join(format!("rocm_sdk_libraries_gfx103x_all-{GFX103_ROCM}.dist-info"));
+        std::fs::create_dir_all(&lib).unwrap();
+        assert!(gfx103_installed(&py));
+        assert!(!rocm10_needed(&layout, &plan));
+        assert!(!rocm10_leftovers(&py).contains(&"rocm_sdk_libraries_gfx103x_all".to_string()));
+        // 函式庫檔案不完整＝沒裝好
+        std::fs::write(lib.join("RECORD"), "_rocm_sdk_libraries_gfx103x_all/bin/rocblas.dll,sha256=x,1\n").unwrap();
+        assert!(!gfx103_installed(&py));
+        // 別族的卡照舊看多架構 ROCm 10 的 device 套件
+        assert!(rocm10_needed(&layout, &plan_for("amd", "gfx1010", &[], true)));
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    /// 2026-11-05 回報：i5-12400F＋RX 6750 GRE（gfx1031），精靈可能選錯架構 → 開站自動補裝偵測到的架構、把選擇改回來
+    #[test]
+    fn rocm10_repair_follows_detected_card() {
+        let gpus = [json!({"vendor": "amd", "name": "AMD Radeon RX 6750 GRE 10GB", "vram_mb": 10240, "gfx": "gfx1031", "route": "rocm10"})];
+        let p = |gpu: &str, gfx: &str| Prefs { gpu: gpu.into(), amd_gfx: gfx.into(), ..Default::default() };
+        let s = |v: &[&str]| v.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+        // 選錯成 RX 6800（gfx1030）：補 gfx1031，選擇改成 gfx1031
+        assert_eq!(rocm10_repair(&gpus, true, &p("amd", "gfx1030"), &s(&["gfx1030"])), (s(&["gfx1031"]), Some("gfx1031".into())));
+        // 選對了、kpack 不見（have 是空的）：只補，不改選擇
+        assert_eq!(rocm10_repair(&gpus, true, &p("amd", "gfx1031"), &[]), (s(&["gfx1031"]), None));
+        // 自動偵測、已經裝好：什麼都不做
+        assert_eq!(rocm10_repair(&gpus, true, &p("auto", ""), &s(&["gfx1031"])), (vec![], None));
+        // 認不出型號的卡：照手動選的
+        let odd = [json!({"vendor": "amd", "name": "AMD Radeon Graphics", "vram_mb": 8192, "route": "unknown"})];
+        assert_eq!(rocm10_repair(&odd, true, &p("amd", "gfx1032"), &[]), (s(&["gfx1032"]), None));
+        // N 卡電腦：不碰
+        let nv = [json!({"vendor": "nvidia", "name": "NVIDIA GeForce RTX 4090", "vram_mb": 24564})];
+        assert_eq!(rocm10_repair(&nv, true, &p("auto", ""), &[]), (vec![], None));
+    }
+
+    #[test]
+    fn hip_device_skips_unsupported_igpu() {
+        let built = json!(["gfx1100", "gfx1101", "gfx1102", "gfx1150", "gfx1151", "gfx1200", "gfx1201"]);
+        let igpu = json!({"name": "AMD Radeon(TM) Graphics", "arch": "gfx1036", "mem": 2u64 << 30});
+        let dgpu = json!({"name": "AMD Radeon RX 7800 XT", "arch": "gfx1101:sramecc-:xnack-", "mem": 16u64 << 30});
+        assert_eq!(pick_hip_device(&json!({"arch": built, "dev": [igpu, dgpu]}), Some("gfx1101")), Some(1));
+        // 精靈記的架構沒有也照樣挑得到（看 PyTorch 有編的＋顯存）
+        assert_eq!(pick_hip_device(&json!({"arch": built, "dev": [igpu, dgpu]}), None), Some(1));
+        // 問不到 PyTorch 編了哪些：照精靈裝的那張，再看顯存
+        let small = json!({"name": "AMD Radeon RX 7600", "arch": "gfx1102", "mem": 8u64 << 30});
+        assert_eq!(pick_hip_device(&json!({"arch": [], "dev": [dgpu, small]}), Some("gfx1102")), Some(1));
+        assert_eq!(pick_hip_device(&json!({"arch": [], "dev": [igpu, dgpu]}), None), Some(1));
+        // 只有一張、一張都不能用：照原樣開
+        assert_eq!(pick_hip_device(&json!({"arch": built, "dev": [dgpu]}), None), None);
+        assert_eq!(pick_hip_device(&json!({"arch": built, "dev": [igpu, igpu]}), None), None);
     }
 }

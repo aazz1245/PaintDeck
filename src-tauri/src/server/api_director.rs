@@ -327,9 +327,7 @@ pub async fn describe(State(app): State<Shared>, Body(b): Body) -> ApiResult {
     if img.is_empty() || !app.paths.input.join(&img).exists() {
         return Err(bad("先選一張角色圖"));
     }
-    let r = app
-        .pe
-        .general_chat("director-describe", d::SYSTEM_DESCRIBE, "Describe this character.", &[img], 800, 0.3)
+    let r = super::api_llm::chat(&app, "director", "page", "director-describe", &app.pe.agent_text("director_describe"), "Describe this character.", &[img], 800, 0.3)
         .await
         .map_err(bad)?;
     let m = d::json_in(&r);
@@ -362,10 +360,10 @@ pub async fn project_new(State(app): State<Shared>, Body(b): Body) -> ApiResult 
     ok(p)
 }
 
-/// 拍攝單套用為 LTX／自訂工作流專案；不改使用者的全域影片模型設定。
+/// 拍攝單套用為導演台專案（內建 H3 或自訂工作流）；不改使用者的全域影片模型設定。
 pub async fn from_sheet(State(app): State<Shared>, Body(b): Body) -> ApiResult {
-    let engine = tx(&b["engine"]);
-    if engine.is_empty() || engine == crate::video_wf::H3 { return Err(bad("請選 LTX 或已匯入的影片工作流")); }
+    let engine = crate::video_wf::normalize_engine(&tx(&b["engine"])).to_string();
+    if engine.is_empty() { return Err(bad("請選內建 H3 或已匯入的影片工作流")); }
     let needs_frame = engine_needs_frame(&app, &engine).map_err(bad)?;
     let prompts: Vec<String> = b["prompts"].as_array().ok_or_else(|| bad("缺少分鏡提示詞"))?.iter().map(|v| {
         v.as_str().map(str::to_string).or_else(|| v["prompt"].as_str().map(str::to_string)).unwrap_or_default()
@@ -444,8 +442,11 @@ pub async fn take_select(State(app): State<Shared>, Body(b): Body) -> ApiResult 
         return Err(bad("這版接續的是上一鏡的另一個版本；請先採用相容的上一鏡，或重拍這一鏡"));
     }
     let changed = crate::film_takes::select(&mut p["segments"][index], &take_id, d::RESULT_KEYS).map_err(bad)?;
-    d::adopt_take_recipe(&mut p["segments"][index], &take_id);
-    if changed { d::invalidate_dependents(&mut p, index); }
+    // 已經是採用版又送一次：不要再把配方蓋回欄位（使用者可能已經在這版上面改了重拍用的提示詞，草稿只在第一次採用時留底）
+    if changed {
+        d::adopt_take_recipe(&mut p["segments"][index], &take_id);
+        d::invalidate_dependents(&mut p, index);
+    }
     app.director.store.save_project(&mut p).map_err(internal)?;
     ok(p)
 }
@@ -504,10 +505,19 @@ fn end(app: &Shared, id: &str) {
 type Step = Result<(), String>;
 
 fn spawn(app: &Shared, id: &str, token: CancellationToken, work: impl std::future::Future<Output = Step> + Send + 'static) {
+    // 背景工作不管怎麼結束（含 panic：diagnostics::spawn 接住後會再往外丟）都要從執行名單除名，
+    // 不然這個專案永遠「正在執行」，存檔、採用版本、開拍全被擋住，只能重開程式（跟長片的 Unlist 同一招）
+    struct Unlist(Shared, String);
+    impl Drop for Unlist {
+        fn drop(&mut self) {
+            end(&self.0, &self.1);
+        }
+    }
     let (app, id) = (app.clone(), id.to_string());
     crate::diagnostics::spawn(async move {
+        let unlist = Unlist(app.clone(), id.clone());
         let r = work.await;
-        end(&app, &id);
+        drop(unlist);
         match r {
             Ok(()) => {
                 let review = app.director.store.project(&id).is_some_and(|p| p["segments"].as_array().is_some_and(|a| a.iter().any(|s| !s["pending_take"].is_null())));
@@ -584,7 +594,7 @@ fn frame_reference_list(family: &str, p: &Value, chars: &[Value], seg: &Value) -
 async fn ask(app: &Shared, id: &str, sys: &str, user: &str, max_tokens: i64, parse: impl Fn(&str) -> bool) -> Result<String, String> {
     let mut last = String::new();
     for attempt in 0..2 {
-        let r = app.pe.general_chat(&rid(id), sys, user, &[], max_tokens, if attempt == 0 { 0.7 } else { 0.9 }).await?;
+        let r = super::api_llm::chat(app, "director", "page", &rid(id), sys, user, &[], max_tokens, if attempt == 0 { 0.7 } else { 0.9 }).await?;
         if parse(&r) {
             return Ok(r);
         }
@@ -618,8 +628,8 @@ async fn write_shot(app: &Shared, id: &str, i: usize, token: &CancellationToken)
         for (k, v) in shot {
             let v = tx(&v);
             let v = match k.as_str() {
-                "frame" => d::safe_text(&v, anima),
-                "video" => d::safe_text(&v, false),
+                "frame" => v,
+                "video" => v,
                 _ => v,
             };
             s.insert(k, json!(v));
@@ -691,12 +701,8 @@ pub async fn write(State(app): State<Shared>, Body(b): Body) -> ApiResult {
 pub(super) async fn wait_job(app: &Shared, pid: &str, token: &CancellationToken) -> Step {
     loop {
         if token.is_cancelled() {
-            if app.comfy.live().running.as_deref() == Some(pid) {
-                let _ = app.comfy.post("/interrupt", &json!({})).await;
-            } else {
-                let _ = app.comfy.post("/queue", &json!({"delete": [pid]})).await;
-                let _ = app.db.set_job(pid, "cancelled", None);
-            }
+            // 工作節點：找這件所在的那台
+            app.pool.cancel(&[pid.to_string()]).await;
             return Err("已停止".into());
         }
         let job = app.db.job(pid).map_err(|e| e.to_string())?;
@@ -813,14 +819,29 @@ fn applied_video_slots(workflow: &Value, mapping: &crate::video_wf::Mapping, slo
     }).collect())
 }
 
+/// 這段用哪個影片模型：段落自己的 → 專案的 → 全域設定；舊作品記的 ltx23 一律當內建 H3
+fn engine_of(p: &Value, seg: &Value, global: &str) -> String {
+    let e = seg["engine"].as_str().filter(|e| !e.is_empty()).or_else(|| p["settings"]["video_engine"].as_str().filter(|e| !e.is_empty())).unwrap_or(global);
+    crate::video_wf::normalize_engine(e).to_string()
+}
+
 fn shot_engine(app: &Shared, p: &Value, seg: &Value) -> String {
-    seg["engine"].as_str().filter(|e| !e.is_empty()).or_else(|| p["settings"]["video_engine"].as_str().filter(|e| !e.is_empty())).map(str::to_string)
-        .unwrap_or_else(|| crate::settings::load(&app.paths.settings).get("video_engine").and_then(Value::as_str).unwrap_or(crate::video_wf::BUILTIN).to_string())
+    let global = crate::settings::load(&app.paths.settings).get("video_engine").and_then(Value::as_str).unwrap_or(crate::video_wf::BUILTIN).to_string();
+    engine_of(p, seg, &global)
+}
+
+/// 內建 H3 走雲端（專案設定 h3_where，預設本機）
+fn h3_cloud(p: &Value) -> bool {
+    p["settings"]["h3_where"] == "cloud"
+}
+
+/// 內建影片一定要首幀（圖生影片）；自訂工作流回 None，要讀工作流才知道
+fn builtin_needs_frame(engine: &str) -> Option<bool> {
+    (crate::video_wf::normalize_engine(engine) == crate::video_wf::BUILTIN).then_some(true)
 }
 
 fn engine_needs_frame(app: &Shared, engine: &str) -> Result<bool, String> {
-    if engine == crate::video_wf::BUILTIN { return Ok(true); }
-    if engine == crate::video_wf::H3 { return Err("H3 請使用拍攝單的 H3 短片／長片拍攝流程".into()); }
+    if let Some(b) = builtin_needs_frame(engine) { return Ok(b); }
     let wf = crate::video_wf::load(&crate::video_wf::dir(&app.paths.data), engine)?;
     let mapping = crate::video_wf::Mapping::from_value(&wf["map"]);
     let analysis = crate::video_wf::analyze_with(&wf["graph"], &mapping)?;
@@ -891,7 +912,6 @@ async fn make_video(app: &Shared, id: &str, i: usize, p: &Value, frame: &str, ta
     let seg = &p["segments"][i];
     let s = &p["settings"];
     let engine = shot_engine(app, p, seg);
-    if engine == crate::video_wf::H3 { return Err("H3 請使用拍攝單的 H3 短片／長片拍攝流程".into()); }
     let workflow = if engine == crate::video_wf::BUILTIN { Value::Null } else {
         crate::video_wf::load(&crate::video_wf::dir(&app.paths.data), &engine)?
     };
@@ -911,15 +931,26 @@ async fn make_video(app: &Shared, id: &str, i: usize, p: &Value, frame: &str, ta
     }
     let mapping = crate::video_wf::Mapping::from_value(&workflow["map"]);
     if frame.is_empty() || (engine != crate::video_wf::BUILTIN && crate::video_wf::analyze_with(&workflow["graph"], &mapping)?.image.is_none()) { q.remove("init_image"); }
+    // H3 照首幀的長寬挑比例（直的首幀拍直的片）
+    if engine == crate::video_wf::BUILTIN && !frame.is_empty() {
+        if let Ok((w, h)) = image::image_dimensions(app.paths.input.join(frame)) { q.insert("width".into(), json!(w)); q.insert("height".into(), json!(h)); }
+    }
     let slots = bind_video_slots(p, seg, &mapping, frame);
     let applied_slots = applied_video_slots(&workflow, &mapping, &slots);
     // 即使本鏡明確清空槽位，也要覆蓋 video_params 裡另一版留下的舊值。
     q.insert("media_slots".into(), json!(slots));
     let requested = json!(q.clone());
     let source_take = if i > 0 && truthy(seg.get("continue")) { p["segments"][i - 1]["selected_take"].as_str().map(str::to_string) } else { None };
-    emit(app, id, Some(i), "video", format!("第 {} 段：生影片…（720p 5 秒約 4～5 分鐘）", i + 1));
-    let jobs = submit_jobs(app, q, 1).await.map_err(|e| e.1)?;
-    let pid = tx(&jobs[0]["job"]);
+    let cloud = engine == crate::video_wf::BUILTIN && h3_cloud(p);
+    emit(app, id, Some(i), "video", format!("第 {} 段：生影片…（{}）", i + 1, if cloud { "雲端 H3，10 秒約 4～8 分鐘" } else { "本機 H3，8GB 顯卡 5 秒約 4 分鐘" }));
+    let pid = if cloud {
+        let (a, sid) = (app.clone(), id.to_string());
+        let status = move |m: String| emit(&a, &sid, Some(i), "video", format!("第 {} 段：{m}", i + 1));
+        super::api_h3::cloud_one(app, &q, token, &status).await?.0
+    } else {
+        let jobs = submit_jobs(app, q, 1).await.map_err(|e| e.1)?;
+        tx(&jobs[0]["job"])
+    };
     let actual = app.db.job(&pid).map_err(|e| e.to_string())?.map(|j| j["params"].clone()).unwrap_or_else(|| requested.clone());
     let frame_recipe = seg["frame_job"].as_str().and_then(|j| app.db.job(j).ok().flatten()).map(|j| j["params"].clone()).unwrap_or(Value::Null);
     let references = json!({"first_frame":frame,"frame_refs":frame_recipe["refs"],"video_slots":applied_slots});
@@ -931,9 +962,9 @@ async fn make_video(app: &Shared, id: &str, i: usize, p: &Value, frame: &str, ta
     })
     .await
     .map_err(|e| e.1)?;
-    wait_job(app, &pid, token).await?;
+    if !cloud { wait_job(app, &pid, token).await?; }
     let row = job_video(app, &pid)?;
-    // 最後一格：graphs::build_video 存在 _poster\<poster>-last_00001_.png
+    // 最後一格：h3::build 存在 _poster\<poster>-last_00001_.png（雲端的跟成品一起下載回這裡）
     let poster = app.db.job(&pid).ok().flatten().map(|j| tx(&j["params"]["poster"])).unwrap_or_default();
     let dir = app.paths.output.join("AnimaWeb").join("_poster");
     let last = std::fs::read_dir(&dir)
@@ -1192,6 +1223,21 @@ pub async fn concat_api(State(app): State<Shared>, Body(b): Body) -> ApiResult {
 #[cfg(test)]
 mod take_integration_tests {
     use super::*;
+
+    /// 內建影片（H3，舊專案記的 ltx23 也算）一定要首幀；舊版本記的 ltx23 讀出來是 h3；專案選雲端才走雲端
+    #[test]
+    fn builtin_engine_is_h3() {
+        assert_eq!(builtin_needs_frame("h3"), Some(true));
+        assert_eq!(builtin_needs_frame("ltx23"), Some(true));
+        assert_eq!(builtin_needs_frame("my-wf"), None);
+        let p = json!({"settings":{"video_engine":"ltx23"}});
+        assert_eq!(engine_of(&p, &json!({}), "x"), "h3");
+        assert_eq!(engine_of(&json!({}), &json!({"engine":"ltx23"}), "x"), "h3");
+        assert_eq!(engine_of(&json!({}), &json!({}), "ltx23"), "h3");
+        assert_eq!(engine_of(&p, &json!({"engine":"my-wf"}), "h3"), "my-wf");
+        assert!(!h3_cloud(&json!({"settings":{}})));
+        assert!(h3_cloud(&json!({"settings":{"h3_where":"cloud"}})));
+    }
 
     fn mapping() -> crate::video_wf::Mapping {
         crate::video_wf::Mapping::from_value(&json!({"media_slots":[

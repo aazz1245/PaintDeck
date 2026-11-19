@@ -122,7 +122,37 @@ pub fn clean_asset(kind: &str, data: &Value) -> Value {
     if !refmod.is_empty() {
         out.insert("refmod".into(), json!({"file": refmod, "name": text(data["refmod"].get("name"), 80)}));
     }
+    // 角色卡綁的 LoRA（2026-11-16，漫畫台加角色時自動掛）：[{name, strength, trigger}]，最多 4 個。
+    // 有送就照送的（空陣列＝拿掉），沒送由 save 沿用舊的
+    if kind == "char" {
+        if let Some(list) = data.get("loras").and_then(Value::as_array) {
+            out.insert("loras".into(), json!(clean_loras(list)));
+        }
+    }
     Value::Object(out)
+}
+
+/// LoRA 名字能不能送：ComfyUI 清單裡的相對路徑（Windows 上是反斜線，原樣保留，不然 ComfyUI 對不到）；不准 ..、磁碟代號、絕對路徑
+pub(super) fn safe_lora_name(name: &str) -> bool {
+    let n = name.replace('\\', "/");
+    !n.is_empty() && !n.starts_with('/') && !n.contains(':') && !n.split('/').any(|p| p == "..")
+}
+
+/// 角色卡綁的 LoRA：名字見 safe_lora_name，強度夾在 -3～3，觸發詞 300 字
+fn clean_loras(list: &[Value]) -> Vec<Value> {
+    let mut out: Vec<Value> = vec![];
+    for l in list {
+        let name = text(l.get("name"), 300);
+        if !safe_lora_name(&name) || out.iter().any(|o| o["name"] == name.as_str()) {
+            continue;
+        }
+        let strength = l.get("strength").and_then(Value::as_f64).unwrap_or(0.8).clamp(-3.0, 3.0);
+        out.push(json!({"name": name, "strength": (strength * 100.0).round() / 100.0, "trigger": text(l.get("trigger"), 300)}));
+        if out.len() >= 4 {
+            break;
+        }
+    }
+    out
 }
 
 /// 資產的圖片、聲音清單以伺服器上的為準（加檔、拿檔只走 /api/assets/*）：送來的清單只拿來改用途。
@@ -237,6 +267,12 @@ pub async fn save(State(app): State<Shared>, Body(body): Body) -> ApiResult {
                 Some(r) => obj.insert("refmod".into(), r.clone()),
                 None => obj.remove("refmod"),
             };
+            // 綁的 LoRA：這次沒送（導演台之類只改外觀）就留舊的
+            if it.kind == "char" && !obj.contains_key("loras") {
+                if let Some(l) = old.and_then(|d| d.get("loras")).filter(|l| l.is_array()) {
+                    obj.insert("loras".into(), l.clone());
+                }
+            }
         }
         // cid 是既有角色的身分，不能因只更新描述而換號。
         if let Some(cid) = old.and_then(|d| d["cid"].as_str()).filter(|s| !s.is_empty()) {
@@ -350,12 +386,50 @@ pub async fn folder(State(app): State<Shared>, Body(body): Body) -> ApiResult {
     ok(json!({"ok": true, "moved": n}))
 }
 
-/// 設定檔匯入（api_gen::settings_import）：每筆檢查過才收；回傳收了幾筆
-pub fn import(db: &Db, items: Option<&Value>) -> Result<usize, ApiError> {
-    let mut n = 0;
+/// 資產 data 裡的檔案引用（圖片、聲音、RefMod）只留 keep 說可以的；回傳有沒有拿掉東西
+fn retain_files(data: &mut Value, keep: &dyn Fn(&str) -> bool) -> bool {
+    let mut cut = false;
+    if let Some(a) = data.get_mut("images").and_then(Value::as_array_mut) {
+        let n = a.len();
+        a.retain(|im| im["file"].as_str().is_some_and(keep));
+        cut |= a.len() != n;
+    }
+    for k in ["audio", "refmod"] {
+        if data[k]["file"].as_str().is_some_and(|f| !keep(f)) {
+            if let Some(o) = data.as_object_mut() {
+                o.remove(k);
+                cut = true;
+            }
+        }
+    }
+    cut
+}
+
+fn file_refs(data: &Value) -> Vec<String> {
+    let mut v: Vec<String> = data["images"].as_array().into_iter().flatten().filter_map(|im| im["file"].as_str().map(str::to_owned)).collect();
+    v.extend(["audio", "refmod"].iter().filter_map(|k| data[*k]["file"].as_str().map(str::to_owned)));
+    v
+}
+
+/// 設定檔匯入（api_gen::settings_import）：每筆檢查過才收；回傳（收了幾筆，幾筆資產的檔案沒跟來）。
+/// 設定檔只帶資產的文字和縮圖，圖片、聲音檔留在原本那台電腦的 data\assets（檔名 <id>_<n>）：
+/// 換一台電腦匯入時檔案不在、或同名的檔其實是這台別筆資產的 → 把引用拿掉（不然點開全是破圖，刪掉還會連累別筆的檔）。
+/// 同一台電腦匯出再匯回、檔案還在的照舊接回去
+pub fn import(db: &Db, items: Option<&Value>, assets: &std::path::Path) -> Result<(usize, usize), ApiError> {
+    let (mut n, mut lost) = (0, 0);
+    let col = |r: &Row, k: &str| r.get(k).and_then(Value::as_str).unwrap_or("").to_string();
+    let same = |r: &Row, it: &LibItem| col(r, "kind") == it.kind && col(r, "folder") == it.folder && col(r, "name") == it.name;
+    let rows = db.lib_export()?;
     // 新增的會排到最前面：倒著匯入，順序才會跟匯出時一樣
     for v in items.and_then(Value::as_array).into_iter().flatten().rev() {
-        let Ok(it) = item_from(v, None) else { continue };
+        let Ok(mut it) = item_from(v, None) else { continue };
+        if MEDIA_KINDS.contains(&it.kind.as_str()) && it.kind != "shot" {
+            let taken: Vec<String> = rows.iter().filter(|r| !same(r, &it)).flat_map(|r| file_refs(r.get("data").unwrap_or(&Value::Null))).collect();
+            let keep = |f: &str| assets.join(f).is_file() && !taken.iter().any(|t| t == f);
+            if retain_files(&mut it.data, &keep) {
+                lost += 1;
+            }
+        }
         let thumb = v
             .get("thumb")
             .and_then(Value::as_str)
@@ -364,7 +438,7 @@ pub fn import(db: &Db, items: Option<&Value>) -> Result<usize, ApiError> {
         db.lib_import(&it, thumb)?;
         n += 1;
     }
-    Ok(n)
+    Ok((n, lost))
 }
 
 /// 舊格式的預設組（設定檔沒有 prompt_lib 時）也收進提示詞庫
@@ -429,6 +503,28 @@ mod tests {
         // 場景不收設定表
         let r = body(save(State(app.clone()), Body(json!({"kind": "scene", "name": "教室", "data": {"spec": spec}}))).await.unwrap()).await;
         assert!(r["data"].get("spec").is_none());
+    }
+
+    #[tokio::test]
+    async fn char_loras_are_cleaned_and_kept_when_not_sent() {
+        let root = std::env::temp_dir().join(format!("anima_char_lora_{}", crate::director::new_id()));
+        let paths = crate::paths::Paths::new(&root, &root.join("web"), Some(root.join("comfy")));
+        let app = super::super::start(paths, "http://127.0.0.1:9").await.unwrap();
+        let loras = json!([{"name": "moss\\lin.safetensors", "strength": 9, "trigger": "lin_v1"}, {"name": "..\\evil.safetensors"},
+                           {"name": "C:/x.safetensors"}, {"name": "moss\\lin.safetensors"}, {"name": "b.safetensors"}]);
+        let r = body(save(State(app.clone()), Body(json!({"kind": "char", "name": "Lin", "data": {"loras": loras}}))).await.unwrap()).await;
+        let id = r["id"].as_i64().unwrap();
+        // 反斜線原樣保留（Windows 的 ComfyUI 清單就是這樣寫）
+        assert_eq!(r["data"]["loras"], json!([{"name": "moss\\lin.safetensors", "strength": 3.0, "trigger": "lin_v1"},
+                                              {"name": "b.safetensors", "strength": 0.8, "trigger": ""}]));
+        // 只改外觀沒送 loras：留著；送空陣列：拿掉
+        let r = body(save(State(app.clone()), Body(json!({"id": id, "data": {"look_en": "x"}}))).await.unwrap()).await;
+        assert_eq!(r["data"]["loras"].as_array().map(Vec::len), Some(2));
+        let r = body(save(State(app.clone()), Body(json!({"id": id, "data": {"loras": []}}))).await.unwrap()).await;
+        assert_eq!(r["data"]["loras"], json!([]));
+        // 場景不收
+        let r = body(save(State(app.clone()), Body(json!({"kind": "scene", "name": "教室", "data": {"loras": loras}}))).await.unwrap()).await;
+        assert!(r["data"].get("loras").is_none());
     }
 
     #[test]

@@ -1,7 +1,7 @@
 //! 反推提示詞：WD EVA02-Large Tagger v3（ONNX，CPU 執行）從圖片產生 Danbooru tag（對照舊版 tagger.py）。
 //!
 //! 模型：https://huggingface.co/SmilingWolf/wd-eva02-large-tagger-v3（data\models\tagger\model.onnx＋selected_tags.csv）
-//! 輸入 448×448、BGR、0～255 浮點、NHWC；以白色補成正方形。年齡類標籤（loli、shota、child…）一律不輸出。
+//! 輸入 448×448、BGR、0～255 浮點、NHWC；以白色補成正方形。
 //!
 //! 前處理逐位元照 Pillow 做（疊白底的整數算法、BICUBIC 縮圖的定點數算法），所以跟舊版餵給模型的數字一模一樣。
 //! ONNX Runtime 用 load-dynamic 載入 onnxruntime.dll：環境變數 ORT_DYLIB_PATH，或放在程式旁邊／模型資料夾裡。
@@ -14,17 +14,8 @@ use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 
-pub const SKIP: [&str; 9] = [
-    "loli",
-    "shota",
-    "child",
-    "toddler",
-    "aged_down",
-    "oppai_loli",
-    "female_child",
-    "male_child",
-    "baby",
-];
+/// 護欄已拆：不再擋年齡類 tag
+pub const SKIP: [&str; 0] = [];
 const KAOMOJI: [&str; 19] = [
     "0_0", "(o)_(o)", "+_+", "+_-", "._.", "<o>_<o>", "<|>_<|>", "=_=", ">_<", "3_3", "6_9", ">_o",
     "@_@", "^_^", "o_o", "u_u", "x_x", "|_|", "||_||",
@@ -219,13 +210,21 @@ fn find_dll(model_dir: &Path) -> Option<PathBuf> {
     if let Some(p) = std::env::var_os("ORT_DYLIB_PATH").filter(|p| !p.is_empty()) {
         c.push(PathBuf::from(p));
     }
+    // Linux 是 libonnxruntime.so（tauri.linux.conf.json 放在附帶檔案的資料夾：/usr/lib/<產品名>/）
+    let lib = if cfg!(windows) { "onnxruntime.dll" } else { "libonnxruntime.so" };
     if let Some(dir) = std::env::current_exe()
         .ok()
         .and_then(|e| e.parent().map(Path::to_path_buf))
     {
-        c.push(dir.join("onnxruntime.dll"));
+        c.push(dir.join(lib));
     }
-    c.push(model_dir.join("onnxruntime.dll"));
+    if let Some(dir) = crate::paths::linux_lib_dir() {
+        c.push(dir.join(lib));
+    }
+    if cfg!(debug_assertions) {
+        c.push(Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("vendor").join("onnxruntime").join(lib));
+    }
+    c.push(model_dir.join(lib));
     c.into_iter().find(|p| p.is_file())
 }
 
@@ -233,7 +232,11 @@ fn init_ort(model_dir: &Path) -> Result<(), String> {
     ORT_READY
         .get_or_init(|| {
             let dll = find_dll(model_dir)
-                .ok_or("找不到 onnxruntime.dll（放在程式旁邊，或設環境變數 ORT_DYLIB_PATH）")?;
+                .ok_or(if cfg!(windows) {
+                    "找不到 onnxruntime.dll（放在程式旁邊，或設環境變數 ORT_DYLIB_PATH）"
+                } else {
+                    "找不到 libonnxruntime.so（重新安裝繪匣，或設環境變數 ORT_DYLIB_PATH）"
+                })?;
             ort::init_from(&dll)
                 .map_err(|e| format!("載入 {} 失敗：{e}", dll.display()))?
                 .with_name("anima-tagger")

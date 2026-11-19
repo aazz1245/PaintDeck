@@ -42,14 +42,56 @@ pub struct Live {
     pub progress: Option<Value>,
 }
 
+/// 這台 ComfyUI 是哪個工作節點（nodes.rs）。主節點＝None
+pub struct NodeInfo {
+    pub id: String,
+    /// 存檔前綴標記（gpu1 → g1）
+    pub tag: String,
+    /// 遠端：輸入圖從哪裡上傳、成品抓回哪裡（本機的 ComfyUI input、output）
+    pub remote: Option<(std::path::PathBuf, std::path::PathBuf)>,
+}
+
+/// 這件工作是哪個節點的（送出時 params 記 _node；沒有＝主節點）
+pub fn owner_of(params: &Value) -> &str {
+    params.get("_node").and_then(Value::as_str).filter(|s| !s.is_empty()).unwrap_or(crate::nodes::MAIN)
+}
+
+/// 節點圖裡每個 combo 欄位（object_info 給的是選項清單）的值不在清單裡＝這台缺那個檔（模型、LoRA…）
+pub fn missing_in(nodes: &Value, info: &Value) -> Vec<String> {
+    let mut out: Vec<String> = vec![];
+    for n in nodes.as_object().into_iter().flat_map(|o| o.values()) {
+        let class = n["class_type"].as_str().unwrap_or("");
+        let spec = &info[class]["input"];
+        for (k, v) in n["inputs"].as_object().into_iter().flatten() {
+            let Some(val) = v.as_str() else { continue };
+            let opts = ["required", "optional"].iter().find_map(|g| spec[*g][k][0].as_array());
+            if let Some(opts) = opts.filter(|o| o.first().is_some_and(Value::is_string)) {
+                if !opts.iter().any(|o| o.as_str() == Some(val)) && !out.iter().any(|x| x == val) {
+                    out.push(val.to_string());
+                }
+            }
+        }
+    }
+    out
+}
+
 pub struct Comfy {
     url: String,
     ws_url: String,
+    client_id: String,
+    node: Option<NodeInfo>,
+    /// 節點從設定拿掉了：websocket 迴圈看到就結束
+    closed: std::sync::atomic::AtomicBool,
     http: reqwest::Client,
     db: Arc<Db>,
     hub: Hub,
     live: Mutex<Live>,
     diagnostics: OnceLock<Arc<crate::diagnostics::Store>>,
+    /// 主節點：繪匣存輸入圖的資料夾（paths.input）。連到的 ComfyUI 讀的 input 不是這裡時（自己開的 ComfyUI 加了
+    /// --input-directory／--base-directory、或連到別份安裝），送出被 LoadImage 打回來就從這裡上傳再送（2026-11-14 回報）
+    local_input: OnceLock<std::path::PathBuf>,
+    /// 已經發現這台 ComfyUI 看不到 local_input：之後每次送出前先上傳輸入圖
+    upload_local: std::sync::atomic::AtomicBool,
 }
 
 impl Comfy {
@@ -59,22 +101,41 @@ impl Comfy {
     }
 
     pub fn new(url: &str, db: Arc<Db>, hub: Hub) -> Arc<Comfy> {
+        Comfy::new_node(url, db, hub, None, None)
+    }
+
+    /// 工作節點（nodes.rs）：client_id 加標記，免得幾台都用同一個 id 搶事件；token＝遠端要的 Bearer 金鑰
+    pub fn new_node(url: &str, db: Arc<Db>, hub: Hub, node: Option<NodeInfo>, token: Option<&str>) -> Arc<Comfy> {
         let url = url.trim_end_matches('/').to_string();
-        let ws_url = format!("{}/ws?clientId={}", url.replacen("http", "ws", 1), CLIENT_ID.as_str());
+        let client_id = match &node {
+            Some(n) => format!("{}-{}", CLIENT_ID.as_str(), n.tag),
+            None => CLIENT_ID.to_string(),
+        };
+        let ws_url = format!("{}/ws?clientId={client_id}", url.replacen("http", "ws", 1));
+        let mut headers = reqwest::header::HeaderMap::new();
+        if let Some(v) = token.filter(|t| !t.is_empty()).and_then(|t| reqwest::header::HeaderValue::from_str(&format!("Bearer {t}")).ok()) {
+            headers.insert(reqwest::header::AUTHORIZATION, v);
+        }
         // 本機的 ComfyUI 直連；雲端網址模式照代理設定（net.rs）
         let http = reqwest::Client::builder()
             .proxy(crate::net::proxy())
+            .default_headers(headers)
             .read_timeout(Duration::from_secs(600))
             .build()
             .expect("建立 HTTP client");
         Arc::new(Comfy {
             url,
             ws_url,
+            client_id,
+            node,
+            closed: std::sync::atomic::AtomicBool::new(false),
             http,
             db,
             hub,
             live: Mutex::new(Live::default()),
             diagnostics: OnceLock::new(),
+            local_input: OnceLock::new(),
+            upload_local: std::sync::atomic::AtomicBool::new(false),
         })
     }
 
@@ -85,6 +146,94 @@ impl Comfy {
     }
 
     pub fn attach_diagnostics(&self, store: Arc<crate::diagnostics::Store>) { let _ = self.diagnostics.set(store); }
+
+    /// 主節點：告訴它繪匣把輸入圖存在哪（見 local_input）
+    pub fn set_local_input(&self, dir: &std::path::Path) { let _ = self.local_input.set(dir.to_path_buf()); }
+
+    /// 節點 id（主節點 main）
+    pub fn node_id(&self) -> &str {
+        self.node.as_ref().map(|n| n.id.as_str()).unwrap_or(crate::nodes::MAIN)
+    }
+    pub fn is_remote(&self) -> bool {
+        self.node.as_ref().is_some_and(|n| n.remote.is_some())
+    }
+    /// 這件工作歸不歸這台管（重連補收、標遺失只管自己的）
+    fn owns(&self, pid: &str) -> bool {
+        match self.db.job(pid) {
+            Ok(Some(j)) => owner_of(&j["params"]) == self.node_id(),
+            _ => self.node.is_none(),
+        }
+    }
+    /// 上線：主節點照舊送 comfy（狀態列）；其他節點送 node 事件，不蓋掉主節點的狀態
+    fn send_online(&self, online: bool) {
+        match &self.node {
+            None => self.hub.send(json!({"type": "comfy", "online": online})),
+            Some(n) => self.hub.send(json!({"type": "node", "id": n.id, "online": online})),
+        }
+    }
+
+    /// 這張節點圖這台缺哪些檔（模型、LoRA、文字編碼器…）
+    pub async fn missing_models(&self, nodes: &Value) -> Result<Vec<String>, ComfyError> {
+        let info = self.object_info_all().await?;
+        Ok(missing_in(nodes, &info))
+    }
+
+    /// 遠端節點：成品從那台的 /view 抓回本機 output 的同一個路徑（之後照一般流程收進圖庫）
+    async fn fetch_outputs(&self, output: &Value) -> Result<(), ComfyError> {
+        let Some((_, out_dir)) = self.node.as_ref().and_then(|n| n.remote.as_ref()) else { return Ok(()) };
+        for im in ["images", "gifs"].into_iter().flat_map(|k| output[k].as_array().into_iter().flatten()) {
+            if im.get("type").and_then(Value::as_str) != Some("output") {
+                continue;
+            }
+            let (Some(f), sub) = (im["filename"].as_str(), im.get("subfolder").and_then(Value::as_str).unwrap_or("")) else { continue };
+            let dest = out_dir.join(sub).join(f);
+            if dest.exists() {
+                continue;
+            }
+            let bytes = self.view(f, sub, "output").await?;
+            if let Some(d) = dest.parent() {
+                std::fs::create_dir_all(d).map_err(|e| ComfyError(format!("建立 {} 失敗：{e}", d.display())))?;
+            }
+            std::fs::write(&dest, bytes).map_err(|e| ComfyError(format!("存 {} 失敗：{e}", dest.display())))?;
+        }
+        Ok(())
+    }
+
+    /// 遠端節點：節點圖用到的輸入圖先傳過去（ComfyUI 的 /upload/image，同名覆蓋）
+    async fn upload_inputs(&self, nodes: &Value) -> Result<(), ComfyError> {
+        if let Some((in_dir, _)) = self.node.as_ref().and_then(|n| n.remote.as_ref()) {
+            return self.upload_from(in_dir, nodes).await;
+        }
+        match self.local_input.get() {
+            Some(dir) if self.upload_local.load(std::sync::atomic::Ordering::Relaxed) => self.upload_from(dir, nodes).await,
+            _ => Ok(()),
+        }
+    }
+
+    /// 節點圖用到的輸入圖從 in_dir 讀出來，用 /upload/image 傳給這台 ComfyUI（同名覆蓋）
+    async fn upload_from(&self, in_dir: &std::path::Path, nodes: &Value) -> Result<(), ComfyError> {
+        for f in crate::nodes::input_files(nodes) {
+            let bytes = std::fs::read(in_dir.join(&f)).map_err(|e| ComfyError(format!("讀不到輸入圖 {f}：{e}")))?;
+            let (sub, name) = match f.rsplit_once('/') {
+                Some((s, n)) => (s.to_string(), n.to_string()),
+                None => (String::new(), f.clone()),
+            };
+            let boundary = format!("anima{:016x}", rand::random::<u64>());
+            let body = crate::runninghub::multipart(&boundary, &[("overwrite", "true"), ("type", "input"), ("subfolder", &sub)], "image", &name, &bytes);
+            let r = self
+                .http
+                .post(format!("{}/upload/image", self.url))
+                .header(reqwest::header::CONTENT_TYPE, format!("multipart/form-data; boundary={boundary}"))
+                .body(body)
+                .send()
+                .await
+                .map_err(conn_err)?;
+            if !r.status().is_success() {
+                return Err(ComfyError(format!("輸入圖 {f} 傳不上節點（{}）", r.status())));
+            }
+        }
+        Ok(())
+    }
 
     pub fn live(&self) -> Live {
         self.live.lock().unwrap_or_else(|e| e.into_inner()).clone()
@@ -127,6 +276,22 @@ impl Comfy {
             return Err(ComfyError(format!("ComfyUI 回應 {status}（讀 {filename}）")));
         }
         Ok(r.bytes().await.map_err(conn_err)?.to_vec())
+    }
+
+    /// 原樣轉一個請求給 ComfyUI（外掛自己的 HTTP API：隨機頁的隨機產生器轉送 /anima-wardrobe-v6/…）。
+    /// url 要是這台 ComfyUI 底下的網址；回 (狀態碼, content-type, 內容)，狀態碼不管好壞都原樣回
+    pub async fn forward(&self, method: reqwest::Method, url: reqwest::Url, body: Option<(Vec<u8>, String)>) -> Result<(u16, String, Vec<u8>), ComfyError> {
+        if !url.as_str().starts_with(&format!("{}/", self.url)) {
+            return Err(ComfyError(format!("不是這台 ComfyUI 的網址：{url}")));
+        }
+        let mut rq = self.http.request(method, url).timeout(Duration::from_secs(120));
+        if let Some((b, ct)) = body {
+            rq = rq.header(reqwest::header::CONTENT_TYPE, ct).body(b);
+        }
+        let r = rq.send().await.map_err(conn_err)?;
+        let status = r.status().as_u16();
+        let ct = r.headers().get(reqwest::header::CONTENT_TYPE).and_then(|v| v.to_str().ok()).unwrap_or("application/octet-stream").to_string();
+        Ok((status, ct, r.bytes().await.map_err(conn_err)?.to_vec()))
     }
 
     pub async fn post(&self, path: &str, payload: &Value) -> Result<Value, ComfyError> {
@@ -177,7 +342,13 @@ impl Comfy {
         let mut nodes = nodes.clone();
         fix_loaders(self, &mut nodes).await?;
         crate::diagnostics::snapshot("workflow_api", &nodes);
-        let payload = |n: &Value| json!({"prompt": n, "client_id": CLIENT_ID.as_str(), "extra_data": {"extra_pnginfo": extra_pnginfo}});
+        // 工作節點：存檔前綴加標記（兩台同秒存檔才不會撞名）、遠端先把輸入圖傳過去
+        if let Some(n) = &self.node {
+            crate::nodes::tag_prefixes(&mut nodes, &n.tag);
+        }
+        self.upload_inputs(&nodes).await?;
+        let cid = self.client_id.clone();
+        let payload = |n: &Value| json!({"prompt": n, "client_id": cid, "extra_data": {"extra_pnginfo": extra_pnginfo}});
         let (mut ok, mut r) = self.post_raw("/prompt", &payload(&nodes)).await?;
         // 模型檔名只差在斜線方向、子資料夾（別台電腦的工作流）：照 ComfyUI 附的清單換成同一個檔，再送一次
         if !ok {
@@ -185,6 +356,19 @@ impl Comfy {
             if fix_listed_names(&mut nodes, &r, &options) {
                 crate::diagnostics::snapshot("workflow_retry_resolved_names", &nodes);
                 (ok, r) = self.post_raw("/prompt", &payload(&nodes)).await?;
+            }
+        }
+        // 主節點的 LoadImage 說圖無效，但繪匣存圖的資料夾裡明明有：這台 ComfyUI 讀的是別的 input 資料夾 → 上傳再送一次，之後都先上傳
+        if !ok && self.node.is_none() && !self.upload_local.load(std::sync::atomic::Ordering::Relaxed) && invalid_input_image(&r) {
+            if let Some(dir) = self.local_input.get() {
+                let files = crate::nodes::input_files(&nodes);
+                if !files.is_empty() && files.iter().all(|f| dir.join(f).is_file()) {
+                    eprintln!("ComfyUI 看不到繪匣 input 資料夾（{}）的圖，改用上傳", dir.display());
+                    self.upload_from(dir, &nodes).await?;
+                    self.upload_local.store(true, std::sync::atomic::Ordering::Relaxed);
+                    crate::diagnostics::snapshot("workflow_retry_uploaded_inputs", &json!(files));
+                    (ok, r) = self.post_raw("/prompt", &payload(&nodes)).await?;
+                }
             }
         }
         match r.get("prompt_id").and_then(Value::as_str) {
@@ -236,12 +420,29 @@ impl Comfy {
     }
 
     // ---------------------------------------------------------------- websocket
+    /// 測試用：不開 websocket，直接設在線與佇列數
+    #[doc(hidden)]
+    pub fn set_live_for_test(&self, online: bool, queue: i64) {
+        self.with_live(|l| {
+            l.online = online;
+            l.queue_remaining = queue;
+        });
+    }
+
+    /// 節點從設定拿掉：停掉背景連線（下次重連前就結束）
+    pub fn close(&self) {
+        self.closed.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+
     async fn ws_loop(self: Arc<Self>) {
         loop {
+            if self.closed.load(std::sync::atomic::Ordering::Relaxed) {
+                return;
+            }
             // 連不上＝ComfyUI 沒開或重啟中：等一下再試
             if let Ok((ws, _)) = tokio_tungstenite::connect_async(self.ws_url.as_str()).await {
                 self.with_live(|l| l.online = true);
-                self.hub.send(json!({"type": "comfy", "online": true}));
+                self.send_online(true);
                 self.recover().await;
                 let (_, mut rx) = ws.split();
                 while let Some(msg) = rx.next().await {
@@ -262,7 +463,7 @@ impl Comfy {
                 }
             }
             if self.with_live(|l| std::mem::replace(&mut l.online, false)) {
-                self.hub.send(json!({"type": "comfy", "online": false}));
+                self.send_online(false);
                 if let Some(store) = self.diagnostics.get() { store.disconnected(); }
             }
             tokio::time::sleep(Duration::from_secs(3)).await;
@@ -306,7 +507,10 @@ impl Comfy {
                     .as_i64()
                     .unwrap_or(0);
                 self.with_live(|l| l.queue_remaining = n);
-                self.hub.send(json!({"type": "queue", "remaining": n}));
+                match &self.node {
+                    None => self.hub.send(json!({"type": "queue", "remaining": n})),
+                    Some(nd) => self.hub.send(json!({"type": "node", "id": nd.id, "remaining": n})),
+                }
             }
             "execution_start" => {
                 self.with_live(|l| {
@@ -327,6 +531,10 @@ impl Comfy {
             }
             "executed" => {
                 let out = d.get("output").cloned().unwrap_or_else(|| json!({}));
+                if let Err(e) = self.fetch_outputs(&out).await {
+                    self.finish(pid.as_deref(), "error", Some(format!("從節點「{}」抓圖失敗：{}", self.node_id(), e.0)));
+                    return;
+                }
                 self.store(pid.as_deref(), &out);
             }
             "execution_success" => self.finish(pid.as_deref(), "done", None),
@@ -375,6 +583,9 @@ impl Comfy {
                 &job["params"],
                 Some(pid),
             ) {
+                // 整本上色的原始輸出：只記一筆給背景工作找（跑完就搬走、從圖庫隱藏），不推到網頁的圖庫
+                // 漫畫台修角色的每一格也一樣（2026-11-16）
+                Ok(_) if job["params"].get("colorbook").is_some() || job["params"]["comic"]["kind"] == "fix_part" => {}
                 Ok(iid) => {
                     let image = self
                         .db
@@ -414,11 +625,15 @@ impl Comfy {
 
     /// 重新連上時，補收斷線期間完成的任務
     async fn recover(&self) {
-        for pid in self.db.open_jobs().unwrap_or_default() {
+        // 只管自己的工作：別台的工作在這台佇列裡本來就找不到，不能標成遺失
+        for pid in self.db.open_jobs().unwrap_or_default().into_iter().filter(|p| self.owns(p)) {
             let Ok(h) = self.get(&format!("/history/{pid}")).await else {
                 continue;
             };
-            if h.get(&pid).is_some() {
+            if let Some(entry) = h.get(&pid) {
+                for out in entry["outputs"].as_object().into_iter().flat_map(|o| o.values()) {
+                    let _ = self.fetch_outputs(out).await;
+                }
                 self.store_history(&pid, &h);
             } else if let Ok(q) = self.get("/queue").await {
                 let live: Vec<&str> = ["queue_running", "queue_pending"]
@@ -460,6 +675,9 @@ impl Comfy {
     /// websocket 的結果會比登記早到而被略過；登記完呼叫這個，從 /history 補收
     pub async fn sync_job(&self, pid: &str) {
         if let Ok(h) = self.get(&format!("/history/{pid}")).await {
+            for out in h[pid]["outputs"].as_object().into_iter().flat_map(|o| o.values()) {
+                let _ = self.fetch_outputs(out).await;
+            }
             self.store_history(pid, &h);
         }
     }
@@ -487,6 +705,19 @@ fn py_str(v: Option<&Value>) -> String {
         }
         Some(other) => other.to_string(),
     }
+}
+
+/// /prompt 的回應：有 LoadImage／LoadImageMask 因為「Invalid image file」被打回來（檔案不在那台 ComfyUI 的 input）
+pub fn invalid_input_image(r: &Value) -> bool {
+    r.get("node_errors").and_then(Value::as_object).is_some_and(|ne| {
+        ne.values().any(|n| {
+            matches!(n["class_type"].as_str(), Some("LoadImage" | "LoadImageMask"))
+                && n["errors"].as_array().into_iter().flatten().any(|e| {
+                    let t = format!("{} {}", py_str(e.get("message")), py_str(e.get("details"))).to_lowercase();
+                    t.contains("invalid image file")
+                })
+        })
+    })
 }
 
 /// 把 ComfyUI 的驗證錯誤整理成看得懂的一句話
@@ -533,19 +764,36 @@ pub fn explain(data: &Value) -> String {
 
 /// 常見錯誤 → 白話說明＋解法（原文附在後面，方便查）
 const FRIENDLY: &[(&[&str], &str)] = &[
+    // 要排在「少了節點」前面：MOSS 照指令改圖的節點在繪匣的 comfy_moss 補丁裡（2026-10-30），舊補丁沒有
+    (&["textencodemossimageedit"],
+     "這台 ComfyUI 的 MOSS 支援還是舊版，沒有「照指令改圖」要的節點。解法：ComfyUI 是 0.38.0 的話，到「設定 → 安裝與修復」再按一次安裝，會自動換上新的 MOSS 支援；其他版本請更新 ComfyUI 到 0.43 以後。"),
     // 新版 ComfyUI：missing_node_type「Node 'X' not found. The custom node may not be installed.」；舊版：「Cannot execute because node X does not exist.」
     (&["custom node may not be installed", "cannot execute because node"],
      "這台 ComfyUI 少了工作流要用的節點（自訂節點沒裝，或 ComfyUI 版本太舊）。解法：用 ComfyUI Manager 安裝缺少的節點（名稱在下面的原始訊息裡），裝完重開 ComfyUI；匯入的工作流也可以到「設定 → 模型與工作流」看缺哪些節點。"),
     (&["out of memory", "outofmemory", "cuda error: out", "allocation on device"],
      "顯示卡記憶體（VRAM）不夠。解法：張數改少、尺寸改小、關掉吃顯卡的遊戲；或到右上角狀態列按「釋放顯存」再試一次。"),
+    // 要排在「value not in list」前面：CLIPLoader 的 type 選單沒有 moss_image＝ComfyUI 程式太舊，跟模型檔無關（2026-10-30 有人因此重下模型）
+    (&["'moss_image' not in"],
+     "這台 ComfyUI 的程式還沒有 MOSS-Image 支援（模型檔沒問題，不用重新下載；官方正式版到 0.40.0 都還沒有 MOSS）。解法：ComfyUI 是 0.38.0 的話，到「設定 → 安裝與修復」再按一次安裝，會自動補上；其他版本的免安裝版執行 ComfyUI 資料夾裡的 update\\update_comfyui.bat 更新到最新開發版（不要用 update_comfyui_stable.bat），或讓安裝精靈另外下載一份 ComfyUI。"),
+    // 要排在「value not in list」前面：H3 影片的模型檔沒裝（2026-10-30 回報：站叫人去 LoRA 分頁刷新，方向錯）
+    (&["minimax_h3", "10eros_max_h3", "qwen3vl_32b_minimax"],
+     "這台 ComfyUI 沒有 H3 影片的模型檔（主模型、文字編碼器或 VAE）。解法：到安裝精靈勾「H3 影片（本機，選配）」下載，或在 H3 影片台改用雲端。"),
     (&["value not in list"],
      "找不到選的模型或 LoRA 檔（可能被移走或改名；匯入的工作流也可能寫著你沒有的檔）。解法：LoRA 分頁按「重新整理清單」，重新選一次模型／LoRA；用「⚙ 生圖工作流」時，到左欄「工作流參數」把標紅的欄位換成你有的檔（檔名在下面的原始訊息裡）。"),
     (&["mat1 and mat2", "size mismatch", "shapes cannot be multiplied", "lora key not loaded"],
      "模型和 LoRA 不相容（多半是家族不同，例如 Anima 的 LoRA 套在 MOSS-Image 上）。解法：把劃掉的 LoRA 移除，或換回對應的模型。"),
     (&["no such file", "filenotfound", "invalid image file", "cannot identify image"],
-     "找不到輸入圖片，或圖片壞掉了。解法：重新放一次圖片。"),
+     "找不到輸入圖片，或圖片壞掉了。解法：重新放一次圖片；換了圖還是一樣的話，多半是繪匣連到的 ComfyUI 讀的 input 資料夾跟繪匣存圖的地方不同（自己開的 ComfyUI 加了 --input-directory，或「設定 → 安裝與修復」指的 ComfyUI 跟正在跑的不是同一份），把兩邊改成同一份再試。"),
     (&["cannot connect", "connection refused", "connect call failed"],
      "連不到 ComfyUI。解法：重新開啟「繪匣 PaintDeck」。"),
+    // A 卡（ROCm）：矩陣運算走到 hipBLASLt，這張卡沒有它的 kernel（2026-11-06 回報：RX 6750 XT，
+    // SamplerCustomAdvanced: CUDA error: HIPBLAS_STATUS_INVALID_VALUE when calling hipblasLtMatmulAlgoGetHeuristic）。新版繪匣開 ComfyUI 時會自己關掉
+    (&["hipblaslt", "hipblas_status_invalid_value", "hipblas_status_not_supported"],
+     "A 卡的矩陣運算庫 hipBLASLt 不支援這張卡（RX 6000 系列最常見，跟模型、提示詞無關）。解法：把「繪匣 PaintDeck」更新到最新版（設定 → 程式更新）再重開，新版開 ComfyUI 時會自動改用 rocBLAS。你是自己開 ComfyUI 的話，啟動前加兩個環境變數再開：DISABLE_ADDMM_CUDA_LT=1、TORCH_BLAS_PREFER_HIPBLASLT=0。"),
+    // A 卡（ROCm）：PyTorch 沒有這張卡架構的 kernel。CPU 內顯（Ryzen 7000／9000 的 610M、筆電 780M）排在 0 號被 ComfyUI 拿去用（2026-11-04 回報），
+    // 或精靈選錯架構、kpack 檔不完整（2026-11-05 回報：i5-12400F＋RX 6750 GRE，沒有內顯，照舊說明填 --cuda-device 1 反而開不起來）
+    (&["invalid kernel file", "hiperrorinvalidkernelfile", "invalid device function", "hiperrorinvaliddevicefunction", "device kernel image is invalid", "hiperrorinvalidimage"],
+     "A 卡的 PyTorch 沒有這張卡能用的程式（架構對不上，或套件檔不完整）。解法：先重開「繪匣 PaintDeck」，新版開 ComfyUI 前會自動檢查、補裝這張卡的套件（約 100MB）；還是不行，到「設定 → 安裝與修復…」第二頁把「A 卡架構」選成你的顯示卡型號（例如 RX 6700／6750 是 gfx1031），按安裝補裝。電腦同時有 AMD 獨顯和 CPU 內顯（Ryzen 7000／9000 桌機、筆電）時，才到「設定 → ComfyUI 啟動方式」的額外參數試 --cuda-device 1；只有一張卡（例如 Intel CPU）不要填，填了 ComfyUI 會開不起來。RX 6000 系列（含 680M／610M 內顯）重開時會自動換成 RX 6000 專用的 PyTorch（約 1.1GB，只要換一次）。RX 5000 這類更舊的卡，AMD 官方的 Windows 版 ROCm 還在實驗階段，上面都試過還是一樣的話，可以改用 ZLUDA 版的 ComfyUI（例如秋葉的 A 卡整合包），在「設定 → 安裝與修復…」第二頁選「用我自己的 ComfyUI」指過去。"),
     (&["expected all tensors to be on the same device"],
      "ComfyUI 模型載入狀態異常。解法：狀態列按「釋放顯存」，或重開 ComfyUI。"),
 ];
@@ -762,6 +1010,90 @@ mod tests {
 
     use super::*;
 
+    /// 2026-11-14 有人回報：主頁圖生圖一律「LoadImage：Invalid image file: aw_image_….png」，文生圖、反推（本機 ONNX 讀檔）正常。
+    /// 繪匣把圖存進自己認定的 ComfyUI\input，連到的 ComfyUI 讀的是別的 input → 第一次被打回來就上傳再送，之後先上傳
+    #[tokio::test]
+    async fn main_node_uploads_inputs_when_comfy_reads_another_input_dir() {
+        use axum::extract::{Multipart, State};
+        use axum::routing::post;
+        use axum::{http::StatusCode, Json, Router};
+        type St = Arc<Mutex<(Vec<String>, usize)>>;
+        let st: St = Arc::new(Mutex::new((vec![], 0)));
+        let app = Router::new()
+            .route(
+                "/upload/image",
+                post(|State(s): State<St>, mut mp: Multipart| async move {
+                    while let Ok(Some(f)) = mp.next_field().await {
+                        if f.name() == Some("image") {
+                            let name = f.file_name().unwrap_or_default().to_string();
+                            let _ = f.bytes().await;
+                            s.lock().unwrap().0.push(name);
+                        }
+                    }
+                    Json(json!({}))
+                }),
+            )
+            .route(
+                "/prompt",
+                post(|State(s): State<St>, Json(v): Json<Value>| async move {
+                    let mut g = s.lock().unwrap();
+                    g.1 += 1;
+                    let f = v["prompt"]["1"]["inputs"]["image"].as_str().unwrap_or_default().to_string();
+                    if g.0.contains(&f) {
+                        (StatusCode::OK, Json(json!({"prompt_id": format!("p{}", g.1), "node_errors": {}})))
+                    } else {
+                        (StatusCode::BAD_REQUEST, Json(json!({
+                            "error": {"type": "prompt_outputs_failed_validation", "message": "Prompt outputs failed validation"},
+                            "node_errors": {"1": {"class_type": "LoadImage", "errors": [{"type": "custom_validation_failed", "message": "Custom validation failed for node", "details": format!("image - Invalid image file: {f}")}]}}
+                        })))
+                    }
+                }),
+            )
+            .with_state(st.clone());
+        let l = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}", l.local_addr().unwrap());
+        tokio::spawn(async move { axum::serve(l, app).await.unwrap() });
+
+        let d = std::env::temp_dir().join(format!("anima_comfy_input_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        let db = Arc::new(Db::open(&d.join("t.db")).unwrap());
+        let c = Comfy::new(&url, db, Hub::new());
+        let g = |f: &str| json!({"1": {"class_type": "LoadImage", "inputs": {"image": f}}, "9": {"class_type": "SaveImage", "inputs": {"filename_prefix": "x"}}});
+
+        // 沒設 local_input：照舊回錯誤，不亂傳
+        let e = c.submit(&g("aw_a.png"), &json!({})).await.unwrap_err();
+        assert!(e.0.contains("找不到輸入圖片"), "{e}");
+        assert!(st.lock().unwrap().0.is_empty());
+
+        // 檔案不在繪匣的 input：照舊回錯誤
+        c.set_local_input(&d);
+        assert!(c.submit(&g("aw_a.png"), &json!({})).await.is_err());
+        assert!(st.lock().unwrap().0.is_empty());
+
+        // 繪匣的 input 有這張：上傳後重送成功
+        std::fs::write(d.join("aw_a.png"), b"png").unwrap();
+        assert_eq!(c.submit(&g("aw_a.png"), &json!({})).await.unwrap(), "p4");
+        assert_eq!(st.lock().unwrap().0, ["aw_a.png"]);
+
+        // 之後送出前就先上傳，一次成功
+        std::fs::write(d.join("aw_b.png"), b"png").unwrap();
+        assert_eq!(c.submit(&g("aw_b.png"), &json!({})).await.unwrap(), "p5");
+        assert_eq!(st.lock().unwrap().0, ["aw_a.png", "aw_b.png"]);
+        drop(c);
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn invalid_input_image_only_for_load_image() {
+        let bad = |cls: &str, details: &str| json!({"node_errors": {"1": {"class_type": cls, "errors": [{"message": "Custom validation failed for node", "details": details}]}}});
+        assert!(invalid_input_image(&bad("LoadImage", "image - Invalid image file: a.png")));
+        assert!(invalid_input_image(&bad("LoadImageMask", "image - Invalid image file: m.png")));
+        assert!(!invalid_input_image(&bad("CLIPLoader", "Invalid image file")));
+        assert!(!invalid_input_image(&bad("LoadImage", "Value not in list")));
+        assert!(!invalid_input_image(&json!({"error": {"message": "x"}})));
+    }
+
     fn have(v: &[&str]) -> Vec<String> {
         v.iter().map(|s| s.to_string()).collect()
     }
@@ -778,6 +1110,38 @@ mod tests {
         assert_eq!(pick_alternative(crate::graphs::MOSS_TE, &have(&["qwen3.5_9b_bf16.safetensors"])), Ok(Some("qwen3.5_9b_bf16.safetensors".into())));
         let e = pick_alternative(crate::graphs::MOSS_TE, &have(&["qwen_3_06b_base.safetensors"])).unwrap_err();
         assert!(e.contains("MOSS") && e.contains(crate::graphs::MOSS_TE), "{e}");
+    }
+
+    /// 2026-10-30 有人回報：ComfyUI 程式沒有 MOSS 支援，以前講成「找不到模型或 LoRA 檔」，害人去重下模型
+    #[test]
+    fn friendly_video_models() {
+        let m = friendly("CLIPLoader: Value not in list: clip_name: 'qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors' not in ['a.safetensors']");
+        assert!(m.contains("H3 影片（本機，選配）") && !m.contains("LoRA 分頁"), "{m}");
+        let g = friendly("UNETLoader: Value not in list: unet_name: 'anima-base.safetensors' not in ['b.safetensors']");
+        assert!(g.contains("LoRA 分頁") && !g.contains("H3"), "{g}");
+    }
+
+    /// 2026-11-04 回報：A 卡按生圖跳 TextEncodeQwenImage21: CUDA error: invalid kernel file，原文看不懂
+    #[test]
+    fn friendly_amd_kernel_file() {
+        let m = friendly("TextEncodeQwenImage21: CUDA error: invalid kernel file\nSearch for `hipErrorInvalidKernelFile' in https://rocm.docs.amd.com/");
+        assert!(m.contains("--cuda-device 1") && m.contains("內顯") && !m.contains("VRAM"), "{m}");
+        // 2026-11-05 回報：第一次是 device kernel image is invalid，單卡的人不能叫他填 --cuda-device
+        let m = friendly("TextEncodeQwenImage21: CUDA error: device kernel image is invalid\nSearch for `hipErrorInvalidImage'");
+        assert!(m.contains("自動檢查") && m.contains("gfx1031") && m.contains("不要填"), "{m}");
+    }
+
+    /// 2026-11-06 回報：RX 6750 XT 換成 RX 6000 專用 PyTorch 之後，按生圖跳 hipBLASLt 的錯
+    #[test]
+    fn friendly_amd_hipblaslt() {
+        let m = friendly("SamplerCustomAdvanced: CUDA error: HIPBLAS_STATUS_INVALID_VALUE when calling hipblasLtMatmulAlgoGetHeuristic( ltHandle, computeDesc.descriptor(), Adesc.descriptor(), Bdesc.descriptor(), Cdesc.descriptor(), Cdesc.descriptor(), preference.descriptor(), 1, &heuristicResult, &returnedResult)");
+        assert!(m.contains("hipBLASLt") && m.contains("DISABLE_ADDMM_CUDA_LT=1") && !m.contains("VRAM") && !m.contains("架構對不上"), "{m}");
+    }
+
+    #[test]
+    fn moss_type_missing_is_not_a_missing_file() {
+        let m = friendly("Prompt outputs failed validation；CLIPLoader: Value not in list: type: 'moss_image' not in (list of length 29)");
+        assert!(m.contains("MOSS-Image 支援") && m.contains("update_comfyui.bat") && !m.contains("找不到選的模型"), "{m}");
     }
 
     #[test]
@@ -863,6 +1227,14 @@ mod tests {
         assert_eq!(pick_alternative("my_custom_vae.safetensors", &have(&["x.safetensors"])), Ok(None));
     }
 
+    /// MOSS 照指令改圖（2026-10-30）：ComfyUI 還是舊補丁、沒有 TextEncodeMOSSImageEdit → 叫人重跑安裝精靈，不是去 Manager 找節點
+    #[test]
+    fn moss_edit_node_missing_points_to_setup() {
+        let v = json!({"error": {"type": "missing_node_type", "message": "Node 'TextEncodeMOSSImageEdit' not found. The custom node may not be installed."}, "node_errors": {}});
+        let e = explain(&v);
+        assert!(e.contains("安裝與修復") && !e.contains("ComfyUI Manager"), "{e}");
+    }
+
     /// 匯入的工作流用到沒裝的自訂節點：新舊版 ComfyUI 的回應都要翻成白話，節點名稱留在原始訊息裡
     #[test]
     fn missing_node_is_explained() {
@@ -872,5 +1244,35 @@ mod tests {
             let e = explain(&v);
             assert!(e.contains("ComfyUI Manager") && e.contains(name), "{e}");
         }
+    }
+}
+
+#[cfg(test)]
+mod node_tests {
+    use super::*;
+
+    #[test]
+    fn missing_models_from_object_info() {
+        let info = json!({
+            "UNETLoader": {"input": {"required": {"unet_name": [["anima.safetensors", "qwen.safetensors"]], "weight_dtype": [["default", "fp8"]]}}},
+            "LoraLoaderModelOnly": {"input": {"required": {"lora_name": [["a.safetensors"]], "strength_model": ["FLOAT", {"default": 1.0}]}}},
+            "CLIPTextEncode": {"input": {"required": {"text": ["STRING", {"multiline": true}]}}}
+        });
+        let nodes = json!({
+            "1": {"class_type": "UNETLoader", "inputs": {"unet_name": "anima.safetensors", "weight_dtype": "default"}},
+            "2": {"class_type": "LoraLoaderModelOnly", "inputs": {"lora_name": "missing.safetensors", "strength_model": 0.8, "model": ["1", 0]}},
+            "3": {"class_type": "CLIPTextEncode", "inputs": {"text": "missing.safetensors? no, just text"}},
+            "4": {"class_type": "LoraLoaderModelOnly", "inputs": {"lora_name": "missing.safetensors"}}
+        });
+        assert_eq!(missing_in(&nodes, &info), vec!["missing.safetensors"]);
+        // 這台根本沒有這個節點：不算缺檔（ComfyUI 會自己報缺節點）
+        assert!(missing_in(&json!({"1": {"class_type": "Nope", "inputs": {"x": "y"}}}), &info).is_empty());
+    }
+
+    #[test]
+    fn owner_defaults_to_main() {
+        assert_eq!(owner_of(&json!({})), "main");
+        assert_eq!(owner_of(&json!({"_node": ""})), "main");
+        assert_eq!(owner_of(&json!({"_node": "gpu1"})), "gpu1");
     }
 }

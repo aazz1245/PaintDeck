@@ -15,6 +15,14 @@ use std::path::Path;
 
 /// 10Eros-Max beta5 TURBO-hybrid int8（無審核、Turbo 已烤進去、8 步；TenStrip/10Eros-Max）
 pub const MODEL: &str = "10Eros_Max_h3_TURBO-hybrid_beta5_int8.safetensors";
+/// 同一顆的 w4a8 量化版（14GB）：3070 8GB 實測 512×768 5 秒約 200 秒，比 Q3 GGUF 快 1.8 倍、顯存一樣（2026-10-30）
+pub const MODEL_W4A8: &str = "10Eros_Max_h3_TURBO-hybrid_beta5_w4a8_14gb_optimized.safetensors";
+
+/// 給小顯存卡的版本（GGUF、w4a8）：沒指定 ff_chunks 就自動切塊
+pub fn low_vram_model(name: &str) -> bool {
+    let l = name.to_lowercase();
+    l.ends_with(".gguf") || l.contains("w4a8")
+}
 pub const TE: &str = "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors";
 pub const VAE: &str = "minimax_h3_video_vae_int8_convrot.safetensors";
 pub const AVAE: &str = "minimax_h3_audio_vae_fp32.safetensors";
@@ -23,6 +31,13 @@ pub const UPSCALER: &str = "minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetenso
 /// 官方 ref2va（社群的換角色、特效、換畫風、動態桌布 LoRA 都是在它上面練的），沒有 Turbo：自動加 DMD 8 步 Turbo LoRA
 pub const OFFICIAL_REF2VA: &str = "minimax_h3_ref2va_pruned_int8_convrot.safetensors";
 pub const TURBO_REF2VA: &str = "minimax_h3_dmd_ref2va_8step_turbo_pruned.safetensors";
+
+/// 官方 ref2va 主模型（沒烤 Turbo）：不管哪種精度（pruned int8、bf16、w4a8、GGUF…）檔名都是 minimax_h3_ref2va 開頭。
+/// 2026-11-10 以前只認 OFFICIAL_REF2VA 那一個檔名，下載中心抓別的精度回來用 8 步跑不會補 Turbo LoRA、出來是糊的
+pub fn official_ref2va(model_name: &str) -> bool {
+    let n = basename(model_name).to_lowercase();
+    n.starts_with("minimax_h3_ref2va") && !n.contains("turbo") && !n.contains("dmd")
+}
 pub const FPS: i64 = 24;
 /// 舊玩法＋素材板（board：任何素材組合，見 design\H3素材板_設計.md）
 pub const MODES: &[&str] = &["t2v", "i2v", "fl2v", "ref2v", "keys", "continue", "swap", "vfx", "style", "live", "control", "board"];
@@ -255,8 +270,11 @@ fn board_plan(p: &Value) -> R<Plan> {
     if pl.lora_mode == "live" {
         pl.max_size = true;
     }
-    let pinned = |t: f64| images.iter().filter(|(_, x)| *x == Some(t)).count();
-    if pinned(0.0) > 1 || pinned(-1.0) > 1 {
+    // 同一格只能釘一張：照 AddGuide「四捨五入成第幾格」比（-1＝最後一格）。以前只擋第 0 秒和最後一格，
+    // 兩張都釘在 2.5 秒會各接一顆 AddGuide 指向同一格
+    let mut slots: Vec<i64> = images.iter().filter_map(|(_, t)| *t).map(|t| if t == -1.0 { -1 } else { (t * FPS as f64).round() as i64 }).collect();
+    slots.sort_unstable();
+    if slots.windows(2).any(|w| w[0] == w[1]) {
         return err("同一個時間點只能釘一張圖");
     }
     if images.iter().filter(|(_, t)| t.is_some()).count() > 6 {
@@ -265,7 +283,7 @@ fn board_plan(p: &Value) -> R<Plan> {
     if pl.audio_pins.len() > MAX_AUDIOS {
         return err(format!("原封不動放進去的聲音最多 {MAX_AUDIOS} 段"));
     }
-    if !pl.prev.is_empty() && pinned(0.0) > 0 {
+    if !pl.prev.is_empty() && slots.contains(&0) {
         return err("「接著上一支拍」的開頭已經是上一支的畫面：第 0 秒不能再釘圖");
     }
     // 有參考素材、或釘在首尾以外的圖 → 參考路：所有圖照順序當參考，釘的再用 AddGuide 釘住
@@ -333,7 +351,9 @@ fn legacy_plan(p: &Value, mode: &str, length: i64) -> R<Plan> {
         pl.refs.images.extend(keys.iter().map(|(img, _)| img.clone()));
         pl.pins = keys;
     }
-    pl.uses_refs = matches!(mode, "ref2v" | "keys" | "swap" | "vfx" | "style" | "live" | "control");
+    // 動作控制：有首幀、沒參考素材 → 圖生影片＋控制（預演台）；其餘照舊走參考生影片
+    let control_i2v = mode == "control" && !first.is_empty() && pl.refs.images.is_empty() && pl.refs.videos.is_empty();
+    pl.uses_refs = matches!(mode, "ref2v" | "keys" | "swap" | "vfx" | "style" | "live") || (mode == "control" && !control_i2v);
     pl.first = first.to_string();
     pl.last = if mode == "fl2v" { last.to_string() } else { String::new() };
     if mode == "continue" {
@@ -466,7 +486,7 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
     if selflift && steps < 4 {
         return err("SelfLift 兩段取樣至少要 4 步（前一半低解析度、後一半原解析度）");
     }
-    if basename(model_name) == OFFICIAL_REF2VA && steps <= 10 && !truthy(p.get("no_turbo")) && !has(&loras, TURBO_REF2VA) {
+    if official_ref2va(model_name) && steps <= 10 && !truthy(p.get("no_turbo")) && !has(&loras, TURBO_REF2VA) {
         loras.insert(0, (TURBO_REF2VA.to_string(), 1.0));
     }
     for (name, st) in &loras {
@@ -482,13 +502,13 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
                    "min_tokens": 12288, "extra_tokens": 256, "sink_conditioning": "exact_kv_and_rows", "verbose": false}),
         );
     }
-    if let (Some(v), a) = (num(p, "shift_video"), num(p, "shift_audio")) {
-        model = g.add("MiniMaxH3SigmaShift", json!({"model": model, "shift_video": v, "shift_audio": a.unwrap_or(3.0)}));
+    let (sv, sa) = (num(p, "shift_video"), num(p, "shift_audio"));
+    if sv.is_some() || sa.is_some() {
+        model = g.add("MiniMaxH3SigmaShift", json!({"model": model, "shift_video": sv.unwrap_or(12.0), "shift_audio": sa.unwrap_or(3.0)}));
     }
-    // 顯存小的卡：feedforward 切塊算，峰值顯存變低、結果一樣（ComfyUI 內建 MiniMaxChunkFeedForward）。
-    // GGUF 量化版本來就是給小顯存用的：沒指定就切 8（3070 8GB 實測過）
-    let gguf = model_name.to_lowercase().ends_with(".gguf");
-    let chunks = num(p, "ff_chunks").map(|x| x as i64).or(gguf.then_some(8));
+    // 顯存小的卡：feedforward 切塊算，峰值顯存變低、結果一樣（MiniMaxChunkFeedForward，節點在 ComfyUI-KJNodes，不是內建）。
+    // GGUF、w4a8 本來就是給小顯存用的：沒指定就切 8（3070 8GB 實測過）；ff_chunks 1＝不切
+    let chunks = num(p, "ff_chunks").map(|x| x as i64).or(low_vram_model(model_name).then_some(8));
     if let Some(c) = chunks.filter(|c| (2..=64).contains(c)) {
         model = g.add("MiniMaxChunkFeedForward", json!({"model": model, "chunks": c, "seq_threshold": 4096}));
     }
@@ -502,12 +522,26 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
         let comp = g.add("GetVideoComponents", json!({"video": src}));
         // 截到要做的長度：前處理（SDPose）不用白跑整段
         let cut = g.add("ImageFromBatch", json!({"image": G::out(&comp, 0), "batch_index": 0, "length": length}));
-        let ctl = control_video(&mut g, p, cut);
+        let ctl = control_video(&mut g, s(p, "control_type"), cut);
         let strength = num(p, "control_strength").unwrap_or(1.0);
         model = g.add(
             "MiniMaxH3FunControlNetApply",
-            json!({"model": model, "model_patch": patch, "vae": vae, "strength": strength, "start_percent": 0.0, "end_percent": 1.0, "control_video": ctl}),
+            json!({"model": model, "model_patch": patch.clone(), "vae": vae, "strength": strength, "start_percent": 0.0, "end_percent": 1.0, "control_video": ctl}),
         );
+        // 第二支控制影片（預演台：深度＋骨架），串在後面、共用同一個 patch
+        let second = s(p, "control2");
+        if !second.is_empty() {
+            let src = g.add("LoadVideo", json!({"file": second}));
+            let comp = g.add("GetVideoComponents", json!({"video": src}));
+            let cut = g.add("ImageFromBatch", json!({"image": G::out(&comp, 0), "batch_index": 0, "length": length}));
+            let kind = match s(p, "control2_type") { "" => "none", k => k };
+            let ctl = control_video(&mut g, kind, cut);
+            let strength = num(p, "control2_strength").unwrap_or(0.7);
+            model = g.add(
+                "MiniMaxH3FunControlNetApply",
+                json!({"model": model, "model_patch": patch.clone(), "vae": vae, "strength": strength, "start_percent": 0.0, "end_percent": 1.0, "control_video": ctl}),
+            );
+        }
     }
 
     // 條件＋空白潛空間
@@ -647,8 +681,8 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
 
 /// 動作控制的前處理：pose（SDPose＋RT-DETR，照官方 video_minimax_h3_fun_controlnet_union 範本）、canny（核心 Canny 節點）、
 /// none（直接用，例如已經是骨架或深度影片）。欄位名照 comfy_extras 的 nodes_sdpose.py、nodes_rtdetr.py、nodes_canny.py
-fn control_video(g: &mut G, p: &Value, frames: Value) -> Value {
-    match s(p, "control_type") {
+fn control_video(g: &mut G, kind: &str, frames: Value) -> Value {
+    match kind {
         "canny" => g.add("Canny", json!({"image": frames, "low_threshold": 0.4, "high_threshold": 0.8})),
         "none" => frames,
         _ => {
@@ -742,6 +776,11 @@ mod tests {
         assert!(by_class(&g, "MiniMaxChunkFeedForward").is_empty(), "指定 1＝不切");
         let (g, _) = build(&json!({"prompt": "x", "ff_chunks": 8}), &dir(), 0).unwrap();
         assert_eq!(by_class(&g, "MiniMaxChunkFeedForward")[0]["inputs"]["chunks"], 8);
+        // w4a8 也是小顯存版：沒指定就切 8；預設 int8 不切
+        let (g, _) = build(&json!({"prompt": "x", "model": MODEL_W4A8}), &dir(), 0).unwrap();
+        assert_eq!(by_class(&g, "UNETLoader")[0]["inputs"]["unet_name"], MODEL_W4A8);
+        assert_eq!(by_class(&g, "MiniMaxChunkFeedForward")[0]["inputs"]["chunks"], 8, "w4a8 沒指定就切 8");
+        assert!(by_class(&n, "MiniMaxChunkFeedForward").is_empty(), "int8 預設不切");
         assert_eq!(info["h3_mode"], "fl2v");
         assert_eq!(info["family"], "h3");
         assert_eq!(info["frames"], 243);
@@ -951,6 +990,9 @@ mod tests {
         assert!(e(json!([{"kind": "video", "name": "a.mp4", "use": "continue"}, {"kind": "video", "name": "b.mp4", "use": "guide"}])).contains("只能放一段"));
         assert!(e(json!([{"kind": "video", "name": "a.mp4", "use": "continue"}, {"kind": "image", "name": "a.png", "use": "anchor", "secs": 0}])).contains("第 0 秒"));
         assert!(e(json!([{"kind": "image", "name": "a.png", "use": "anchor", "secs": 0}, {"kind": "image", "name": "b.png", "use": "anchor", "secs": 0}])).contains("同一個時間點"));
+        // 中間的時間點也算；差不到一格（2.5 秒和 2.51 秒都是第 60 格）也算同一格
+        assert!(e(json!([{"kind": "image", "name": "a.png", "use": "anchor", "secs": 2.5}, {"kind": "image", "name": "b.png", "use": "anchor", "secs": 2.51}])).contains("同一個時間點"));
+        assert!(build(&board(json!([{"kind": "image", "name": "a.png", "use": "anchor", "secs": 2.5}, {"kind": "image", "name": "b.png", "use": "anchor", "secs": 3.0}])), &dir(), 0).is_ok());
         assert!(e(json!([{"kind": "video", "name": "src.mp4", "use": "guide", "lora": "swap"}])).contains("角色圖"));
         assert!(e(json!([{"kind": "image", "name": "a.png", "use": "anchor", "secs": 30}])).contains("超出"));
         assert!(e(json!([{"kind": "audio", "name": "a.wav", "use": "ref"}])).contains("不能單獨"));
@@ -1057,6 +1099,9 @@ mod tests {
         let p = json!({"h3_mode": "live", "prompt": "x", "refs": {"images": ["a.png"]}});
         let (n, _) = build(&p, &dir(), 0).unwrap();
         assert!(!by_class(&n, "LoraLoaderModelOnly").iter().any(|l| l["inputs"]["lora_name"] == TURBO_REF2VA));
+        // 官方 ref2va 的其他精度（下載中心抓得到的 bf16、子資料夾裡的）一樣補 Turbo；烤好 Turbo 的、10Eros 不補
+        assert!(official_ref2va("minimax_h3_ref2va_bf16.safetensors") && official_ref2va("h3\\Minimax_H3_Ref2VA_pruned_w4a8.safetensors") && official_ref2va(OFFICIAL_REF2VA));
+        assert!(!official_ref2va(TURBO_REF2VA) && !official_ref2va(MODEL) && !official_ref2va("minimax_h3_ref2va_turbo_int8.safetensors"));
         assert!(build(&json!({"h3_mode": "live", "prompt": "x"}), &dir(), 0).is_err());
     }
 
@@ -1070,5 +1115,39 @@ mod tests {
         let guider = by_class(&n, "BasicGuider")[0];
         assert_eq!(node(&n, &guider["inputs"]["model"])["class_type"], "MiniMaxH3FunControlNetApply");
         assert_eq!(by_class(&n, "ModelPatchLoader")[0]["inputs"]["name"], CONTROL_PATCH);
+    }
+
+    #[test]
+    fn control_with_first_uses_i2v() {
+        // 預演台：首幀＋深度控制走圖生影片（2026-10-31 PB／PD 實測就是這樣接的）；沒首幀照舊走參考生影片
+        let d = std::env::temp_dir().join(format!("h3_ctl_first_{}", std::process::id()));
+        std::fs::create_dir_all(&d).unwrap();
+        image::RgbImage::new(96, 64).save(d.join("h3_first.png")).unwrap();
+        let p = json!({"h3_mode": "control", "prompt": "x", "first": "h3_first.png", "source": "d.mp4", "control_type": "none"});
+        let (n, _) = build(&p, &d, 0).unwrap();
+        let i2v = by_class(&n, "MiniMaxH3ImageToVideo");
+        assert_eq!(i2v.len(), 1);
+        assert_eq!(node(&n, &i2v[0]["inputs"]["first_frame"])["inputs"]["image"], "h3_first.png");
+        assert!(by_class(&n, "MiniMaxH3ReferenceToVideo").is_empty());
+        assert_eq!(by_class(&n, "MiniMaxH3FunControlNetApply").len(), 1);
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn control_chains_second_video() {
+        // 預演台：深度 0.3＋骨架 0.7 兩支控制影片串接，共用同一個 patch
+        let p = json!({"h3_mode": "control", "prompt": "x", "source": "d.mp4", "control_type": "none", "control_strength": 0.3,
+                       "control2": "p.mp4", "control2_strength": 0.7});
+        let (n, _) = build(&p, &dir(), 0).unwrap();
+        let c = by_class(&n, "MiniMaxH3FunControlNetApply");
+        assert_eq!(c.len(), 2);
+        assert_eq!(by_class(&n, "ModelPatchLoader").len(), 1);
+        let (a, b) = if node(&n, &c[1]["inputs"]["model"])["class_type"] == "MiniMaxH3FunControlNetApply" { (c[0], c[1]) } else { (c[1], c[0]) };
+        assert_eq!(a["inputs"]["strength"], 0.3);
+        assert_eq!(b["inputs"]["strength"], 0.7);
+        assert_eq!(node(&n, &b["inputs"]["model"]), a);
+        assert_eq!(node(&n, &b["inputs"]["control_video"])["class_type"], "ImageFromBatch");
+        let guider = by_class(&n, "BasicGuider")[0];
+        assert_eq!(node(&n, &guider["inputs"]["model"]), b);
     }
 }

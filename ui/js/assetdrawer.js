@@ -1,5 +1,7 @@
 // 資產抽屜：生成、導演分鏡、H3 影片台、漫畫、助手共用。點一個資產 → 後端照目前的模型轉換（/api/assets/{id}/apply）→ 插文字、放圖。
-// mount(box, ctx)：ctx = { family(), insert(text), images?: { base?(r), control?(r), ref?: {add(r), count(), max, has?(name)} }, lock?(chip) }。
+// mount(box, ctx)：ctx = { family(), hint?, insert(text), images?: { base?(r), control?(r), ref?: {add(r), count(), max, has?(name), tag?(n)}, place?(it, p, toInput) }, lock?(chip), claim?(it, p) }。
+// claim：頁面自己收下這個資產（漫畫台把角色做成角色卡），回 true 就不插字。
+// ref.tag：提示詞裡怎麼寫第 n 張（預設 <imageN>）；place：頁面自己放（H3 素材板）。
 // lock：鎖定設定表的角色不插字，交給頁面做成標籤（生成頁，見 lockedchips.js）；chip = {id, name, zh, en, tags, refs}。
 // r 是 /api/to_input 的 {name, width, height}；ref.add 回傳加入後的 1 起算編號，放不下回 null。
 import { api, el, toast, store } from "./util.js";
@@ -10,9 +12,9 @@ const HINT = {
   anima: "Anima：插 tag＋一句外觀英文；有圖可以選當圖生圖底圖或構圖控制（各 1 張）",
   qwen21: "Qwen 2.1：外觀文字＋參考圖最多 10 張（4 張以內細節最好），提示詞會自動寫上第幾張圖",
   moss: "MOSS：只吃文字，圖不會送",
-  h3: "H3：中文外觀、聲音、說話語言（參考圖最多 9 張，影片台合併後再接）",
-  ltx: "導演分鏡（LTX）：插外觀文字；第一格用角色卡的原圖",
-  comic: "漫畫：插外觀文字和 tag",
+  h3: "H3：圖放進素材板（同一個角色的圖算同一個人）、音檔放聲音格，外觀和聲音寫進點子",
+  agent: "助手：圖放進附圖，外觀文字寫進句子",
+  comic: "漫畫：角色變成角色卡（外貌、參考圖、綁的 LoRA）；其他資產插外觀文字",
 };
 const drawers = [];
 const isOpen = () => store.get("assetDrawer", false);
@@ -214,7 +216,7 @@ async function apply(d, it, fam) {
   let text = p.text || "";
   const added = [];  // 這次放進多圖參考的檔名（鎖定標籤送出時照目前順序換成 <imageN>）
   try {
-    if (fam === "qwen21" && imgs.ref && p.images.length) {
+    if ((fam === "qwen21" || fam === "agent") && imgs.ref && p.images.length) {
       const max = imgs.ref.max || 10;
       const room = Math.max(0, max - imgs.ref.count());
       const ready = [];
@@ -229,19 +231,18 @@ async function apply(d, it, fam) {
         if (p.locked && d.ctx.lock && imgs.ref.has?.(r.name)) { added.push(r.name); continue; }
         if (imgs.ref.count() >= max) break;
         const n = imgs.ref.add(r);
-        if (n) { tags.push(`<image${n}>`); added.push(r.name); }
+        if (n) { tags.push(imgs.ref.tag ? imgs.ref.tag(n) : `<image${n}>`); added.push(r.name); }
       }
       if (p.images.length > room || added.length < ready.length || (p.warn || []).some((w) => w.includes("10"))) toast(`參考圖最多 ${max} 張`, "err");
       if (tags.length && imgs.ref.count() > 4) toast(`目前有 ${imgs.ref.count()} 張參考圖，4 張以內細節最好`, "err");
-      if (tags.length) text = `${it.name}（${tags.join("")}）${text ? "：" + text : ""}`;
+      if (tags.length) text = `${it.name}（${tags.join(imgs.ref.tag ? "、" : "")}）${text ? "：" + text : ""}`;
     }
   } catch (e) { toast(e.message, "err"); }
-  if ((fam === "h3" || fam === "ltx") && (p.voice || p.lang)) {
-    const voice = fam === "ltx"
-      ? `${it.name}: Voice: ${p.voice || "—"}; Language: ${p.lang || "—"}`
-      : `「${it.name}」聲音：${p.voice || "—"}；語言：${p.lang || "—"}`;
+  if (fam === "h3" && (p.voice || p.lang)) {
+    const voice = `「${it.name}」聲音：${p.voice || "—"}；語言：${p.lang || "—"}`;
     text = [text, voice].filter(Boolean).join("\n");
   }
+  if (d.ctx.claim?.(it, p)) return;
   const locked = !!(p.locked && d.ctx.lock);
   let didAdd = false;
   if (locked) {
@@ -263,6 +264,7 @@ async function apply(d, it, fam) {
       didAdd = true;
     }
   }
+  if (imgs.place) await imgs.place(it, p, (f) => toInput(it, f));
   if (didAdd && fam === "anima" && p.images.length && (imgs.base || imgs.control)) {
     d.menu = el("div", { class: "row wrap adr-menu" },
       el("span", { class: "sm" }, `「${it.name}」有圖：`),

@@ -556,7 +556,8 @@ pub fn check(sheet: &Value, prompts: &[String], r: &Rules) -> Vec<Value> {
         let ref_count = seg_ref_items(sheet, i).len();
         if h3 && refs_on && ref_count > 0 && !prompt.is_empty() {
             let base = if i == 0 && !s(&sheet["first"]["file"]).is_empty() { 2 } else { 1 };
-            if let Some(p) = (base..base + ref_count).find(|p| !prompt.contains(&format!("<Picture {p}>"))) {
+            // 缺幾個報幾個：只報第一個的話，補上一個再健檢又冒下一個
+            for p in (base..base + ref_count).filter(|p| !prompt.contains(&format!("<Picture {p}>"))) {
                 out.push(json!({"seg": i, "rule": 7, "level": "warn", "word": format!("<Picture {p}>"), "msg": "有勾參考圖，但提示詞裡找不到對應的圖號（手改時刪掉了？）"}));
             }
         }
@@ -801,7 +802,7 @@ mod tests {
         // 英文用空白接
         let en = put_locked("integrated_multimodal_description: Style: anime.", "Ko (S1): female.", false);
         assert_eq!(en, "integrated_multimodal_description: Ko (S1): female. Style: anime.");
-        // 沒有 H3 欄位名（LTX 等引擎）：放在最前面一行
+        // 沒有 H3 欄位名（自訂工作流等引擎）：放在最前面一行
         assert_eq!(put_locked("Style: anime.\nShe turns.", "S1 Ko: female.", false), "S1 Ko: female.\nStyle: anime.\nShe turns.");
         assert_eq!(put_locked("", "S1 Ko: female.", false), "S1 Ko: female.");
         assert_eq!(put_locked("anything", "", true), "anything");

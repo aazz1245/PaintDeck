@@ -33,19 +33,19 @@ fn http() -> &'static reqwest::Client {
 }
 
 #[cfg(windows)]
-fn seal(s: &str) -> Result<String, String> {
+pub(super) fn seal(s: &str) -> Result<String, String> {
     crate::settings::protect(s).map_err(|e| format!("加密金鑰失敗：{e}"))
 }
 #[cfg(not(windows))]
-fn seal(s: &str) -> Result<String, String> {
+pub(super) fn seal(s: &str) -> Result<String, String> {
     Ok(s.to_string())
 }
 #[cfg(windows)]
-fn unseal(s: &str) -> Option<String> {
+pub(super) fn unseal(s: &str) -> Option<String> {
     crate::settings::unprotect(s).ok()
 }
 #[cfg(not(windows))]
-fn unseal(s: &str) -> Option<String> {
+pub(super) fn unseal(s: &str) -> Option<String> {
     Some(s.to_string())
 }
 
@@ -200,10 +200,22 @@ pub type Fetched = (String, String, Vec<u8>);
 /// 送一份節點圖上 RunningHub 跑完、把成品抓回來（不存檔）。job＝(工作編號前面要記進工作清單的 params, info)，長片不記
 pub async fn run_files(
     app: &Shared,
+    nodes: Map<String, Value>,
+    job: Option<(&Value, &Value)>,
+    token: &CancellationToken,
+    on_status: &(dyn Fn(String) + Send + Sync),
+) -> Result<(String, Vec<Fetched>), String> {
+    run_files_in(app, nodes, job, token, on_status, None).await
+}
+
+/// 同 run_files；wid＝建任務時帶的 workflowId（下載中心「在 RunningHub 跑」帶那個工作流自己的編號），None＝設定裡的
+pub async fn run_files_in(
+    app: &Shared,
     mut nodes: Map<String, Value>,
     job: Option<(&Value, &Value)>,
     token: &CancellationToken,
     on_status: &(dyn Fn(String) + Send + Sync),
+    wid: Option<&str>,
 ) -> Result<(String, Vec<Fetched>), String> {
     let c = cfg(app);
     if c.key.is_empty() {
@@ -224,11 +236,13 @@ pub async fn run_files(
     }
     rh::rewrite(&mut nodes, &map, &c.models);
     on_status("送到 RunningHub…".into());
-    let created = post_json(&c, "/task/openapi/create", &rh::create_body(&c.key, &nodes, c.instance, &c.workflow_id)).await?;
+    let created = post_json(&c, "/task/openapi/create", &rh::create_body(&c.key, &nodes, c.instance, wid.unwrap_or(&c.workflow_id))).await?;
     let task = rh::parse_create(&created)?;
     let jid = format!("rh-{task}");
     if let Some((params, info)) = job {
         app.db.add_job(&jid, params, info).map_err(|e| e.to_string())?;
+        // RunningHub 收下就算開始跑了（它自己的排隊也在算時間）：2026-11-10 以前全程顯示「排隊中」
+        let _ = app.db.set_job(&jid, "running", None);
     }
     let fail = |e: &str| {
         if job.is_some() {
@@ -268,17 +282,19 @@ pub async fn run_files(
     let mut got = vec![];
     for o in &outs {
         let (sub, base) = rh::local_name(&nodes, o);
-        let bytes = http()
-            .get(&o.url)
-            .timeout(Duration::from_secs(900))
-            .send()
-            .await
-            .and_then(|r| r.error_for_status())
-            .map_err(|e| format!("下載 RunningHub 的成品失敗：{e}"))?
-            .bytes()
-            .await
-            .map_err(|e| format!("下載 RunningHub 的成品失敗：{e}"))?;
-        got.push((sub, base, bytes.to_vec()));
+        let res = async {
+            http().get(&o.url).timeout(Duration::from_secs(900)).send().await.and_then(|r| r.error_for_status())?.bytes().await
+        }
+        .await;
+        match res {
+            Ok(bytes) => got.push((sub, base, bytes.to_vec())),
+            Err(e) => {
+                // 下載失敗也要把工作記成失敗：2026-11-10 以前這裡直接跳出，工作永遠停在「排隊中」
+                let msg = format!("下載 RunningHub 的成品失敗：{e}（任務編號 {task}，成品還在 RunningHub 網站的任務頁）");
+                fail(&msg);
+                return Err(msg);
+            }
+        }
     }
     Ok((jid, got))
 }
@@ -292,10 +308,29 @@ pub async fn run_graph(
     token: &CancellationToken,
     on_status: &(dyn Fn(String) + Send + Sync),
 ) -> Result<(String, Vec<i64>), String> {
-    let (job, got) = run_files(app, nodes, Some((params, info)), token, on_status).await?;
+    run_graph_in(app, nodes, params, info, token, on_status, None).await
+}
+
+/// 同 run_graph；wid 見 run_files_in
+pub async fn run_graph_in(
+    app: &Shared,
+    nodes: Map<String, Value>,
+    params: &Value,
+    info: &Value,
+    token: &CancellationToken,
+    on_status: &(dyn Fn(String) + Send + Sync),
+    wid: Option<&str>,
+) -> Result<(String, Vec<i64>), String> {
+    let (job, got) = run_files_in(app, nodes, Some((params, info)), token, on_status, wid).await?;
     let mut ids = vec![];
     for (sub, base, bytes) in &got {
-        ids.extend(super::api_cloud::keep_output(app, sub, base, bytes, params, info, &job)?);
+        match super::api_cloud::keep_output(app, sub, base, bytes, params, info, &job) {
+            Ok(v) => ids.extend(v),
+            Err(e) => {
+                let _ = app.db.set_job(&job, "error", Some(&e));
+                return Err(e);
+            }
+        }
     }
     let _ = app.db.set_job(&job, "done", None);
     Ok((job, ids))

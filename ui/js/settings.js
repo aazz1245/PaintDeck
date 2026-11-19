@@ -1,12 +1,13 @@
 // 設定：Civitai API key、成人預覽模糊、預設負面提示詞、AI 改寫、影片模型、模型與工作流（models.js）、匯出／匯入、恢復原廠（可救回）
-import { $, el, api, toast } from "./util.js";
+import { $, el, api, toast, copyText } from "./util.js";
 import { app } from "./state.js";
 import * as i18n from "./i18n.js";
 import { resetDock } from "./dock.js";
-import { LTX_NAME, H3_NAME } from "./gen.js";
+import { H3_NAME } from "./gen.js";
 import * as models from "./models.js";
 import { mountNet } from "./net.js";
 import { mountComfyOpts } from "./comfyopts.js";
+import { mountNodes } from "./nodes.js";
 import { mountSkills } from "./skills.js";
 import { applyStrip } from "./feature.js";
 import { openAi } from "./studio.js";
@@ -19,6 +20,23 @@ import * as diagnostics from "./diagnostics.js";
 const DEFAULT_PARTS = ["gallery", "uploads", "presets"];
 // 這個瀏覽器記住的東西（localStorage 前綴 aw_）
 const BROWSER_KEYS = ["form", "pe", "recent", "snippets", "snippetsMoved", "libView", "theme", "galFilters", "notify"];  // 介面語言（lang）恢復原廠也保留
+
+// 設定頁「接 SillyTavern」：酒館要填的網址（就是繪匣自己的網址）、複製、檢查 A1111 相容接口（api_sdapi.rs）
+function mountTavern() {
+  const url = location.protocol === "http:" ? location.origin : "http://127.0.0.1:8190";
+  $("#tavernUrl").textContent = url;
+  $("#tavernCopy").onclick = async () => { await copyText(url); toast("網址複製好了，貼到酒館的 URL 欄", "ok"); };
+  $("#tavernTest").onclick = async () => {
+    const b = $("#tavernTest");
+    b.disabled = true;
+    try {
+      const list = await api("/sdapi/v1/sd-models", { timeout: 30000 });
+      if (!list?.length) toast("接口正常，但沒有能用的模型：酒館只會列 Anima、Qwen 2.1、MOSS 的模型", "err");
+      else toast(`接口正常，酒館看得到 ${list.length} 顆模型`, "ok");
+    } catch (e) { toast("接口沒有回應：" + e.message, "err"); }
+    finally { b.disabled = false; }
+  };
+}
 
 export function init() {
   updates.init();
@@ -35,6 +53,7 @@ export function init() {
     resetDock();
     toast("版面都恢復成預設了", "ok");
   };
+  mountTavern();
   // 儲存失敗要講出來（不然按了沒反應，使用者以為存好了）
   $("#setKeySave").onclick = async () => {
     try {
@@ -43,6 +62,22 @@ export function init() {
       await app.refreshState();
       toast("已儲存", "ok");
     } catch (e) { toast("儲存失敗：" + e.message, "err"); }
+  };
+  // 魔塔金鑰（下載中心，server\api_hub.rs）：只回有沒有填，不回內容
+  const msSave = async (key) => {
+    try {
+      const r = await api("/api/hub/modelscope", { json: { key } });
+      $("#setMsKey").value = "";
+      paintMs(r.has_key);
+      toast(r.has_key ? "魔塔金鑰存好了" : "魔塔金鑰清掉了", "ok");
+    } catch (e) { toast("儲存失敗：" + e.message, "err"); }
+  };
+  $("#setMsSave").onclick = () => { const k = $("#setMsKey").value.trim(); if (!k) return toast("先貼上 Access Token", "err"); msSave(k); };
+  $("#setMsClear").onclick = () => { if (confirm("清掉魔塔金鑰？")) msSave(""); };
+  $("#setMsTest").onclick = async () => {
+    $("#setMsState").textContent = "測試中…";
+    try { await api("/api/hub/modelscope/test", { json: {}, timeout: 60000 }); toast("魔塔登入成功", "ok"); $("#setMsState").textContent = "目前狀態：已設定，登入成功"; }
+    catch (e) { $("#setMsState").textContent = "測試失敗：" + e.message; }
   };
   $("#setBlur").onchange = async () => {
     try { await api("/api/settings", { json: { blur_nsfw: $("#setBlur").checked } }); await app.refreshState(); }
@@ -60,9 +95,14 @@ export function init() {
     if (!(temp >= 0.1 && temp <= 1.5)) return toast("隨機程度請填 0.1～1.5", "err");
     if ($("#setPeMode").value === "partial" && !(layers >= 1 && layers <= 40)) return toast("層數請填 1～40", "err");
     try {
-      await api("/api/settings", { json: { pe_mode: $("#setPeMode").value, pe_engine: $("#setPeEngine").value, pe_general: $("#setPeGeneral").value, pe_partial_layers: layers || 16, pe_idle: idle, pe_temperature: temp,
+      await api("/api/settings", { json: { pe_mode: $("#setPeMode").value, pe_general: $("#setPeGeneral").value, pe_partial_layers: layers || 16, pe_idle: idle, pe_temperature: temp,
         pe_close_after: $("#setPeClose").checked, pe_zh: $("#setPeZh").checked, pe_think: $("#setPeThink").checked } });
       await app.refreshState();
+      // 「預設開啟中文對照／深度思考」改了：AI 改寫面板的兩個勾選框跟著換（面板自己會記住）
+      for (const [id, on] of [["peZhOn", $("#setPeZh").checked], ["peThinkOn", $("#setPeThink").checked]]) {
+        const box = $("#" + id);
+        if (box && box.checked !== on) { box.checked = on; box.dispatchEvent(new Event("change", { bubbles: true })); }
+      }
       toast("已儲存（下次改寫生效；換執行方式會重新載入模型）", "ok");
     } catch (e) { toast(e.message, "err"); }
   };
@@ -77,7 +117,7 @@ export function init() {
   $("#setPrReset").onclick = () => { if (confirm("還原成預設的系統提示詞？自訂的內容會刪掉。")) savePrompt(""); };
   loadPrompts();
 
-  // 影片模型：內建 LTX-2.3，或匯入的 ComfyUI 工作流（選了就存）
+  // 影片模型：內建 MiniMax H3，或匯入的 ComfyUI 工作流（選了就存）
   $("#setVidEngine").onchange = async () => {
     const id = $("#setVidEngine").value;
     showVideo();
@@ -97,7 +137,7 @@ export function init() {
   vidmap.init();
   $("#setVidDel").onclick = async () => {
     const w = VID?.workflows.find((x) => x.id === $("#setVidEngine").value);
-    if (!w || !confirm(`刪掉影片工作流「${w.name}」？影片會換回內建的 LTX。（你電腦上原本的 JSON 檔不受影響）`)) return;
+    if (!w || !confirm(`刪掉影片工作流「${w.name}」？影片會換回內建的 MiniMax H3。（你電腦上原本的 JSON 檔不受影響）`)) return;
     try {
       await api(`/api/video/workflows/${encodeURIComponent(w.id)}`, { method: "DELETE" });
       await loadVideo();
@@ -123,6 +163,7 @@ export function init() {
       if (r.pe_prompts) parts.push(`AI 改寫提示詞 ${r.pe_prompts} 個`);
       let msg = "已匯入：設定、" + parts.join("、");
       if (r.backup_dir) msg += `\n同名但內容不同的舊檔搬到資料資料夾的 ${r.backup_dir}`;
+      if (r.asset_files_missing) msg += `\n有 ${r.asset_files_missing} 筆資產的圖片或聲音檔不在這台電腦（設定檔只帶文字和縮圖），要用請重新加檔`;
       const w = r.warnings || [];
       if (w.length) msg += "\n這幾項沒匯入：\n・" + w.slice(0, 6).join("\n・") + (w.length > 6 ? `\n…還有 ${w.length - 6} 項` : "");
       toast(msg, w.length ? "err" : "ok");
@@ -139,10 +180,10 @@ let VID = null;
 async function loadVideo() {
   try { VID = await api("/api/video/workflows"); } catch (e) { $("#setVidInfo").textContent = "讀不到：" + e.message; return; }
   const sel = $("#setVidEngine");
-  sel.replaceChildren(el("option", { value: VID.builtin.id }, LTX_NAME), el("option", { value: "h3" }, H3_NAME),
+  sel.replaceChildren(el("option", { value: VID.builtin.id }, H3_NAME),
     ...VID.workflows.map((w) => el("option", { value: w.id }, w.name + (w.error ? "（讀不懂）" : ""))));
   // 設定裡的工作流檔不見了：列出來讓人知道，生成時會報錯
-  if (![VID.builtin.id, "h3", ...VID.workflows.map((w) => w.id)].includes(VID.engine)) sel.append(el("option", { value: VID.engine }, VID.engine + "（找不到）"));
+  if (![VID.builtin.id, ...VID.workflows.map((w) => w.id)].includes(VID.engine)) sel.append(el("option", { value: VID.engine }, VID.engine + "（找不到）"));
   sel.value = VID.engine;
   showVideo();
 }
@@ -155,11 +196,7 @@ function showVideo() {
   $("#setVidDel").hidden = !w;
   $("#setVidMap").hidden = !w;
   if (id === VID?.builtin.id) {
-    box.textContent = "內建：LTX-2.3（10Eros v1.5 DMD INT8），兩段 9＋3 步、每秒 24 格、有聲音；可以選 3～8 秒、480p／720p、先出預覽。模型要自己下載，見說明第 01 章。";
-    return;
-  }
-  if (id === "h3") {
-    box.textContent = "MiniMax H3（10Eros 無審核版）：1～15 秒、每秒 24 格、有聲音，玩法很多（首尾幀、多素材參考、換角色、特效…）。要 48GB 以上的顯卡，一般都在雲端跑。選了以後，生成頁和圖庫的「動起來」會把圖帶到「導演 → H3 影片」；導演台的分鏡還不能用 H3。";
+    box.textContent = "內建：MiniMax H3（10Eros 無審核版），1～15 秒、每秒 24 格、有聲音；「動起來」和導演台都用它，快速＝480p、高畫質＝720p。本機要到安裝精靈勾「H3 影片（本機，選配）」：8GB 顯卡用 w4a8 版跑得動（512×768 5 秒約 3～4 分鐘）；也可以開雲端跑。更多玩法（首尾幀、多素材參考、換角色、特效…）在「導演 → H3 影片」。";
     return;
   }
   if (!w) { box.textContent = "找不到這個工作流的檔案：重新匯入，或換一個。"; return; }
@@ -219,6 +256,11 @@ async function loadPrompts(keep) {
   if (PROMPTS.some((p) => p.id === want)) sel.value = want;
   showPrompt();
 }
+/** 別頁（API 頁的「改內建指令」）叫：打開自訂系統提示詞、選到這一份 */
+export async function openPrompt(id) {
+  await loadPrompts(id);
+  $("#setPrompts")?.scrollIntoView({ block: "start" });
+}
 function showPrompt() {
   const p = PROMPTS.find((x) => x.id === $("#setPrSel").value);
   if (!p) return;
@@ -267,6 +309,7 @@ async function doReset() {
   const parts = [...document.querySelectorAll("#resetParts input:checked")].map((x) => x.value);
   const browser = $("#resetBrowser").checked;
   if (!parts.length && !browser) return toast("先勾選要清掉哪些部分", "err");
+  if (parts.length && !resetInfo) return toast("恢復原廠的清單還沒讀到：等一下再按，或重開設定頁", "err");
   // 換了介面語言，畫面要人打的是翻過的字（Factory Reset／恢复原厂），兩種都收；送給伺服器的一律是「恢復原廠」
   const typed = $("#resetConfirm").value.trim().toLowerCase();
   if (typed !== "恢復原廠" && typed !== i18n.tr("恢復原廠").toLowerCase()) { $("#resetConfirm").focus(); return toast("請在框裡輸入「恢復原廠」四個字", "err"); }
@@ -306,6 +349,30 @@ async function undoReset(r) {
   } catch (e) { toast(e.message, "err"); }
 }
 
+// 「通用模型」選單：自動／35B／9B 之外，列出 LLM 資料夾裡每一顆能對話的模型讓人自己指定（2026-10-29 使用者：「讓別人自己決定要用什麼模型」）。
+// 寫明能不能看圖、是不是 Qwen 系列（別家不保證寫得出生圖站要的格式）；指定的檔不見了，後端照自動挑
+function fillGeneral(list, cur) {
+  const sel = $("#setPeGeneral");
+  const key = JSON.stringify([list, cur]);
+  if (sel.dataset.key === key) return;
+  sel.dataset.key = key;
+  sel.querySelector("optgroup")?.remove();
+  if (list.length || !["auto", "35b", "9b"].includes(cur)) {
+    const g = el("optgroup", { label: "指定這一顆（LLM 資料夾裡的模型）" });
+    for (const m of list) {
+      const gb = (m.size / 1e9).toFixed(1), n = m.name;
+      // 整句寫死（介面翻譯照整句比對，拼起來的翻不到）
+      const label = m.qwen
+        ? (m.vision ? `${n}（${gb}GB，能看圖）` : `${n}（${gb}GB，沒有看圖檔：助手看不了圖）`)
+        : (m.vision ? `${n}（${gb}GB，能看圖；非 Qwen 系列，不保證寫得出生圖站要的格式）` : `${n}（${gb}GB，沒有看圖檔；非 Qwen 系列，不保證寫得出生圖站要的格式）`);
+      g.append(el("option", { value: n }, label));
+    }
+    if (!["auto", "35b", "9b"].includes(cur) && !list.some((m) => m.name === cur)) g.append(el("option", { value: cur }, `${cur}（找不到這個檔，現在照自動挑）`));
+    sel.append(g);
+  }
+  sel.value = cur;
+}
+
 export function onState(st) {
   const s = st.settings || {};
   $("#setKeyState").textContent = s.has_civitai_key ? "目前狀態：已設定 API key（要更換就貼上新的再按儲存，留空儲存＝清除）" : "目前狀態：未設定";
@@ -313,8 +380,7 @@ export function onState(st) {
   if (document.activeElement !== $("#setNeg")) $("#setNeg").value = s.negative || "";
   if (!$("#setPe").contains(document.activeElement)) {
     $("#setPeMode").value = s.pe_mode || "gpu";
-    $("#setPeEngine").value = s.pe_engine === "official" ? "official" : "general";
-    $("#setPeGeneral").value = s.pe_general || "auto";
+    fillGeneral(st.pe?.general_models || [], s.pe_general || "auto");
     $("#setPeLayers").value = s.pe_partial_layers ?? 16;
     $("#setPeIdle").value = s.pe_idle ?? 120;
     $("#setPeTemp").value = s.pe_temperature ?? 1;
@@ -330,9 +396,8 @@ export function onPe(pe) {
   if (!pe) return;
   if (!pe.ok) { $("#setPeState").textContent = "無法使用：" + pe.error; return; }
   const a = pe.available || {};
-  // 預設用通用模型；選了官方 PE 才看 PE 那兩顆
-  const official = $("#setPeEngine")?.value === "official";
-  const miss = official ? ["t2i", "i2i"].filter((k) => !a[k]).map((k) => "官方 PE " + k) : a.adult ? [] : ["通用模型 9B／35B"];
+  // 只剩通用模型（2026-10-30 官方 PE 拿掉了）：缺 9B／35B，或缺它的看圖檔
+  const miss = !a.adult ? ["通用模型 9B／35B"] : a.vision ? [] : ["看圖檔 mmproj（改圖、生圖助手看圖要用）"];
   $("#setPeState").textContent = (pe.running ? `執行中：${pe.kind}（${pe.ngl === 0 ? "CPU" : pe.ngl >= 99 ? "GPU" : "GPU " + pe.ngl + " 層"}）` : "目前沒有載入")
     + (miss.length ? `・缺模型：${miss.join("、")}` : "") + (a.server ? "" : "・缺 llama-server.exe");
 }
@@ -344,8 +409,15 @@ export function show() {
   loadReset(); loadVideo(); models.show(); if (!PROMPTS.length) loadPrompts();
   if (!netShown) { netShown = true; mountNet($("#netBox")); } // 網路（代理、下載來源）：第一次打開設定頁才讀
   mountComfyOpts($("#comfyOptsBox")); // ComfyUI 啟動方式：每次打開都重讀（安裝與修復可能改過）
+  mountNodes($("#nodesBox")); // 工作節點（多張顯卡、遠端 ComfyUI）：每次打開都重讀（可能自己改過設定）
   mountSkills($("#setSkills")); // 外掛寫法：每次打開都重讀（可能自己放了資料夾進去）
   mountFeatures(); // 外掛功能（內容補丁）：每次打開都重讀
+  api("/api/hub/modelscope").then((r) => paintMs(r.has_key)).catch(() => {});
+}
+
+function paintMs(has) {
+  $("#setMsState").textContent = has ? "目前狀態：已設定（要換就貼新的再按儲存）" : "目前狀態：未設定（搜、下載公開模型不用填）";
+  $("#setMsKey").placeholder = has ? "已設定" : "未設定";
 }
 
 let featuresWired = false;

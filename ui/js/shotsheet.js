@@ -15,7 +15,7 @@ const LANG_ALIAS = { Chinese: ["zh", "cn", "chinese", "中文", "國語", "普�
   English: ["en", "english", "英文", "英語"], Korean: ["ko", "kr", "korean", "韓文", "韓語"], Cantonese: ["yue", "cantonese", "粵語", "廣東話"] };
 const normLang = (v) => { const c = String(v || "").trim().toLowerCase(); return Object.keys(LANG_ALIAS).find((k) => LANG_ALIAS[k].includes(c)) || ""; };
 const LAYOUT = [["top", "上方"], ["bottom", "下方"], ["left", "左邊"], ["right", "右邊"], ["fg", "前景"], ["mid", "中景"], ["bg", "遠景"], ["light", "光線"]];
-const BRAINS = [["9b", "9B（快）"], ["35b", "35B（準）"], ["cloud", "雲端"]];
+const BRAINS = [["9b", "9B（快）"], ["35b", "35B（準）"], ["cloud", "雲端"], ["api", "外接 API"]];
 // /api/shotsheet/meta 回來前先用這組（跟 shotsheet.rs 的常數一樣）
 const LIM = { tail: 1.6, handover: 0.7, early: 1, min_secs: 5, max_secs: 15, max_segs: 30, max_cast: 4, max_refs: 8 };
 
@@ -51,7 +51,7 @@ function fill(x) {
   x = x && typeof x === "object" ? x : {};
   const segs = Array.isArray(x.segments) && x.segments.length ? x.segments.slice(0, LIM.max_segs) : [{}];
   return {
-    ...b, engine: x.engine === "ltx" ? "ltx23" : x.engine || "h3", title: x.title || "", lang: x.lang === "en" ? "en" : "zh", style: x.style || "", camera: x.camera || "", early: x.early !== false,
+    ...b, engine: ["ltx", "ltx23"].includes(x.engine) ? "h3" : x.engine || "h3", title: x.title || "", lang: x.lang === "en" ? "en" : "zh", style: x.style || "", camera: x.camera || "", early: x.early !== false,
     first: { ...b.first, ...(x.first || {}) },
     refs: { on: !!x.refs?.on, items: (x.refs?.items || []).slice(0, LIM.max_refs).map((r) => ({ file: r.file || null, asset_id: r.asset_id ?? null, who: r.who || "" })) },
     scene: { text: x.scene?.text || "", layout: { ...(x.scene?.layout || {}) } },
@@ -70,7 +70,7 @@ function fill(x) {
 export function current() { return S; }
 
 export function requiresFirstFrame(engine = S.engine) {
-  if (engine === "h3" || engine === "ltx23") return true;
+  if (engine === "h3") return true;
   const flow = workflows.find((w) => w.id === engine);
   if (!flow?.info || !("image" in flow.info)) return true;
   return !!flow.info.image || (flow.media_slots || flow.info.media_slots || []).some((s) => s.kind === "image" && s.role === "first");
@@ -157,6 +157,7 @@ export function setSegCount(n) {
     const lost = S.segments.slice(n).map((s, k) => (hasContent(s) ? n + k + 1 : 0)).filter(Boolean);
     if (lost.length && !confirm(`第 ${lost.join("、")} 段已經寫了東西，確定拿掉？`)) { paint(); return false; }
     S.segments.splice(n);
+    issues = issues.filter((x) => !(x.seg >= n));  // 拿掉的段的健檢提醒一起拿掉
   } else while (S.segments.length < n) S.segments.push(seg());
   if (S.engine === "h3" && (cur === 1) !== (n === 1)) studio.openVideo(n === 1 ? "short" : "long");
   save();
@@ -169,7 +170,9 @@ export function setSegCount(n) {
 export async function addCast(it) {
   if (S.cast.length >= LIM.max_cast) { toast(`角色最多 ${LIM.max_cast} 個`, "err"); return false; }
   let p;
+  const draft = S;
   try { p = await api(`/api/assets/${it.id}/apply`, { json: { family: "h3" } }); } catch (e) { toast(e.message, "err"); return false; }
+  if (S !== draft) return false;  // 等的時候換了一張拍攝單：不要把角色加進別張
   if (S.cast.length >= LIM.max_cast) { toast(`角色最多 ${LIM.max_cast} 個`, "err"); return false; }
   castImgs.set(it.id, p.images || []);
   const locked = !!p.locked;
@@ -309,7 +312,7 @@ function paintHeadEl() {
   count.onchange = () => setSegCount(count.value);
   const tpl = el("select", { class: "sm", "aria-label": "從範本開始", onchange: () => useTemplate(tpl) }, el("option", { value: "" }, "從範本開始…"));
   fillTemplates(tpl);
-  const engines = [["h3", "MiniMax H3"], ["ltx23", "LTX-2.3（內建）"], ...workflows.filter((w) => !["h3", "ltx23"].includes(w.id)).map((w) => [w.id, `自訂：${w.name || w.id}`])];
+  const engines = [["h3", "MiniMax H3"], ...workflows.filter((w) => w.id !== "h3").map((w) => [w.id, `自訂：${w.name || w.id}`])];
   if (!engines.some(([id]) => id === S.engine)) engines.push([S.engine, `自訂：${S.engine}（目前找不到）`]);
   return el("div", { class: "row wrap sh-head" },
     el("label", { class: "row" }, el("span", {}, "影片引擎"), select(S.engine, engines, setEngine, { "aria-label": "拍攝單影片引擎" })),
@@ -412,6 +415,8 @@ async function addRef(get, who = "") {
     const draft = S;
     const r = await get();
     if (!r || S !== draft) return;
+    // 同一張放兩次會變成兩個 <Picture N> 指同一張圖（鎖定角色自動放過的，再按「用角色的圖」最常見）
+    if (S.refs.items.some((x) => x.file === r.name)) { if (!who) toast("這張已經在參考圖裡了", "err"); return; }
     if (S.refs.items.filter((x) => x.file).length >= LIM.max_refs) return toast(`參考圖最多 ${LIM.max_refs} 張`, "err");
     const empty = S.refs.items.find((x) => !x.file && r.asset_id && x.asset_id === r.asset_id) || S.refs.items.find((x) => !x.file);
     const item = { file: r.name, asset_id: r.asset_id ?? empty?.asset_id ?? null, who: who || empty?.who || "" };
@@ -648,7 +653,10 @@ export async function applyTo() {
   if (applying) return;
   applying = true;
   try {
-  if (!(await composeNow())) return;
+  // 剛打完字 0.3 秒內按下去：自動重組會插隊、這次的結果作廢。多試幾次；真的組不出來要講，不能按了沒反應
+  let composed = false;
+  for (let k = 0; k < 4 && !composed; k++) composed = await composeNow();
+  if (!composed) return toast("提示詞沒組出來：再按一次，或先按「直接組」看是哪裡出錯", "err");
   const draft = S, version = seq;
   const prompts = S.segments.map((s) => s.prompt);
   if (prompts.some((p) => !p.trim())) return toast("有段落還沒有提示詞：先按「直接組」", "err");

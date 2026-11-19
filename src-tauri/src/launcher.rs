@@ -28,6 +28,13 @@ pub fn set_note(n: Option<String>) {
     *NOTE.lock().unwrap_or_else(|e| e.into_inner()) = n;
 }
 
+/// 開站時做過的檢查（A 卡 PyTorch 補裝…）：下一次開 ComfyUI 時寫在 comfyui.log 第一段，網友回報只給 log 也看得到
+static LOG_NOTES: Mutex<Vec<String>> = Mutex::new(Vec::new());
+
+pub fn log_note(n: String) {
+    LOG_NOTES.lock().unwrap_or_else(|e| e.into_inner()).push(n);
+}
+
 /// 驅動那一類錯誤要叫使用者看哪一家：backend＝gpu::comfy_backend（這份 ComfyUI 的 PyTorch 是哪一種），
 /// machine()＝這台電腦自動判斷該裝哪一版（gpu::auto_plan 的 variant，要偵測顯示卡，用到才問）。
 /// "nvidia"＝照舊（N 卡、認不出來）；"amd"＝ROCm（AMD 版）；"intel"＝XPU（Intel 版）；"zluda"＝ZLUDA 版；
@@ -59,7 +66,7 @@ fn failure_text(log_tail: &str, gpu: &str) -> (String, String) {
     let has = |ks: &[&str]| ks.iter().any(|k| low.contains(k));
     const NVIDIA_ERR: &[&str] = &["torch not compiled with cuda", "no kernel image", "cuda driver version is insufficient", "found no nvidia driver", "nvidia driver on your system is too old"];
     // ROCm（AMD 版）找不到顯示卡、這張卡沒有對應的程式（架構選錯）、驅動太舊載不起 amdhip64
-    const AMD_ERR: &[&str] = &["no hip gpus are available", "hip error", "hiperror", "invalid device function", "amdhip64"];
+    const AMD_ERR: &[&str] = &["no hip gpus are available", "hip error", "hiperror", "invalid device function", "invalid kernel file", "amdhip64"];
     // XPU（Intel 版）找不到顯示卡、Level Zero／SYCL 執行階段出錯（多半是驅動太舊）
     const INTEL_ERR: &[&str] = &["no xpu devices", "xpu device not", "torch not compiled with xpu", "level_zero", "ze_result", "ur_result_error", "pi_error"];
     // ZLUDA：HIP SDK 跟 ZLUDA 版本對不上（0xC0000135＝找不到 DLL）、cuBLAS 不支援
@@ -99,7 +106,7 @@ fn failure_text(log_tail: &str, gpu: &str) -> (String, String) {
 
 /// 盯著自己開的 ComfyUI：還沒開好就結束、或開好之後自己關掉（不是生圖站關的），把原因記到 NOTE。
 /// backend＝gpu::comfy_backend（PyTorch 是 NVIDIA 版、AMD 版、Intel 版還是 ZLUDA，驅動提示才講得對）
-fn watch(child: Arc<Mutex<Option<Child>>>, log: PathBuf, backend: Option<&'static str>, diagnostics: Arc<Mutex<Option<std::sync::Weak<crate::diagnostics::Store>>>>) {
+fn watch(who: String, child: Arc<Mutex<Option<Child>>>, log: PathBuf, backend: Option<&'static str>, diagnostics: Arc<Mutex<Option<std::sync::Weak<crate::diagnostics::Store>>>>) {
     std::thread::spawn(move || loop {
         std::thread::sleep(Duration::from_secs(3));
         let (pid,code) = {
@@ -124,7 +131,7 @@ fn watch(child: Arc<Mutex<Option<Child>>>, log: PathBuf, backend: Option<&'stati
         let (hint, last) = failure_text(&tail, gpu);
         let code = code.map(|c| format!("（結束代碼 {c}）")).unwrap_or_default();
         let last = if last.is_empty() { String::new() } else { format!("。最後的錯誤：{last}") };
-        set_note(Some(format!("ComfyUI 關掉了{code}：{hint}{last}。完整紀錄在 {}", log.display())));
+        set_note(Some(format!("{who} 關掉了{code}：{hint}{last}。完整紀錄在 {}", log.display())));
         return;
     });
 }
@@ -251,8 +258,34 @@ fn comfy_running(port: u16) -> bool {
 
 /// ZLUDA 版自己的 bat 預設參數（patientx/ComfyUI-Zluda 的 comfyui-n.bat，2026-10-21）：找不到 bat 時用
 const ZLUDA_ARGS: &[&str] = &["--use-quad-cross-attention", "--reserve-vram", "0.9", "--disable-async-offload", "--disable-pinned-memory"];
+/// RX 6000 專用（gfx103X）PyTorch 的 ComfyUI 參數和環境變數（comfyui-rinsei 的 comfyui_rinsei.bat，2026-11-05）
+const GFX103_ARGS: &[&str] = &["--use-quad-cross-attention", "--disable-async-offload"];
+const GFX103_ENV: &[(&str, &str)] = &[
+    ("HSA_OVERRIDE_GFX_VERSION", "10.3.0"),
+    ("MIOPEN_FIND_MODE", "2"),
+    ("MIOPEN_FIND_ENFORCE", "1"),
+    ("MIOPEN_SEARCH_CUTOFF", "1"),
+    ("MIOPEN_ENABLE_LOGGING", "0"),
+    ("GPU_MAX_HEAP_SIZE", "100"),
+    ("GPU_MAX_ALLOC_PERCENT", "100"),
+    ("PYTORCH_HIP_ALLOC_CONF", "expandable_segments:True"),
+];
+/// RX 6000（gfx103x）不能用 hipBLASLt（2026-11-06 回報：RX 6750 XT 按生圖，SamplerCustomAdvanced 報
+/// HIPBLAS_STATUS_INVALID_VALUE when calling hipblasLtMatmulAlgoGetHeuristic）。查過 gfx103X 套件：hipBLASLt 只帶 gfx1100 的 kernel，
+/// rocBLAS 才有 gfx1030～1036；torch 2.10.0+rocm7.14 的 addmm（帶 bias 的線性層）卻把 gfx1030 列在可走 hipBLASLt 的清單裡。
+/// DISABLE_ADDMM_CUDA_LT＝addmm 改走 rocBLAS；TORCH_BLAS_PREFER_HIPBLASLT=0＝其他矩陣乘法的預設庫也維持 rocBLAS
+const NO_HIPBLASLT_ENV: &[(&str, &str)] = &[("DISABLE_ADDMM_CUDA_LT", "1"), ("TORCH_BLAS_PREFER_HIPBLASLT", "0")];
 /// 要另外加的環境變數（名稱, 值）
 type Env = Vec<(String, String)>;
+
+static PCI_ORDER: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// 設定裡有開本機別張卡的節點：主節點的 ComfyUI 也照 nvidia-smi 的卡號順序開（main.rs 開 ComfyUI 之前設）
+pub fn set_pci_order(on: bool) {
+    PCI_ORDER.store(on, std::sync::atomic::Ordering::Relaxed);
+}
+fn pci_order() -> bool {
+    PCI_ORDER.load(std::sync::atomic::Ordering::Relaxed)
+}
 
 /// 從 ZLUDA 的 bat 帶過來的環境變數（其他的不碰）
 const ZLUDA_ENV: &[&str] = &[
@@ -349,6 +382,27 @@ struct Launch {
 /// 照 ComfyUI 的擺法、comfy.json 的設定、PyTorch 的種類（backend＝gpu::comfy_backend）組出啟動指令。
 /// zluda＝ZLUDA 版的 zluda.exe。extra_yaml＝生圖站的外部模型資料夾設定、desktop_yaml＝官方桌面版的模型路徑設定。
 /// N 卡、沒改設定時跟以前一模一樣
+/// 別張卡的 ComfyUI 用自己的資料庫：拿掉原本的 --database-url（使用者全域參數裡的那個＝主節點的），換成 db
+fn with_node_db(args: Vec<OsString>, db: &Path) -> Vec<OsString> {
+    let mut out = vec![];
+    let mut it = args.into_iter();
+    while let Some(a) = it.next() {
+        let t = a.to_string_lossy();
+        if t == "--database-url" {
+            it.next();
+            continue;
+        }
+        if t.starts_with("--database-url=") {
+            continue;
+        }
+        out.push(a);
+    }
+    out.push("--database-url".into());
+    out.push(format!("sqlite:///{}", db.to_string_lossy().replace('\\', "/")).into());
+    out
+}
+
+#[cfg(test)]
 fn launch(
     layout: &ComfyLayout,
     port: u16,
@@ -357,6 +411,22 @@ fn launch(
     zluda: Option<&Path>,
     extra_yaml: Option<&Path>,
     desktop_yaml: Option<&Path>,
+) -> Result<Launch, String> {
+    launch_node(layout, port, prefs, backend, zluda, extra_yaml, desktop_yaml, None)
+}
+
+/// 同 launch；node＝(卡號, 這個節點的額外參數)＝本機另一張卡的 ComfyUI（設定 → 工作節點）：
+/// 加 --cuda-device 卡號、節點的參數排在使用者全域參數後面（同組的以節點為準），卡號照 nvidia-smi 的順序（CUDA_DEVICE_ORDER=PCI_BUS_ID）
+#[allow(clippy::too_many_arguments)]
+fn launch_node(
+    layout: &ComfyLayout,
+    port: u16,
+    prefs: &Prefs,
+    backend: Option<&str>,
+    zluda: Option<&Path>,
+    extra_yaml: Option<&Path>,
+    desktop_yaml: Option<&Path>,
+    node: Option<(u32, &str)>,
 ) -> Result<Launch, String> {
     let mut args: Vec<OsString> = vec!["-s".into(), layout.main.clone().into()];
     // 免安裝版照官方 run_nvidia_gpu.bat 加這個；其他照一般方式開。
@@ -377,9 +447,22 @@ fn launch(
     if let Some(y) = extra_yaml {
         args.extend(["--extra-model-paths-config".into(), y.into()]);
     }
-    let user = crate::gpu::extra_args(&prefs.extra_args)?;
-    let mut auto: Vec<String> = vec![];
+    let mut user = crate::gpu::extra_args(&prefs.extra_args)?;
     let mut env = vec![];
+    if let Some((gpu, node_args)) = node {
+        if prefs.cpu || !matches!(backend, None | Some("cuda")) {
+            return Err("一台電腦開好幾張卡只支援 NVIDIA 顯示卡（PyTorch 的 CUDA 版）".into());
+        }
+        let own = crate::gpu::extra_args(node_args)?;
+        if own.iter().any(|a| a.starts_with("--cuda-d")) {
+            return Err("卡號由「工作節點」的設定決定，不能放在額外參數裡".into());
+        }
+        let mut n = vec!["--cuda-device".to_string(), gpu.to_string()];
+        n.extend(own);
+        user = merge_args(&user, &n);
+        env.push(("CUDA_DEVICE_ORDER".to_string(), "PCI_BUS_ID".to_string()));
+    }
+    let mut auto: Vec<String> = vec![];
     if prefs.cpu {
         auto.push("--cpu".into()); // 沒有能用的顯示卡（精靈裝的是 CPU 版）
     }
@@ -402,12 +485,42 @@ fn launch(
             program = exe.to_path_buf();
             args.splice(0..0, ["--".into(), layout.python.clone().into()]);
         }
+        // RX 6000 專用（gfx103X）PyTorch：照 comfyui-rinsei 在 RX 6700 XT 確認能跑的設定（見 gpu::GFX103_INDEX）。
+        // async offload 在 RDNA2 換模型時會 access violation；HSA_OVERRIDE 讓 1031／1032… 都用 gfx1030 的 kernel
+        Some("rocm") if !prefs.cpu && crate::gpu::gfx103_installed(&layout.python) => {
+            auto.extend(GFX103_ARGS.iter().map(|s| s.to_string()));
+            env.extend(GFX103_ENV.iter().chain(NO_HIPBLASLT_ENV).map(|(k, v)| (k.to_string(), v.to_string())));
+        }
         _ => {}
     }
     args.extend(merge_args(&auto, &user).into_iter().map(OsString::from));
     // 使用者自己設了的環境變數照他的
     env.retain(|(k, _)| std::env::var_os(k).is_none());
     Ok(Launch { program, args, env })
+}
+
+/// A 卡（ROCm 版 PyTorch）的電腦有好幾張 A 卡（獨顯＋CPU 內顯最常見）時，ComfyUI 要用哪一號，和原因（寫進 comfyui.log）。
+/// 只有一張 A 卡、使用者自己設了 HIP_VISIBLE_DEVICES 或 --cuda-device、問不到 PyTorch＝None（照原樣開）。
+/// 要 import torch 一次（約幾秒到幾十秒），所以只在偵測到兩張以上 A 卡時才問
+fn amd_device(layout: &ComfyLayout, prefs: &Prefs) -> Option<(usize, String)> {
+    if std::env::var_os("HIP_VISIBLE_DEVICES").is_some() || prefs.extra_args.contains("--cuda-d") {
+        return None;
+    }
+    let (gpus, _) = crate::gpu::detect(false);
+    if gpus.iter().filter(|g| g["vendor"] == "amd").count() < 2 {
+        return None;
+    }
+    let plan = crate::gpu::current_plan();
+    let probe = crate::gpu::hip_probe(layout)?;
+    let i = crate::gpu::pick_hip_device(&probe, plan.gfx.as_deref())?;
+    let all: Vec<String> = probe["dev"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .enumerate()
+        .map(|(n, d)| format!("{n}＝{}（{}）", d["name"].as_str().unwrap_or("?"), d["arch"].as_str().unwrap_or("?")))
+        .collect();
+    Some((i, format!("ROCm 看到好幾張 A 卡：{}", all.join("、"))))
 }
 
 impl ComfyProc {
@@ -417,6 +530,16 @@ impl ComfyProc {
         log_dir: &Path,
         port: u16,
     ) -> Result<Option<ComfyProc>, String> {
+        Self::spawn(comfy_dir, log_dir, port, None)
+    }
+
+    /// 本機另一張卡的 ComfyUI（設定 → 工作節點）：同一份 ComfyUI、另一個 port、--cuda-device 卡號；紀錄檔 comfyui_gpu卡號.log。
+    /// 那個 port 已經有 ComfyUI＝None（直接用它）
+    pub fn start_extra(comfy_dir: &Path, log_dir: &Path, port: u16, gpu: u32, args: &str) -> Result<Option<ComfyProc>, String> {
+        Self::spawn(comfy_dir, log_dir, port, Some((gpu, args)))
+    }
+
+    fn spawn(comfy_dir: &Path, log_dir: &Path, port: u16, node: Option<(u32, &str)>) -> Result<Option<ComfyProc>, String> {
         if port_open(port) {
             return if comfy_running(port) {
                 Ok(None)
@@ -448,11 +571,72 @@ impl ComfyProc {
             .filter(|y| y.is_file());
         let extra = Some(crate::model_dirs::yaml_path(&layout.root)).filter(|y| y.is_file());
         let zluda = crate::gpu::zluda_exe(&layout);
-        let l = launch(&layout, port, &prefs, backend, zluda.as_deref(), extra.as_deref(), desktop_yaml.as_deref())?;
+        let mut l = launch_node(&layout, port, &prefs, backend, zluda.as_deref(), extra.as_deref(), desktop_yaml.as_deref(), node)?;
+        if let Some((g, _)) = node {
+            // 同一份 ComfyUI 的 user\comfyui.db 只准一台開（第二台會 ASSETS_STARTUP_FAILED: in_use 直接結束）：每張卡自己一個
+            let dir = log_dir.parent().unwrap_or(log_dir).join("comfy_nodes");
+            std::fs::create_dir_all(&dir).map_err(|e| format!("建立 {} 失敗：{e}", dir.display()))?;
+            l.args = with_node_db(l.args, &dir.join(format!("gpu{g}.db")));
+        }
+        // 有開別張卡：主節點也照 nvidia-smi 的順序（不然 PyTorch 的 0 號＝最快那張，可能跟別的節點搶同一張）
+        if node.is_none() && pci_order() {
+            l.env.push(("CUDA_DEVICE_ORDER".into(), "PCI_BUS_ID".into()));
+            l.env.retain(|(k, _)| std::env::var_os(k).is_none());
+        }
+        let log_name = match node {
+            Some((g, _)) => format!("comfyui_gpu{g}.log"),
+            None => "comfyui.log".into(),
+        };
         std::fs::create_dir_all(log_dir)
             .map_err(|e| format!("建立 {} 失敗：{e}", log_dir.display()))?;
-        let log = File::create(log_dir.join("comfyui.log"))
+        let mut log = File::create(log_dir.join(&log_name))
             .map_err(|e| format!("建立 ComfyUI 紀錄檔失敗：{e}"))?;
+        if node.is_none() {
+            use std::io::Write;
+            for n in std::mem::take(&mut *LOG_NOTES.lock().unwrap_or_else(|e| e.into_inner())) {
+                let _ = writeln!(log, "[繪匣] {n}");
+            }
+        }
+        if node.is_none() && !prefs.cpu && backend == Some("rocm") {
+            use std::io::Write;
+            // 回報常常只給 comfyui.log：偵測到的 A 卡、精靈選的架構、PyTorch 實際裝好的架構先寫一行
+            let (gpus, _) = crate::gpu::detect(false);
+            let amd: Vec<&serde_json::Value> = gpus.iter().filter(|g| g["vendor"] == "amd").collect();
+            let cards: Vec<String> = amd
+                .iter()
+                .map(|g| format!("{}（{}）", g["name"].as_str().unwrap_or("?"), g["gfx"].as_str().unwrap_or("認不出架構")))
+                .collect();
+            let gfx103_build = crate::gpu::gfx103_installed(&layout.python);
+            let _ = writeln!(
+                log,
+                "[繪匣] A 卡：{}；精靈選的架構：{}；PyTorch {} 裝好的架構：{}",
+                if cards.is_empty() { "沒偵測到".into() } else { cards.join("、") },
+                if prefs.amd_gfx.is_empty() { "自動偵測" } else { &prefs.amd_gfx },
+                crate::gpu::torch_build(&layout.python).unwrap_or_default(),
+                if gfx103_build {
+                    "RX 6000 專用版（gfx103X：gfx1030～1036，HSA_OVERRIDE_GFX_VERSION=10.3.0，不走 hipBLASLt）".to_string()
+                } else {
+                    crate::gpu::rocm10_devices(&layout.python).join("、")
+                },
+            );
+            // 別的 ROCm PyTorch（還沒換成 RX 6000 專用版、或使用者自己的）裝在 RX 6000 上：至少把 hipBLASLt 關掉
+            let gfx: Vec<String> = amd.iter().filter_map(|g| g["gfx"].as_str().map(String::from)).collect();
+            if !gfx103_build && gfx.len() == amd.len() && crate::gpu::gfx103_family(&gfx) {
+                let add: Vec<(String, String)> = NO_HIPBLASLT_ENV
+                    .iter()
+                    .filter(|(k, _)| std::env::var_os(k).is_none() && !l.env.iter().any(|(e, _)| e == k))
+                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .collect();
+                if !add.is_empty() {
+                    let _ = writeln!(log, "[繪匣] RX 6000 不走 hipBLASLt（這張卡沒有它的 kernel）：{}", add.iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join(" "));
+                    l.env.extend(add);
+                }
+            }
+            if let Some((i, why)) = amd_device(&layout, &prefs) {
+                let _ = writeln!(log, "[繪匣] {why}：只讓 ComfyUI 用第 {i} 號（HIP_VISIBLE_DEVICES={i}）");
+                l.env.push(("HIP_VISIBLE_DEVICES".into(), i.to_string()));
+            }
+        }
         let err = log.try_clone().map_err(|e| e.to_string())?;
         let mut cmd = Command::new(&l.program);
         cmd.args(&l.args).envs(l.env);
@@ -471,7 +655,7 @@ impl ComfyProc {
         set_note(None);
         let child = Arc::new(Mutex::new(Some(child)));
         let diagnostics=Arc::new(Mutex::new(None));
-        watch(child.clone(), log_dir.join("comfyui.log"), backend,diagnostics.clone());
+        watch(match node { Some((g, _)) => format!("第 {g} 號卡的 ComfyUI"), None => "ComfyUI".into() }, child.clone(), log_dir.join(&log_name), backend,diagnostics.clone());
         Ok(Some(ComfyProc { child,diagnostics }))
     }
 
@@ -610,7 +794,39 @@ mod tests {
         v.iter().map(OsString::from).collect()
     }
 
+    /// 另一張卡的 ComfyUI：主節點的指令＋--cuda-device＋節點自己的參數（同組的以節點為準），卡號照 nvidia-smi 的順序
+    #[test]
+    fn extra_args_include_cuda_device() {
+        let d = std::env::temp_dir().join(format!("anima_launch_node_{}", std::process::id()));
+        let lay = ComfyLayout {
+            root: d.join("ComfyUI"),
+            main: d.join("ComfyUI").join("main.py"),
+            python: d.join("python_embeded").join("python.exe"),
+            portable: true,
+            desktop: false,
+            cwd: d.clone(),
+        };
+        let p = Prefs { extra_args: "--highvram --fast".into(), ..Default::default() };
+        let l = launch_node(&lay, 8199, &p, Some("cuda"), None, None, None, Some((1, "--lowvram"))).unwrap();
+        let a: Vec<String> = l.args.iter().map(|x| x.to_string_lossy().to_string()).collect();
+        assert_eq!(a[a.len() - 4..], ["--fast", "--cuda-device", "1", "--lowvram"], "--highvram 被節點的 --lowvram 換掉");
+        assert!(a.windows(2).any(|w| w == ["--port", "8199"]));
+        if std::env::var_os("CUDA_DEVICE_ORDER").is_none() {
+            assert!(l.env.contains(&("CUDA_DEVICE_ORDER".into(), "PCI_BUS_ID".into())));
+        }
+        assert!(launch_node(&lay, 8199, &p, Some("cuda"), None, None, None, Some((1, "--cuda-device 0"))).is_err(), "卡號只能從節點設定給");
+        assert!(launch_node(&lay, 8199, &p, Some("directml"), None, None, None, Some((1, ""))).is_err(), "只有 N 卡能指定卡號");
+        let cpu = Prefs { cpu: true, ..Default::default() };
+        assert!(launch_node(&lay, 8199, &cpu, Some("cuda"), None, None, None, Some((1, ""))).is_err());
+        // 每張卡自己的資料庫（同一份 ComfyUI 的 comfyui.db 只准一台開）
+        let a = with_node_db(os(&["--fast", "--database-url", "sqlite:///x.db", "--database-url=y"]), Path::new(r"D:\data\comfy_nodes\gpu1.db"));
+        assert_eq!(a, os(&["--fast", "--database-url", "sqlite:///D:/data/comfy_nodes/gpu1.db"]));
+        // 主節點不變
+        assert_eq!(launch_node(&lay, 8188, &Prefs::default(), Some("cuda"), None, None, None, None).unwrap(), launch(&lay, 8188, &Prefs::default(), Some("cuda"), None, None, None).unwrap());
+    }
+
     /// 啟動指令：N 卡沒改設定時跟以前一模一樣；CPU、DirectML、額外參數、ZLUDA
+    #[cfg(windows)] // 免安裝版、ZLUDA、gfx103X 都是 Windows 的 ComfyUI
     #[test]
     fn launch_commands() {
         let d = std::env::temp_dir().join(format!("anima_launch_test_{}", std::process::id()));
@@ -641,6 +857,22 @@ mod tests {
         assert_eq!(launch(&portable, 8188, &p, Some("cuda"), None, None, None).unwrap().args[8..], os(&["--cpu", "--fast"])[..]);
         // DirectML 自動加 --directml；額外參數裡生圖站自己管的不准放
         assert_eq!(launch(&portable, 8188, &def, Some("directml"), None, None, None).unwrap().args[8..], os(&["--directml"])[..]);
+        // ROCm：一般的不加東西；RX 6000 專用（gfx103X）PyTorch 加 quad attention、關 async offload、HSA_OVERRIDE
+        assert_eq!(launch(&portable, 8188, &def, Some("rocm"), None, None, None).unwrap().args.len(), base.len());
+        let sp = d.join("P").join("python_embeded").join("Lib").join("site-packages");
+        for x in [format!("torch-2.10.0+rocm{}.dist-info", crate::gpu::GFX103_ROCM), format!("rocm_sdk_libraries_gfx103x_all-{}.dist-info", crate::gpu::GFX103_ROCM)] {
+            std::fs::create_dir_all(sp.join(x)).unwrap();
+        }
+        let l = launch(&portable, 8188, &def, Some("rocm"), None, None, None).unwrap();
+        assert_eq!(l.args[8..], os(&["--use-quad-cross-attention", "--disable-async-offload"])[..]);
+        assert!(std::env::var_os("HSA_OVERRIDE_GFX_VERSION").is_some() || l.env.iter().any(|(k, v)| k == "HSA_OVERRIDE_GFX_VERSION" && v == "10.3.0"));
+        // gfx103X 的 hipBLASLt 沒有 RX 6000 的 kernel：addmm 和預設矩陣庫都要走 rocBLAS（2026-11-06 回報）
+        for (k, v) in [("DISABLE_ADDMM_CUDA_LT", "1"), ("TORCH_BLAS_PREFER_HIPBLASLT", "0")] {
+            assert!(std::env::var_os(k).is_some() || l.env.iter().any(|(e, x)| e == k && x == v), "{k}");
+        }
+        let p = Prefs { extra_args: "--use-split-cross-attention".into(), ..Default::default() };
+        assert!(!launch(&portable, 8188, &p, Some("rocm"), None, None, None).unwrap().args.iter().any(|a| a == "--use-quad-cross-attention"), "attention 以使用者選的為準");
+        std::fs::remove_dir_all(&sp).unwrap();
         let bad = Prefs { extra_args: "--port 9000".into(), ..Default::default() };
         assert!(launch(&portable, 8188, &bad, Some("cuda"), None, None, None).is_err());
         // ZLUDA（patientx 版）：zluda.exe -- python main.py…，照 comfyui-n.bat 的參數和環境變數

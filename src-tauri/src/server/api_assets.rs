@@ -197,6 +197,11 @@ pub fn detach_file(app: &Shared, id: i64, file: &str) -> Result<Value, ApiError>
             o.remove("audio");
         }
     }
+    if data["refmod"]["file"].as_str() == Some(file.as_str()) {
+        if let Some(o) = data.as_object_mut() {
+            o.remove("refmod");
+        }
+    }
     if let Some(a) = data["images"].as_array_mut() {
         a.retain(|im| im["file"].as_str() != Some(file.as_str()));
     }
@@ -347,9 +352,35 @@ fn images_by_role(data: &Value) -> Vec<String> {
     v.into_iter().map(|(_, f)| f).collect()
 }
 
-/// 一筆資產拿去給某個模型家族用：{text, images（資產檔名）, warn, voice, lang}。
+/// H3 和助手要放幾張：角色＝正面特寫（沒有就原圖）＋多視圖，其他＝前 2 張。
+/// 參考圖每一步取樣都要跟著算（「match」時跟畫面一樣大），不是越多越好；裸體多視圖、表情表不自動放，要的人到素材板自己換（2026-10-30）
+fn few_refs(kind: &str, data: &Value, all: &[String]) -> Vec<String> {
+    if kind != "char" {
+        return all.iter().take(2).cloned().collect();
+    }
+    let mut out: Vec<String> = first_image(data, "portrait").or_else(|| first_image(data, "src")).into_iter().collect();
+    out.extend(first_image(data, "sheet"));
+    if out.is_empty() {
+        out.extend(all.iter().find(|f| data["images"].as_array().is_none_or(|a| !a.iter().any(|im| im["file"] == f.as_str() && im["role"] == "sheet_nude"))).cloned());
+    }
+    out
+}
+
+/// 這幾張圖各是什麼用途：{檔名: role}（H3 素材板寫「臉在第幾張、全身在第幾張」用）
+fn views_of(data: &Value, images: &[String]) -> Value {
+    let list = data["images"].as_array().cloned().unwrap_or_default();
+    let map: serde_json::Map<String, Value> = images
+        .iter()
+        .filter_map(|f| list.iter().find(|im| im["file"] == f.as_str()).map(|im| (f.clone(), im["role"].clone())))
+        .collect();
+    Value::Object(map)
+}
+
+/// 一筆資產拿去給某個模型家族用：{text, images（資產檔名）, views, audio, warn, voice, lang}。
 /// 規則見設計文件 4.5：anima＝tag＋外觀英文、全部圖給前端選底圖或控制圖；moss 只有文字；
-/// qwen21 最多 10 張參考圖、超過 4 張提醒；h3 中文外觀、最多 9 張參考圖、帶聲音語言；ltx 外觀＋第一張原圖；comic＝tag＋外觀
+/// qwen21 最多 10 張參考圖、超過 4 張提醒；h3 中文外觀、少量參考圖（few_refs）、帶聲音語言和音檔；agent（助手）中文外觀、少量參考圖；
+/// comic＝外觀英文句子（MOSS 讀自然語言；沒有外觀才退回 tag）＋角色的少量參考圖（漫畫台「照資產修角色」給 Qwen 2.1 用，2026-11-16）；
+/// 其他（含以前導演台用的 ltx）只有外觀文字。每一筆都帶 loras（資產卡綁的 LoRA，漫畫台加角色時自動掛）
 pub fn apply_plan(item: &Row, family: &str) -> Value {
     let kind = item.get("kind").and_then(Value::as_str).unwrap_or("");
     let null = Value::Null;
@@ -368,7 +399,6 @@ pub fn apply_plan(item: &Row, family: &str) -> Value {
         .collect::<Vec<_>>()
         .join(". ");
     let all = images_by_role(data);
-    let first_src: Vec<String> = first_image(data, "src").into_iter().collect();
     let mut warn: Vec<String> = vec![];
     // 角色卡鎖住的設定表（2026-10-27）：文字用固定的那一段，參考圖只送正面特寫＋多視圖（圖文雙管）
     let locked = if kind == "char" { crate::charspec::locked_blocks(data) } else { None };
@@ -378,21 +408,20 @@ pub fn apply_plan(item: &Row, family: &str) -> Value {
         let fixed = if fixed.is_empty() { all.iter().take(2).cloned().collect() } else { fixed };
         let (text, images) = match family {
             "anima" => (pick(bt, be), all.clone()),
-            "comic" => (pick(bt, be), vec![]),
+            "comic" => (pick(be, bt), fixed),
             "moss" => (pick(be, bz), vec![]),
             "qwen21" => (pick(be, bz), fixed),
-            "h3" => (pick(bz, be), fixed),
-            "ltx" => (pick(be, bz), first_src),
+            "h3" | "agent" => (pick(bz, be), fixed),
             _ => (pick(be, bz), vec![]),
         };
-        let av = matches!(family, "h3" | "ltx");
-        return json!({"text": text, "images": images, "warn": warn, "locked": true, "spec": {"zh": bz, "en": be, "tags": bt},
-                      "refmod": data["refmod"]["name"].as_str().unwrap_or(""),
+        let av = family == "h3";
+        return json!({"text": text, "views": views_of(data, &images), "images": images, "warn": warn, "locked": true, "spec": {"zh": bz, "en": be, "tags": bt}, "loras": loras_of(data),
+                      "refmod": data["refmod"]["name"].as_str().unwrap_or(""), "audio": if av { data["audio"]["file"].clone() } else { Value::Null },
                       "voice": if av { s("voice") } else { String::new() }, "lang": if av { s("lang") } else { String::new() }});
     }
     let (mut text, images, zh) = match family {
         "anima" => (tag_text, all.clone(), false),
-        "comic" => (tag_text, vec![], false),
+        "comic" => (if look_en.is_empty() && look_zh.is_empty() { tag_text } else { either(&look_en, &look_zh) }, few_refs(kind, data, &all), false),
         "moss" => (either(&look_en, &look_zh), vec![], true),
         "qwen21" => {
             if all.len() > 10 {
@@ -402,13 +431,7 @@ pub fn apply_plan(item: &Row, family: &str) -> Value {
             }
             (either(&look_en, &look_zh), all.iter().take(10).cloned().collect(), true)
         }
-        "h3" => {
-            if all.len() > 9 {
-                warn.push(format!("參考圖有 {} 張：H3 最多 9 張，只送前 9 張", all.len()));
-            }
-            (either(&look_zh, &look_en), all.iter().take(9).cloned().collect(), true)
-        }
-        "ltx" => (either(&look_en, &look_zh), first_src, false),
+        "h3" | "agent" => (either(&look_zh, &look_en), few_refs(kind, data, &all), true),
         _ => (either(&look_en, &look_zh), vec![], false),
     };
     if text.is_empty() {
@@ -418,9 +441,14 @@ pub fn apply_plan(item: &Row, family: &str) -> Value {
     if !line.is_empty() {
         text = if text.is_empty() { line } else { format!("{text}{}{line}", if zh { "。" } else { ". " }) };
     }
-    let av = matches!(family, "h3" | "ltx");
-    json!({"text": text, "images": images, "warn": warn, "locked": false,
+    let av = family == "h3";
+    json!({"text": text, "views": views_of(data, &images), "images": images, "warn": warn, "locked": false, "loras": loras_of(data), "audio": if av { data["audio"]["file"].clone() } else { Value::Null },
            "voice": if av { s("voice") } else { String::new() }, "lang": if av { s("lang") } else { String::new() }})
+}
+
+/// 資產卡綁的 LoRA（只有角色卡會有；存檔時 api_lib::clean_asset 整理過）
+fn loras_of(data: &Value) -> Value {
+    data.get("loras").filter(|v| v.is_array()).cloned().unwrap_or_else(|| json!([]))
 }
 
 /// 角色做 RefMod 用哪張圖：正面特寫 → 原圖 → 第一張
@@ -532,12 +560,31 @@ mod tests {
         let p = apply_plan(&it, "h3");
         assert_eq!(p["text"], "橘髮女生");
         assert_eq!((p["voice"].as_str(), p["lang"].as_str()), (Some("slightly low"), Some("ja")));
-        assert_eq!(p["images"].as_array().unwrap().len(), 9, "H3 參考圖最多 9 張");
+        // 不是全塞：原圖＋穿衣多視圖，裸體多視圖和其他的不自動放
+        assert_eq!(p["images"], json!(["1_4.png", "1_3.png"]));
+        assert_eq!((p["views"]["1_4.png"].as_str(), p["views"]["1_3.png"].as_str()), (Some("src"), Some("sheet")));
+        let portrait = item("char", json!({"images": [{"file": "a.png", "role": "src"}, {"file": "b.png", "role": "portrait"}, {"file": "c.png", "role": "sheet"}, {"file": "d.png", "role": "face"}], "audio": {"file": "v.wav"}}));
+        assert_eq!(apply_plan(&portrait, "h3")["images"], json!(["b.png", "c.png"]), "有正面特寫就用它");
+        assert_eq!(apply_plan(&portrait, "h3")["audio"], "v.wav");
+        assert_eq!(apply_plan(&portrait, "agent")["images"], json!(["b.png", "c.png"]));
+        assert!(apply_plan(&portrait, "agent")["audio"].is_null(), "助手不用音檔");
+        let only_nude = item("char", json!({"images": [{"file": "n.png", "role": "sheet_nude"}, {"file": "o.png", "role": "other"}]}));
+        assert_eq!(apply_plan(&only_nude, "h3")["images"], json!(["o.png"]), "裸體多視圖不自動放");
+        let scene = item("scene", json!({"images": [{"file": "1.png", "role": "src"}, {"file": "2.png", "role": "other"}, {"file": "3.png", "role": "other"}]}));
+        assert_eq!(apply_plan(&scene, "h3")["images"], json!(["1.png", "2.png"]));
+        // 2026-10-30 LTX 退場：舊的 ltx 家族（導演台以前用的）當一般家族，不帶圖、聲音
         let ltx = apply_plan(&it, "ltx");
-        assert_eq!(ltx["images"], json!(["1_4.png"]), "LTX 只帶第一張 src");
-        assert_eq!(ltx["lang"], "ja");
+        assert_eq!(ltx["images"], json!([]));
+        assert_eq!(ltx["lang"], "");
         assert_eq!(apply_plan(&it, "comic")["voice"], "");
-        assert_eq!(apply_plan(&it, "comic")["images"], json!([]), "漫畫只帶文字與 tag");
+        // 漫畫：外觀英文句子（不是 tag）＋正面特寫／多視圖（給 Qwen 修角色）＋綁的 LoRA
+        assert_eq!(apply_plan(&portrait, "comic")["images"], json!(["b.png", "c.png"]));
+        let lo = item("char", json!({"look_en": "A girl with orange hair", "tags_anima": ["1girl", "orange hair"],
+                                      "loras": [{"name": "moss/xk.safetensors", "strength": 0.8, "trigger": "xk"}]}));
+        let c = apply_plan(&lo, "comic");
+        assert_eq!(c["text"], "A girl with orange hair");
+        assert_eq!(c["loras"][0]["trigger"], "xk");
+        assert_eq!(apply_plan(&item("char", json!({"tags_anima": ["1girl"]})), "comic")["text"], "1girl", "沒有外觀才退回 tag");
     }
 
     #[test]

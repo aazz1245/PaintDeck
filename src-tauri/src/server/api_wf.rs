@@ -104,15 +104,7 @@ pub async fn reveal(Body(body): Body) -> ApiResult {
     if !is_json || is_unc(raw) || !path.is_absolute() || !path.is_file() {
         return Err(bad("找不到這個檔，可能被搬走或刪掉了"));
     }
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        // 路徑有空白時 /select, 後面要整段加引號，不能交給 Command 自己加（explorer 認不得）
-        std::process::Command::new("explorer.exe")
-            .raw_arg(format!("/select,\"{}\"", path.display()))
-            .spawn()
-            .map_err(|e| bad(format!("打不開檔案總管：{e}")))?;
-    }
+    crate::pe::win::reveal(&path).map_err(|e| bad(format!("打不開檔案總管：{e}")))?;
     ok(json!({"ok": true}))
 }
 
@@ -295,7 +287,15 @@ pub async fn import(State(app): State<Shared>, Body(body): Body) -> ApiResult {
     let roots = model_roots(&app.paths);
     entry["family"] = json!(pick_family(&roots, entry["model_file"].as_str(), entry["family"].as_str().unwrap_or("")));
     let warnings: Vec<String> = warnings.into_iter().chain(warns2).collect();
-    ok(json!({"ok": true, "workflow": entry, "warnings": warnings, "source": source, "mode": if is_set { Value::Null } else { json!(mode) }}))
+    // 用到、這台電腦沒有的模型：網頁每個給一顆「到下載中心找」（整組匯入不看）
+    let missing = match probe {
+        Some(g) => {
+            let a = app.clone();
+            blocking(move || super::api_hub::missing_models(&a, &g)).await
+        }
+        None => vec![],
+    };
+    ok(json!({"ok": true, "workflow": entry, "warnings": warnings, "source": source, "mode": if is_set { Value::Null } else { json!(mode) }, "missing_models": missing}))
 }
 
 // ---------------------------------------------------------------- 選項、刪除

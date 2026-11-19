@@ -88,9 +88,30 @@ pub fn to_recycle_bin(paths: &[PathBuf]) -> io::Result<Vec<PathBuf>> {
     Ok(done)
 }
 
+/// Linux：丟進桌面的垃圾桶（freedesktop 規格，用 GNOME 的 gio trash；KDE、Xfce 也讀同一個垃圾桶）。沒有 gio＝錯誤
 #[cfg(not(windows))]
-pub fn to_recycle_bin(_paths: &[PathBuf]) -> io::Result<Vec<PathBuf>> {
-    Err(err("資源回收筒只支援 Windows"))
+pub fn to_recycle_bin(paths: &[PathBuf]) -> io::Result<Vec<PathBuf>> {
+    let paths: Vec<&PathBuf> = paths.iter().filter(|p| p.exists()).collect();
+    let mut done = vec![];
+    for batch in paths.chunks(200) {
+        let st = std::process::Command::new("gio")
+            .arg("trash")
+            .arg("--")
+            .args(batch.iter().map(|p| p.as_os_str()))
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status();
+        done.extend(batch.iter().filter(|p| !p.exists()).map(|p| (*p).clone()));
+        if let Err(e) = st {
+            if done.is_empty() {
+                return Err(err(format!("丟進垃圾桶失敗（找不到 gio：{e}）")));
+            }
+        }
+    }
+    if done.is_empty() && !paths.is_empty() {
+        return Err(err("丟進垃圾桶失敗"));
+    }
+    Ok(done)
 }
 
 /// 某個路徑所在磁碟的（可用, 總共）位元組
@@ -107,11 +128,25 @@ pub fn disk_usage(path: &Path) -> Option<(u64, u64)> {
     let ok = unsafe { GetDiskFreeSpaceExW(w.as_ptr(), &mut avail, &mut total, &mut free) };
     (ok != 0).then_some((free, total))
 }
+/// Linux：statvfs（可用給一般使用者的 f_bavail，跟 df 的 Avail 一樣）
 #[cfg(not(windows))]
-pub fn disk_usage(_path: &Path) -> Option<(u64, u64)> {
-    None
+pub fn disk_usage(path: &Path) -> Option<(u64, u64)> {
+    use std::os::unix::ffi::OsStrExt;
+    // 路徑還不存在（要建的資料夾）就往上找存在的那層
+    let mut p = path;
+    while !p.exists() {
+        p = p.parent()?;
+    }
+    let c = std::ffi::CString::new(p.as_os_str().as_bytes()).ok()?;
+    let mut st: libc::statvfs = unsafe { std::mem::zeroed() };
+    if unsafe { libc::statvfs(c.as_ptr(), &mut st) } != 0 {
+        return None;
+    }
+    let bs = st.f_frsize as u64;
+    Some((st.f_bavail as u64 * bs, st.f_blocks as u64 * bs))
 }
 
+#[cfg_attr(not(windows), allow(dead_code))] // 只有 Windows 用（Linux 沒有這個機制）
 trait EncodeWide {
     fn encode_wide_compat(&self) -> Vec<u16>;
 }
@@ -469,11 +504,10 @@ pub fn undo(
     let sp = bx.join("settings.json");
     if parts.iter().any(|p| p == "settings") && sp.exists() {
         let mut old = file_settings(&sp).unwrap_or_default();
-        let cur = file_settings(settings_path).unwrap_or_default();
-        old.insert(
-            settings::KEY.into(),
-            cur.get(settings::KEY).cloned().unwrap_or(json!("")),
-        );
+        // 現在的金鑰要用 settings::load 讀（Windows 的設定檔只存加密過的 civitai_key_dpapi，直接讀檔拿不到 civitai_key）：
+        // 2026-11-10 以前這裡直接讀檔，救回設定後 Civitai API key 就不見了
+        let cur = settings::load(settings_path);
+        old.insert(settings::KEY.into(), json!(settings::civitai_key(&cur)));
         settings::save(settings_path, &old)?;
     }
     m["restored"] = json!(now());

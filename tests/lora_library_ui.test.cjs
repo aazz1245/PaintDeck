@@ -6,21 +6,38 @@ const vm = require('node:vm');
 
 function harness() {
   const controls = new Map();
-  for (const id of ['loraQ', 'loraFamily', 'loraCategory', 'loraTag', 'loraFav', 'loraTotal', 'loraMore', 'loraGrid']) {
+  for (const id of ['loraQ', 'loraFamily', 'loraCategory', 'loraTag', 'loraFav', 'loraTotal', 'loraMore', 'loraGrid', 'loraView']) {
+    const classes = new Set();
     controls.set('#' + id, {
-      value: '', checked: false, options: [], children: [], hidden: false, textContent: '',
+      value: '', checked: false, options: [], children: [], hidden: false, textContent: '', classes,
+      classList: { toggle(c, on) { if (on) classes.add(c); else classes.delete(c); } },
       replaceChildren(...children) { this.children = children; this.options = children; },
       append(child) { this.children.push(child); },
     });
   }
-  const el = (tag, attrs = {}, ...kids) => ({ tag, attrs, kids, get value() { return attrs.value || ''; } });
+  const boxes = [];
+  const el = (tag, attrs = {}, ...kids) => {
+    const e = { tag, attrs, kids, classes: new Set(String(attrs.class || '').split(' ').filter(Boolean)), get value() { return attrs.value || ''; },
+      get dataset() { return { lora: attrs['data-lora'] }; },
+      classList: { toggle(c, on) { if (on) e.classes.add(c); else e.classes.delete(c); } },
+      replaceChildren(...c) { e.kids = c; } };
+    if (attrs['data-lora'] !== undefined) boxes.push(e);
+    return e;
+  };
+  const calls = [];
+  const document = { querySelectorAll: () => boxes };
   const app = { page: 'loras', state: { models: { family_names: { anima: 'Anima（動漫）' } } } };
   const source = fs.readFileSync(path.join(__dirname, '../ui/js/loras.js'), 'utf8')
     .replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '');
-  const context = vm.createContext({ $, el, app, api: async () => {}, toast() {}, openModal() {}, closeModal() {}, debounce: f => f });
+  const timers = [];
+  const saved = {};
+  const store = { get: (k, d) => (k in saved ? saved[k] : d), set: (k, v) => { saved[k] = v; } };
+  let reply = null;
+  const context = vm.createContext({ $, el, app, document, store, setTimeout: (f) => timers.push(f), confirm: () => true,
+    api: async (url, opts) => { calls.push([url, opts]); return reply; }, toast() {}, openModal() {}, closeModal() {}, debounce: f => f, makeDrop() {}, pickFile: async () => null });
   function $(id) { return controls.get(id); }
-  vm.runInContext(source + '\nglobalThis.subject = { onState, renderPage, categoryOf, preview };', context, { filename: 'loras.js' });
-  return { ...context.subject, get: id => controls.get('#' + id) };
+  vm.runInContext(source + '\nglobalThis.subject = { onState, renderPage, categoryOf, previewUrl, onCover, view, applyMeta, previewFromImage };', context, { filename: 'loras.js' });
+  return { ...context.subject, app, calls, timers, saved, reply: (r) => { reply = r; }, get: id => controls.get('#' + id) };
 }
 
 test('五千個 LoRA 只先建立 60 張卡片，分類與搜尋仍掃完整清單', () => {
@@ -47,7 +64,7 @@ test('五千個 LoRA 只先建立 60 張卡片，分類與搜尋仍掃完整清�
 
 test('手動安裝的 LoRA 能使用模型旁的預覽圖', () => {
   const h = harness();
-  const image = h.preview({ name: 'krea2\\sample.safetensors', local_preview: true });
+  const image = h.previewUrl({ name: 'krea2\\sample.safetensors', local_preview: true });
   assert.match(image, /\/api\/loras\/local-preview\?name=krea2%5Csample\.safetensors/);
 });
 
@@ -67,4 +84,97 @@ test('模型篩選同一個底模只出現一次，名稱用新寫法（Anima、
   h.get('loraFamily').value = 'MOSS Image';
   h.renderPage(true);
   assert.equal(h.get('loraGrid').children.length, 2);
+});
+
+// 2026-11-07：預載的 LoRA 沒預覽圖整片黑。state 標 cover 的送去 /api/loras/covers 抓，抓完的廣播換上圖
+test('沒預覽圖的卡片先寫名字、請後端抓封面，抓到後換成圖', () => {
+  const h = harness();
+  h.app.state.settings = { blur_nsfw: true };
+  const loras = [
+    { name: 'a.safetensors', title: 'A 風格', family: 'anima', cover: true, cover_nsfw: 1 },
+    { name: 'b.safetensors', family: 'anima', preview: 'b.jpg' },
+    { name: 'c.safetensors', family: 'anima' },
+  ];
+  h.app.state.models.loras = loras;
+  h.onState({ models: { loras } });
+  const phOf = (name) => h.get('loraGrid').children.map((c) => c.kids[0]).find((b) => b.attrs['data-lora'] === name);
+  // 只有標 cover、還沒有預覽圖的送去抓，一次一批
+  assert.deepEqual(h.calls.map(([u, o]) => [u, o.json.names]), [['/api/loras/covers', ['a.safetensors']]]);
+  assert.deepEqual(phOf('a.safetensors').kids.map((k) => k.kids[0]), ['A 風格', '正在抓封面…']);
+  assert.equal(phOf('b.safetensors').kids[0].tag, 'img');
+  assert.equal(phOf('b.safetensors').kids[0].attrs.src, '/lora_preview/b.jpg');
+  assert.deepEqual(phOf('c.safetensors').kids.map((k) => k.kids[0]), ['c', '沒有預覽圖']);
+  // 同一批不重送
+  h.renderPage(true);
+  assert.equal(h.calls.length, 1);
+  // 抓到：換成 <img>；封面那張 C 站尺度大於 1 時照「模糊成人預覽圖」模糊
+  h.onCover({ name: 'a.safetensors', preview: 'a.jpg', nsfw: 4 });
+  const box = phOf('a.safetensors');
+  assert.equal(box.kids[0].attrs.src, '/lora_preview/a.jpg');
+  assert.ok(box.classes.has('blur'));
+  // 抓不到：之後就寫「沒有預覽圖」
+  h.onCover({ name: 'c.safetensors', failed: true });
+  assert.equal(loras[2].coverFailed, true);
+});
+
+// 2026-11-08：程式附封面縮圖（cover_file）直接用，不送去抓；連不上一直沒消息的，兩分鐘後改寫「沒有預覽圖」
+test('程式附的封面縮圖直接顯示，抓不到的不會永遠停在「正在抓封面…」', () => {
+  const h = harness();
+  const loras = [
+    { name: 'built.safetensors', family: 'anima', cover_file: '0123456789abcdef.webp', cover_nsfw: 1 },
+    { name: 'net.safetensors', family: 'anima', cover: true },
+  ];
+  h.app.state.models.loras = loras;
+  h.onState({ models: { loras } });
+  const phOf = (name) => h.get('loraGrid').children.map((c) => c.kids[0]).find((b) => b.attrs['data-lora'] === name);
+  assert.equal(phOf('built.safetensors').kids[0].attrs.src, '/api/loras/bundled-cover/0123456789abcdef.webp');
+  assert.deepEqual(h.calls.map(([, o]) => o.json.names), [['net.safetensors']]);
+  assert.equal(h.previewUrl({ name: 'x', preview: 'x.jpg', cover_file: '0123456789abcdef.webp' }), '/lora_preview/x.jpg');
+  assert.equal(phOf('net.safetensors').kids[1].kids[0], '正在抓封面…');
+  for (const f of h.timers) f();
+  assert.equal(loras[1].coverFailed, true);
+  assert.equal(phOf('net.safetensors').kids[1].kids[0], '沒有預覽圖');
+});
+
+// 2026-11-17 網友：「给lora换预览图，或者是列表化选择」
+test('列表模式一行一個，切換鈕寫的是按下去會變成什麼', () => {
+  const h = harness();
+  h.view.page = 'list';
+  h.onState({ models: { loras: [{ name: 'a.safetensors', family: 'anima', triggers: ['tok'] }, { name: 'b.safetensors', family: 'anima' }] } });
+  const g = h.get('loraGrid');
+  assert.equal(g.children.length, 2);
+  assert.ok(g.children.every((c) => c.classes.has('lrow')));
+  assert.ok(g.classes.has('as-list'));
+  assert.equal(h.get('loraView').textContent, '▦ 卡片');
+  h.view.page = 'grid';
+  h.renderPage(true);
+  assert.ok(!g.classes.has('as-list'));
+  assert.ok(g.children.every((c) => !c.classes.has('lrow')));
+  assert.equal(h.get('loraView').textContent, '☰ 列表');
+});
+
+test('換過的預覽圖網址帶版本（同檔名也會重抓），還原後拿掉換上去的欄位', () => {
+  const h = harness();
+  const l = { name: 'a.safetensors', family: 'anima', preview: 'custom_0123abcd.jpg', preview_custom: true, preview_t: 1731800000.4, preview_orig: 'civ.jpg' };
+  h.app.state.models.loras = [l];
+  h.onState({ models: { loras: [l] } });
+  assert.equal(h.previewUrl(l), '/lora_preview/custom_0123abcd.jpg?v=1731800000');
+  h.applyMeta(l, { preview: 'civ.jpg', preview_nsfw: 2 });
+  assert.equal(l.preview, 'civ.jpg');
+  assert.equal(l.preview_custom, undefined);
+  assert.equal(l.preview_orig, undefined);
+  assert.equal(h.previewUrl(l), '/lora_preview/civ.jpg');
+});
+
+test('圖庫「設為 LoRA 預覽圖」：只用一個 LoRA 就直接送那個', async () => {
+  const h = harness();
+  const l = { name: 'a.safetensors', family: 'anima' };
+  h.onState({ models: { loras: [l, { name: 'b.safetensors', family: 'anima' }] } });
+  h.reply({ preview: 'custom_0123abcd.jpg', preview_custom: true, preview_t: 5, preview_nsfw: 1 });
+  await h.previewFromImage({ id: 42, params: { loras: [{ name: 'a.safetensors', strength: 0.8 }] } });
+  await new Promise((r) => setImmediate(r));
+  const [url, opts] = h.calls.at(-1);
+  assert.equal(url, '/api/loras/preview/set');
+  assert.deepEqual({ ...opts.json }, { name: 'a.safetensors', id: 42, nsfw: false });
+  assert.equal(h.previewUrl(l), '/lora_preview/custom_0123abcd.jpg?v=5');
 });

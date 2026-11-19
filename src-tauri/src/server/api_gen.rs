@@ -1,6 +1,5 @@
 //! 狀態、設定、生成、任務面板、系統狀態（對照舊版 server.py 同名的函式）。
 use super::{api_bundle, api_wf, bad, blocking, internal, not_found, ok, ApiResult, Body, Shared, VERSION};
-use crate::comfy::ComfyError;
 use crate::families::{self, ANIMA, FAMILY_NAMES};
 use crate::graphs;
 use crate::py::{self, now, truthy};
@@ -20,6 +19,7 @@ pub async fn state(State(app): State<Shared>) -> ApiResult {
         let c = &app.comfy;
         let wanted = [
             ("unets", "UNETLoader", "unet_name"),
+            ("ckpts", "CheckpointLoaderSimple", "ckpt_name"),
             ("loras_all", "LoraLoaderModelOnly", "lora_name"),
             ("upscalers", "UpscaleModelLoader", "model_name"),
             ("samplers", "KSampler", "sampler_name"),
@@ -46,10 +46,21 @@ pub async fn state(State(app): State<Shared>) -> ApiResult {
             .filter_map(|v| v.as_str().map(str::to_owned))
             .collect()
     };
-    let (unets, loras_all) = (names("unets"), names("loras_all"));
+    let (mut unets, loras_all) = (names("unets"), names("loras_all"));
     let meta = app.db.lora_meta()?;
     let p = &app.paths;
     let (unet_roots, lora_roots) = (p.unet_roots(), p.lora_roots());
+    // SDXL 是整包 checkpoint（CheckpointLoaderSimple 的清單）：判得出 SDXL 的併進主模型清單，生成頁選單才列得到。
+    // 其他 checkpoint（SAM3、SDPose、LTX 整包檔…）不列；外部資料夾同時算主模型資料夾的，同名只列一次
+    for n in names("ckpts") {
+        if !unets.contains(&n) && families::family_of(&unet_roots, &n) == families::SDXL {
+            unets.push(n);
+        }
+    }
+    models.remove("ckpts");
+    if models.contains_key("unets") {
+        models.insert("unets".into(), json!(unets));
+    }
     let lfam: HashMap<&str, &str> = loras_all
         .iter()
         .map(|n| {
@@ -64,6 +75,7 @@ pub async fn state(State(app): State<Shared>) -> ApiResult {
         .map(|n| (n.clone(), json!(families::family_of(&unet_roots, n))))
         .collect();
     let turbo = |n: &str| graphs::is_turbo_lora(n) && lfam[n] == ANIMA;
+    let covers = crate::lora_cover::load(&p.res);
     let loras: Vec<Value> = loras_all
         .iter()
         .filter(|n| !turbo(n))
@@ -77,13 +89,17 @@ pub async fn state(State(app): State<Shared>) -> ApiResult {
                 m.remove("preview");
                 if super::api_misc::local_lora_preview(&lora_roots, n).is_some() {
                     m.insert("local_preview".into(), json!(true));
+                } else if let Some((file, nsfw)) = covers.bundled(&p.res, n) {
+                    // 程式附的縮圖：網頁直接用 /api/loras/bundled-cover/<file>，不用連網抓
+                    m.insert("cover_file".into(), json!(file));
+                    m.insert("cover_nsfw".into(), json!(nsfw));
+                } else if !covers.sources(n, meta.get(n)).is_empty() {
+                    // 抓得到封面（lora_covers.json 或下載過的 versionId）：網頁打開 LoRA 庫時送 /api/loras/covers 去抓
+                    m.insert("cover".into(), json!(true));
+                    m.insert("cover_nsfw".into(), json!(covers.nsfw(n)));
                 }
             }
             m.insert("family".into(), json!(lfam[n.as_str()]));
-            // 影片（LTX）LoRA：家族是 other，「動起來」的 LoRA 下拉只列這種
-            if lfam[n.as_str()] == families::OTHER && families::is_ltx_of(&lora_roots, n) {
-                m.insert("ltx".into(), json!(true));
-            }
             Value::Object(m)
         })
         .collect();
@@ -111,6 +127,19 @@ pub async fn state(State(app): State<Shared>) -> ApiResult {
         }
         models.insert("dirs_pending".into(), json!({"list": list, "can_restart": app.restart_comfy.get().is_some()}));
     }
+    // 開站換了 ComfyUI 的元件（節點、流程檔）、ComfyUI 還沒重開：跟外部資料夾無關，要自己判斷
+    // （2026-11-10 以前寫在上面那個 if 裡，沒加外部資料夾的人永遠看不到「請重開 ComfyUI」）
+    let updated = crate::setup::updated();
+    if !updated.is_empty() {
+        models.insert("comfy_updated".into(), json!({"list": updated, "can_restart": app.restart_comfy.get().is_some()}));
+    }
+    // SDXL 的子標籤（Pony／Illustrious／NoobAI…，看檔頭 metadata，看不出來就不列）：網頁拿來換說明文字（Pony 要寫 score tag）
+    let unet_sub: Map<String, Value> = unets
+        .iter()
+        .filter(|n| unet_family.get(n.as_str()).and_then(Value::as_str) == Some(families::SDXL))
+        .filter_map(|n| families::sublabel_of(&unet_roots, n).map(|s| (n.clone(), json!(s))))
+        .collect();
+    models.insert("unet_sub".into(), Value::Object(unet_sub));
     models.insert("unet_family".into(), Value::Object(unet_family));
     models.insert(
         "family_names".into(),
@@ -241,11 +270,12 @@ pub async fn settings_import(State(app): State<Shared>, Body(body): Body) -> Api
             n_l += 1;
         }
     }
-    let n_lib = {
+    let (n_lib, lost) = {
         let _g = app.assets_lock.lock().await;
-        super::api_lib::import(&app.db, body.get("prompt_lib"))?
+        super::api_lib::import(&app.db, body.get("prompt_lib"), &super::api_assets::assets_dir(&app.paths))?
     };
-    let mut out = json!({"ok": true, "presets": n_p, "prompt_lib": n_lib, "lora_meta": n_l});
+    // asset_files_missing＝幾筆資產的圖片／聲音檔沒跟來（設定檔不帶資產檔），只收了文字和縮圖
+    let mut out = json!({"ok": true, "presets": n_p, "prompt_lib": n_lib, "lora_meta": n_l, "asset_files_missing": lost});
     if let (Some(o), Value::Object(r)) = (out.as_object_mut(), report.to_json()) {
         o.extend(r);
     }
@@ -268,17 +298,19 @@ pub async fn set_settings(State(app): State<Shared>, Body(body): Body) -> ApiRes
         s.insert("pe_mode".into(), m.clone());
     }
     if let Some(m) = body.get("pe_general") {
-        if !matches!(m.as_str(), Some("auto" | "35b" | "9b")) {
-            return Err(bad("通用模型只能是 auto／35b／9b"));
+        // auto／35b／9b，或直接指定 LLM 資料夾裡的某個 .gguf（只收檔名，不收路徑）
+        let ok = match m.as_str() {
+            Some("auto" | "35b" | "9b") => true,
+            Some(f) => f.len() <= 255 && f.to_lowercase().ends_with(".gguf") && !f.contains(['/', '\\', ':']) && !f.contains(".."),
+            None => false,
+        };
+        if !ok {
+            return Err(bad("通用模型只能是 auto／35b／9b，或 LLM 資料夾裡某個 .gguf 的檔名"));
         }
         s.insert("pe_general".into(), m.clone());
     }
-    if let Some(m) = body.get("pe_engine") {
-        if !matches!(m.as_str(), Some("general" | "official")) {
-            return Err(bad("改寫模型只能是 general／official"));
-        }
-        s.insert("pe_engine".into(), m.clone());
-    }
+    // pe_engine（以前選官方 PE）2026-10-30 拿掉了：舊網頁送來就不理，存檔裡留著的舊值也清掉
+    s.remove("pe_engine");
     if let Some(v) = body.get("pe_partial_layers") {
         s.insert(
             "pe_partial_layers".into(),
@@ -329,16 +361,17 @@ pub async fn set_settings(State(app): State<Shared>, Body(body): Body) -> ApiRes
 /// 一次最多送幾張（網頁最多 16）
 const MAX_COUNT: i64 = 32;
 
-/// 外部直接打 API 最常漏的參數：沒給不會報錯，只會畫出 256 寬、0 步、CFG 0 的圖。
-/// 只管文生圖：網頁一定帶齊；其他模式的尺寸跟著輸入圖走，有的模式（去背、放大、差分）也不用步數
-fn missing_txt2img(p: &Map<String, Value>) -> Vec<&'static str> {
-    if p.get("mode").and_then(Value::as_str).unwrap_or("txt2img") != "txt2img" {
-        return vec![];
-    }
-    ["width", "height", "steps", "cfg"]
-        .into_iter()
-        .filter(|k| p.get(*k).is_none_or(Value::is_null))
-        .collect()
+/// 外部直接打 API 最常漏的參數：沒給不會報錯，只會畫出 256 寬、0 步、CFG 0 的圖。網頁一定帶齊。
+/// 文生圖要寬高＋步數＋CFG；圖生圖、局部重繪、擴圖、多圖參考、修臉修手的尺寸跟著輸入圖走，但一樣要取樣，
+/// 少了步數／CFG 會組出 0 步、CFG 0 的取樣器（2026-11-13 以前只擋文生圖）。
+/// 其他模式（去背、放大、設定圖、差分、脫衣）不用或自己帶固定參數；走匯入的工作流組時，沒給就用工作流裡的值
+fn missing_params(p: &Map<String, Value>) -> Vec<&'static str> {
+    let need: &[&str] = match p.get("mode").and_then(Value::as_str).unwrap_or("txt2img") {
+        "txt2img" => &["width", "height", "steps", "cfg"],
+        "img2img" | "inpaint" | "outpaint" | "multiref" | "detail" if p.get("image_workflow").is_none_or(Value::is_null) => &["steps", "cfg"],
+        _ => &[],
+    };
+    need.iter().copied().filter(|k| p.get(*k).is_none_or(Value::is_null)).collect()
 }
 
 fn random_seed() -> i64 {
@@ -346,7 +379,7 @@ fn random_seed() -> i64 {
 }
 
 /// 種子：沒給、空白、-1 都是隨機；其他要是整數
-fn resolve_seed(p: &mut Map<String, Value>) -> Result<(), super::ApiError> {
+pub(super) fn resolve_seed(p: &mut Map<String, Value>) -> Result<(), super::ApiError> {
     let seed = p.get("seed").cloned().unwrap_or(Value::Null);
     let random = match &seed {
         Value::Null => true,
@@ -374,9 +407,9 @@ pub async fn generate(State(app): State<Shared>, Body(body): Body) -> ApiResult 
     if !(1..=MAX_COUNT).contains(&count) {
         return Err(bad(format!("count 要在 1～{MAX_COUNT} 之間（送來的是 {count}）")));
     }
-    let missing = missing_txt2img(&p);
+    let missing = missing_params(&p);
     if !missing.is_empty() {
-        return Err(bad(format!("文生圖缺少參數：{}", missing.join("、"))));
+        return Err(bad(format!("缺少參數：{}（沒給不會用預設值，會組出 0 步、CFG 0 的圖）", missing.join("、"))));
     }
     resolve_seed(&mut p)?;
     submit(&app, p, count).await
@@ -406,20 +439,62 @@ struct Prepared {
     fam: String,
     /// 家族不合而略過的 LoRA 檔名
     skipped: Vec<String>,
+    /// 給了卻不會生效的參數（白話，一條一句）
+    notes: Vec<String>,
+}
+
+/// 明確開了、這個家族或模式卻不會用到的參數：以前都是靜默沒作用，現在每個 job 帶 notes 回去（網頁跳提示、MCP 原樣轉給 AI）。
+/// 只挑「使用者動手開的」：網頁每次都會帶的預設值不算（不然每張圖都跳）。走匯入工作流的不看（那邊用什麼照工作流）
+fn ignored_notes(p: &Map<String, Value>, fam: &str, mode: &str) -> Vec<String> {
+    let on = |c: &Value| truthy(Some(c)) && truthy(c.get("enabled")) && truthy(c.get("image"));
+    let ctl = |k: &str| match p.get(k) {
+        Some(Value::Array(a)) => a.iter().any(on),
+        Some(c) => on(c),
+        None => false,
+    };
+    let sampled = matches!(mode, "txt2img" | "img2img");
+    let name = families::label(fam);
+    let mut out = vec![];
+    if ctl("control") && !(fam == families::ANIMA && sampled) {
+        out.push(format!("構圖控制只在 Anima 的文生圖、圖生圖有作用：這次（{name}・{mode}）沒有套用"));
+    }
+    if ctl("moss_control") && !(fam == families::MOSS && mode == "txt2img") {
+        out.push(format!("色彩／深度控制只在 MOSS 的文生圖有作用：這次（{name}・{mode}）沒有套用"));
+    }
+    let pose = p.get("pose_control").is_some_and(|pc| ["depth", "pose"].iter().any(|k| pc.get(*k).and_then(Value::as_str).is_some_and(|x| !x.is_empty())));
+    let pose_ok = match fam {
+        families::ANIMA => sampled,
+        families::MOSS => mode == "txt2img",
+        families::QWEN21 => true,
+        _ => false,
+    };
+    if pose && !pose_ok {
+        out.push(format!("姿勢參考圖只在 Anima（文生圖、圖生圖）、MOSS（文生圖）、Qwen 2.1 有作用：這次（{name}・{mode}）沒有套用"));
+    }
+    if p.get("hires").is_some_and(|h| truthy(Some(h)) && truthy(h.get("enabled"))) && !sampled {
+        out.push(format!("高解析修復只在文生圖、圖生圖有作用：這次（{mode}）沒有套用"));
+    }
+    if p.get("layout").and_then(Value::as_array).is_some_and(|a| !a.is_empty()) && !(fam == families::MOSS && sampled) {
+        out.push(format!("版面框只在 MOSS 的文生圖、圖生圖有作用：這次（{name}・{mode}）沒有套用"));
+    }
+    // 跟 graphs::sample 同一個條件：Qwen 2.1 的 Turbo 走固定的 ManualSigmas
+    let model = p.get("model").and_then(Value::as_str).unwrap_or("").to_lowercase();
+    if fam == families::QWEN21 && model.contains("turbo") {
+        if let Some(n) = p.get("steps").and_then(crate::py::int).filter(|n| *n != 8) {
+            out.push(format!("Qwen 2.1 Turbo 用固定的蒸餾排程：步數 {n} 和排程器沒有作用（要調步數請換非 Turbo 的模型）"));
+        }
+    }
+    out
 }
 
 /// 決定用哪個流程、家族，並照家族篩 LoRA。不碰 ComfyUI（匯出內建工作流也用它）
 /// 影片要用哪個模型：請求指定的（重跑、放大成正式版）→ 設定裡選的
-fn video_engine(paths: &crate::paths::Paths, p: &Map<String, Value>) -> String {
-    match p.get("video_engine").and_then(Value::as_str).filter(|e| !e.is_empty()) {
+pub(crate) fn video_engine(paths: &crate::paths::Paths, p: &Map<String, Value>) -> String {
+    let e = match p.get("video_engine").and_then(Value::as_str).filter(|e| !e.is_empty()) {
         Some(e) => e.to_string(),
         None => settings::load(&paths.settings).get("video_engine").and_then(Value::as_str).unwrap_or(video_wf::BUILTIN).to_string(),
-    }
-}
-
-/// 影片模型選了 H3：生成頁、導演台的影片不走這裡（字串要寫在 bad(…) 裡，英文字典才抽得到）
-fn h3_here() -> super::ApiError {
-    bad("影片模型選的是 MiniMax H3：到「導演 → H3 影片」分頁做（或到「設定 → 影片模型」換回 LTX）")
+    };
+    video_wf::normalize_engine(&e).to_string()
 }
 
 fn prepare(app: &Shared, mut p: Map<String, Value>) -> Result<Prepared, super::ApiError> {
@@ -433,12 +508,11 @@ fn prepare(app: &Shared, mut p: Map<String, Value>) -> Result<Prepared, super::A
     // 影片模型：請求指定的（重跑、放大成正式版）→ 設定裡選的。記進 params，重跑時用同一個
     if video {
         let engine = video_engine(paths, &p);
-        if engine == video_wf::H3 {
-            return Err(h3_here());
+        // 內建 H3 在 submit_jobs 就轉去 api_h3，不經過這裡（匯出內建工作流這類呼叫也不支援 H3）
+        if engine == video_wf::BUILTIN {
+            return Err(bad("內建影片（MiniMax H3）不經過生圖流程：從「動起來」或導演台送出"));
         }
-        if engine != video_wf::BUILTIN {
-            flow = Some(Flow::Video(video_wf::load(&video_wf::dir(&paths.data), &engine).map_err(bad)?));
-        }
+        flow = Some(Flow::Video(video_wf::load(&video_wf::dir(&paths.data), &engine).map_err(bad)?));
         p.insert("video_engine".into(), json!(engine));
     }
     let model = p.get("model").and_then(Value::as_str).unwrap_or("").to_string();
@@ -467,6 +541,11 @@ fn prepare(app: &Shared, mut p: Map<String, Value>) -> Result<Prepared, super::A
         flow = Some(Flow::Image { set, mode: mode.clone() });
         fam = "custom".to_string();
     } else {
+        if !video {
+            if let Some(e) = families::missing_model(&paths.unet_roots(), &model) {
+                return Err(bad(e));
+            }
+        }
         fam = families::family_of(&paths.unet_roots(), &model).to_string();
         lora_fam = Some(fam.clone());
         // 內建功能被使用者的工作流取代了（「取代內建功能」）：這個家族的這個模式有指定工作流組、而且組裡有這個模式
@@ -485,6 +564,15 @@ fn prepare(app: &Shared, mut p: Map<String, Value>) -> Result<Prepared, super::A
             }
         }
     }
+    // 檔頭認得出是 SD 1.5／Flux／SD3，但內建流程沒有它們的節點圖：以前會靜默走 Anima 那條（UNETLoader＋Anima 的文字編碼器），
+    // ComfyUI 才報一個看不懂的形狀錯誤。認不出來的（other）照舊放行：新微調的檔頭可能只是沒見過
+    if !video && flow.is_none() && fam != families::OTHER && fam != "custom" && !families::is_builtin(&fam) {
+        return Err(bad(format!(
+            "「{model}」是{}的模型，內建流程不會畫。到「設定 → 模型與工作流」匯入它用的 ComfyUI 工作流，再從模型選單選「⚙ 工作流」那一項",
+            families::label(&fam)
+        )));
+    }
+    let notes = if flow.is_none() && !video { ignored_notes(&p, &fam, &mode) } else { vec![] };
     p.insert("family".into(), json!(fam));
     // 一鍵脫衣：改圖指令和精修 tag 是外部內容補丁（feature_strip），這裡照 target／keep 算好塞進 params，
     // graph 本身不含露骨文字；沒裝補丁就擋下。
@@ -520,52 +608,33 @@ fn prepare(app: &Shared, mut p: Map<String, Value>) -> Result<Prepared, super::A
         }
     }
     p.insert("loras".into(), json!(kept));
-    // 影片 LoRA：只有內建 LTX 用得到，而且只留 LTX 的（其他家族掛上去 ComfyUI 會整串報錯）
-    if let Some(vl) = p.shift_remove("video_loras") {
-        if video && flow.is_none() {
-            let (keep, skip) = split_video_loras(&lora_roots, &vl);
-            skipped.extend(skip);
-            if !keep.is_empty() {
-                p.insert("video_loras".into(), json!(keep));
-            }
-        }
-    }
-    Ok(Prepared { p, video, flow, fam, skipped })
-}
-
-/// 影片 LoRA 清單分成（LTX 能用的、要略過的檔名）
-fn split_video_loras(roots: &[std::path::PathBuf], list: &Value) -> (Vec<Value>, Vec<String>) {
-    let (mut keep, mut skip) = (vec![], vec![]);
-    for l in list.as_array().into_iter().flatten() {
-        let Some(name) = l.get("name").and_then(Value::as_str) else { continue };
-        if families::is_ltx_of(roots, name) {
-            keep.push(l.clone());
-        } else {
-            skip.push(name.to_string());
-        }
-    }
-    (keep, skip)
+    // 以前內建 LTX 的影片 LoRA 欄位（舊網頁、重跑舊任務會帶來）：LTX 退場，丟掉
+    p.shift_remove("video_loras");
+    Ok(Prepared { p, video, flow, fam, skipped, notes })
 }
 
 /// 同 submit，回傳 [{"job": 任務編號, "seed": 種子}]（導演台自己等任務跑完）。
-/// 有因為家族不合而略過的 LoRA，每個 job 多一個 skipped_loras（檔名清單）
+/// 有因為家族不合而略過的 LoRA，每個 job 多一個 skipped_loras（檔名清單）；有給了卻沒作用的參數，多一個 notes（白話句子）
 pub async fn submit_jobs(
     app: &Shared,
     p: Map<String, Value>,
     count: i64,
 ) -> Result<Vec<Value>, super::ApiError> {
-    // 「動起來」明確選了 H3 本機（請求帶 video_engine "h3"）：換成 H3 參數排進本機 ComfyUI
-    if p.get("mode").and_then(Value::as_str) == Some("video") && p.get("video_engine").and_then(Value::as_str) == Some(video_wf::H3) {
+    // 影片用內建的 H3（請求指定、或設定選的；舊的 ltx23 也算）：換成 H3 參數排進本機 ComfyUI。匯入的影片工作流照舊走 prepare
+    if p.get("mode").and_then(Value::as_str) == Some("video") && video_engine(&app.paths, &p) == video_wf::BUILTIN {
         return super::api_h3::submit_from_gen(app, &p, count).await;
     }
-    // 只有設定選了 H3（導演台的分鏡也走這裡）：導演台還不能用 H3，設定的問題先講，比「沒有連線」有用
-    if p.get("mode").and_then(Value::as_str) == Some("video") && video_engine(&app.paths, &p) == video_wf::H3 {
-        return Err(h3_here());
-    }
-    if !app.comfy.live().online {
+    // 工作節點：任何一台在線就能送（只有主節點時＝主節點在線）
+    if !app.pool.loads().iter().any(|l| l.online) {
         return Err(bad("ComfyUI 沒有連線。解法：重新開啟「繪匣 PaintDeck」。"));
     }
-    let Prepared { p, video, flow, fam, skipped } = prepare(app, p)?;
+    // 站剛開、還沒問過 ComfyUI 模型放哪些資料夾（每分鐘問一次）就找不到模型檔：先問一次再判斷家族（第一百九十一筆）
+    let model = p.get("model").and_then(Value::as_str).unwrap_or("").to_string();
+    if !model.starts_with(image_wf::PREFIX) && families::missing_model(&app.paths.unet_roots(), &model).is_some() {
+        let u = app.comfy.url().to_string();
+        let _ = blocking(move || crate::model_dirs::refresh_live(&u)).await;
+    }
+    let Prepared { p, video, flow, fam, skipped, notes } = prepare(app, p)?;
     // AI 改寫的 llama-server 在 GPU 上會占掉 5～6GB，ComfyUI 會爆顯存：先關掉（正在改寫就等它寫完）
     app.pe.release_for_generation().await;
     if video {
@@ -589,13 +658,8 @@ pub async fn submit_jobs(
             Ok(j) => jobs.push(j),
             Err(e) => {
                 // 送到一半失敗：前面已經排進 ComfyUI 的幾張也收回，免得網頁說失敗、背景卻還在畫（使用者再按一次就重複了）
-                for j in &jobs {
-                    let Some(pid) = j["job"].as_str() else { continue };
-                    let _ = app.comfy.post("/queue", &json!({"delete": [pid]})).await;
-                    let _ = app.db.set_job(pid, "cancelled", None);
-                    app.hub
-                        .send(json!({"type": "finish", "job": pid, "status": "cancelled"}));
-                }
+                let pids: Vec<String> = jobs.iter().filter_map(|j| j["job"].as_str().map(str::to_owned)).collect();
+                app.pool.cancel(&pids).await;
                 return Err(e);
             }
         }
@@ -603,6 +667,11 @@ pub async fn submit_jobs(
     if !skipped.is_empty() {
         for j in &mut jobs {
             j["skipped_loras"] = json!(skipped);
+        }
+    }
+    if !notes.is_empty() {
+        for j in &mut jobs {
+            j["notes"] = json!(notes);
         }
     }
     Ok(jobs)
@@ -648,15 +717,20 @@ async fn submit_one(
         let mut params = p.clone();
         params["seed"] = info["seed"].clone();
         params["prompt_resolved"] = info["prompt"].clone();
-        let pid = app
-            .comfy
-            .submit(&Value::Object(nodes), &json!({"anima_params": params}))
+        // 工作節點：挑一台送（網頁「丟哪台」＝params.node；只有主節點時跟以前一樣）
+        let manual = p.get("node").and_then(Value::as_str).map(str::to_owned);
+        let (pid, node) = app
+            .pool
+            .submit(&Value::Object(nodes), &json!({"anima_params": params}), fam, manual.as_deref(), video)
             .await
-            .map_err(|e: ComfyError| bad(e.0))?;
+            .map_err(bad)?;
+        if node != crate::nodes::MAIN {
+            params["_node"] = json!(node);
+        }
         app.db.add_job(&pid, &params, &info)?;
-        app.comfy.sync_job(&pid).await;
+        app.pool.sync_job(&pid).await;
         *app.last_family.lock().unwrap_or_else(|e| e.into_inner()) = fam.to_string();
-        Ok(json!({"job": pid, "seed": info["seed"]}))
+        Ok(if node == crate::nodes::MAIN { json!({"job": pid, "seed": info["seed"]}) } else { json!({"job": pid, "seed": info["seed"], "node": node}) })
     }
 }
 
@@ -670,9 +744,9 @@ pub async fn export_graph(State(app): State<Shared>, Body(body): Body) -> ApiRes
     let Some(Value::Object(mut p)) = body.get("params").cloned() else {
         return Err(bad("送來的資料格式不對：缺少 params"));
     };
-    let missing = missing_txt2img(&p);
+    let missing = missing_params(&p);
     if !missing.is_empty() {
-        return Err(bad(format!("文生圖缺少參數：{}", missing.join("、"))));
+        return Err(bad(format!("缺少參數：{}（沒給不會用預設值，會組出 0 步、CFG 0 的圖）", missing.join("、"))));
     }
     // 只匯得出工作流組也有的模式（匯回去才有地方放）
     let m = p.get("mode").and_then(Value::as_str).unwrap_or("txt2img");
@@ -776,20 +850,20 @@ pub async fn jobs_clear(State(app): State<Shared>) -> ApiResult {
 }
 
 pub async fn interrupt(State(app): State<Shared>) -> ApiResult {
-    app.comfy
-        .post("/interrupt", &json!({}))
+    app.pool
+        .broadcast("/interrupt", &json!({}))
         .await
         .map_err(internal)?;
     ok(json!({"ok": true}))
 }
 
 pub async fn clear_queue(State(app): State<Shared>) -> ApiResult {
-    app.comfy
-        .post("/queue", &json!({"clear": true}))
+    app.pool
+        .broadcast("/queue", &json!({"clear": true}))
         .await
         .map_err(internal)?;
-    app.comfy
-        .post("/interrupt", &json!({}))
+    app.pool
+        .broadcast("/interrupt", &json!({}))
         .await
         .map_err(internal)?;
     // 把資料庫裡還沒結束的任務也收掉；不然它們永遠停在 queued，恢復原廠會一直被擋、導演台／助手的等待也不會停
@@ -807,16 +881,12 @@ pub async fn cancel(State(app): State<Shared>, Body(body): Body) -> ApiResult {
         .and_then(Value::as_str)
         .ok_or_else(|| bad("缺少 job"))?
         .to_string();
-    if app.comfy.live().running.as_deref() == Some(job.as_str()) {
-        app.comfy
-            .post("/interrupt", &json!({}))
-            .await
-            .map_err(internal)?;
+    // 找這件工作所在的那台（工作節點）
+    let c = app.pool.for_job(&job);
+    if c.live().running.as_deref() == Some(job.as_str()) {
+        c.post("/interrupt", &json!({})).await.map_err(internal)?;
     } else {
-        app.comfy
-            .post("/queue", &json!({"delete": [job]}))
-            .await
-            .map_err(internal)?;
+        c.post("/queue", &json!({"delete": [job]})).await.map_err(internal)?;
         app.db.set_job(&job, "cancelled", None)?;
         app.hub
             .send(json!({"type": "finish", "job": job, "status": "cancelled"}));
@@ -878,4 +948,64 @@ pub async fn free_vram(State(app): State<Shared>) -> ApiResult {
         .map_err(|e| internal(format!("ComfyUI 沒有回應：{e}")))?;
     let stopped = app.pe.stop("網頁按了釋放顯存").await.map_err(internal)?;
     ok(json!({"ok": true, "pe_stopped": stopped}))
+}
+
+#[cfg(test)]
+mod missing_tests {
+    use super::missing_params;
+    use serde_json::json;
+
+    fn miss(v: serde_json::Value) -> Vec<&'static str> {
+        missing_params(v.as_object().unwrap())
+    }
+
+    /// 文生圖要寬高＋步數＋CFG；要取樣的圖片模式要步數＋CFG（尺寸跟輸入圖走）；不取樣的模式、走工作流組的不擋
+    #[test]
+    fn missing_params_by_mode() {
+        assert_eq!(miss(json!({"prompt": "a"})), ["width", "height", "steps", "cfg"]);
+        assert_eq!(miss(json!({"mode": "txt2img", "width": 832, "height": 1216, "steps": 8, "cfg": 1})), Vec::<&str>::new());
+        for mode in ["img2img", "inpaint", "outpaint", "multiref", "detail"] {
+            assert_eq!(miss(json!({"mode": mode})), ["steps", "cfg"], "{mode}");
+            assert_eq!(miss(json!({"mode": mode, "steps": null, "cfg": 1})), ["steps"], "{mode}");
+            assert!(miss(json!({"mode": mode, "steps": 8, "cfg": 1})).is_empty(), "{mode}");
+            assert!(miss(json!({"mode": mode, "image_workflow": "wf_abc"})).is_empty(), "{mode} 走工作流組用工作流裡的值");
+        }
+        for mode in ["upscale", "rembg", "video", "charsheet"] {
+            assert!(miss(json!({"mode": mode})).is_empty(), "{mode}");
+        }
+    }
+
+    fn notes(v: serde_json::Value, fam: &str, mode: &str) -> Vec<String> {
+        super::ignored_notes(v.as_object().unwrap(), fam, mode)
+    }
+
+    /// 開了卻不會生效的參數要講出來；會生效的、沒開的、網頁預設帶的不講
+    #[test]
+    fn ignored_params_are_reported() {
+        let ctl = json!({"control": {"enabled": true, "image": "a.png"}});
+        assert!(notes(ctl.clone(), "anima", "txt2img").is_empty());
+        assert!(notes(ctl.clone(), "anima", "img2img").is_empty());
+        assert!(notes(ctl.clone(), "qwen21", "txt2img")[0].contains("構圖控制"));
+        assert!(notes(ctl.clone(), "anima", "inpaint")[0].contains("構圖控制"));
+        assert!(notes(json!({"control": [{"enabled": false, "image": "a.png"}, {"enabled": true, "image": ""}]}), "moss", "txt2img").is_empty(), "沒開、沒放圖的不算");
+        assert!(notes(json!({"control": [{"enabled": true, "image": "a.png"}]}), "moss", "txt2img")[0].contains("構圖控制"));
+        let pose = json!({"pose_control": {"depth": "d.png"}});
+        assert!(notes(pose.clone(), "qwen21", "multiref").is_empty());
+        assert!(notes(pose.clone(), "moss", "txt2img").is_empty());
+        assert!(notes(pose.clone(), "moss", "img2img")[0].contains("姿勢參考圖"));
+        assert!(notes(pose.clone(), "sdxl", "txt2img")[0].contains("姿勢參考圖"));
+        assert!(notes(json!({"pose_control": {"depth": "", "strength": 0.5}}), "sdxl", "txt2img").is_empty());
+        let hi = json!({"hires": {"enabled": true}});
+        assert!(notes(hi.clone(), "anima", "txt2img").is_empty());
+        assert!(notes(hi.clone(), "anima", "inpaint")[0].contains("高解析修復"));
+        assert!(notes(json!({"hires": {"enabled": false}}), "anima", "inpaint").is_empty());
+        assert!(notes(json!({"layout": [{"type": "text", "box": [0, 0, 1, 1]}]}), "anima", "txt2img")[0].contains("版面框"));
+        assert!(notes(json!({"layout": [{"type": "text", "box": [0, 0, 1, 1]}]}), "moss", "txt2img").is_empty());
+        assert!(notes(json!({"layout": []}), "anima", "txt2img").is_empty());
+        let turbo = |steps: i64| json!({"model": "qwen_image_2.1_turbo_int8_convrot.safetensors", "steps": steps});
+        assert!(notes(turbo(8), "qwen21", "txt2img").is_empty(), "網頁預設的 8 步不講");
+        assert!(notes(turbo(20), "qwen21", "txt2img")[0].contains("步數 20"));
+        assert!(notes(json!({"model": "qwen_image_2.1_int8.safetensors", "steps": 25}), "qwen21", "txt2img").is_empty());
+        assert!(notes(json!({"model": "anima-turbo-v1.1.safetensors", "steps": 12}), "anima", "txt2img").is_empty());
+    }
 }

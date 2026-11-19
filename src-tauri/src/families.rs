@@ -11,9 +11,11 @@
 //!   Flux.1                    double_blocks.N.*、single_blocks.N.*（lora_unet_double_blocks_*、diffusion_model.double_blocks.*）、
 //!                              diffusers 格式的 single_transformer_blocks.*
 //!   SD3／3.5                  joint_blocks.N.*（lora_unet_joint_blocks_*）
+//!   Krea 2（單流 DiT）        txtfusion.*、blocks.N.attn.wq／wk／wv／wo（跟 ComfyUI model_detection 一樣看 txtfusion）；
+//!                              diffusers 格式的 LoRA 是 text_fusion.*、transformer_blocks.N.attn.to_gate、ff.gate／up／down
 //!
 //! 判斷順序（Anima、Qwen、MOSS 的規則一字不改，只在前面插入新家族的「結構證據」）：
-//!   MOSS → Qwen 的 txt_in.text_norm → Flux／SD3 → SDXL／SD1.5 → （有 UNet 命名卻分不出 SD1.5／SDXL：metadata，否則 other）
+//!   MOSS → Krea 2 → Qwen 的 txt_in.text_norm → Flux／SD3 → SDXL／SD1.5 → （有 UNet 命名卻分不出 SD1.5／SDXL：metadata，否則 other）
 //!   → Qwen 的 transformer_blocks → Anima → metadata → other。
 //!   SD 的 UNet 與 Flux／SD3 的 diffusers 格式也有 transformer_blocks，所以一定要比舊的 Qwen 規則先判斷。
 //!   SD1.5 與 SDXL 之間，結構證據（區塊編號、transformer 深度）比 label_emb、文字編碼器名稱可靠。
@@ -33,23 +35,25 @@ use std::time::SystemTime;
 pub const ANIMA: &str = "anima";
 pub const QWEN21: &str = "qwen21";
 pub const MOSS: &str = "moss";
+pub const KREA2: &str = "krea2";
 pub const SD15: &str = "sd15";
 pub const SDXL: &str = "sdxl";
 pub const FLUX: &str = "flux";
 pub const SD3: &str = "sd3";
 pub const OTHER: &str = "other";
-/// 顯示名稱（順序就是生成頁模型選單的順序：內建的三個在前面）
-pub const FAMILY_NAMES: [(&str, &str); 7] = [
+/// 顯示名稱（順序就是生成頁模型選單的順序：內建的在前面，順序跟 BUILTIN 一樣）
+pub const FAMILY_NAMES: [(&str, &str); 8] = [
     (ANIMA, "Anima（動漫）"),
     (QWEN21, "Qwen 2.1（編輯）"),
     (MOSS, "MOSS-Image（文生圖繪圖）"),
+    (KREA2, "Krea 2（寫實／插畫）"),
     (SDXL, "SDXL（含 Pony、Illustrious、NoobAI）"),
     (SD15, "SD 1.5"),
     (FLUX, "Flux"),
     (SD3, "SD3"),
 ];
 /// 生圖站內建流程（graphs.rs）真的會畫的家族；其他家族只能走匯入的工作流
-pub const BUILTIN: [&str; 3] = [ANIMA, QWEN21, MOSS];
+pub const BUILTIN: [&str; 5] = [ANIMA, QWEN21, MOSS, KREA2, SDXL];
 
 pub fn is_builtin(family: &str) -> bool {
     BUILTIN.contains(&family)
@@ -71,12 +75,15 @@ struct Info {
     sub: Option<&'static str>,
     /// LTX 影片模型／LoRA（family 是 other）
     ltx: bool,
+    /// MiniMax H3 影片模型／LoRA（family 是 other）
+    h3: bool,
 }
 
 const NO_INFO: Info = Info {
     family: OTHER,
     sub: None,
     ltx: false,
+    h3: false,
 };
 
 static CACHE: Mutex<Option<HashMap<(PathBuf, SystemTime), Info>>> = Mutex::new(None);
@@ -353,10 +360,14 @@ struct Probe {
     // 影片模型（Wan 2.x、LTX-Video／LTX-2）：架構名稱跟 Anima（.blocks.）、Qwen（transformer_blocks）撞名，要先認出來排除
     wan: bool,
     ltx: bool,
+    /// MiniMax H3：blocks.N.attn.qkv_proj、video／audio_patch_proj（Anima 的注意力是分開的 q_proj／k_proj／v_proj）
+    h3: bool,
     /// transformer_blocks 底下有 attn1／attn2（LTX 的命名；Qwen-Image 是 attn、SD 的 UNet 才有 input_blocks 之類的結構）
     attn12: bool,
     /// Anima 自己才有的名稱（Cosmos predict2 的 adaln_modulation、llm_adapter）
     anima_strong: bool,
+    /// Krea 2：txtfusion／text_fusion、注意力 attn.wq／wk／wv／wo（kohya 底線版也是）、diffusers 版的 attn.to_gate、ff.gate／up／down
+    krea2: bool,
 }
 
 impl Probe {
@@ -388,6 +399,12 @@ impl Probe {
         let t: Vec<&str> = low.split(['.', '_']).filter(|s| !s.is_empty()).collect();
         let t = &t[..];
         self.video_evidence(t);
+        let wqkvo = |x: &&str| matches!(*x, "wq" | "wk" | "wv" | "wo");
+        self.krea2 |= t.contains(&"txtfusion")
+            || has(t, &["text", "fusion"])
+            || find(t, &["attn"]).is_some_and(|i| t.get(i + 1).is_some_and(wqkvo))
+            || has(t, &["attn", "to", "gate"])
+            || find(t, &["ff"]).is_some_and(|i| matches!(t.get(i + 1), Some(&"gate") | Some(&"up") | Some(&"down")));
         // MOSS 的 LoRA 也有 kohya 底線版（lora_unet_layers_0_proj_qkv）和只練注意力層的（沒有 ffn_up_gate）：認 layers.N.proj.<qkv|q|k|v|o|ffn>
         self.moss |= has(t, &["shared", "block", "modulation"])
             || after(t, &["layers"]).is_some_and(|r| num(r, 0).is_some() && r.get(1) == Some(&"proj") && r.get(2).is_some_and(|x| matches!(*x, "qkv" | "q" | "k" | "v" | "o" | "ffn")));
@@ -501,6 +518,9 @@ impl Probe {
             || has(t, &["caption", "projection"])
             || has(t, &["audio", "to", "video"])
             || has(t, &["video", "to", "audio"]);
+        self.h3 |= has(t, &["attn", "qkv", "proj"])
+            || has(t, &["video", "patch", "proj"])
+            || has(t, &["audio", "patch", "proj"]);
         if find(t, &["transformer", "blocks"]).is_some() && (has(t, &["attn1"]) || has(t, &["attn2"])) {
             self.attn12 = true;
         }
@@ -508,12 +528,17 @@ impl Probe {
 
     /// 影片模型：不是 Anima 也不是 Qwen，也不是任何生圖家族
     fn is_video(&self) -> bool {
-        (self.wan && !self.anima_strong) || self.ltx || (self.attn12 && !self.unet_ctx && !self.depth2 && self.dit_family().is_none())
+        (self.wan && !self.anima_strong) || (self.h3 && !self.anima_strong) || self.ltx || (self.attn12 && !self.unet_ctx && !self.depth2 && self.dit_family().is_none())
     }
 
     /// 影片模型裡的 LTX（LTX-Video／LTX-2）：有 LTX 自己的名稱，或 transformer_blocks.N.attn1／attn2 又不是 Wan
     fn is_ltx(&self) -> bool {
         self.ltx || (self.is_video() && self.attn12 && !self.wan)
+    }
+
+    /// 影片模型裡的 MiniMax H3：blocks.N.attn.qkv_proj、video_patch_proj／audio_patch_proj（Anima、Wan、LTX 都沒有這些名稱）
+    fn is_h3(&self) -> bool {
+        self.h3 && !self.anima_strong && !self.ltx && !self.wan
     }
 
     /// Flux／SD3（DiT）
@@ -614,6 +639,8 @@ fn classify_with(keys: &[String], meta: Option<&Meta>) -> &'static str {
     let p = Probe::new(keys);
     if p.moss {
         MOSS
+    } else if p.krea2 {
+        KREA2
     } else if p.qwen_strong {
         QWEN21
     } else if p.is_video() {
@@ -682,6 +709,7 @@ fn info_of(path: &Path) -> Info {
             None
         },
         ltx: family == OTHER && !h.meta.ic_lora && is_ltx_keys(&h.keys),
+        h3: family == OTHER && is_h3_keys(&h.keys),
     }
 }
 
@@ -714,9 +742,20 @@ pub fn is_video_keys(keys: &[String]) -> bool {
     Probe::new(keys).is_video()
 }
 
+/// 這個檔（.safetensors、.sft、.gguf）是不是影片模型：讀檔頭的權重名稱。model_dirs 分類 GGUF 時用
+/// （GGUF 的 general.architecture 各家轉檔工具寫法不一，H3 的不在已知清單裡）
+pub fn is_video_file(path: &Path) -> bool {
+    read_header(path).is_ok_and(|h| is_video_keys(&h.keys))
+}
+
 /// 這些權重名稱是不是 LTX（影片 LoRA 下拉只列這種）
 pub fn is_ltx_keys(keys: &[String]) -> bool {
     Probe::new(keys).is_ltx()
+}
+
+/// 這些權重名稱是不是 MiniMax H3（H3 影片台的模型、LoRA 選單靠它認，不靠檔名）
+pub fn is_h3_keys(keys: &[String]) -> bool {
+    Probe::new(keys).is_h3()
 }
 
 /// 檔案屬於哪個家族：anima／qwen21／moss／sdxl／sd15／flux／sd3／other。
@@ -737,6 +776,13 @@ pub fn resolve(roots: &[PathBuf], name: &str) -> Option<PathBuf> {
     roots.iter().map(|r| r.join(&rel)).find(|p| p.exists())
 }
 
+/// 生圖前檢查：選了模型、卻在所有模型資料夾都找不到這個檔 → 給畫面看的說明（不要讓 family_of 猜成 other、用錯流程）
+pub fn missing_model(roots: &[PathBuf], name: &str) -> Option<String> {
+    (!name.is_empty() && resolve(roots, name).is_none()).then(|| {
+        format!("找不到模型檔「{name}」：ComfyUI 的模型資料夾裡沒有這個檔。剛開站的話等幾秒再按一次；還是不行就到模型選單重選一次，或確認檔案還在")
+    })
+}
+
 pub fn family_of(roots: &[PathBuf], name: &str) -> &'static str {
     resolve(roots, name).map(|p| detect(&p)).unwrap_or(OTHER)
 }
@@ -749,8 +795,13 @@ pub fn from_base_model(base: &str) -> Option<&'static str> {
         Some(ANIMA)
     } else if b.contains("moss") {
         Some(MOSS)
+    } else if b.contains("krea 2") || b.contains("krea2") || b.contains("krea-2") {
+        Some(KREA2)
     } else if b.contains("qwen") && b.contains("2.1") {
         Some(QWEN21)
+    } else if b.contains("sdxl") || b.contains("pony") || b.contains("illustrious") || b.contains("noobai") {
+        // C 站寫 "SDXL 1.0"、"Pony"、"Illustrious"、"NoobAI"（Flux.1 Krea、SD 1.5 都不含這些字）
+        Some(SDXL)
     } else {
         None
     }
@@ -774,6 +825,12 @@ pub fn is_ltx_of(roots: &[PathBuf], name: &str) -> bool {
     resolve(roots, name).is_some_and(|p| cached(&p).ltx)
 }
 
+/// 這個名稱的檔案是不是 MiniMax H3 影片模型／LoRA（看檔頭、有快取；.safetensors 和 .gguf 都認）。
+/// 2026-11-10：H3 影片台以前只列檔名有 h3／10eros／minimax 的，下載中心抓回來、檔名沒寫這些字的 H3 模型和 LoRA 永遠選不到
+pub fn is_h3_of(roots: &[PathBuf], name: &str) -> bool {
+    resolve(roots, name).is_some_and(|p| cached(&p).h3)
+}
+
 /// 同 [`family_of`]，回子標籤
 pub fn sublabel_of(roots: &[PathBuf], name: &str) -> Option<&'static str> {
     resolve(roots, name).and_then(|p| sublabel(&p))
@@ -784,6 +841,22 @@ mod tests {
     use super::*;
     use serde_json::json;
     use std::sync::atomic::{AtomicUsize, Ordering};
+
+    /// 2026-10-31（第一百九十一筆）：站剛開、還不知道模型資料夾時找不到 MOSS 模型檔 → 判成 other → 用 Anima 的文字編碼器跑 MOSS、
+    /// 報「too many values to unpack」。找不到模型檔要講出來，不能猜成 other
+    #[test]
+    fn missing_model_is_reported_not_guessed() {
+        let d = std::env::temp_dir().join(format!("anima_missing_model_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(d.join("moss")).unwrap();
+        std::fs::write(d.join("moss").join("m.safetensors"), "x").unwrap();
+        let roots = vec![d.clone()];
+        assert!(missing_model(&roots, "moss\\m.safetensors").is_none());
+        assert!(missing_model(&roots, "").is_none()); // 沒選模型：照舊交給後面
+        let e = missing_model(&roots, "moss_image_sft_int8_convrot.safetensors").expect("要報找不到");
+        assert!(e.contains("moss_image_sft_int8_convrot.safetensors") && e.contains("ComfyUI"), "{e}");
+        let _ = std::fs::remove_dir_all(&d);
+    }
 
     fn s(v: &[&str]) -> Vec<String> {
         v.iter().map(|x| x.to_string()).collect()
@@ -868,7 +941,10 @@ mod tests {
         // 檔案找不到（看不出家族）時才用 Civitai 的底模
         let roots = vec![std::env::temp_dir().join("no_such_lora_root_20261028")];
         assert_eq!(lora_family(&roots, "x.safetensors", Some(&json!({"base_model": "MOSS Image"}))), MOSS);
-        assert_eq!(lora_family(&roots, "x.safetensors", Some(&json!({"base_model": "SDXL 1.0"}))), OTHER);
+        // 2026-11-06 起 SDXL 是內建家族：C 站寫 SDXL 1.0／Pony／Illustrious／NoobAI 都算 sdxl
+        assert_eq!(lora_family(&roots, "x.safetensors", Some(&json!({"base_model": "SDXL 1.0"}))), SDXL);
+        assert_eq!(from_base_model("Illustrious"), Some(SDXL));
+        assert_eq!(from_base_model("SD 1.5"), None);
         assert_eq!(lora_family(&roots, "x.safetensors", None), OTHER);
     }
 
@@ -880,6 +956,23 @@ mod tests {
         assert_eq!(classify(&s(&["transformer.layers.4.proj.q.lora_A.weight", "transformer.layers.4.proj.v.lora_B.weight"])), MOSS);
         // 文字編碼器 LoRA（layers.N.self_attn.q_proj）不能被認成 MOSS
         assert_eq!(classify(&s(&["model.layers.0.self_attn.q_proj.lora_A.weight"])), OTHER);
+    }
+
+    #[test]
+    fn krea2_model_and_lora_formats() {
+        // 主模型（Comfy-Org/Krea-2 的 ComfyUI 版）：blocks.N 跟 Anima 撞名，靠 txtfusion、attn.wq 認
+        assert_eq!(classify(&s(&["first.weight", "txtfusion.projector.weight", "blocks.0.attn.wq.weight", "blocks.0.mlp.gate.weight"])), KREA2);
+        // ComfyUI 原生名稱的 LoRA、kohya 底線版、diffusers 版（transformer_blocks 跟 Qwen 撞名）
+        assert_eq!(classify(&s(&["diffusion_model.blocks.3.attn.wq.lora_A.weight", "diffusion_model.blocks.3.attn.wk.lora_B.weight"])), KREA2);
+        assert_eq!(classify(&s(&["lora_unet_blocks_3_attn_wv.lora_down.weight"])), KREA2);
+        assert_eq!(classify(&s(&["transformer.transformer_blocks.0.attn.to_q.lora_A.weight", "transformer.transformer_blocks.0.attn.to_gate.lora_A.weight"])), KREA2);
+        assert_eq!(classify(&s(&["transformer_blocks.5.ff.up.lora_A.weight"])), KREA2);
+        // 舊的不能被搶走：Anima 的 self_attn.q_proj、Flux diffusers 的 ff.net、Qwen 的 attn.to_q
+        assert_eq!(classify(&s(&["lora_unet_blocks_3_self_attn_q_proj.lora_down.weight"])), ANIMA);
+        assert_eq!(classify(&s(&["transformer_blocks.0.attn.to_q.weight"])), QWEN21);
+        assert_eq!(classify(&s(&["single_transformer_blocks.0.attn.to_q.weight", "transformer_blocks.0.ff.net.0.proj.weight"])), FLUX);
+        assert_eq!(from_base_model("Krea 2 Turbo"), Some(KREA2));
+        assert_eq!(from_base_model("Flux.1 Krea"), None);
     }
 
     #[test]
@@ -1582,6 +1675,12 @@ mod tests {
         let ic = Tmp::new("ic.safetensors", &safetensors(&["diffusion_model.transformer_blocks.0.attn1.to_k.lora_A.weight"],
             Some(json!({"model_version": "2.3.0", "reference_downscale_factor": "2"}))));
         assert!(!is_ltx_of(&root(&ic), "ic.safetensors"));
+        // H3：檔名沒寫 h3 也認得（LoRA、整顆模型）；LTX、找不到的檔不算
+        assert!(is_h3_of(&root(&h3), "h3.safetensors"));
+        let plain = Tmp::new("CinemaMix_v2.safetensors", &safetensors(&["blocks.0.attn.qkv_proj.weight", "video_patch_proj.weight", "audio_patch_proj.weight"], None));
+        assert!(is_h3_of(&root(&plain), "CinemaMix_v2.safetensors"));
+        assert!(!is_h3_of(&root(&ltx), "ltx_move.safetensors"));
+        assert!(!is_h3_of(&root(&h3), "missing.safetensors"));
     }
 
     #[test]
@@ -1768,13 +1867,13 @@ mod tests {
         assert_eq!(label(SDXL), "SDXL（含 Pony、Illustrious、NoobAI）");
         assert_eq!(label(SD15), "SD 1.5");
         assert_eq!(label(OTHER), "其他");
-        assert!(is_builtin(ANIMA) && is_builtin(QWEN21) && is_builtin(MOSS));
-        assert!(!is_builtin(SDXL) && !is_builtin(FLUX) && !is_builtin(OTHER));
-        // 內建三個維持在最前面（生成頁模型選單的順序）
+        assert!(is_builtin(ANIMA) && is_builtin(QWEN21) && is_builtin(MOSS) && is_builtin(KREA2) && is_builtin(SDXL));
+        assert!(!is_builtin(SD15) && !is_builtin(FLUX) && !is_builtin(OTHER));
+        // 內建的維持在最前面（生成頁模型選單的順序）
         assert_eq!(
             FAMILY_NAMES
                 .iter()
-                .take(3)
+                .take(BUILTIN.len())
                 .map(|(k, _)| *k)
                 .collect::<Vec<_>>(),
             BUILTIN
@@ -1872,7 +1971,7 @@ mod tests {
         ]);
         assert_eq!(legacy_classify(&ltx), QWEN21, "以前會被誤認成 Qwen");
         assert_eq!(classify(&ltx), OTHER);
-        // LTX-2.3（10Eros）：只有 transformer_blocks.N.attn1＋audio 的名稱（真實檔頭 D:\AI\ComfyUI_models\checkpointsEros_v1.5_DMD_INT8_checkpoint.safetensors）
+        // LTX-2.3（10Eros）：只有 transformer_blocks.N.attn1＋audio 的名稱（真實檔頭 D:\AI\ComfyUI_models\checkpoints\10Eros_v1.5_DMD_INT8_checkpoint.safetensors）
         assert_eq!(
             classify(&s(&[
                 "model.diffusion_model.transformer_blocks.0.attn1.to_k.weight_scale",
@@ -1900,6 +1999,23 @@ mod tests {
         assert!(!is_ltx_keys(&s(&["transformer_blocks.0.attn.to_q.weight", "transformer_blocks.0.img_mlp.net.0.proj.weight"])));
         // SDXL 的 UNet 也有 attn1／attn2，但有 input_blocks
         assert!(!is_ltx_keys(&s(&["lora_unet_input_blocks_4_1_transformer_blocks_0_attn1_to_q.lora_down.weight", "lora_unet_label_emb_0_0.lora_down.weight"])));
+    }
+
+    /// MiniMax H3（影片）也用 blocks.N 開頭，不能被舊規則當成 Anima（酒館接口曾挑到 10Eros H3 去生圖而炸掉）
+    #[test]
+    fn minimax_h3_is_video_not_anima() {
+        // 真實檔頭 10Eros_Max_h3_TURBO-hybrid_beta5_w4a8_14gb_optimized（整顆模型）
+        assert_eq!(classify(&s(&["adaln_basis", "audio_patch_proj.weight", "blocks.0.adaln_proj.linear.weight", "blocks.0.attn.qkv_proj.weight",
+            "blocks.0.attn.out_proj.weight", "blocks.0.mlp.fc1.weight", "token_refiner.blocks.0.attn.qkv_proj.weight", "video_patch_proj.weight"])), OTHER);
+        // H3 LoRA（minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16）
+        assert_eq!(classify(&s(&["diffusion_model.blocks.0.attn.qkv_proj.lora_A.weight", "diffusion_model.blocks.0.attn.out_proj.lora_B.weight"])), OTHER);
+        assert!(!is_ltx_keys(&s(&["blocks.0.attn.qkv_proj.weight", "video_patch_proj.weight"])));
+        // H3 認得出來；Wan、LTX、Anima 不算
+        assert!(is_h3_keys(&s(&["blocks.0.attn.qkv_proj.weight", "video_patch_proj.weight"])));
+        assert!(is_h3_keys(&s(&["diffusion_model.blocks.0.attn.qkv_proj.lora_A.weight"])));
+        assert!(!is_h3_keys(&s(&["diffusion_model.blocks.0.self_attn.q.lora_A.weight", "diffusion_model.blocks.0.ffn.0.lora_B.weight"])));
+        assert!(!is_h3_keys(&s(&["diffusion_model.transformer_blocks.4.attn1.to_q.lora_A.weight"])));
+        assert!(!is_h3_keys(&s(&["blocks.0.self_attn.q_proj.weight", "blocks.0.mlp.layer1.weight"])));
     }
 
     /// 影片模型的排除條件不能誤傷：Anima、Qwen、SDXL／SD1.5 的 UNet（也有 attn1／attn2）、SD3.5（transformer_blocks.N.attn2）照舊
@@ -1933,7 +2049,7 @@ mod tests {
     fn real_video_header() {
         let Some(f) = std::env::var_os("ANIMA_TEST_VIDEO_FILE") else { return };
         let h = read_header(Path::new(&f)).expect("讀不到檔頭");
-        println!("{} 個權重，家族＝{}，影片＝{}", h.keys.len(), classify_with(&h.keys, Some(&h.meta)), is_video_keys(&h.keys));
+        println!("{} 個權重，家族＝{}，影片＝{}，H3＝{}，LTX＝{}", h.keys.len(), classify_with(&h.keys, Some(&h.meta)), is_video_keys(&h.keys), is_h3_keys(&h.keys), is_ltx_keys(&h.keys));
         assert_eq!(classify_with(&h.keys, Some(&h.meta)), OTHER);
     }
 }

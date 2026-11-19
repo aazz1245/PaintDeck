@@ -4,9 +4,10 @@ import * as gen from "./gen.js";
 import * as gallery from "./gallery.js";
 import * as assets from "./assets.js";
 import * as loras from "./loras.js";
-import * as civitai from "./civitai.js";
+import * as hub from "./hub.js";
 import * as feature from "./feature.js";
 import * as settings from "./settings.js";
+import * as llm from "./llm.js";
 import * as pe from "./pe.js";
 import * as queue from "./queue.js";
 import * as system from "./system.js";
@@ -15,11 +16,13 @@ import * as deck from "./deck.js";
 import * as director from "./director.js";
 import * as studio from "./studio.js";
 import * as comic from "./comic.js";
+import * as colorbook from "./colorbook.js";
 import * as agent from "./agent.js";
 import { onAgentUi } from "./agentui.js";
 import * as play from "./play.js";
 import * as h3 from "./h3.js";
 import * as h3chain from "./h3chain.js";
+import * as train from "./train.js";
 import * as shotsheet from "./shotsheet.js";
 import * as framepick from "./framepick.js";
 import * as charsheet from "./charsheet.js";
@@ -27,21 +30,29 @@ import * as i18n from "./i18n.js";
 import * as diagnostics from "./diagnostics.js";
 import * as booru from "./booru.js";
 import { mountDock } from "./dock.js";
+import * as taglibPage from "./taglibpage.js";
 
 function showPage(p) {
+  // 隨機頁借走的生成頁面板：離開就還回去（要在生成頁顯示之前，自由版面才量得到）
+  if (app.page === "taglib" && p !== "taglib") taglibPage.hide();
   app.page = p;
   $$("#tabs button").forEach((b) => { b.classList.toggle("on", b.dataset.page === p); b.setAttribute("aria-selected", String(b.dataset.page === p)); });
   $$(".page").forEach((pg) => pg.classList.toggle("on", pg.id === `page-${p}`));
+  if (p === "taglib") taglibPage.show();
   if (p === "gallery") gallery.show();
   if (p === "assets") assets.show();
   if (p === "loras") loras.showPage();
-  if (p === "civitai") civitai.show();
+  if (p === "civitai") hub.show();
   if (p === "settings") settings.show();
+  if (p === "api") llm.show();
   if (p === "director") { director.show(); studio.show(); }
-  if (p === "comic") comic.show();
+  if (p === "comic") { comic.show(); colorbook.show(); }
   if (p === "agent") agent.show();
+  if (p === "train") train.show();
 }
 $("#tabs").addEventListener("click", (e) => { const b = e.target.closest("button[data-page]"); if (b && !b.disabled) showPage(b.dataset.page); });
+// 頁面裡「到 API 頁」這種跳頁按鈕：data-go＝頁名
+document.addEventListener("click", (e) => { const b = e.target.closest("button[data-go]"); if (b) showPage(b.dataset.go); });
 app.showPage = showPage;
 
 // 好幾個地方會同時要求重讀（換設定、ComfyUI 上線、重新連線）：只收最後一次的結果，晚回的舊狀態不能蓋掉新的
@@ -85,19 +96,21 @@ function connect() {
     const m = JSON.parse(ev.data);
     diagnostics.onEvent(m);
     switch (m.type) {
-      case "hello": setOnline(m.online, m.remaining); if (connectedOnce) refreshState(); connectedOnce = true; break;
+      case "hello": setOnline(m.online, m.remaining); if (connectedOnce) { refreshState(); gen.reconcile(); } connectedOnce = true; break;
       case "comfy": setOnline(m.online); if (m.online) refreshState(); else toast("ComfyUI 連線中斷，正在重新連線…", "err"); break;
       case "queue": setOnline(true, m.remaining); if (!m.remaining) { $("#topProg > div").style.width = "0"; deck.idle(); } break;
       case "start": gen.onStart(m.job); queue.onStart(m.job); deck.onStart(m.job, gen.S.pending.has(m.job)); break;
       case "progress": gen.onProgress(m); queue.onProgress(m); deck.onProgress(m); $("#topProg > div").style.width = `${(100 * m.value) / m.max}%`; break;
-      case "image": if (gen.S.pending.has(m.job)) queue.onImage(m.job, m.image); play.onImage(m.job, m.image); gen.onImage(m.job, m.image); gallery.onNewImage(m.image); charsheet.onImage(m.job, m.image); h3.onImage(m.job, m.image); framepick.onImage(m.job, m.image); break;
+      case "image": if (gen.S.pending.has(m.job)) queue.onImage(m.job, m.image); play.onImage(m.job, m.image); gen.onImage(m.job, m.image); gallery.onNewImage(m.image); charsheet.onImage(m.job, m.image); h3.onImage(m.job, m.image); framepick.onImage(m.job, m.image); train.onImage(m.job, m.image); break;
       case "director": case "director_llm": director.onEvent(m); break;
       case "comic": comic.onEvent(m); break;
+      case "colorbook": colorbook.onEvent(m); break;
       case "agent": case "agent_llm": case "agent_lora": agent.onEvent(m); break;
       case "agent_ui": onAgentUi(m); break;
       case "agent_cloud": agent.onEvent(m); h3.onEvent(m); h3chain.onEvent(m); break;
       case "h3": h3.onEvent(m); break;
       case "h3chain": h3chain.onEvent(m); break;
+      case "train": train.onEvent(m); break;
       case "finish": {
         const mine = gen.S.pending.has(m.job);
         play.onFinish(m);
@@ -107,7 +120,11 @@ function connect() {
         deck.onFinish(m);
         break;
       }
-      case "download": civitai.onDownload(m); break;
+      case "download": hub.onDownload(m); break;
+      case "lora_cover": loras.onCover(m); break;
+      // 酒館（A1111 相容接口）送來的圖：LoRA 找不到、跟模型不合這類提醒酒館不會顯示，在這裡講
+      case "sdapi": if (m.warnings?.length) toast("酒館生圖：" + m.warnings.join("；"), "err"); break;
+      case "hubrun": hub.onRun(m); break;
       case "pe": if (app.state) app.state.pe = m; pe.onStatus(m); settings.onPe?.(m); deck.onPe(m); break;
     }
   };
@@ -179,12 +196,15 @@ deck.init();
 system.init();
 gen.init();
 booru.init();
+taglibPage.init();   // 要在 gen.init 之後：隨機頁接的是生成頁的提示詞框
 gallery.init();
 assets.init();
 loras.init();
-civitai.init();
+hub.init();
+train.init();
 feature.initFeatures();
 settings.init();
+llm.init();
 queue.init();
 director.init();
 studio.init();
@@ -192,6 +212,7 @@ h3.init();
 h3chain.init();
 shotsheet.init();
 comic.init();
+colorbook.init();
 agent.init();
 charsheet.init();
 refreshState();
@@ -200,7 +221,7 @@ connect();
 // 網址的 #gallery、#loras、#civitai、#settings、#director、#comic、#agent 直接打開那一頁；#jobs 打開任務面板、#help 打開說明（系統列選單也用這個）
 function fromHash() {
   const h = location.hash.slice(1);
-  if (["gen", "gallery", "assets", "loras", "civitai", "settings", "director", "comic", "agent"].includes(h)) showPage(h);
+  if (["gen", "taglib", "gallery", "assets", "loras", "civitai", "settings", "director", "comic", "agent", "train", "api"].includes(h)) showPage(h);
   else if (h === "jobs") queue.toggle();
   else if (h === "help") system.openHelp();
 }

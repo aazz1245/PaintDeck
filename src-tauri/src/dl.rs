@@ -45,6 +45,8 @@ pub struct Job<'a> {
     pub url: &'a str,
     /// Civitai 的 API key（放 Authorization 標頭；只會送給 civitai.com）
     pub bearer: Option<&'a str>,
+    /// 魔塔登入後拿到的 Cookie（下載私有模型用；只會送給 modelscope.cn）
+    pub cookie: Option<&'a str>,
     /// 預期的檔案大小（清單上寫的確切大小）；None＝只核對伺服器給的 Content-Length
     pub size: Option<u64>,
     /// .part 檔名的記號：檔名.記號.part。檔名相同但來源（版本）不同的下載才不會接錯檔
@@ -56,7 +58,7 @@ pub struct Job<'a> {
 
 impl<'a> Job<'a> {
     pub fn new(http: &'a reqwest::Client, url: &'a str) -> Self {
-        Job { http, url, bearer: None, size: None, tag: None, cancel: None, policy: Policy::default() }
+        Job { http, url, bearer: None, cookie: None, size: None, tag: None, cancel: None, policy: Policy::default() }
     }
 }
 
@@ -276,6 +278,9 @@ async fn open(job: &Job<'_>, url: &str, have: u64, part: Option<&Path>) -> Resul
     if let Some(k) = job.bearer.filter(|k| !k.is_empty() && is_civitai(&host)) {
         rb = rb.bearer_auth(k);
     }
+    if let Some(c) = job.cookie.filter(|c| !c.is_empty() && is_modelscope(&host)) {
+        rb = rb.header(reqwest::header::COOKIE, c);
+    }
     if have > 0 {
         rb = rb.header(reqwest::header::RANGE, format!("bytes={have}-"));
     }
@@ -332,6 +337,10 @@ fn is_civitai(host: &str) -> bool {
     host == "civitai.com" || host.ends_with(".civitai.com")
 }
 
+fn is_modelscope(host: &str) -> bool {
+    host == "modelscope.cn" || host.ends_with(".modelscope.cn")
+}
+
 fn is_hf(host: &str) -> bool {
     host == net::HF || host.ends_with(".huggingface.co") || host == net::HF_MIRROR
 }
@@ -343,7 +352,7 @@ fn is_page(ctype: &str, host: &str) -> bool {
 
 fn login_msg(host: &str) -> String {
     if is_civitai(host) {
-        "Civitai 要求登入才能下載這個模型：請到「設定」填入你的 Civitai API key（有些模型還要先在網站上登入並同意授權），再重試".into()
+        "Civitai 不給下載：請到「設定」填入你的 Civitai API key（有些模型還要先在網站上登入並同意授權）。如果這個版本標著「付費」，要先在 C 站用 Buzz 買下（早鳥期過了就免費），再重試".into()
     } else {
         "下載到的是網頁不是檔案：網址可能要登入、已經失效，或是貼成介紹頁了（要貼檔案的下載連結）".into()
     }

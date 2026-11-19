@@ -13,7 +13,7 @@ let FMODES = [];         // 同上的 modes：[{id, name}]
 let FFLOWS = {};         // 同上的 feature_flows：{"家族.模式": 工作流組代號}
 let scanTimer = null, dlTimer = null;
 const label = (k) => KINDS.find((x) => x.id === k)?.label || k;
-const FAM = { anima: "Anima", qwen21: "Qwen 2.1", moss: "MOSS", sdxl: "SDXL", sd15: "SD1.5", flux: "Flux", sd3: "SD3", other: "" };
+const FAM = { anima: "Anima", qwen21: "Qwen 2.1", moss: "MOSS", krea2: "Krea 2", sdxl: "SDXL", sd15: "SD1.5", flux: "Flux", sd3: "SD3", other: "" };
 
 export function init() {
   $("#mdAdd").onclick = addDir;
@@ -97,9 +97,10 @@ async function addDir() {
   try {
     const r = await api("/api/models/dirs/add", { json: { path, kind: $("#mdKind").value } });
     $("#mdPath").value = "";
-    if (!r.added.length) return toast("沒有新加入的資料夾：生圖站本來就會讀這裡，或已經在清單裡了", "err");
+    const warns = r.warnings || [];
+    if (!r.added.length) return toast(warns.length ? "沒有加入：" + warns.join("；") : "沒有新加入的資料夾：生圖站本來就會讀這裡，或已經在清單裡了", "err");
     await loadDirs();
-    toast(`已加入 ${r.added.length} 個資料夾：` + r.added.map((a) => `${a.label}（${a.path}）`).join("、"), "ok");
+    toast(`已加入 ${r.added.length} 個資料夾：` + r.added.map((a) => `${a.label}（${a.path}）`).join("、") + (warns.length ? "\n另外：" + warns.join("；") : ""), warns.length ? "err" : "ok");
     needRestart("外部資料夾改了");
     app.refreshState();
   } catch (e) { toast("加入失敗：" + e.message, "err"); }
@@ -172,9 +173,10 @@ function showScan(s) {
     const dirs = checks.map((c) => c.querySelector("input")).filter((c) => c.checked).map((c) => ({ kind: c._item.kind, path: c._item.path }));
     if (!dirs.length) return toast("沒有勾選任何資料夾", "err");
     try {
-      await api("/api/models/scan/apply", { json: { dirs } });
+      const r = await api("/api/models/scan/apply", { json: { dirs } });
       await loadDirs();
-      box.replaceChildren(el("div", {}, `已加入 ${dirs.length} 個資料夾。`));
+      const warns = r.warnings || [];
+      box.replaceChildren(el("div", {}, warns.length ? `已套用，但有 ${warns.length} 項要注意：` : `已加入 ${dirs.length} 個資料夾。`), ...warns.map((w) => el("div", { class: "muted sm" }, "・" + w)));
       needRestart("外部資料夾改了");
       app.refreshState();
     } catch (e) { toast("套用失敗：" + e.message, "err"); }
@@ -286,7 +288,7 @@ async function pollDownloads() {
 // 後端在 server\api_wf.rs、image_wf.rs、wf_import.rs；設計在 design\萬用工作流與匯入匯出.md
 const MODE_NAMES = { txt2img: "文生圖", img2img: "圖生圖", inpaint: "局部重繪", upscale: "放大", multiref: "多圖參考" };
 const modeLabel = (m) => FMODES.find((x) => x.id === m)?.name || MODE_NAMES[m] || m;
-const BUILTIN_FAMS = ["anima", "qwen21", "moss"];
+const BUILTIN_FAMS = ["anima", "qwen21", "moss", "krea2", "sdxl"];
 const famName = (f) => app.state?.models?.family_names?.[f] || FAM[f] || f;
 
 async function loadFlows() {
@@ -394,6 +396,24 @@ function flowOut(kind, head, lines = []) {
     ...(kind === "err" ? [el("div", { class: "wf-msg" }, lines.join("\n"))] : lines.length ? [el("ul", { class: "vid-rules" }, ...lines.map((t) => el("li", {}, t)))] : []));
 }
 
+/** 生成頁「讀圖片參數」的「匯入成工作流」：用這張圖新建一組（名字＝檔名，模式自動判斷），結果顯示在匯入欄 */
+export async function importImageFile(f) {
+  await focusImport();
+  const name = f.name.replace(/\.[^.]+$/, "");
+  if (FLOWS.some((w) => w.name === name) && !confirm(`已經有叫「${name}」的工作流組：這張圖會加進去（同一個模式會換成新的，其他模式保留）。要繼續嗎？`)) return;
+  let body;
+  try { body = { mode: "auto", file_name: f.name, data_b64: await toB64(f) }; }
+  catch (e) { flowOut("err", "匯入失敗", [e.message]); return; }
+  await sendFlow(body);
+}
+
+/** 下載中心「匯入生圖站」：/api/hub/workflow 拿到的檔（base64）新建一組（名字＝卡片名稱，模式自動判斷），結果顯示在匯入欄 */
+export async function importData(fileName, b64, name) {
+  await focusImport();
+  if (FLOWS.some((w) => w.name === name) && !confirm(`已經有叫「${name}」的工作流組：這個檔會加進去（同一個模式會換成新的，其他模式保留）。要繼續嗎？`)) return;
+  await sendFlow({ mode: "auto", file_name: fileName, data_b64: b64, name });
+}
+
 async function importFlow() {
   const f = $("#mdFlowFile").files[0];
   $("#mdFlowFile").value = "";
@@ -435,6 +455,7 @@ async function sendFlow(body) {
     const w = r.workflow;
     const got = r.mode ? `這個檔收成「${modeLabel(r.mode)}」；` : "";
     flowOut("ok", `已匯入「${w.name}」：${got}這組現在有${w.modes.map(modeLabel).join("、")}。到生成頁的模型選單最下面選「⚙ ${w.name}」。`, r.warnings || []);
+    missingOut(r.missing_models || []);
     toast(`已匯入「${w.name}」`, "ok");
     await loadFlows();
     await app.refreshState();
@@ -446,6 +467,17 @@ async function sendFlow(body) {
   } finally {
     btn.disabled = false;
   }
+}
+
+/** 匯入結果底下：工作流用到、這台電腦沒有的模型（api_wf::import 的 missing_models），LoRA／主模型／VAE 給一顆「到下載中心找」 */
+function missingOut(list) {
+  if (!list.length) return;
+  const KIND = { lora: "LoRA", model: "主模型", vae: "VAE", te: "文字編碼器" };
+  $("#mdFlowOut").append(el("div", { class: "wf-missing" },
+    el("div", { class: "st-err" }, `這個工作流用到 ${list.length} 個這台電腦沒有的模型，畫之前要先放好：`),
+    el("ul", { class: "vid-rules" }, ...list.map((m) => el("li", {},
+      el("span", { translate: "no" }, m.name), `（${KIND[m.kind] || m.kind}）`,
+      m.kind !== "te" && app.hubFind ? el("button", { class: "akey sm", type: "button", onclick: () => app.hubFind(m.name, m.kind) }, "到下載中心找") : null)))));
 }
 
 // 分析找不到某個地方（api_wf::import 回的 need）：問使用者是哪個節點。mark＝寫進去的標記，list＝candidates 裡的哪一類

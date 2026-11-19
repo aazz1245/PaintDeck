@@ -1,4 +1,4 @@
-"""Qwen-Image 2.1 提示詞改寫（社群無審查版 PE Heretic GGUF）：llama-server 管理、請求組裝、輸出解析、快取。
+"""Qwen-Image 2.1 提示詞改寫（通用模型 Qwen3.5 9B／Qwen3.6 35B；官方 PE Heretic 2026-10-30 起拿掉）：llama-server 管理、請求組裝、輸出解析、快取。
 
 只用標準函式庫，ComfyUI 節點（__init__.py）和 Anima 生圖站（anima_ui/app/pe.py）共用這一份：
   - 同一個 port（127.0.0.1:8199），同一時間只會有一個 llama-server。
@@ -20,7 +20,10 @@ import urllib.error
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-BIN = os.path.join(HERE, "bin", "llama-server.exe")
+WIN = os.name == "nt"
+BIN = os.path.join(HERE, "bin", "llama-server.exe" if WIN else "llama-server")
+# Windows：開子程序不跳主控台視窗（CREATE_NO_WINDOW）；Linux 沒有這個旗標
+NO_WINDOW = 0x08000000 if WIN else 0
 PROMPTS = os.path.join(HERE, "prompts")
 STATE = os.path.join(HERE, "server_state.json")
 LOCK = os.path.join(HERE, "server.lock")
@@ -31,7 +34,6 @@ MODELS_DIR = os.environ.get("ANIMA_PE_MODELS") or os.path.normpath(os.path.join(
 HOST, PORT = "127.0.0.1", 8199
 URL = f"http://{HOST}:{PORT}"
 CTX = 16384
-QUANTS = ("Q4_K_M", "Q6_K", "Q8_0")  # 找模型檔時的優先順序（8GB 顯卡用 Q4_K_M 才放得下）
 
 # 任務 → (系統提示詞檔, 用哪個模型)。改寫、微調、中文摘要都可以用目前已載入的模型，只有讀圖一定要 i2i
 TASKS = {
@@ -51,17 +53,57 @@ class PEError(Exception):
 
 
 # ---------------------------------------------------------------- 模型檔
+def _words(name):
+    """檔名拆成小寫的字（配看圖檔用，跟生圖站 pe.rs 的 name_words 一樣）"""
+    return {w for w in re.split(r"[^a-z0-9]+", name.lower()) if w and w not in ("gguf", "mmproj")}
+
+
+def _big(name):
+    """30B 以上（35B 那類，跟生圖站 pe.rs 的 is_big_brain 一樣看檔名裡的 xxB）"""
+    return any(w[:-1].isdigit() and int(w[:-1]) >= 30 for w in _words(name) if w.endswith("b"))
+
+
+def _llm_files():
+    """MODELS_DIR 底下（含子資料夾，最多 4 層）的 gguf，照路徑排序"""
+    out = []
+    for root, dirs, files in os.walk(MODELS_DIR):
+        if os.path.relpath(root, MODELS_DIR).count(os.sep) >= 4:
+            dirs[:] = []
+        out += [os.path.join(root, f) for f in files if f.lower().endswith(".gguf")]
+    return sorted(out)
+
+
 def model_files(kind, quant=None):
-    """回傳 (模型路徑, mmproj 路徑或 None)。找不到就丟 PEError。"""
-    order = [quant] if quant else list(QUANTS)
-    for q in order:
-        p = os.path.join(MODELS_DIR, f"pe_{kind}_heretic-{q}.gguf")
-        if os.path.exists(p):
-            mm = os.path.join(MODELS_DIR, "pe_i2i_heretic.mmproj-bf16.gguf") if kind == "i2i" else None
-            if mm and not os.path.exists(mm):
-                raise PEError(f"找不到讀圖用的 {os.path.basename(mm)}（放在 {MODELS_DIR}）")
-            return p, mm
-    raise PEError(f"找不到 pe_{kind}_heretic-*.gguf（放在 {MODELS_DIR}）")
+    """回傳 (模型路徑, mmproj 路徑或 None)。找不到就丟 PEError。
+    2026-10-30 起官方 PE（pe_*_heretic）拿掉了，照生圖站 pe.rs 自動挑的順序用通用模型：
+    有 Qwen3.6 35B 先用它，沒有就 Qwen3.5 9B（Defiant Fable 優先，再來 abliterated、任何一顆 Qwen3.5）。
+    kind＝i2i 要讀圖，配同系列的看圖檔（mmproj）。quant 是以前挑 PE 量化版用的，留著相容、沒作用"""
+    chat, mmprojs = [], []
+    for p in _llm_files():
+        n = os.path.basename(p).lower()
+        if "mmproj" in n:
+            mmprojs.append(p)
+        elif "embedding" not in n and not n.startswith("pe_"):
+            chat.append((p, n))
+
+    def pick(want):
+        return next((p for p, n in chat if want(n)), None)
+    model = (pick(lambda n: "qwen3.6" in n and _big(n))
+             or pick(lambda n: "qwen3.5" in n and "defiant-fable" in n)
+             or pick(lambda n: "qwen3.5" in n and "abliterated" in n)
+             or pick(lambda n: "qwen3.5" in n and not _big(n)))
+    if not model:
+        raise PEError(f"找不到 AI 改寫用的通用模型（Qwen3.5-9B-The-Defiant-Fable*.gguf 或 Qwen3.6-35B-A3B*.gguf，放在 {MODELS_DIR}）。"
+                      "到繪匣的「安裝與修復」勾「AI 改寫、生圖助手」會下載 9B；以前的官方 PE 改寫模型已經不再支援")
+    if kind != "i2i":
+        return model, None
+    name = os.path.basename(model)
+    fam = "qwen3.6" if "qwen3.6" in name.lower() else "qwen3.5"
+    mm = sorted((p for p in mmprojs if fam in os.path.basename(p).lower()),
+                key=lambda p: (-len(_words(os.path.basename(p)) & _words(name)), p))
+    if not mm:
+        raise PEError(f"找不到 {name} 讀圖用的 mmproj 檔（放在 {MODELS_DIR}，檔名要同時有「mmproj」和「{fam}」）")
+    return model, mm[0]
 
 
 def available():
@@ -85,6 +127,12 @@ def system_prompt(task):
 def _pid_alive(pid):
     if not pid:
         return False
+    if not WIN:
+        try:
+            with open(f"/proc/{int(pid)}/stat", encoding="utf-8", errors="replace") as f:
+                return f.read().rsplit(")", 1)[-1].split()[0] not in ("Z", "X")  # 殭屍、已結束不算
+        except (OSError, ValueError, IndexError):
+            return False
     k32 = ctypes.windll.kernel32
     h = k32.OpenProcess(0x1000, False, int(pid))  # PROCESS_QUERY_LIMITED_INFORMATION
     if not h:
@@ -134,13 +182,17 @@ class _FileLock:
         self.path, self.timeout, self.f = path, timeout, None
 
     def __enter__(self):
-        import msvcrt
         self.f = open(self.path, "a+")
         t0 = time.time()
         while True:
             try:
-                self.f.seek(0)
-                msvcrt.locking(self.f.fileno(), msvcrt.LK_NBLCK, 1)
+                if WIN:
+                    import msvcrt
+                    self.f.seek(0)
+                    msvcrt.locking(self.f.fileno(), msvcrt.LK_NBLCK, 1)
+                else:
+                    import fcntl  # 跟生圖站（pe.rs）一樣用 flock
+                    fcntl.flock(self.f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
                 return self
             except OSError:
                 if time.time() - t0 > self.timeout:
@@ -149,10 +201,14 @@ class _FileLock:
                 time.sleep(0.2)
 
     def __exit__(self, *a):
-        import msvcrt
         try:
-            self.f.seek(0)
-            msvcrt.locking(self.f.fileno(), msvcrt.LK_UNLCK, 1)
+            if WIN:
+                import msvcrt
+                self.f.seek(0)
+                msvcrt.locking(self.f.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(self.f.fileno(), fcntl.LOCK_UN)
         finally:
             self.f.close()
 
@@ -167,10 +223,12 @@ def health(timeout=1.5):
 
 def _port_owner():
     """8199 被誰占用（沒有狀態檔的孤兒程序）。只回傳 llama-server.exe 的 pid。"""
+    if not WIN:
+        return _port_owner_linux()
     try:
         # 主控台輸出是系統的 OEM 字碼頁（繁中 cp950、簡中 GBK）；ComfyUI 用 UTF-8 模式開時 text=True 會照 UTF-8 解而出錯
         out = subprocess.run(["netstat", "-ano", "-p", "TCP"], capture_output=True, text=True, encoding="oem", errors="replace",
-                             timeout=10, creationflags=0x08000000).stdout
+                             timeout=10, creationflags=NO_WINDOW).stdout
     except Exception:
         return None
     for line in out.splitlines():
@@ -179,16 +237,55 @@ def _port_owner():
             pid = int(parts[4])
             try:
                 img = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"], capture_output=True,
-                                     text=True, encoding="oem", errors="replace", timeout=10, creationflags=0x08000000).stdout
+                                     text=True, encoding="oem", errors="replace", timeout=10, creationflags=NO_WINDOW).stdout
             except Exception:
                 return None
             return pid if "llama-server" in img.lower() else None
     return None
 
 
+def _port_owner_linux():
+    """Linux：/proc/net/tcp(6) 找 LISTEN 在 PORT 的 socket inode，再到 /proc/<pid>/fd 找誰開著它，程式名要是 llama-server。"""
+    inodes = set()
+    for fn in ("/proc/net/tcp", "/proc/net/tcp6"):
+        try:
+            with open(fn, encoding="ascii", errors="replace") as f:
+                for line in f.readlines()[1:]:
+                    parts = line.split()
+                    if len(parts) > 9 and parts[3] == "0A" and int(parts[1].rsplit(":", 1)[1], 16) == PORT:
+                        inodes.add(parts[9])
+        except (OSError, ValueError):
+            pass
+    if not inodes:
+        return None
+    for d in os.listdir("/proc"):
+        if not d.isdigit():
+            continue
+        try:
+            fds = os.listdir(f"/proc/{d}/fd")
+        except OSError:
+            continue
+        for fd in fds:
+            try:
+                link = os.readlink(f"/proc/{d}/fd/{fd}")
+            except OSError:
+                continue
+            if link.startswith("socket:[") and link[8:-1] in inodes:
+                try:
+                    with open(f"/proc/{d}/comm", encoding="utf-8", errors="replace") as f:
+                        comm = f.read().strip()
+                except OSError:
+                    return None
+                return int(d) if "llama-server" in comm else None
+    return None
+
+
 def _no_throttle(pid):
     """關掉 Windows 對這個程序的節能限速（EcoQoS／Power Throttling）。
-    從背景程序（沒有視窗的生圖站伺服器、ComfyUI）啟動的 llama-server 會被當成背景工作降速，實測 57 → 26 token／秒。"""
+    從背景程序（沒有視窗的生圖站伺服器、ComfyUI）啟動的 llama-server 會被當成背景工作降速，實測 57 → 26 token／秒。
+    Linux 沒有這種限速，直接當成功。"""
+    if not WIN:
+        return True
     class _State(ctypes.Structure):
         _fields_ = [("Version", ctypes.c_ulong), ("ControlMask", ctypes.c_ulong), ("StateMask", ctypes.c_ulong)]
     k32 = ctypes.windll.kernel32
@@ -211,7 +308,20 @@ def _no_throttle(pid):
 
 
 def _kill(pid):
-    subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True, creationflags=0x08000000)
+    if WIN:
+        subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True, creationflags=NO_WINDOW)
+    else:
+        import signal
+        for sig, wait in ((signal.SIGTERM, 30), (signal.SIGKILL, 20)):
+            try:
+                os.kill(int(pid), sig)
+            except OSError:
+                return
+            for _ in range(wait):
+                if not _pid_alive(pid):
+                    return
+                time.sleep(0.1)
+        return
     for _ in range(50):
         if not _pid_alive(pid):
             return
@@ -264,7 +374,8 @@ def ensure(kind, ngl=99, before_start=None, timeout=180, quant=None):
     已經在跑就直接用；不對就重開。before_start()：真的要啟動前呼叫（生圖站用來叫 ComfyUI 釋放顯存）。
     回傳 dict：{"started": 是否新啟動, "load_seconds": 載入秒數}"""
     model, mmproj = model_files(kind, quant)
-    want = {"kind": kind, "ngl": int(ngl), "model": os.path.basename(model)}
+    # 狀態檔的 kind 寫成生圖站 pe.rs 用的名字（adult＝純文字、adult_vision＝加看圖檔），兩邊才能共用已經載好的模型
+    want = {"kind": "adult_vision" if mmproj else "adult", "ngl": int(ngl), "model": os.path.basename(model)}
     with _FileLock(LOCK):
         s = read_state()
         if s and all(s.get(k) == v for k, v in want.items()) and health():
@@ -281,13 +392,15 @@ def ensure(kind, ngl=99, before_start=None, timeout=180, quant=None):
             if int(ngl) == 0:
                 args += ["--no-mmproj-offload"]
         env = dict(os.environ)
+        if not WIN:  # Linux 官方編好的 llama.cpp：.so 都在 llama-server 旁邊
+            env["LD_LIBRARY_PATH"] = os.path.dirname(BIN) + (":" + env["LD_LIBRARY_PATH"] if env.get("LD_LIBRARY_PATH") else "")
         if int(ngl) == 0:
             args += ["--device", "none"]  # 真正的 CPU 模式：連提示詞處理都不碰顯卡
         _log("start " + " ".join(os.path.basename(a) if os.path.isabs(a) else a for a in args))
         logf = open(LOG, "a", encoding="utf-8", errors="replace")
         t0 = time.time()
         proc = subprocess.Popen(args, stdout=logf, stderr=subprocess.STDOUT, cwd=os.path.dirname(BIN), env=env,
-                                creationflags=0x08000000)  # CREATE_NO_WINDOW
+                                creationflags=NO_WINDOW)
         logf.close()
         try:
             _no_throttle(proc.pid)
@@ -628,8 +741,8 @@ def rewrite(task, idea="", images=(), prev="", instruction="", temperature=1.0, 
             return {**hit, "cached": True, "seconds": 0.0, "load_seconds": 0.0}
     kind = "i2i" if (task == "i2i" or images) else TASKS[task][1]
     st = read_state()
-    if task in ("zh", "refine") and st.get("kind") in ("t2i", "i2i") and int(st.get("ngl", -1)) == int(ngl):
-        kind = st["kind"]  # 純文字工作用目前已載入的模型，不為了它重開
+    if task in ("zh", "refine") and st.get("kind") in ("adult", "adult_vision") and int(st.get("ngl", -1)) == int(ngl):
+        kind = "i2i" if st["kind"] == "adult_vision" else "t2i"  # 純文字工作用目前已載入的模型，不為了它重開
     t0 = time.time()
     info = ensure(kind, ngl, before_start=before_start)
     msgs = build_messages(task, idea, images, prev, instruction, noct_anime, ratio)

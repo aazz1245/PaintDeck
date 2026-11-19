@@ -9,6 +9,7 @@ mod api_assets;
 mod api_charsheet;
 mod api_bundle;
 mod api_cloud;
+mod api_colorbook;
 mod api_comic;
 mod api_director;
 mod api_gallery;
@@ -18,11 +19,17 @@ mod api_h3chain;
 mod api_shotsheet;
 mod api_skills;
 mod api_lib;
+mod api_llm;
+mod api_nodes;
+mod api_hub;
 mod api_misc;
+pub mod api_mixdesk;
 mod api_pe;
 mod api_play;
 mod api_refmod;
+mod api_wardrobe;
 mod api_runninghub;
+mod api_sdapi;
 mod api_studio;
 mod api_video;
 mod api_video_review;
@@ -32,6 +39,9 @@ mod api_models;
 mod api_update;
 mod api_cache;
 mod api_diagnostics;
+mod api_train;
+mod train_ms;
+mod train_run;
 
 use crate::civitai::Civitai;
 use crate::comfy::Comfy;
@@ -66,6 +76,8 @@ pub struct App {
     pub db: Arc<Db>,
     pub hub: Hub,
     pub comfy: Arc<Comfy>,
+    /// 工作節點：主節點（上面的 comfy）＋其他顯卡、遠端 ComfyUI（nodes.rs）
+    pub pool: Arc<crate::nodes::Pool>,
     pub civitai: Arc<Civitai>,
     /// AI 改寫（llama-server）
     pub pe: Arc<crate::pe::Service>,
@@ -86,10 +98,14 @@ pub struct App {
     pub last_family: std::sync::Mutex<String>,
     /// 生圖助手（對話、背景工作、雲端模式）
     pub agent: api_agent::Agent,
+    /// API 總機：大模型連線、誰用哪顆腦袋、指令預設（brains.rs）
+    pub brains: Arc<crate::brains::Brains>,
     /// 影音工作台的剪輯台（FableCut 伺服器）
     pub studio: crate::studio::Studio,
     /// H3 影片台：背景工作（停止用）
     pub h3: api_h3::H3,
+    /// 混音台：呼叫 mixdesk、渲染工作
+    pub mixdesk: Arc<crate::mixdesk::Mixdesk>,
     /// 桌面版才有：叫出主視窗（第二次開程式時，新的那個會打 /api/app/show 叫舊的出來）
     pub show_window: OnceLock<Box<dyn Fn() + Send + Sync>>,
     /// 桌面版才有：重開生圖站自己開的 ComfyUI（外部模型資料夾改了要重開才生效）。Err＝不能重開的原因
@@ -150,9 +166,9 @@ pub async fn blocking<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static)
     crate::diagnostics::blocking(f).await
 }
 
-/// 只留檔名（擋掉 ..\ 之類的路徑）
+/// 只留檔名（擋掉 ..\ 之類的路徑）。\ 和 / 都當分隔：Linux 的 Path 只認 /，網頁、Windows 的 ComfyUI 送來的名字常是 \
 pub fn basename(name: &str) -> String {
-    Path::new(name)
+    Path::new(name.rsplit(['/', '\\']).next().unwrap_or(name))
         .file_name()
         .map(|n| n.to_string_lossy().to_string())
         .unwrap_or_default()
@@ -265,8 +281,21 @@ async fn no_stale_static(req: Request, next: Next) -> Response {
     r
 }
 
+/// 無頭版的 --allow-host：除了本機名稱，網址還可以用這些（區網 IP、主機名）。沒設＝只收本機
+static ALLOW_HOSTS: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
+
+pub fn allow_hosts(hosts: Vec<String>) {
+    let _ = ALLOW_HOSTS.set(hosts.into_iter().map(|h| h.trim().trim_start_matches('[').trim_end_matches(']').to_lowercase()).collect());
+}
+
+fn allowed_host(host: &str) -> bool {
+    let h = host.trim_start_matches('[').trim_end_matches(']').to_lowercase();
+    ALLOW_HOSTS.get().is_some_and(|v| v.contains(&h))
+}
+
 /// 限制本機服務只接受以本機名稱開啟的頁面及同源瀏覽器請求。
 /// 否則其他網站可以透過 DNS rebinding 或表單向本機 API 送出指令。
+/// 無頭版明確用 --allow-host 列出來的名稱也算（同樣要同源）
 pub(crate) fn local_request(req: &Request) -> bool {
     let Some(host) = req
         .headers()
@@ -281,7 +310,8 @@ pub(crate) fn local_request(req: &Request) -> bool {
     if !matches!(
         authority.host(),
         "127.0.0.1" | "localhost" | "[::1]" | "::1"
-    ) {
+    ) && !allowed_host(authority.host())
+    {
         return false;
     }
     if authority.port_u16().is_none() {
@@ -334,7 +364,7 @@ pub fn router(app: Shared) -> Router {
         .route("/api/cache/clear", post(api_cache::clear))
         .route("/api/settings/export", get(api_gen::settings_export))
         .route("/api/settings/import", post(api_gen::settings_import))
-        // 影片模型（內建 LTX-2.3 或匯入的 ComfyUI 工作流）
+        // 影片模型（內建 MiniMax H3 或匯入的 ComfyUI 工作流）
         .route("/api/video/workflows", get(api_video::list).post(api_video::add))
         .route("/api/video/media/upload", post(api_video::upload_media).layer(DefaultBodyLimit::max(220 * 1024 * 1024)))
         .route("/api/video/workflows/{id}", get(api_video::detail).post(api_video::set_map).delete(api_video::remove))
@@ -365,6 +395,7 @@ pub fn router(app: Shared) -> Router {
         .route("/api/models/download", post(api_models::download))
         .route("/api/models/downloads", get(api_models::downloads))
         .route("/api/models/restart_comfy", post(api_models::restart_comfy))
+        .route("/api/models/fetch_listed", post(api_models::fetch_listed))
         // 生成與任務
         .route("/api/diagnostics", get(api_diagnostics::list))
         .route("/api/diagnostics/job/{job}", get(api_diagnostics::job))
@@ -372,6 +403,7 @@ pub fn router(app: Shared) -> Router {
         .route("/api/diagnostics/clear", post(api_diagnostics::clear))
         .route("/api/diagnostics/{id}/report", post(api_diagnostics::report))
         .route("/api/diagnostics/{id}/export", get(api_diagnostics::export))
+        .route("/api/diagnostics/{id}/save", post(api_diagnostics::save))
         .route("/api/generate", post(api_gen::generate))
         .route("/api/detail", post(api_play::detail))
         .route("/api/play/models", get(api_play::models))
@@ -392,6 +424,7 @@ pub fn router(app: Shared) -> Router {
         .route("/api/reset/undo", post(api_misc::reset_undo))
         // 輸入圖
         .route("/api/upload", post(api_gallery::upload))
+        .route("/api/image/meta", post(api_gallery::image_meta))
         .route("/api/to_input", post(api_gallery::to_input))
         .route("/input/{name}", get(api_gallery::input_file))
         // 圖庫
@@ -418,6 +451,8 @@ pub fn router(app: Shared) -> Router {
         .route("/thumb/{id}", get(api_gallery::thumb))
         // 提示詞工具、預設組、LoRA
         .route("/api/tags", get(api_misc::tags))
+        .route("/api/tags/zh", post(api_misc::tags_zh))
+        .route("/api/tags/library", get(api_misc::tags_library))
         // AI（MCP）連線狀態：標題列的燈號
         .route("/api/ai/heartbeat", post(api_misc::ai_heartbeat))
         .route("/api/ai/link", get(api_misc::ai_link))
@@ -448,6 +483,9 @@ pub fn router(app: Shared) -> Router {
         .route("/api/assets/{id}/refmod", post(api_assets::make_refmod))
         .route("/api/refmod/status", get(api_refmod::status))
         .route("/api/refmod/install", post(api_refmod::install))
+        .route("/api/wardrobe/status", get(api_wardrobe::status))
+        .route("/api/wardrobe/install", post(api_wardrobe::install))
+        .route("/api/wardrobe/x/{*rest}", get(api_wardrobe::forward).post(api_wardrobe::forward))
         .route("/api/runninghub", get(api_runninghub::get))
         .route("/api/runninghub/config", post(api_runninghub::config))
         .route("/api/runninghub/test", post(api_runninghub::test))
@@ -457,17 +495,32 @@ pub fn router(app: Shared) -> Router {
         .route("/api/charsheet/spec", post(api_charsheet::spec))
         .route("/api/loras/meta", post(api_misc::lora_meta))
         .route("/api/loras/delete", post(api_misc::lora_delete))
+        .route("/api/loras/preview", post(api_misc::lora_preview_upload))
+        .route("/api/loras/preview/set", post(api_misc::lora_preview_set))
         .route("/lora_preview/{file}", get(api_misc::lora_preview))
         .route("/api/loras/local-preview", get(api_misc::lora_local_preview))
+        .route("/api/loras/covers", post(api_misc::lora_covers))
+        .route("/api/loras/bundled-cover/{file}", get(api_misc::lora_bundled_cover))
         .route("/api/features/strip", get(api_misc::feature_strip))
         .route("/api/features/strip/install", post(api_misc::feature_strip_install))
         .route("/api/civitai/bases", get(api_misc::civitai_bases))
         .route("/api/civitai/search", get(api_misc::civitai_search))
         .route("/api/civitai/download", post(api_misc::civitai_download))
+        .route("/api/hub/sources", get(api_hub::sources))
+        .route("/api/hub/search", get(api_hub::search))
+        .route("/api/hub/files", get(api_hub::files))
+        .route("/api/hub/tags", get(api_hub::tags))
+        .route("/api/hub/download", post(api_hub::download))
+        .route("/api/hub/workflow", post(api_hub::workflow))
+        .route("/api/hub/modelscope", get(api_hub::ms_get).post(api_hub::ms_set))
+        .route("/api/hub/modelscope/test", post(api_hub::ms_test))
+        .route("/api/hub/rh_run", post(api_hub::rh_run))
+        .route("/api/hub/rh_stop", post(api_hub::rh_stop))
         .route("/api/downloads", get(api_misc::downloads))
         // AI 改寫提示詞
         .route("/api/pe/rewrite", post(api_pe::rewrite))
         .route("/api/pe/cancel", post(api_pe::cancel))
+        .route("/api/pe/translate", post(api_pe::translate))
         .route("/api/pe/status", get(api_pe::status))
         .route("/api/pe/stop", post(api_pe::stop))
         .route("/api/pe/mmproj", post(api_pe::mmproj))
@@ -504,11 +557,23 @@ pub fn router(app: Shared) -> Router {
         .route("/api/comic/project/{id}", get(api_comic::project_get))
         .route("/api/comic/run", post(api_comic::run))
         .route("/api/comic/stop", post(api_comic::stop))
+        .route("/api/comic/fix", post(api_comic::fix))
         .route("/api/comic/prompts", post(api_comic::prompts))
         .route("/api/comic/layout", post(api_comic::layout_preview))
         .route("/api/comic/layout/ai", post(api_comic::layout_ai))
         .route("/api/comic/script", post(api_comic::script))
         .route("/api/comic/run/remove", post(api_comic::run_remove))
+        // 整本上色（黑白漫畫，整本丟進來自動上色）
+        .route("/api/colorbook", get(api_colorbook::list))
+        .route("/api/colorbook/new", post(api_colorbook::new).layer(DefaultBodyLimit::max(800 * 1024 * 1024)))
+        .route("/api/colorbook/{id}", get(api_colorbook::get))
+        .route("/api/colorbook/{id}/sheet", post(api_colorbook::sheet))
+        .route("/api/colorbook/{id}/page", post(api_colorbook::page))
+        .route("/api/colorbook/{id}/run", post(api_colorbook::run))
+        .route("/api/colorbook/{id}/stop", post(api_colorbook::stop))
+        .route("/api/colorbook/{id}/file/{dir}/{name}", get(api_colorbook::file))
+        .route("/api/colorbook/{id}/zip", get(api_colorbook::zip))
+        .route("/api/colorbook/{id}/delete", post(api_colorbook::delete))
         // 生圖助手
         .route("/api/agent/sessions", get(api_agent::sessions))
         .route("/api/agent/session/new", post(api_agent::session_new))
@@ -530,13 +595,61 @@ pub fn router(app: Shared) -> Router {
         .route("/api/agent/cloud/start", post(api_cloud::start))
         .route("/api/agent/cloud/stop", post(api_cloud::stop))
         .route("/api/agent/cloud/idle", post(api_cloud::idle))
+        .route("/api/agent/llm_api", get(api_llm::llm_api).post(api_llm::llm_api_config))
+        .route("/api/agent/llm_api/test", post(api_llm::llm_api_test))
+        .route("/api/llm", get(api_llm::overview))
+        .route("/api/llm/profile", post(api_llm::profile_save))
+        .route("/api/llm/profile/delete", post(api_llm::profile_delete))
+        .route("/api/llm/profile/test", post(api_llm::profile_test))
+        .route("/api/llm/profile/models", post(api_llm::profile_models))
+        .route("/api/llm/preset/get", post(api_llm::preset_get))
+        .route("/api/llm/preset", post(api_llm::preset_save))
+        .route("/api/llm/preset/delete", post(api_llm::preset_delete))
+        .route("/api/llm/preset/import", post(api_llm::preset_import).layer(DefaultBodyLimit::max(4 * 1024 * 1024)))
+        .route("/api/llm/routes", post(api_llm::routes_save))
+        .route("/api/nodes", get(api_nodes::overview).post(api_nodes::save))
+        .route("/api/nodes/test", post(api_nodes::test))
         // H3 影片台（導演頁的「H3 影片」分頁）
         .route("/api/h3/info", get(api_h3::info))
         // 素材用 base64 包在 JSON 裡送（影片 15 秒以內、網頁擋 150MB 的檔，base64 多三分之一）：放寬全站 64MB 的限制。再大要改成串流上傳（大 JSON 很吃記憶體）
         .route("/api/h3/media", post(api_h3::media).layer(DefaultBodyLimit::max(220 * 1024 * 1024)))
         .route("/api/h3/generate", post(api_h3::generate))
         .route("/api/h3/stop", post(api_h3::stop))
+        .route("/mixdesk", get(api_mixdesk::page))
+        .route("/api/mixdesk/status", get(api_mixdesk::status))
+        .route("/api/mixdesk/songs", get(api_mixdesk::songs))
+        .route("/api/mixdesk/song", get(api_mixdesk::song))
+        .route("/api/mixdesk/mtime", get(api_mixdesk::mtime))
+        .route("/api/mixdesk/new", post(api_mixdesk::new_song))
+        .route("/api/mixdesk/apply", post(api_mixdesk::apply))
+        .route("/api/mixdesk/render", post(api_mixdesk::render))
+        .route("/api/mixdesk/job/{id}", get(api_mixdesk::job))
+        .route("/api/mixdesk/job/{id}/stop", post(api_mixdesk::job_stop))
+        .route("/api/mixdesk/file", get(api_mixdesk::file))
+        .route("/api/mixdesk/video", get(api_mixdesk::video))
+        .route("/api/mixdesk/instruments", get(api_mixdesk::instruments))
+        .route("/api/mixdesk/audition", post(api_mixdesk::audition))
+        .route("/api/mixdesk/to_studio", post(api_mixdesk::to_studio))
         .route("/api/h3/write", post(api_h3::write))
+        .route("/api/train", get(api_train::list).post(api_train::create))
+        .route("/api/train/trainer", get(train_run::trainer))
+        .route("/api/train/trainer/install", post(train_run::trainer_install))
+        .route("/api/train/trainer/remove", post(train_run::trainer_remove))
+        .route("/api/train/{id}", get(api_train::get).post(api_train::set).delete(api_train::delete))
+        .route("/api/train/{id}/images", post(api_train::images_add).layer(DefaultBodyLimit::max(220 * 1024 * 1024)))
+        .route("/api/train/{id}/images/set", post(api_train::images_set))
+        .route("/api/train/{id}/images/remove", post(api_train::images_remove))
+        .route("/api/train/{id}/img/{file}", get(api_train::img))
+        .route("/api/train/{id}/caption", post(api_train::caption))
+        .route("/api/train/{id}/captions", post(api_train::captions_set))
+        .route("/api/train/{id}/traits", get(api_train::traits))
+        .route("/api/train/{id}/params", get(api_train::params))
+        .route("/api/train/{id}/quote", post(train_run::quote))
+        .route("/api/train/{id}/start", post(train_run::start))
+        .route("/api/train/{id}/stop", post(api_train::stop))
+        .route("/api/train/{id}/sample/{file}", get(train_run::sample))
+        .route("/api/train/{id}/compare", post(train_run::compare))
+        .route("/api/train/{id}/adopt", post(train_run::adopt))
         .route("/api/h3/chains", get(api_h3chain::list))
         .route("/api/h3/chain/save", post(api_h3chain::save))
         .route("/api/h3/chain/take/select", post(api_h3chain::select_take))
@@ -589,6 +702,21 @@ pub fn router(app: Shared) -> Router {
         .route("/api/app/update/check", post(api_update::check))
         .route("/api/app/update/preferences", post(api_update::preferences))
         .route("/api/app/update/install", post(api_update::install))
+        // Stable Diffusion WebUI（A1111）相容：SillyTavern 這類程式選 A1111 來源、網址填繪匣就能出圖（api_sdapi.rs）
+        .route("/sdapi/v1/options", get(api_sdapi::options_get).post(api_sdapi::options_set))
+        .route("/sdapi/v1/sd-models", get(api_sdapi::sd_models))
+        .route("/sdapi/v1/refresh-checkpoints", post(api_sdapi::refresh))
+        .route("/sdapi/v1/samplers", get(api_sdapi::samplers))
+        .route("/sdapi/v1/schedulers", get(api_sdapi::schedulers))
+        .route("/sdapi/v1/upscalers", get(api_sdapi::upscalers))
+        .route("/sdapi/v1/loras", get(api_sdapi::loras))
+        .route("/sdapi/v1/refresh-loras", post(api_sdapi::refresh))
+        .route("/sdapi/v1/latent-upscale-modes", get(api_sdapi::empty_list))
+        .route("/sdapi/v1/sd-vae", get(api_sdapi::empty_list))
+        .route("/sdapi/v1/sd-modules", get(api_sdapi::empty_list))
+        .route("/sdapi/v1/progress", get(api_sdapi::progress))
+        .route("/sdapi/v1/interrupt", post(api_sdapi::interrupt))
+        .route("/sdapi/v1/txt2img", post(api_sdapi::txt2img))
         .nest_service(static_prefix(), ServeDir::new(web.clone()))
         .nest_service("/static", ServeDir::new(web))
         .layer(middleware::from_fn(no_stale_static))
@@ -677,16 +805,31 @@ pub async fn start(paths: Paths, comfy_url: &str) -> Result<Shared, String> {
     for d in [&paths.thumbs, &paths.previews, &paths.input] {
         std::fs::create_dir_all(d).map_err(|e| format!("建立 {} 失敗：{e}", d.display()))?;
     }
+    // Linux 沒有 DPAPI，金鑰（Civitai、雲端、外部 AI…）是明文存在 data/ 裡的設定檔：整個 data/ 只給自己讀（0700）
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(&paths.data, std::fs::Permissions::from_mode(0o700));
+    }
     // 外部模型資料夾（model_dirs.rs）要比 AI 改寫早讀：AI 改寫的語言模型可能放在外部資料夾
     crate::model_dirs::init(&paths.data);
     crate::model_dirs::ensure_yaml(&paths.comfy_root);
     // 使用者自己 ComfyUI 的 extra_model_paths.yaml 裡的資料夾也算（model_dirs::roots）
     crate::model_dirs::init_comfy(&paths.comfy_root);
     let db = Arc::new(Db::open(&paths.db).map_err(|e| format!("開資料庫失敗：{e}"))?);
+    // 程式附的 LoRA 備註（MOSS 合集等）併進資料庫：沒有的才補，要掃 LoRA 資料夾所以放背景
+    {
+        let (db, res, roots) = (db.clone(), paths.res.clone(), paths.lora_roots());
+        std::thread::spawn(move || match crate::setup::merge_lora_notes(&db, &res, &roots) {
+            0 => {}
+            n => eprintln!("[LoRA 備註] 補上或更新了 {n} 筆"),
+        });
+    }
     let hub = Hub::new();
     let diagnostics = crate::diagnostics::Store::new(&paths);
     let comfy = Comfy::new(comfy_url, db.clone(), hub.clone());
     comfy.attach_diagnostics(diagnostics.clone());
+    comfy.set_local_input(&paths.input);
     comfy.start();
     let civitai = Civitai::new(
         &paths.loras,
@@ -710,6 +853,11 @@ pub async fn start(paths: Paths, comfy_url: &str) -> Result<Shared, String> {
     ));
     let data_dir = paths.data.clone();
     let studio = crate::studio::Studio::new(&paths.res, &paths.data);
+    let mixdesk = Arc::new(crate::mixdesk::Mixdesk::new(paths.settings.clone()));
+    let agent = api_agent::Agent::new(&data_dir);
+    let pool = Arc::new(crate::nodes::Pool::new(comfy.clone(), db.clone(), hub.clone(), &data_dir, &paths.input, &paths.output));
+    // 要比 App 早建：第一次開站會把 cloud.json 裡舊的單組外接 API 搬進 llm_profiles.json
+    let brains = Arc::new(crate::brains::Brains::new(&data_dir, &agent.cloud.cfg_snapshot()));
     let app = Arc::new(App {
         diagnostics,
         cache: Arc::new(crate::cache::Control::default()),
@@ -719,6 +867,7 @@ pub async fn start(paths: Paths, comfy_url: &str) -> Result<Shared, String> {
         db,
         hub,
         comfy,
+        pool,
         civitai,
         pe,
         tagger,
@@ -729,9 +878,11 @@ pub async fn start(paths: Paths, comfy_url: &str) -> Result<Shared, String> {
         director: api_director::Director::new(&data_dir),
         comic: api_comic::Comic::new(&data_dir),
         last_family: std::sync::Mutex::new(String::new()),
-        agent: api_agent::Agent::new(&data_dir),
+        agent,
+        brains,
         studio,
         h3: api_h3::H3::default(),
+        mixdesk,
         show_window: OnceLock::new(),
         restart_comfy: OnceLock::new(),
     });
@@ -744,6 +895,8 @@ pub async fn start(paths: Paths, comfy_url: &str) -> Result<Shared, String> {
             eprintln!("舊角色卡搬進資產庫失敗：{}", e.1);
         }
     });
+    // 升級換模型：刪掉官方 PE、換上新的通用 9B（只做一次；下載失敗下次開站再試，見 api_pe.rs）
+    tokio::spawn(api_pe::retire_old_models(app.clone()));
     // ComfyUI 開著時，問它看得到哪些模型資料夾（補 yaml 讀不到的，例如別的啟動器用參數帶進去的資料夾）；每分鐘更新一次
     let live_url = comfy_url.to_string();
     tokio::spawn(async move {
@@ -762,7 +915,10 @@ pub async fn start(paths: Paths, comfy_url: &str) -> Result<Shared, String> {
         let ix = blocking(move || {
             let mine = a.paths.data.join("tags");
             let dir = if mine.join("danbooru.csv").exists() { mine } else { a.paths.res.join("tags") };
-            TagIndex::load(&dir)
+            let mut ix = TagIndex::load(&dir);
+            // WeiLin 詞庫的 danbooru 翻譯：不管用哪份 data\tags 都接上（只補對照表沒有的 tag）
+            ix.add_zh_file(&a.paths.res.join("tags").join("weilin").join("zh_extra.json"));
+            ix
         })
         .await;
         let _ = bg.tags.set(ix);

@@ -92,6 +92,8 @@ F("skipBtn").onclick = () => { if (finished && usable) finish(); };
 
 // ---------------------------------------------------------------- 1. 檢查電腦
 const gb = (n) => (n == null ? "—" : `${(n / 2 ** 30).toFixed(n >= 100 * 2 ** 30 ? 0 : 1)} GB`);
+// RX 6000 這一族（gfx1030～1036）裝的是 gfx103X 專用 PyTorch，不是多架構 ROCm 10（gpu.rs gfx103_family）
+const rx6000 = (gfx) => !!gfx && String(gfx).split(",").every((g) => g.trim().startsWith("gfx103"));
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
 // 檢查失敗：講白話原因和怎麼辦，給「重試」鈕（技術細節留給回報用）
@@ -131,7 +133,7 @@ async function loadScan() {
   else if (nvNoDriver.length) lines.push(`<span class="r">GPU  <span class="a">${esc(nvNoDriver[0].name)}</span>  <span class="zh">NVIDIA 顯示卡的驅動沒有裝好</span></span>`);
   else lines.push(`<span class="r">GPU  <span class="zh">找不到顯示卡</span></span>`);
   if (scan.lite?.ram) lines.push(`RAM  <span class="${scan.lite.tiny_ram ? "r" : "a"}">${gb(scan.lite.ram)}</span>`);
-  lines.push(scan.vcredist.ok ? `VC++ <span class="a">${esc(scan.vcredist.version)}</span>`
+  if (!isLinux()) lines.push(scan.vcredist.ok ? `VC++ <span class="a">${esc(scan.vcredist.version)}</span>`
     : `<span class="r">VC++ <span class="zh">${scan.vcredist.version ? `${esc(scan.vcredist.version)} 太舊` : "沒有裝"}，安裝時會一起裝</span></span>`);
   for (const d of scan.disks) lines.push(`DISK ${esc(d.drive)}  <span class="zh">可用</span> <span class="a">${gb(d.free)}</span> / ${gb(d.total)}`);
   lines.push(`<span class="zh">找到舊版生圖站資料</span> <span class="a">${scan.data.length}</span>  <span class="zh">找到 ComfyUI</span> <span class="a">${scan.comfy.length}</span>`);
@@ -144,7 +146,7 @@ async function loadScan() {
   else if (why === "nvidia" && !gpus.some((g) => g.vendor === "nvidia")) warn.push("沒有偵測到 NVIDIA 顯示卡。ComfyUI 的免安裝版需要 NVIDIA 顯示卡（顯存 8GB 以上）才能正常畫圖。");
   else if (usableGpu.length && usableGpu.every((g) => g.vram_mb && g.vram_mb < 7800)) warn.push("顯示卡的顯存不到 8GB，畫圖可能會很慢或失敗。");
   if (why === "amd_portable") warn.push({ html: `偵測到 AMD 顯示卡（架構 <span translate="no">${esc(auto.gfx)}</span>）：A 卡目前是實驗性支援。安裝時會改下載 ComfyUI 官方的 AMD 版免安裝包（PyTorch＋ROCm 7.2.1），AI 改寫改用 llama.cpp 的 Vulkan 版。請先裝好最新的 AMD Adrenalin 驅動（<a href="https://www.amd.com/en/support/download/drivers.html" target="_blank" rel="noopener">AMD 官網</a>）。生圖站作者手上沒有 A 卡，這條路還沒實際測過，遇到問題請回報。` });
-  if (why === "amd_rocm10") warn.push({ html: `偵測到 AMD 顯示卡（架構 <span translate="no">${esc(auto.gfx)}</span>）：A 卡目前是實驗性支援。官方 AMD 版免安裝包沒有附這張卡的程式，安裝時會先下載它，再用 pip 從 AMD 官方的套件庫把 PyTorch 換成支援這張卡的 ROCm 10 版（多下載約 ${gb(auto.rocm10_bytes)}）。AI 改寫用 llama.cpp 的 Vulkan 版。請先裝好最新的 AMD Adrenalin 驅動（<a href="https://www.amd.com/en/support/download/drivers.html" target="_blank" rel="noopener">AMD 官網</a>）。這條路只在 N 卡電腦上試裝過（PyTorch 裝得起來），還沒在 A 卡上實際畫過圖，遇到問題請回報。` });
+  if (why === "amd_rocm10") warn.push({ html: `偵測到 AMD 顯示卡（架構 <span translate="no">${esc(auto.gfx)}</span>）：A 卡目前是實驗性支援。官方 AMD 版免安裝包沒有附這張卡的程式，安裝時會先下載它，再用 pip 從 AMD 官方的套件庫把 PyTorch 換成支援這張卡的${rx6000(auto.gfx) ? " RX 6000 專用版（gfx103X）" : " ROCm 10 版"}（多下載約 ${gb(auto.rocm10_bytes)}）。AI 改寫用 llama.cpp 的 Vulkan 版。請先裝好最新的 AMD Adrenalin 驅動（<a href="https://www.amd.com/en/support/download/drivers.html" target="_blank" rel="noopener">AMD 官網</a>）。這條路只在 N 卡電腦上試裝過（PyTorch 裝得起來），還沒在 A 卡上實際畫過圖，遇到問題請回報。` });
   if (why === "amd_unknown") warn.push({ html: `偵測到 AMD 顯示卡，但認不出是哪一代（<span translate="no">${esc(auto.card)}</span>）：會先照 AMD 版免安裝包裝；知道型號的話，可以在下一頁的「A 卡架構」手動選。A 卡目前是實驗性支援，還沒實際測過。` });
   if (why === "intel_arc") warn.push({ html: `偵測到 Intel Arc 顯示卡：Intel 目前是實驗性支援。安裝時會改下載 ComfyUI 官方的 Intel 版免安裝包（PyTorch XPU，解壓縮後約 5.3GB），AI 改寫用 llama.cpp 的 Vulkan 版。請先裝好最新的 Intel 顯示卡驅動（<a href="https://www.intel.com/content/www/us/en/download/785597/intel-arc-graphics-windows.html" target="_blank" rel="noopener">Intel 官網</a>）。還沒實際測過，遇到問題請回報。` });
   if (["none", "amd_old", "intel_old"].includes(why)) {
@@ -166,6 +168,8 @@ async function loadScan() {
   // 驅動太舊：ComfyUI 0.38 的 PyTorch 是 CUDA 13，要 R580 以上。驅動要自己裝（要重開機、要選版本），這裡只提醒
   const oldDrv = scan.gpus.find((g) => g.driver_old);
   if (oldDrv) warn.push({ html: `顯示卡驅動 ${esc(oldDrv.driver)} 太舊：ComfyUI 需要 ${scan.driver_min} 版以上，不然會用不了顯示卡。請到 <a href="https://www.nvidia.com/Download/index.aspx" target="_blank" rel="noopener">NVIDIA 官網</a>（或 NVIDIA App）更新驅動，更新完重開機再回來。` });
+  // 找舊安裝有時間上限（setup.rs FIND_BUDGET）：沒掃完的硬碟講一聲，不擋
+  if (scan.unscanned?.length) warn.push(`有幾顆硬碟太慢，沒在時間內找完舊的安裝（${scan.unscanned.join("、")}）：硬碟在休眠、檔案很多、或是掛載成磁碟的網盤都會這樣。可以直接繼續；舊的圖庫或 ComfyUI 要是放在那裡，下一頁用「自己指定舊資料」「自己指定 ComfyUI 資料夾」選它的位置。`);
   if (!scan.vcredist.ok) warn.push("這台電腦缺少（或太舊）Visual C++ 執行階段，ComfyUI 少了它會開不起來。安裝時精靈會從微軟官網下載（約 18MB）幫你裝，到時候會跳出系統確認視窗，請按「是」。");
   F("sysWarn").innerHTML = warn.map((w) => `<div class="warnbox">${w.html ?? esc(w)}</div>`).join("");
   presetPicks();
@@ -231,7 +235,7 @@ function renderPlaces() {
     h += opt("comfy", c.path, pick.comfy === c.path, `<b>沿用這個 ComfyUI</b>${c.version ? `（${esc(c.version)}）` : ""}<div class="path">${esc(c.path)}</div>`);
   // 掃描只看每顆硬碟往下三層（加上幾個啟動器的固定位置）：沒被找到的，自己貼路徑
   h += opt("comfy", "manual", pick.comfy === "manual",
-    `<b>自己指定 ComfyUI 資料夾</b><div class="muted sm">選整包的最外層就好：官方免安裝版、秋葉整合包、StabilityMatrix、Pinokio、SwarmUI、自己 git clone 的（venv）都認得；官方桌面版選它的資料夾（有 .venv 和 models 的那個）。可以在檔案總管的網址列複製路徑貼上。</div><div class="pickrow"><input type="text" id="comfyManual" value="${esc(pick.comfyManual)}" placeholder="例如 D:\\ComfyUI" aria-label="ComfyUI 資料夾位置" spellcheck="false"><button class="akey sm" type="button" data-pick="comfyManual">選資料夾…</button></div>` +
+    `<b>自己指定 ComfyUI 資料夾</b><div class="muted sm">選整包的最外層就好：官方免安裝版、秋葉整合包、StabilityMatrix、Pinokio、SwarmUI、自己 git clone 的（venv）都認得；官方桌面版選它的資料夾（有 .venv 和 models 的那個）。可以在檔案總管的網址列複製路徑貼上。</div><div class="pickrow"><input type="text" id="comfyManual" value="${esc(pick.comfyManual)}" placeholder="例如 ${isLinux() ? "/home/你的名字/ComfyUI" : "D:\\ComfyUI"}" aria-label="ComfyUI 資料夾位置" spellcheck="false"><button class="akey sm" type="button" data-pick="comfyManual">選資料夾…</button></div>` +
     `<div class="pickrow"><input type="text" id="comfyPy" value="${esc(pick.python)}" placeholder="Python 位置：找不到它的 Python 時才填（conda、放在外面的 venv…的 python.exe）" aria-label="Python 位置" spellcheck="false"></div>` +
     `<span class="check sm"><input type="checkbox" id="comfyExt"${pick.external ? " checked" : ""}> 我自己開這份 ComfyUI（用它自己的啟動器；生圖站只連過去，不找它的 Python）</span>`);
   h += opt("comfy", "new", pick.comfy === "new",
@@ -265,8 +269,15 @@ function manualPick() {
   F("comfyManual").closest("label").querySelector("input[type=radio]").checked = true;
 }
 
+// Linux 版（setup.rs scan 的 os）：沒有 VC++、沒有 Windows 免安裝版，ComfyUI 由精靈用可攜式 Python＋pip 組
+const isLinux = () => scan?.os === "linux";
+
 // 「自動下載」那一項的說明：照要下載的版本（legacy＝N 卡舊卡版）
 function dlNote(variant, size, legacy) {
+  if (isLinux() && variant !== "unknown") {
+    const torch = variant === "nvidia" ? (legacy ? "CUDA 12.6 舊卡版" : "CUDA 版") : variant === "amd" ? "ROCm 版（實驗性）" : variant === "intel" ? "XPU 版（實驗性）" : "CPU 版";
+    return `（約 ${gb(size)}：可攜式 Python 3.12＋ComfyUI 原始碼，再用 pip 裝 PyTorch ${torch}，裝好後約 6～8GB）`;
+  }
   if (variant === "nvidia" && legacy) return `（${gb(size)}，官方 Windows 免安裝版的舊卡版（CUDA 12.6，給 GTX 10 系列以前），解壓縮後約 5GB）`;
   if (variant === "amd") return `（${gb(size)}，官方 Windows 免安裝版的 AMD 版，實驗性，解壓縮後約 6GB）`;
   if (variant === "intel") return `（${gb(size)}，官方 Windows 免安裝版的 Intel 版，實驗性，解壓縮後約 5.3GB）`;
@@ -299,7 +310,7 @@ function gpuNote(c) {
   if (g.variant === "unknown") return `<div class="st-err sm">偵測不到顯示卡：請選一個 ComfyUI 版本，不然沒辦法自動下載 ComfyUI。</div>`;
   if (g.variant === "cpu") return `<div class="muted sm">用 CPU 畫圖非常慢（一張圖要好幾分鐘），只適合試試看；生圖助手可以改用「雲端顯卡」。</div>`;
   if (g.variant === "nvidia" && g.legacy) return `<div class="muted sm">比較舊的 N 卡（GTX 10 系列以前）：新版 PyTorch 不支援，會改下載官方給舊卡的版本（CUDA 12.6）。驅動要 ${esc(scan.driver_min_legacy || "")} 版以上；顯存小的卡畫 Qwen、MOSS 會很慢或不夠。</div>`;
-  if (g.variant === "amd" && g.rocm10.length) return `<div class="muted sm">這張卡（<span translate="no">${esc(g.rocm10.join("、"))}</span>）官方 AMD 版沒有附：裝完 ComfyUI 會再用 pip 換成 AMD 官方的 ROCm 10 版 PyTorch，多下載約 ${gb(g.rocm10_bytes)}。</div>`;
+  if (g.variant === "amd" && g.rocm10.length) return `<div class="muted sm">這張卡（<span translate="no">${esc(g.rocm10.join("、"))}</span>）官方 AMD 版沒有附：裝完 ComfyUI 會再用 pip 換成 AMD 官方的${rx6000(g.rocm10.join(",")) ? " RX 6000 專用版（gfx103X）" : " ROCm 10 版"} PyTorch，多下載約 ${gb(g.rocm10_bytes)}。</div>`;
   if (g.variant === "amd" && !g.gfx) return `<div class="muted sm">認不出這張 A 卡的架構，先照官方 AMD 版裝；知道型號的話，在右邊選架構。</div>`;
   return "";
 }
@@ -404,7 +415,10 @@ function torchNote(c) {
 }
 
 // 沿用的 ComfyUI 比生圖站測過的版本舊：內建功能可能缺節點
-const oldNote = (c) => c.comfy.old
+// 官方免安裝版比生圖站要的新版舊（setup.rs comfy_upgradable）：安裝時會自動升級
+const oldNote = (c) => c.comfy.upgrade_to
+  ? `<div class="muted sm">⬆ 開始安裝時會把這份 ComfyUI 從 ${esc(c.comfy.version)} 升級到 ${esc(c.comfy.upgrade_to)}（MOSS 編輯、色彩深度控制都要新版；模型、圖片、外掛不動，換掉的檔會備份）</div>`
+  : c.comfy.old
   ? `<div class="st-err sm">這份 ComfyUI 是 ${esc(c.comfy.version)} 版，比生圖站測過的 ${esc(c.comfy.min_version)} 舊，有些內建功能會缺節點：建議改選「自動下載」，或先把它更新到新版</div>` : "";
 
 // 還沒有 ComfyUI、要下載的那一列
@@ -432,7 +446,7 @@ function renderCheck() {
     ["AI 改寫節點", yes(c.node)],
     ["llama.cpp（AI 改寫用）", yes(c.llama, "已經有了", vulkan ? "勾「AI 改寫」會下載 Vulkan 版，約 30MB" : "勾「AI 改寫」會下載約 0.6GB")],
     ["反推模型", yes(c.tagger, "已經有了", "會下載約 1.2GB")],
-    ["Visual C++ 執行階段", yes(c.vcredist, "已經有了", "會下載約 18MB 並安裝（會跳出系統確認視窗）")],
+    isLinux() ? null : ["Visual C++ 執行階段", yes(c.vcredist, "已經有了", "會下載約 18MB 並安裝（會跳出系統確認視窗）")],
     ["影音工作台工具（Node.js、ffmpeg）", yes(c.studio_tools, "已經有了", "勾「影音工作台」會下載約 150MB")],
     ["ComfyUI 工作流程", yes(!c.workflows_missing, "已經有了", `會放入 ${c.workflows_missing} 個`)],
     c.loras_bundled ? ["程式附帶的畫風 LoRA", yes(!c.loras_missing, "已經有了", `會放入 ${c.loras_missing} 個`)] : null,
@@ -452,7 +466,13 @@ const packDone = (p) => !p.missing.missing && p.tool;
 const wanted = (p) => packDone(p) || pick.packs.has(p.id);
 
 function packLine(p) {
-  if (packDone(p)) return `<span class="st-ok">✓ 已經有了</span>`;
+  // 模型檔齊了不代表能畫：ComfyUI 的程式沒有 MOSS 支援時（setup.rs moss_support），卡片上直接講（2026-10-30 有人因此一直重下模型）
+  const moss = p.id === "moss" && chk.comfy.moss_problem ? `<div class="st-err sm">⚠ ${esc(chk.comfy.moss_problem)}</div>` : "";
+  if (packDone(p)) return moss ? `<span class="st-ok">✓ 模型檔已經有了</span>${moss}` : `<span class="st-ok">✓ 已經有了</span>`;
+  return packMissing(p) + moss;
+}
+
+function packMissing(p) {
   const m = p.missing;
   let s = m.missing ? `還缺 ${m.missing} 個檔，約 ${gb(m.bytes)}` : `還缺約 ${gb(m.bytes)}`;
   // Civitai 那段另外包一層：英文介面一段一段查字典比較準
@@ -481,9 +501,10 @@ function renderModels() {
     <div><b>${esc(p.label)}</b>${p.requires ? ` <span class="muted sm">要先有：</span><span class="muted sm">${esc(label[p.requires])}</span>` : ""}
     <div class="muted sm">${esc(p.desc)}</div><div class="sm">${packLine(p)}</div></div></label>`;
   F("modelOpts").innerHTML = (cpu ? `<div class="warnbox">這台電腦沒有能用的顯示卡（ComfyUI 會用 CPU 跑）：生圖模型預設全不選，免得白下載好幾十 GB。想試試 CPU 畫圖可以自己勾，畫一張要好幾分鐘。</div>` : "") +
-    liteNote(packs, basic, cpu) +
+    liteNote(packs, basic, cpu) + ltxNote() +
     `<div class="lbl">基本版：三種畫風的生圖功能</div>` + packs.filter((p) => basic.includes(p.id)).map(row).join("") +
     `<div class="lbl" style="margin-top:6px">額外功能（完整版）</div>` + packs.filter((p) => !basic.includes(p.id)).map(row).join("");
+  if (F("ltxDel")) F("ltxDel").onclick = removeLtx;
   $$("#modelOpts input[data-pack]").forEach((c) => (c.onchange = () => {
     const id = c.dataset.pack;
     if (c.checked) {
@@ -519,8 +540,28 @@ function liteNote(packs, basic, cpu) {
   return h;
 }
 
+// 2026-10-30 LTX-2.3 退場：以前「影片」包下載的檔還在硬碟上就提醒，按了才刪（伺服器自己重新找，只認那三個檔名）
+function ltxNote() {
+  const l = chk?.ltx_leftovers;
+  if (!l?.files?.length) return "";
+  return `<div class="warnbox"><b>舊的 LTX-2.3 影片模型已經不用了</b>：內建影片改成 MiniMax H3（下面的「H3 影片」包）。這台電腦還留著以前下載的 ${l.files.length} 個 LTX 檔，約 ${gb(l.bytes)}：
+    <div class="sm muted" translate="no">${l.files.map(esc).join("<br>")}</div>
+    <button type="button" class="akey sm" id="ltxDel">刪掉這些舊檔（空出 ${gb(l.bytes)}）</button></div>`;
+}
+async function removeLtx() {
+  const b = F("ltxDel");
+  if (!confirm("確定刪掉舊的 LTX-2.3 影片模型？刪掉的檔不會進資源回收筒。")) return;
+  b.disabled = true;
+  try {
+    const r = await api("/api/setup/ltx_remove", { json: chosen() });
+    if (r.fails?.length) alert(`有幾個檔刪不掉（可能 ComfyUI 正開著它）：\n${r.fails.join("\n")}`);
+    chk = await api("/api/setup/check", { json: chosen() });
+    renderModels();
+  } catch (e) { b.disabled = false; alert(e.message); }
+}
+
 $$("#packQuick [data-set]").forEach((b) => (b.onclick = () => {
-  // 選配包（官方 PE）「完整版」也不勾，要自己勾
+  // 選配包（35B、影片）「完整版」也不勾，要自己勾
   const ids = chk.packs.filter((p) => !p.optional).map((p) => p.id);
   const s = b.dataset.set;
   pick.packs = new Set(s === "full" ? ids : s === "basic" ? chk.basic_packs : s === "anima" ? ["anima"] : []);
@@ -647,7 +688,7 @@ F("cancelBtn").onclick = async () => {
   await api("/api/setup/cancel", { method: "POST" }).catch(() => {});
 };
 
-const STATUS = { wait: "等待", run: "進行中", done: "完成", skip: "已經有了", error: "失敗", stop: "已停止" };
+const STATUS = { wait: "等待", run: "進行中", done: "完成", skip: "已經有了", error: "失敗", stop: "已停止", warn: "要手動處理" };
 
 // 剩下的時間：「不到 1 分鐘」「15 分鐘」「2 小時 5 分鐘」
 function fmtEta(s) {
