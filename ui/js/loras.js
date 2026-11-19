@@ -431,7 +431,7 @@ export function closePickerMenu() {
   pickerMenuEl = null;
 }
 
-if (typeof document !== "undefined" && typeof document.addEventListener === "function") {
+if (typeof document !== "undefined") {
   document.addEventListener("pointerdown", (e) => {
     if (pickerMenuEl && !pickerMenuEl.contains(e.target)) closePickerMenu();
   }, true);

@@ -27,7 +27,7 @@ function load(prompt = '') {
   const line = (head) => SRC.slice(SRC.indexOf(head), SRC.indexOf('\n', SRC.indexOf(head)));
   const code = [line('const TAG_SEP'), grab('function splitTags'), grab('function normTag'), line('const promptTagSet'), grab('function removeTags'),
     quality, grab('export function insertAfterQuality'), grab('function insertTriggers'), grab('function toggleTrigger'), grab('function watchPromptValue')].join('\n');
-  const context = vm.createContext({ F: () => box, save() {}, renderTrig() {} });
+  const context = vm.createContext({ F: () => box, save() {}, renderTrig() {}, promptx: { refresh() {} }, assetDrawer: { refresh() {} } });
   vm.runInContext(code + '\nglobalThis.subject = {splitTags, normTag, removeTags, insertAfterQuality, toggleTrigger, watchPromptValue};', context, { filename: 'gen.js' });
   return { box, ...context.subject };
 }

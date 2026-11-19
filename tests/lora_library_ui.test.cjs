@@ -25,7 +25,8 @@ function harness() {
     return e;
   };
   const calls = [];
-  const document = { querySelectorAll: () => boxes };
+  const document = { querySelectorAll: () => boxes, addEventListener() {}, body: { append() {} } };
+  const window = { addEventListener() {} };
   const app = { page: 'loras', state: { models: { family_names: { anima: 'Anima（動漫）' } } } };
   const source = fs.readFileSync(path.join(__dirname, '../ui/js/loras.js'), 'utf8')
     .replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '');
@@ -33,7 +34,7 @@ function harness() {
   const saved = {};
   const store = { get: (k, d) => (k in saved ? saved[k] : d), set: (k, v) => { saved[k] = v; } };
   let reply = null;
-  const context = vm.createContext({ $, el, app, document, store, setTimeout: (f) => timers.push(f), confirm: () => true,
+  const context = vm.createContext({ $, el, app, document, window, store, setTimeout: (f) => timers.push(f), confirm: () => true,
     api: async (url, opts) => { calls.push([url, opts]); return reply; }, toast() {}, openModal() {}, closeModal() {}, debounce: f => f, makeDrop() {}, pickFile: async () => null });
   function $(id) { return controls.get(id); }
   vm.runInContext(source + '\nglobalThis.subject = { onState, renderPage, categoryOf, previewUrl, onCover, view, applyMeta, previewFromImage };', context, { filename: 'loras.js' });
