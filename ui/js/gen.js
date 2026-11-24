@@ -240,6 +240,8 @@ export function init() {
   F("mossFast").onchange = (e) => setMossFast(e.target.checked);
   F("mossDeband").onchange = (e) => setMossDeband(e.target.checked);
   F("mossEdit").onchange = (e) => setMossEdit(e.target.checked);
+  if (F("refMossFormat")) F("refMossFormat").onchange = () => { modelHint(); save(); };
+  if (F("refMossMount")) F("refMossMount").onclick = () => mountMossEditLora();
   F("ipMethod").onchange = () => { F("denoise").value = F("ipMethod").value === "lllite" ? 1 : 0.75; F("denoiseOut").textContent = F("denoise").value; save(); };
   F("ipArea").onchange = () => { F("ipPadRow").hidden = F("ipArea").value !== "masked"; save(); };
   F("upRefine").onchange = () => { F("upRefineRow").hidden = !F("upRefine").checked; save(); };
@@ -612,20 +614,38 @@ async function have4b() {
 const MOSS_CONTROL = listed({ re: /(^|[\\/])moss-color-depth-control[^\\/]*\.safetensors$/i, rel: "loras/moss/moss-color-depth-control.safetensors" });
 const controlLora = () => (app.state?.models?.loras || []).find((x) => MOSS_CONTROL.is(x.name));
 
-// MOSS 照指令改圖（2026-10-30）：圖生圖時輸入圖當參考圖（ComfyUI 的 TextEncodeMOSSImageEdit，comfy_moss 補丁移植），掛編輯 LoRA
-// 預設的 chinoll Moss-Image-Edit 在 MOSS 包裡；使用者自己掛了別的編輯 LoRA（Civitai）就不加
-const MOSS_EDIT = listed({ re: /(^|[\\/])moss_edit_chinoll[^\\/]*\.safetensors$/i, rel: "loras/moss/moss_edit_chinoll.safetensors", strength: 1.0 });
+// MOSS 照指令改圖／多圖參考（2026-10-30）：輸入圖當參考圖（ComfyUI 的 TextEncodeMOSSImageEdit），掛編輯 LoRA
+// 預設的 chinoll Moss-Image-Edit 在 MOSS 清單裡；同時辨識自行改名放進 loras 的 chinoll / moss-image-edit / adapter_model
+const MOSS_EDIT_RE = /(^|[\\/])(moss_edit_chinoll|moss[-_]image[-_]edit|chinoll|adapter_model)[^\\/]*\.safetensors$/i;
+const MOSS_EDIT = listed({ re: MOSS_EDIT_RE, rel: "loras/moss/moss_edit_chinoll.safetensors", strength: 1.0 });
+const mossEditLoraInList = () => (app.state?.models?.loras || []).find((x) => MOSS_EDIT.is(x.name))
+  || (app.state?.models?.loras || []).find((x) => (!x.family || x.family === "moss") && /(edit|chinoll|a2r|2real|2anime)/i.test(x.name));
+const hasMossEditLora = () => S.loras.some((l) => l.enabled && (/edit|chinoll|adapter_model|a2r|2real|2anime/i.test(l.name) || MOSS_EDIT.is(l.name)));
 const editOn = () => fam() === "moss" && S.mode === "img2img" && F("mossEdit").checked;
+function mountMossEditLora(afterFetch) {
+  const l = mossEditLoraInList();
+  if (!l) {
+    fetchListed("loras/moss/moss_edit_chinoll.safetensors", " MOSS 編輯 LoRA (chinoll/Moss-Image-Edit)", "300 MB", () => {
+      if (afterFetch) afterFetch();
+      else mountMossEditLora();
+    });
+    return false;
+  }
+  const have = S.loras.find((x) => x.name === l.name);
+  if (have) Object.assign(have, { enabled: true, strength: have.strength || MOSS_EDIT.strength });
+  else S.loras.push({ name: l.name, strength: MOSS_EDIT.strength, enabled: true, title: l.title, min: l.min, max: l.max, slider: l.slider });
+  renderLoras();
+  familyUI();
+  save();
+  return true;
+}
 function setMossEdit(on) {
   F("mossEdit").checked = on;
-  if (on && !S.loras.some((l) => l.enabled && /edit|a2r|2real|2anime/i.test(l.name))) {
-    const l = (app.state?.models?.loras || []).find((x) => MOSS_EDIT.is(x.name));
+  if (on && !hasMossEditLora()) {
+    const l = mossEditLoraInList();
     if (!l) fetchListed("loras/moss/moss_edit_chinoll.safetensors", " MOSS 編輯 LoRA", "300 MB", () => F("mossEdit").checked && setMossEdit(true));
-    else {
-      const have = S.loras.find((x) => x.name === l.name);
-      if (have) Object.assign(have, { enabled: true, strength: MOSS_EDIT.strength });
-      else S.loras.push({ name: l.name, strength: MOSS_EDIT.strength, enabled: true, title: l.title, min: l.min, max: l.max, slider: l.slider });
-    }
+    else mountMossEditLora();
+    return;
   }
   renderLoras();
   familyUI();
@@ -908,7 +928,17 @@ function familyUI() {
   F("ctrlMossRow").hidden = !mossCtl;
   F("hiresBox").hidden = fam() === "custom" || !(S.mode === "txt2img" || S.mode === "img2img");
   F("ipMethodRow").hidden = noLllite;
-  F("refFamilyWarn").hidden = q || fam() === "custom" || S.mode !== "multiref";
+  const canRef = q || fam() === "moss";
+  F("refFamilyWarn").hidden = canRef || fam() === "custom" || S.mode !== "multiref";
+  if (F("refMossRow")) {
+    const showMossRef = fam() === "moss" && S.mode === "multiref";
+    F("refMossRow").hidden = !showMossRef;
+    if (showMossRef && F("refMossMount")) {
+      const mounted = hasMossEditLora();
+      F("refMossMount").hidden = mounted;
+      F("refMossMount").textContent = mossEditLoraInList() ? "自動掛載編輯 LoRA" : "下載 chinoll 編輯 LoRA";
+    }
+  }
   // 工作流組：寬高只有文生圖照生成頁；遮罩擴張／柔化、放大模型這些都在工作流裡（「工作流參數」改），生成頁這幾塊沒作用就藏起來
   const cw = fam() === "custom";
   F("sizeBox").hidden = ["inpaint", "upscale", "strip", "sheet", "outpaint"].includes(S.mode) || (cw && S.mode !== "txt2img");
@@ -1579,8 +1609,9 @@ export function collectParams() {
   }
   // 姿勢參考圖（MOSS）：有色彩／深度控制轉接器就改用它（深度圖當控制、從空白畫），沒有照舊從深度圖重繪
   if (fam() === "moss" && p.pose_control && controlLora()) p.pose_control = { ...p.pose_control, adapter: controlLora().name };
-  if (layOn() && !editOn()) { const boxes = lay.usable(); if (boxes.length) p.layout = boxes; }
+  if (layOn() && !editOn() && !(fam() === "moss" && S.mode === "multiref")) { const boxes = lay.usable(); if (boxes.length) p.layout = boxes; }
   if (editOn()) p.moss_edit = "auto";
+  if (fam() === "moss" && S.mode === "multiref") p.moss_edit = F("refMossFormat")?.value || "auto";
   if (fam() === "moss" && F("mossTe").value === "4b") p.moss_te = "4b";
   if (fam() === "custom") {
     // 工作流組：「工作流參數」面板改過的值（鍵是「節點編號.欄位」，後端最後套上）
@@ -1598,7 +1629,7 @@ export function baseParams() {
 }
 
 const FORM_IDS = ["promptPrefix", "prompt", "promptSuffix", "negative", "width", "height", "autoSize", "denoise", "ipMethod", "ipArea", "ipGrow", "ipBlur", "ipPad", "upModel", "upScale", "upRefine", "upDenoise",
-  "hiresOn", "hiresScale", "hiresDenoise", "hiresUpscaler", "ctrlOn", "ctrlType", "ctrlPre", "ctrlStr", "ctrlEnd", "ctrlInvert", "ctrlMossDepth", "ctrlMossColor", "mossTe", "model", "steps", "cfg", "sampler", "scheduler", "turboLora", "seed", "count", "refPixels",
+  "hiresOn", "hiresScale", "hiresDenoise", "hiresUpscaler", "ctrlOn", "ctrlType", "ctrlPre", "ctrlStr", "ctrlEnd", "ctrlInvert", "ctrlMossDepth", "ctrlMossColor", "mossTe", "refMossFormat", "model", "steps", "cfg", "sampler", "scheduler", "turboLora", "seed", "count", "refPixels",
   "stripTarget", "stripKeep", "stripRefine", "stripDenoise", "stripMerge", "stripExtra", "stripTags", "sheetReq",
   "opTop", "opBottom", "opLeft", "opRight", "opFeather", "autoDetail", "detailDenoise", "batchLines"];
 
@@ -1809,6 +1840,7 @@ function paramsToForm(p) {
   if (p.outpaint) Object.assign(f, { opTop: p.outpaint.top, opBottom: p.outpaint.bottom, opLeft: p.outpaint.left, opRight: p.outpaint.right, opFeather: p.outpaint.feather });
   if (p.layout?.length) f.layout = p.layout;
   if (p.mode === "multiref" && p.refs) f.refs = p.refs.map((r) => ({ name: r.image, width: r.width, height: r.height, role: r.role || "person" }));
+  if (p.mode === "multiref" && p.moss_edit) f.refMossFormat = p.moss_edit;
   return f;
 }
 
@@ -1848,9 +1880,19 @@ async function generate() {
       // 工作流組：參考圖放進標了 {{ref1}}、{{ref2}}… 的 Load Image，提示詞不用 <image1> 標記
       if (!refs.get().length) return toast("請先加入至少一張參考圖", "err");
     } else {
-      if (fam() !== "qwen21") return toast("多圖參考只支援 Qwen 2.1 模型：在參考圖區按「換成 Qwen 2.1 Turbo」", "err");
+      if (fam() !== "qwen21" && fam() !== "moss") return toast("多圖參考只支援 Qwen 2.1 與 MOSS-Image 模型：請切換模型或按「換成 Qwen 2.1 Turbo」", "err");
       const bad = refs.check(full(p.prompt));
       if (bad) return toast(bad, "err");
+      if (fam() === "moss" && !hasMossEditLora()) {
+        if (mossEditLoraInList()) {
+          mountMossEditLora();
+          p.loras = collectParams().loras;
+          toast("已自動掛載 MOSS 編輯 LoRA", "ok");
+        } else if (typeof confirm === "function" && confirm("尚未掛載 MOSS 編輯 LoRA（chinoll/Moss-Image-Edit），MOSS 多圖參考需搭配編輯 LoRA 才能依參考圖改圖。\n\n按「確定」自動下載 chinoll Moss-Image-Edit（約 297 MB），或按「取消」仍照目前設定送出。")) {
+          mountMossEditLora(() => toast("下載好了，再按一次生成", "ok"));
+          return;
+        }
+      }
     }
   } else if (S.mode === "booru") {
     if (!p.init_image && !p.prompt) return toast("畫廊模式：請先在畫廊點選圖片設為輸入圖，或選取標籤填入提示詞", "err");

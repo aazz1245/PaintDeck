@@ -156,6 +156,27 @@ fn raw(p: &Value, k: &str, default: Value) -> Value {
 const MOSS_EDIT_FORMATS: [&str; 3] = ["ai-toolkit", "ai-toolkit (kv_cache off)", "Moss-Image-Edit"];
 
 /// p.moss_edit：沒開＝None；"auto"＝照掛的 LoRA 猜（chinoll 的 Moss-Image-Edit 用自己的版面，Civitai 上 ai-toolkit 訓練的用 ai-toolkit）
+fn infer_moss_edit_format(p: &Value, default_chinoll: bool) -> &'static str {
+    let mut saw_ai_toolkit = false;
+    let mut saw_chinoll = false;
+    for l in p["loras"].as_array().into_iter().flatten().filter(|l| l["enabled"] != false) {
+        let n = l["name"].as_str().unwrap_or("").to_lowercase();
+        if n.contains("ai-toolkit") || n.contains("aitoolkit") || n.contains("anime2real") || n.contains("a2r") || n.contains("2real") || n.contains("2anime") {
+            saw_ai_toolkit = true;
+        }
+        if n.contains("chinoll") || n.contains("moss-image-edit") || n.contains("moss_image_edit") || n.contains("moss_edit") || n.contains("adapter_model") {
+            saw_chinoll = true;
+        }
+    }
+    if saw_chinoll {
+        "Moss-Image-Edit"
+    } else if saw_ai_toolkit || !default_chinoll {
+        "ai-toolkit"
+    } else {
+        "Moss-Image-Edit"
+    }
+}
+
 fn moss_edit_format(p: &Value) -> R<Option<String>> {
     let v = s(p.get("moss_edit"), "");
     if v.is_empty() || v == "off" || p.get("moss_edit") == Some(&Value::Bool(false)) {
@@ -164,11 +185,30 @@ fn moss_edit_format(p: &Value) -> R<Option<String>> {
     if v != "auto" {
         return if MOSS_EDIT_FORMATS.contains(&v) { Ok(Some(v.to_string())) } else { err(format!("不認得的 MOSS 編輯版面：{v}")) };
     }
-    let chinoll = p["loras"].as_array().into_iter().flatten().filter(|l| l["enabled"] != false).any(|l| {
-        let n = l["name"].as_str().unwrap_or("").to_lowercase();
-        n.contains("chinoll") || n.contains("moss-image-edit") || n.contains("moss_image_edit")
-    });
-    Ok(Some(if chinoll { "Moss-Image-Edit" } else { "ai-toolkit" }.to_string()))
+    Ok(Some(infer_moss_edit_format(p, false).to_string()))
+}
+
+/// MOSS 多圖參考一定走 TextEncodeMOSSImageEdit；未指定或 "auto" 時，預設優先用 chinoll (Moss-Image-Edit)，除非掛了明確的 ai-toolkit 編輯 LoRA
+fn moss_multiref_format(p: &Value) -> R<String> {
+    let v = s(p.get("moss_edit"), "");
+    if v.is_empty() || v == "auto" {
+        return Ok(infer_moss_edit_format(p, true).to_string());
+    }
+    if MOSS_EDIT_FORMATS.contains(&v) {
+        Ok(v.to_string())
+    } else {
+        err(format!("不認得的 MOSS 編輯版面：{v}"))
+    }
+}
+
+/// 把生成頁多圖用的 `<image1>`、`<image2>` 標記轉為 MOSS 編輯 LoRA 看得懂的引用格式
+/// - Moss-Image-Edit：純文字編碼，官方寫法是 `image 1`、`image 2`
+/// - ai-toolkit：TextEncodeMOSSImageEdit 會在開頭加 `Picture 1: ...`，對應寫法為 `Picture 1`、`Picture 2`
+fn moss_ref_prompt(prompt: &str, edit_format: &str) -> String {
+    static RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    let re = RE.get_or_init(|| regex::Regex::new(r"<image(\d+)>").expect("valid regex"));
+    let prefix = if edit_format == "Moss-Image-Edit" { "image" } else { "Picture" };
+    re.replace_all(prompt, |caps: &regex::Captures| format!("{prefix} {}", &caps[1])).into_owned()
 }
 
 /// Python: `p.get(k) or default`
@@ -425,6 +465,26 @@ impl Graph {
         kw.insert("resolution".into(), json!(0));
         let r = self.add("TextEncodeQwenImage21", Value::Object(kw));
         (r.clone(), Self::slot(&r, 1), Self::slot(&r, 2))
+    }
+    /// MOSS 照指令編輯／多圖參考：參考圖進 TextEncodeMOSSImageEdit（images.image_0…），從空白畫布出發。回傳 (正向, 負向, 空 latent)
+    fn moss_edit_text(&mut self, prompt: &str, negative: &str, edit_format: &str, images: &[Ref], w: i64, h: i64) -> (Ref, Ref, Ref) {
+        let (clip, vae) = (self.clip(), self.vae());
+        let build_node = |g: &mut Graph, text: &str| {
+            let mut kw = Map::new();
+            kw.insert("clip".into(), clip.clone());
+            kw.insert("prompt".into(), json!(text));
+            kw.insert("vae".into(), vae.clone());
+            kw.insert("edit_format".into(), json!(edit_format));
+            for (k, im) in images.iter().enumerate() {
+                kw.insert(format!("images.image_{k}"), im.clone());
+            }
+            kw.insert("image_strength".into(), json!(1.0));
+            g.add("TextEncodeMOSSImageEdit", Value::Object(kw))
+        };
+        let pos = build_node(self, prompt);
+        let neg = build_node(self, negative);
+        let lat = self.empty_latent(w, h);
+        (pos, neg, lat)
     }
     fn encode(&mut self, image: &Ref, w: i64, h: i64) -> Ref {
         let vae = self.vae();
@@ -1030,10 +1090,7 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
             let lay = if g.moss() && edit.is_none() { Layout::from_params(p, &prompt, &mut rng) } else { None };
             let (pos, neg, lat);
             if let Some(fmt) = &edit {
-                let (clip, vae) = (g.clip(), g.vae());
-                pos = g.add("TextEncodeMOSSImageEdit", json!({"clip": clip, "prompt": prompt, "vae": vae, "edit_format": fmt, "images.image_0": src, "image_strength": 1.0}));
-                neg = g.add("TextEncodeMOSSImageEdit", json!({"clip": clip, "prompt": negative, "vae": vae, "edit_format": fmt, "images.image_0": src, "image_strength": 1.0}));
-                lat = g.empty_latent(w0, h0);
+                (pos, neg, lat) = g.moss_edit_text(&prompt, &negative, fmt, std::slice::from_ref(&src), w0, h0);
             } else if q {
                 let (a, b, e) = g.qtext(&prompt, &negative, std::slice::from_ref(&src));
                 pos = a;
@@ -1189,9 +1246,9 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
             (w, h) = (ow, oh);
         }
         "multiref" => {
-            // 多圖參考（只有 Qwen 2.1）：最多 10 張參考圖一起交給編碼器，提示詞用 <image1>… 指名
-            if !q {
-                return err("多圖參考只支援 Qwen 2.1 模型（Noct Q），請先在「模型」換成 Qwen 2.1");
+            // 多圖參考：支援 Qwen 2.1（TextEncodeQwenImage21）與 MOSS-Image（TextEncodeMOSSImageEdit + 編輯 LoRA）；最多 10 張參考圖
+            if !q && !g.moss() {
+                return err("多圖參考只支援 Qwen 2.1 與 MOSS-Image 模型，請先在「模型」換成 Qwen 2.1 或 MOSS-Image");
             }
             let refs: Vec<&Value> = match p.get("refs") {
                 Some(Value::Array(a)) => a
@@ -1206,8 +1263,9 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
             }
             let auto = s(p.get("size_mode"), "auto") == "auto";
             let (rw0, rh0) = image_size(&inp(&refs[0]["image"]))?;
+            let default_px = if q { QWEN21_PIXELS } else { 1024.0 * 1024.0 };
             let (w0, h0) = if auto {
-                fit_pixels(rw0, rh0, or_f(p, "pixels", QWEN21_PIXELS), step)
+                fit_pixels(rw0, rh0, or_f(p, "pixels", default_px), step)
             } else {
                 (
                     snap(f(p.get("width"), 0.0), step, 256),
@@ -1226,13 +1284,20 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
                 imgs.push(g.scale(&li, tw, th, "center", "lanczos"));
             }
             let model = model_chain(&mut g, p, vec![]);
-            let (pos, neg, mut lat) = g.qtext(&prompt, &negative, &imgs);
-            if !auto {
-                lat = g.add(
-                    "EmptyLatentImage",
-                    json!({"width": w0, "height": h0, "batch_size": 1}),
-                );
-            }
+            let (pos, neg, lat) = if g.moss() {
+                let fmt = moss_multiref_format(p)?;
+                prompt = moss_ref_prompt(&prompt, &fmt);
+                g.moss_edit_text(&prompt, &negative, &fmt, &imgs, w0, h0)
+            } else {
+                let (a, b, mut c) = g.qtext(&prompt, &negative, &imgs);
+                if !auto {
+                    c = g.add(
+                        "EmptyLatentImage",
+                        json!({"width": w0, "height": h0, "batch_size": 1}),
+                    );
+                }
+                (a, b, c)
+            };
             let smp = sample(
                 &mut g,
                 &model,
@@ -1808,10 +1873,73 @@ mod tests {
         let (n, _) = build(&a, &dir, 0).unwrap();
         assert_eq!(n.values().filter(|v| v["class_type"] == "AnimaLLLiteApply").count(), 2);
         assert_eq!(n.values().find(|v| v["class_type"] == "KSampler").unwrap()["inputs"]["denoise"], 1.0);
-        let mut m = p.clone();
-        m["mode"] = json!("multiref");
-        assert!(build(&m, &dir, 0).unwrap_err().0.contains("只支援 Qwen 2.1"));
+        // Anima 仍不支援多圖參考，MOSS 則已支援多圖參考（TextEncodeMOSSImageEdit）
+        let mut a_ref = p.clone();
+        a_ref["family"] = json!("anima");
+        a_ref["mode"] = json!("multiref");
+        a_ref["refs"] = json!([{"image": "aw_test_moss_i2i.png"}]);
+        assert!(build(&a_ref, &dir, 0).unwrap_err().0.contains("只支援 Qwen 2.1 與 MOSS-Image"));
         let _ = std::fs::remove_file(img);
+    }
+
+    #[test]
+    fn moss_multiref_edit_graph() {
+        let dir = std::env::temp_dir();
+        let img1 = dir.join("aw_test_moss_m1.png");
+        let img2 = dir.join("aw_test_moss_m2.png");
+        image::RgbImage::new(832, 1216).save(&img1).unwrap();
+        image::RgbImage::new(1024, 1024).save(&img2).unwrap();
+        let mut p = json!({
+            "mode": "multiref", "family": "moss", "model": "OneObsession_MOSS_BASE_v1-INT8.safetensors",
+            "prompt": "Dress the person in <image1> in the outfit from <image2>.",
+            "negative": "worst quality", "seed": 42, "steps": 30, "cfg": 4.0,
+            "sampler": "euler", "scheduler": "sgm_uniform",
+            "size_mode": "auto", "pixels": 1048576, "ref_pixels": 524288,
+            "refs": [
+                {"image": "aw_test_moss_m1.png", "role": "base"},
+                {"image": "aw_test_moss_m2.png", "role": "outfit"}
+            ],
+            "loras": [{"name": "moss/moss_edit_chinoll.safetensors", "strength": 1.0, "enabled": true}]
+        });
+        let (n, info) = build(&p, &dir, 0).unwrap();
+        let enc: Vec<&Value> = n.values().filter(|v| v["class_type"] == "TextEncodeMOSSImageEdit").collect();
+        assert_eq!(enc.len(), 2);
+        assert!(enc.iter().all(|e| {
+            e["inputs"]["edit_format"] == "Moss-Image-Edit"
+                && e["inputs"]["images.image_0"].is_array()
+                && e["inputs"]["images.image_1"].is_array()
+                && e["inputs"]["vae"].is_array()
+        }));
+        assert!(enc.iter().any(|e| e["inputs"]["prompt"] == "Dress the person in image 1 in the outfit from image 2."));
+        assert_eq!(info["prompt"], "Dress the person in image 1 in the outfit from image 2.");
+        assert!(n.values().any(|v| v["class_type"] == "EmptyFlux2LatentImage"));
+        assert!(n.values().any(|v| v["class_type"] == "SkipLayerGuidanceDiTSimple"));
+        assert!(n.values().any(|v| v["class_type"] == "ModelSamplingAuraFlow"));
+        assert_eq!(n.values().find(|v| v["class_type"] == "KSampler").unwrap()["inputs"]["denoise"], 1.0);
+        assert_eq!(info["width"].as_i64().unwrap() % 16, 0);
+        assert_eq!(info["height"].as_i64().unwrap() % 16, 0);
+
+        // 未指定 LoRA 檔名（或自訂改名後的 adapter_model）且 moss_edit=auto 時，預設也用 Moss-Image-Edit；ai-toolkit 則用 Picture N
+        p["loras"] = json!([]);
+        let (n2, _) = build(&p, &dir, 0).unwrap();
+        assert!(n2.values().any(|v| v["class_type"] == "TextEncodeMOSSImageEdit" && v["inputs"]["edit_format"] == "Moss-Image-Edit"));
+
+        p["moss_edit"] = json!("ai-toolkit");
+        let (n3, info3) = build(&p, &dir, 0).unwrap();
+        assert!(n3.values().any(|v| v["class_type"] == "TextEncodeMOSSImageEdit" && v["inputs"]["edit_format"] == "ai-toolkit"));
+        assert_eq!(info3["prompt"], "Dress the person in Picture 1 in the outfit from Picture 2.");
+
+        // 固定尺寸應建立 16px 對齊的 EmptyFlux2LatentImage
+        p["size_mode"] = json!("fixed");
+        p["width"] = json!(900);
+        p["height"] = json!(1200);
+        let (n4, info4) = build(&p, &dir, 0).unwrap();
+        assert_eq!(info4["width"], 896);
+        assert_eq!(info4["height"], 1200);
+        assert!(n4.values().any(|v| v["class_type"] == "EmptyFlux2LatentImage" && v["inputs"]["width"] == 896 && v["inputs"]["height"] == 1200));
+
+        let _ = std::fs::remove_file(img1);
+        let _ = std::fs::remove_file(img2);
     }
 
     #[test]

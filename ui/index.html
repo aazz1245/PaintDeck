@@ -131,9 +131,20 @@
 
     <section class="group" id="refBox" hidden>
       <div class="lbl" data-silk="REFS">參考圖 <span id="refCount"></span><button class="act" id="refPick" type="button">＋選檔案</button><button class="act" id="refFromGallery" type="button">從圖庫選</button></div>
-      <div class="notice" id="refFamilyWarn" hidden>多圖參考只支援 Qwen 2.1 模型。<button class="akey sm go" id="refSwitchModel" type="button">換成 Qwen 2.1 Turbo</button></div>
+      <div class="notice" id="refFamilyWarn" hidden>多圖參考只支援 Qwen 2.1 與 MOSS-Image 模型。<button class="akey sm go" id="refSwitchModel" type="button">換成 Qwen 2.1 Turbo</button></div>
+      <div class="row gap wrap" id="refMossRow" hidden>
+        <span class="sub inline">MOSS 編輯版面</span>
+        <select id="refMossFormat" class="sm" title="對應所使用的 MOSS 編輯 LoRA 訓練格式；chinoll/Moss-Image-Edit 請選預設或自動">
+          <option value="auto" selected>自動（依 LoRA 判斷，預設 Moss-Image-Edit）</option>
+          <option value="Moss-Image-Edit">chinoll (Moss-Image-Edit)</option>
+          <option value="ai-toolkit">ai-toolkit</option>
+          <option value="ai-toolkit (kv_cache off)">ai-toolkit (kv_cache off)</option>
+        </select>
+        <button class="akey sm" id="refMossMount" type="button" title="檢查並掛載 chinoll/Moss-Image-Edit 編輯 LoRA">掛載編輯 LoRA</button>
+        <span class="muted sm" id="refMossHint">Base 版建議 30 步、CFG 3.5～4.0（euler＋normal／sgm_uniform），可直接使用 <code>image 1</code> 或 <code>&lt;image1&gt;</code>（自動轉換）。</span>
+      </div>
       <div class="ref-tray" id="refTray"></div>
-      <div class="muted sm">輸出的尺寸照第 1 張；角色選「底圖」的會自動排到第 1 張，構圖照它。點圖上的 <code>&lt;image1&gt;</code> 會插進提示詞；拖曳卡片可換順序（提示詞裡的編號會跟著改）。也可以直接 Ctrl+V 貼上。</div>
+      <div class="muted sm">輸出的尺寸照第 1 張；角色選「底圖」的會自動排到第 1 張，構圖照它。點圖上的 <code>&lt;image1&gt;</code> 會插進提示詞（MOSS 會自動轉成 <code>image 1</code>）；拖曳卡片可換順序。也可以直接 Ctrl+V 貼上。</div>
       <div class="muted sm">實測：<b>重新組一張圖</b>（人物＋衣服＋場景、合照）效果最好；鎖住底圖只改局部（例如只換衣服、背景完全不動）容易只改一半。</div>
       <span class="sub">範本（會設好角色並寫好提示詞）</span>
       <div class="chips" id="refTemplates"></div>
@@ -1839,7 +1850,7 @@
     <span class="st-ram">記憶體 <span class="a" id="ramText">—</span></span><span class="sep"></span>
     <span class="st-disk"><span class="a" id="diskText">—</span></span><span class="sep"></span>
     <span class="st-pe" id="peText">AI 改寫 待機</span>
-    <span class="r a" id="qtxt">佇列 0</span><span class="sep"></span><span id="verText">V261117</span><button type="button" class="akey sm" id="updateNotice" hidden></button>
+    <span class="r a" id="qtxt">佇列 0</span><span class="sep"></span><span id="verText">V261124</span><button type="button" class="akey sm" id="updateNotice" hidden></button>
   </footer>
 </div>
 

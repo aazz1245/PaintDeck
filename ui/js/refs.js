@@ -195,13 +195,16 @@ export function compose(ask = false, group = false) {
   if (base < 0 && !hasScene) toast("接著在提示詞最後用一句話描述場景、姿勢和光線，例如：她站在咖啡廳窗邊，柔和的自然光，全身照。", "ok");
 }
 
-// 送出前檢查：張數、提示詞裡的標記
+// 送出前檢查：張數、提示詞裡的標記（同時支援 Qwen 2.1 的 <imageN> 與 MOSS 的 image N / Picture N / 圖N）
 export function check(prompt) {
   if (!refs.length) return "請先加入至少一張參考圖";
-  const used = [...prompt.matchAll(/<image(\d+)>/g)].map((m) => +m[1]);
-  const bad = used.filter((k) => k < 1 || k > refs.length);
+  const usedTags = [...prompt.matchAll(/<image(\d+)>/g)].map((m) => +m[1]);
+  const bad = usedTags.filter((k) => k < 1 || k > refs.length);
   if (bad.length) return `提示詞裡的 <image${bad[0]}> 沒有對應的參考圖（目前只有 ${refs.length} 張）`;
   if (prompt.includes("<image?>")) return "提示詞裡還有 <image?>（被移除的圖），請先改掉";
-  if (refs.length >= 2 && !used.length) toast("提示詞裡沒有用 <image1> 這類標記指名圖片，模型可能分不清楚哪張做什麼（點圖上的編號可以插入）");
+  const usedNatural = [...prompt.matchAll(/(?:\b(?:image|picture)\s*|[圖图]\s*)(\d+)(?!\d)/gi)].map((m) => +m[1]);
+  const badNat = usedNatural.filter((k) => k >= 1 && k > refs.length);
+  if (badNat.length) return `提示詞裡提到的第 ${badNat[0]} 張圖沒有對應的參考圖（目前只有 ${refs.length} 張）`;
+  if (refs.length >= 2 && !usedTags.length && !usedNatural.length) toast("提示詞裡沒有用 <image1> 或 image 1 這類標記指名圖片，模型可能分不清楚哪張做什麼（點圖上的編號可以插入）");
   return null;
 }
