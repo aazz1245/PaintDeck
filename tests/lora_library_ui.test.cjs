@@ -6,7 +6,11 @@ const vm = require('node:vm');
 
 function harness() {
   const controls = new Map();
-  for (const id of ['loraQ', 'loraFamily', 'loraCategory', 'loraTag', 'loraFav', 'loraTotal', 'loraMore', 'loraGrid', 'loraView']) {
+  const modeButtons = ['manager', 'library'].map((view) => ({ dataset: { view }, attrs: {}, classes: new Set(), setAttribute(name, value) { this.attrs[name] = value; } }));
+  for (const button of modeButtons) {
+    button.classList = { toggle(name, on) { if (on) button.classes.add(name); else button.classes.delete(name); } };
+  }
+  for (const id of ['loraQ', 'loraFamily', 'loraCategory', 'loraTag', 'loraFav', 'loraTotal', 'loraMore', 'loraGrid', 'loraView', 'loraLibrary', 'lmTools']) {
     const classes = new Set();
     controls.set('#' + id, {
       value: '', checked: false, options: [], children: [], hidden: false, textContent: '', classes,
@@ -15,6 +19,7 @@ function harness() {
       append(child) { this.children.push(child); },
     });
   }
+  controls.set('#loraModes', { querySelectorAll: () => modeButtons });
   const boxes = [];
   const el = (tag, attrs = {}, ...kids) => {
     const e = { tag, attrs, kids, classes: new Set(String(attrs.class || '').split(' ').filter(Boolean)), get value() { return attrs.value || ''; },
@@ -37,7 +42,7 @@ function harness() {
   const context = vm.createContext({ $, el, app, document, window, store, setTimeout: (f) => timers.push(f), confirm: () => true,
     api: async (url, opts) => { calls.push([url, opts]); return reply; }, toast() {}, openModal() {}, closeModal() {}, debounce: f => f, makeDrop() {}, pickFile: async () => null });
   function $(id) { return controls.get(id); }
-  vm.runInContext(source + '\nglobalThis.subject = { onState, renderPage, categoryOf, previewUrl, onCover, view, applyMeta, previewFromImage };', context, { filename: 'loras.js' });
+  vm.runInContext(source + '\nglobalThis.subject = { onState, renderPage, categoryOf, previewUrl, onCover, view, applyMeta, previewFromImage, setPageView };', context, { filename: 'loras.js' });
   return { ...context.subject, app, calls, timers, saved, reply: (r) => { reply = r; }, get: id => controls.get('#' + id) };
 }
 
@@ -85,6 +90,24 @@ test('模型篩選同一個底模只出現一次，名稱用新寫法（Anima、
   h.get('loraFamily').value = 'MOSS Image';
   h.renderPage(true);
   assert.equal(h.get('loraGrid').children.length, 2);
+});
+
+test('LoRA 管理視圖可在 ComfyUI 管理器與繪匣清單間切換', () => {
+  const h = harness();
+  h.setPageView('manager');
+  assert.equal(h.get('lmTools').hidden, false);
+  assert.equal(h.get('loraLibrary').hidden, true);
+  h.setPageView('library');
+  assert.equal(h.get('lmTools').hidden, true);
+  assert.equal(h.get('loraLibrary').hidden, false);
+  assert.equal(h.saved.lora_page_view, 'library');
+});
+
+test('LoRA 頁面有繪匣清單實際渲染所需的卡片容器', () => {
+  const html = fs.readFileSync(path.join(__dirname, '../ui/index.html'), 'utf8');
+  assert.match(html, /id="loraLibrary"[^>]*hidden/);
+  assert.match(html, /id="loraGrid"/);
+  assert.match(html, /id="loraMore"/);
 });
 
 // 2026-11-07：預載的 LoRA 沒預覽圖整片黑。state 標 cover 的送去 /api/loras/covers 抓，抓完的廣播換上圖

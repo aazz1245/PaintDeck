@@ -13,6 +13,7 @@ let pickShown = 0;
 let shown = 0;
 // 卡片／列表兩種排法（2026-11-17 網友：「或者是列表化选择」）：LoRA 庫和挑選視窗各記各的
 const view = { page: store.get("lora_view", "grid"), pick: store.get("lora_pick_view", "grid") };
+let pageView = store.get("lora_page_view", "manager") === "library" ? "library" : "manager";
 const PAGE = 60;
 let pickerTab = "single"; // "single" | "recipe"
 
@@ -98,18 +99,13 @@ export function init() {
     if (folderSel) folderSel.style.display = pickerTab === "recipe" ? "none" : "";
     renderPicker();
   });
-  const lmTools = $("#lmTools"), lmOpenBtn = $("#lmOpenBtn");
-  const syncLmToggle = () => lmOpenBtn?.setAttribute("aria-expanded", String(!!lmTools?.open));
-  lmOpenBtn?.addEventListener("click", () => {
-    if (!lmTools) return;
-    lmTools.open = !lmTools.open;
-    syncLmToggle();
-    if (lmTools.open) showPage();
+  $("#loraModes")?.addEventListener("click", (e) => {
+    const button = e.target.closest("button[data-view]");
+    if (!button) return;
+    setPageView(button.dataset.view);
+    showPage();
   });
-  lmTools?.addEventListener("toggle", () => {
-    syncLmToggle();
-    if (lmTools.open) showPage();
-  });
+  setPageView(pageView);
   $("#loraQ")?.addEventListener("input", debounce(() => renderPage(true), 150));
   for (const id of ["#loraFamily", "#loraCategory", "#loraTag", "#loraFav"]) $(id)?.addEventListener("change", () => renderPage(true));
   $("#loraMore")?.addEventListener("click", () => renderPage(false));
@@ -127,6 +123,18 @@ function syncViewBtn(btn, mode, box) {
   box.classList.toggle("as-list", mode === "list");
 }
 
+function setPageView(mode) {
+  pageView = mode === "library" ? "library" : "manager";
+  store.set("lora_page_view", pageView);
+  $("#lmTools").hidden = pageView !== "manager";
+  $("#loraLibrary").hidden = pageView !== "library";
+  $("#loraModes")?.querySelectorAll("button[data-view]").forEach((button) => {
+    const selected = button.dataset.view === pageView;
+    button.classList.toggle("on", selected);
+    button.setAttribute("aria-selected", String(selected));
+  });
+}
+
 export function onState(st) {
   list = (st.models?.loras || []).slice().sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0) || (a.title || a.name).localeCompare(b.title || b.name));
   if (app.page === "loras") {
@@ -141,7 +149,7 @@ export function showPage() {
   const frame = $("#loraManagerFrame");
   const offline = $("#loraManagerOffline");
   if (!frame || !offline) return;
-  if (!$("#lmTools")?.open) return;
+  if (pageView !== "manager") return;
 
   const isOnline = app.state?.online !== false;
 

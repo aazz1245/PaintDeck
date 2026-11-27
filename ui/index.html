@@ -771,20 +771,12 @@
 <main id="page-loras" class="page">
   <section class="panel lib screws">
   <div class="toolbar">
-    <div class="scr search-scr"><span data-ic="search" class="sic"></span><input type="search" id="loraQ" placeholder="搜尋已安裝的 LoRA…" aria-label="搜尋 LoRA"></div>
-    <select id="loraFamily" aria-label="模型家族"><option value="">全部模型</option></select>
-    <select id="loraCategory" aria-label="用途分類"><option value="">全部分類</option></select>
-    <select id="loraTag" aria-label="標籤"><option value="">常用標籤</option></select>
-    <label class="check inline"><input type="checkbox" id="loraFav"> 只看收藏</label>
-    <span class="vfd g" id="loraTotal"></span>
-    <span class="grow"></span>
-    <button class="akey sm" id="loraView" type="button" title="改成一行一個的列表">☰ 列表</button>
-    <button class="akey sm" id="loraLearn" type="button" data-ic="chip">讓助手認識 LoRA</button>
-    <button class="akey sm" id="loraRefresh" type="button" data-ic="loop">重新整理清單</button>
-    <button class="akey sm" id="lmOpenBtn" type="button" aria-expanded="false">ComfyUI LoRA Manager</button>
+    <div class="piano row" id="loraModes" role="tablist" aria-label="LoRA 管理方式">
+      <button class="on" data-view="manager" type="button" role="tab" aria-selected="true">ComfyUI 管理器</button>
+      <button data-view="library" type="button" role="tab" aria-selected="false">繪匣 LoRA 清單</button>
+    </div>
   </div>
-  <details class="lm-tools" id="lmTools">
-    <summary>ComfyUI LoRA Manager</summary>
+  <section class="lm-tools" id="lmTools" role="tabpanel">
     <div class="lm-host-wrap">
       <iframe id="loraManagerFrame" class="lm-frame" src="about:blank" title="ComfyUI-Lora-Manager"></iframe>
       <div id="loraManagerOffline" class="lm-offline" hidden>
@@ -799,7 +791,24 @@
         </div>
       </div>
     </div>
-  </details>
+  </section>
+  <div id="loraLibrary" role="tabpanel" hidden>
+  <div class="toolbar">
+    <div class="scr search-scr"><span data-ic="search" class="sic"></span><input type="search" id="loraQ" placeholder="搜尋已安裝的 LoRA…" aria-label="搜尋 LoRA"></div>
+    <select id="loraFamily" aria-label="模型家族"><option value="">全部模型</option></select>
+    <select id="loraCategory" aria-label="用途分類"><option value="">全部分類</option></select>
+    <select id="loraTag" aria-label="標籤"><option value="">常用標籤</option></select>
+    <label class="check inline"><input type="checkbox" id="loraFav"> 只看收藏</label>
+    <span class="vfd g" id="loraTotal"></span>
+    <span class="grow"></span>
+    <button class="akey sm" id="loraView" type="button" title="改成一行一個的列表">☰ 列表</button>
+    <button class="akey sm" id="loraLearn" type="button" data-ic="chip">讓助手認識 LoRA</button>
+    <button class="akey sm" id="loraRefresh" type="button" data-ic="loop">重新整理清單</button>
+  </div>
+  <div class="muted sm pad lora-library-note">用途會依「讓助手認識 LoRA」的結果、Civitai 標籤與檔名自動分類；卡片可自行改分類與標籤。搜尋框也能找所有標籤；大量清單會分批顯示。</div>
+  <div class="lib-scroll"><div class="cards" id="loraGrid"></div><div class="center"><button class="akey" id="loraMore" type="button" hidden>載入更多</button></div></div>
+  </div>
+  </section>
 </main>
 
 <!-- ======================= 下載中心（C 站／魔塔／RunningHub，hub.js） ======================= -->
