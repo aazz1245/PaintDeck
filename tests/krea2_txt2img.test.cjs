@@ -14,7 +14,11 @@ test("ui/js/gen.js includes krea2 in BUILTIN_FAMS and BASIC_NEEDS", () => {
 test("ui/js/gen.js applies Krea 2 Turbo defaults for krea2_turbo_fp8_scaled", () => {
   assert.match(genJs, /function isTurboModel\(\)\s*\{\s*return \/turbo\/i\.test\(/);
   assert.equal(/turbo/i.test("krea2_turbo_fp8_scaled.safetensors"), true);
-  assert.match(genJs, /else if \(fam\(\) === "krea2"\) \{ F\("steps"\)\.value = isTurboModel\(\) \? 8 : 30; F\("cfg"\)\.value = isTurboModel\(\) \? 1 : 4; pick\("sampler", "euler"\); pick\("scheduler", "simple"\); \}/);
+  assert.match(genJs, /const KREA2_DEFAULTS = \{/);
+  assert.match(genJs, /width:\s*1024,\s*\r?\n\s*height:\s*1536/);
+  assert.match(genJs, /wlop_c1-st4000\.safetensors",\s*strength:\s*0\.4/);
+  assert.match(genJs, /si_\(wooupp\)_000001000\.safetensors",\s*strength:\s*0\.6/);
+  assert.match(genJs, /applyKrea2DefaultLoras\(\);/);
   assert.match(genJs, /fam\(\) === "custom" \|\| fam\(\) === "krea2" \? ""/);
 });
 

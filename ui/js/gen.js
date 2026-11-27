@@ -737,16 +737,75 @@ function isOfficialTurbo() {
 // 下拉選單有這個選項才換（ComfyUI 版本不同，清單可能不一樣）
 function pick(id, v) { if ([...F(id).options].some((o) => o.value === v)) F(id).value = v; }
 
+const KREA2_DEFAULTS = {
+  width: 1024,
+  height: 1536,
+  steps: 8,
+  cfg: 1,
+  sampler: "euler",
+  scheduler: "simple",
+  loras: [
+    { name: "krea2\\wlop_c1-st4000.safetensors", strength: 0.4 },
+    { name: "krea2\\light_c1-st2000.safetensors", strength: 0.4 },
+    { name: "krea2\\Krea2Rella_c1-st8000.safetensors", strength: 0.4 },
+    { name: "krea2\\KREA_MIDJ_1.safetensors", strength: 0.5 },
+    { name: "krea2\\z3zz4-k2-5_c1-st6000.safetensors", strength: 0.55 },
+    { name: "krea2\\si_(wooupp)_000001000.safetensors", strength: 0.6 },
+  ],
+};
+const normLoraKey = (n) => String(n || "").replace(/\\/g, "/").toLowerCase();
+const isKrea2DefaultLora = (name) => KREA2_DEFAULTS.loras.some((d) => normLoraKey(d.name) === normLoraKey(name));
+
+function applyKrea2DefaultLoras() {
+  const avail = app.state?.models?.loras || [];
+  const hasKrea2 = S.loras.some((l) => l.enabled && !mismatch(l));
+  if (hasKrea2) return;
+  let changed = false;
+  for (const d of KREA2_DEFAULTS.loras) {
+    const found = avail.find((x) => normLoraKey(x.name) === normLoraKey(d.name));
+    if (!found) continue;
+    if (S.loras.some((x) => normLoraKey(x.name) === normLoraKey(found.name))) continue;
+    const info = loras.getLoraInfo?.(found.name);
+    const rawTrigs = [...(found.triggers || []), ...(info?.triggers || [])];
+    const triggers = [...new Set(rawTrigs.flatMap((x) => (typeof x === "string" ? x.split(",") : [])).map((s) => s.trim()).filter(Boolean))];
+    S.loras.push({
+      name: found.name,
+      strength: d.strength,
+      enabled: true,
+      title: found.title || info?.title || baseName(found.name),
+      triggers,
+    });
+    changed = true;
+  }
+  if (changed) renderLoras();
+}
+
 function modelDefaults() {
   // 加速 LoRA 只給 MOSS 用，換到別的模型就拿掉
   if (fam() !== "moss" && S.loras.some((l) => MOSS_FAST.is(l.name) || MOSS_DEBAND.is(l.name))) {
     S.loras = S.loras.filter((x) => !MOSS_FAST.is(x.name) && !MOSS_DEBAND.is(x.name));
     renderLoras();
   }
+  // Krea 2 預設 LoRA 組只給 Krea 2 用，換到別的模型自動移除
+  if (fam() !== "krea2" && S.loras.some((l) => isKrea2DefaultLora(l.name))) {
+    S.loras = S.loras.filter((x) => !isKrea2DefaultLora(x.name));
+    renderLoras();
+  }
   if (fam() === "moss") { F("steps").value = fastOn() ? MOSS_FAST.steps : MOSS_FAST.normal; F("cfg").value = 5; pick("sampler", "euler"); pick("scheduler", "sgm_uniform"); }
   else if (fam() === "qwen21") { F("steps").value = isOfficialTurbo() ? 8 : isTurboModel() ? 6 : 25; F("cfg").value = isOfficialTurbo() || isTurboModel() ? 1 : 3; }
-  // Krea 2 Turbo：ComfyUI 內建範本 8 步、CFG 1、euler＋simple。Raw（沒蒸餾）沒有官方建議值：先給一般 DiT 的 30 步、CFG 4
-  else if (fam() === "krea2") { F("steps").value = isTurboModel() ? 8 : 30; F("cfg").value = isTurboModel() ? 1 : 4; pick("sampler", "euler"); pick("scheduler", "simple"); }
+  // Krea 2 Turbo：預設套用 1024×1536、8 步、CFG 1、euler＋simple 與預設 6 顆 Krea 2 LoRA 組合
+  else if (fam() === "krea2") {
+    F("steps").value = isTurboModel() ? KREA2_DEFAULTS.steps : 30;
+    F("cfg").value = isTurboModel() ? KREA2_DEFAULTS.cfg : 4;
+    pick("sampler", KREA2_DEFAULTS.sampler);
+    pick("scheduler", KREA2_DEFAULTS.scheduler);
+    if (F("width") && F("height")) {
+      F("width").value = KREA2_DEFAULTS.width;
+      F("height").value = KREA2_DEFAULTS.height;
+      syncSize();
+    }
+    applyKrea2DefaultLoras();
+  }
   // SDXL：NoobAI 官方建議 25～30 步、CFG 5～6、Euler a；加速版 8 步、CFG 1.5（各家建議不一樣，畫不好再照模型頁調）
   else if (fam() === "sdxl") { F("steps").value = isFastSdxl() ? 8 : 28; F("cfg").value = isFastSdxl() ? 1.5 : 5; pick("sampler", "euler_ancestral"); pick("scheduler", isFastSdxl() ? "sgm_uniform" : "normal"); }
   else if (fam() === "custom") { /* 步數、CFG 照工作流，這裡的不用 */ }
