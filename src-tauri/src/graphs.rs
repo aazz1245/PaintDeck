@@ -1690,6 +1690,16 @@ mod tests {
         assert_eq!(by(&n, "LoraLoaderModelOnly")[0]["inputs"]["lora_name"], "krea2_darkbrush.safetensors");
         assert!(by(&n, "ModelSamplingAuraFlow").is_empty() && by(&n, "AnimaLLLiteApply").is_empty());
         assert_eq!(info["family"], "krea2");
+        // fp8_scaled 官方版（krea2_turbo_fp8_scaled.safetensors）：同樣走 UNETLoader(default) + CLIPLoader(krea2) + qwen_image_vae + ConditioningZeroOut
+        let mut fp8 = p.clone();
+        fp8["model"] = json!("krea2_turbo_fp8_scaled.safetensors");
+        let (n_fp8, info_fp8) = build(&fp8, &dir, 0).unwrap();
+        assert_eq!(by(&n_fp8, "UNETLoader")[0]["inputs"]["unet_name"], "krea2_turbo_fp8_scaled.safetensors");
+        assert_eq!(by(&n_fp8, "UNETLoader")[0]["inputs"]["weight_dtype"], "default");
+        assert_eq!(by(&n_fp8, "CLIPLoader")[0]["inputs"]["type"], "krea2");
+        assert_eq!(by(&n_fp8, "VAELoader")[0]["inputs"]["vae_name"], VAE);
+        assert_eq!(by(&n_fp8, "ConditioningZeroOut").len(), 1);
+        assert_eq!(info_fp8["family"], "krea2");
         // Raw（CFG > 1）：負面詞照常編碼
         let mut raw = p.clone();
         raw["cfg"] = json!(4);

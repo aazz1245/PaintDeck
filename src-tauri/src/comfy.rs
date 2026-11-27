@@ -913,6 +913,7 @@ const LOADER_ALTS: &[Alt] = &[
     alt("VAELoader", "vae_name", crate::graphs::MOSS_VAE, "MOSS-Image 的 VAE（flux2-vae）", &["flux2_vae.", "moss_image_vae", "flux2_vae"], "vae", "Hugging Face 的 Comfy-Org/MOSS-Image", false),
     alt("CLIPLoader", "clip_name", crate::graphs::QWEN21_TE, "Qwen 2.1 的文字編碼器（Qwen3-VL 8B）", &["qwen3vl_8b_w4a8", "qwen3vl_8b", "qwen3_vl_8b"], "text_encoders", "Hugging Face 的 Comfy-Org/Qwen-Image-2.1", false),
     alt("VAELoader", "vae_name", crate::graphs::QWEN21_VAE, "Qwen 2.1 的 VAE", &["qwen_image_2.1_vae", "qwen_image_2_1_vae"], "vae", "Hugging Face 的 Comfy-Org/Qwen-Image-2.1", false),
+    alt("CLIPLoader", "clip_name", crate::graphs::KREA2_TE, "Krea 2 的文字編碼器（Qwen3-VL 4B）", &["qwen3vl_4b_fp8_scaled", "qwen3vl_4b_int8", "qwen3vl_4b_fp8", "qwen3vl_4b", "qwen3_vl_4b"], "text_encoders", "Hugging Face 的 Comfy-Org/Krea-2", false),
     alt("CLIPLoader", "clip_name", crate::graphs::CLIP, "Anima 的文字編碼器（Qwen3 0.6B）", &["qwen_3_06b", "qwen3_0.6b", "qwen_3_0.6b"], "text_encoders", "Hugging Face 的 circlestone-labs/Anima", false),
     alt("VAELoader", "vae_name", crate::graphs::VAE, "Anima 的 VAE（qwen_image_vae）", &["qwen_image_vae"], "vae", "Hugging Face 的 circlestone-labs/Anima", false),
     // 修臉／修手（SAM3）放在 checkpoints，那裡有很多檔，所以不能用「只有一個檔」判斷
@@ -1223,6 +1224,10 @@ mod tests {
         assert_eq!(pick_alternative(crate::graphs::VAE, &have(&["qwen_image_vae_fp16.safetensors"])), Ok(Some("qwen_image_vae_fp16.safetensors".into())));
         assert_eq!(pick_alternative(crate::graphs::QWEN21_VAE, &have(&["qwen_image_vae.safetensors", "qwen_image_2.1_vae_fp32.safetensors"])), Ok(Some("qwen_image_2.1_vae_fp32.safetensors".into())));
         assert_eq!(pick_alternative(crate::graphs::QWEN21_TE, &have(&["qwen3vl_8b_bf16.safetensors"])), Ok(Some("qwen3vl_8b_bf16.safetensors".into())));
+        assert_eq!(pick_alternative(crate::graphs::KREA2_TE, &have(&["qwen3vl_4b_fp8_scaled.safetensors"])), Ok(Some("qwen3vl_4b_fp8_scaled.safetensors".into())));
+        assert_eq!(pick_alternative(crate::graphs::KREA2_TE, &have(&["qwen3vl_4b_bf16.safetensors"])), Ok(Some("qwen3vl_4b_bf16.safetensors".into())));
+        let krea_err = pick_alternative(crate::graphs::KREA2_TE, &have(&["qwen3vl_8b_w4a8.safetensors"])).unwrap_err();
+        assert!(krea_err.contains("Krea 2") && krea_err.contains("text_encoders"), "{krea_err}");
         // 不是生圖站預設的名稱（使用者自己的工作流）：不管
         assert_eq!(pick_alternative("my_custom_vae.safetensors", &have(&["x.safetensors"])), Ok(None));
     }

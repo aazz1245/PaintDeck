@@ -547,6 +547,7 @@ const BASIC_NEEDS = {
   anima: ["text_encoders/qwen_3_06b_base", "vae/qwen_image_vae."],
   qwen21: ["text_encoders/qwen3vl_8b", "vae/qwen_image_2.1_vae"],
   moss: ["text_encoders/qwen3.5_9b", "vae/flux2-vae"],
+  krea2: ["text_encoders/qwen3vl_4b", "vae/qwen_image_vae."],
 };
 let basicChecked = false;
 async function checkBasic(m) {

@@ -342,6 +342,9 @@
 
 ### 📝 更新日誌 (Changelog)
 
+#### [2026-11-27] — 26.1127.1
+- **feat(txt2img,krea2)**: 完善 **Krea 2 Turbo（`krea2_turbo_fp8_scaled` 等版本）** 文生圖相容適配：後端 `LOADER_ALTS` 補齊 `KREA2_TE` 自動替代匹配（支援 `qwen3vl_4b_fp8_scaled`、`qwen3vl_4b_int8`、`qwen3vl_4b_bf16` 等同系列文字編碼器與中文缺檔指引），前端 `BASIC_NEEDS` 納入 `krea2` 缺檔自檢並補齊單元測試。
+
 #### [2026-11-24] — 26.1124.1
 - **feat(multiref,moss)**: 多圖參考（`multiref`）全面相容適配 `chinoll/Moss-Image-Edit` 與 **MOSS Base 版**模型，後端直接組裝 `TextEncodeMOSSImageEdit` 多槽位節點並自動將 `<imageN>` 標記轉換為 `image N`（或 `ai-toolkit` 的 `Picture N`），前端支援版面切換、Base 版參數建議、一鍵掛載／補下載編輯 LoRA 與多格式參考標記校驗。
 
