@@ -131,7 +131,7 @@
 
     <section class="group" id="refBox" hidden>
       <div class="lbl" data-silk="REFS">參考圖 <span id="refCount"></span><button class="act" id="refPick" type="button">＋選檔案</button><button class="act" id="refFromGallery" type="button">從圖庫選</button></div>
-      <div class="notice" id="refFamilyWarn" hidden>多圖參考只支援 Qwen 2.1 與 MOSS-Image 模型。<button class="akey sm go" id="refSwitchModel" type="button">換成 Qwen 2.1 Turbo</button></div>
+      <div class="notice" id="refFamilyWarn" hidden>多圖參考只支援 Qwen 2.1、MOSS-Image 與 Krea 2 模型。<button class="akey sm go" id="refSwitchModel" type="button">換成 Qwen 2.1 Turbo</button></div>
       <div class="row gap wrap" id="refMossRow" hidden>
         <span class="sub inline">MOSS 編輯版面</span>
         <select id="refMossFormat" class="sm" title="對應所使用的 MOSS 編輯 LoRA 訓練格式；chinoll/Moss-Image-Edit 請選預設或自動">
@@ -142,6 +142,27 @@
         </select>
         <button class="akey sm" id="refMossMount" type="button" title="檢查並掛載 chinoll/Moss-Image-Edit 編輯 LoRA">掛載編輯 LoRA</button>
         <span class="muted sm" id="refMossHint">Base 版建議 30 步、CFG 3.5～4.0（euler＋normal／sgm_uniform），可直接使用 <code>image 1</code> 或 <code>&lt;image1&gt;</code>（自動轉換）。</span>
+      </div>
+      <div class="row gap wrap" id="refKrea2Row" hidden>
+        <span class="sub inline">Krea 2 風格參考</span>
+        <select id="refKrea2Mode" class="sm" title="recommended 為調好的低洩漏推薦檔；custom 可微調強度參數">
+          <option value="recommended" selected>推薦低洩漏檔 (recommended)</option>
+          <option value="custom">自訂參數 (custom)</option>
+        </select>
+        <select id="refKrea2Fit" class="sm" title="參考圖對齊目標畫幅的方式">
+          <option value="crop" selected>裁切 (crop)</option>
+          <option value="contain">留邊 (contain)</option>
+          <option value="stretch">拉伸 (stretch)</option>
+        </select>
+        <span class="sub inline">風格強度</span><input id="refKrea2Str" class="sm" type="number" min="0" max="2" step="0.05" value="1.0" style="width:4.8em">
+        <span class="sub inline">參考 K</span><input id="refKrea2RefK" class="sm" type="number" min="0" max="5" step="0.01" value="1.06" style="width:4.8em">
+        <span class="sub inline">雙圖主圖</span>
+        <select id="refKrea2Primary" class="sm" title="雙圖模式時指定哪張圖主導第一階段">
+          <option value="1" selected>第 1 張</option>
+          <option value="2">第 2 張</option>
+        </select>
+        <span class="sub inline">一階段比</span><input id="refKrea2Ratio" class="sm" type="number" min="0.05" max="0.95" step="0.05" value="0.75" style="width:4.8em" title="雙圖模式建議 0.70～0.80">
+        <span class="muted sm" id="refKrea2Hint">使用 <code>ComfyUI-Krea2-StyleTransfer</code>（支援 1～2 張風格參考圖，無需寫 <code>&lt;image1&gt;</code>；推薦 8 步、CFG 1、<code>euler_ancestral</code>＋<code>simple</code>）。</span>
       </div>
       <div class="ref-tray" id="refTray"></div>
       <div class="muted sm">輸出的尺寸照第 1 張；角色選「底圖」的會自動排到第 1 張，構圖照它。點圖上的 <code>&lt;image1&gt;</code> 會插進提示詞（MOSS 會自動轉成 <code>image 1</code>）；拖曳卡片可換順序。也可以直接 Ctrl+V 貼上。</div>
@@ -1877,7 +1898,7 @@
     <span class="st-ram">記憶體 <span class="a" id="ramText">—</span></span><span class="sep"></span>
     <span class="st-disk"><span class="a" id="diskText">—</span></span><span class="sep"></span>
     <span class="st-pe" id="peText">AI 改寫 待機</span>
-    <span class="r a" id="qtxt">佇列 0</span><span class="sep"></span><span id="verText">V261127</span><button type="button" class="akey sm" id="updateNotice" hidden></button>
+    <span class="r a" id="qtxt">佇列 0</span><span class="sep"></span><span id="verText">V261128</span><button type="button" class="akey sm" id="updateNotice" hidden></button>
   </footer>
 </div>
 

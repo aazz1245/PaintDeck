@@ -342,6 +342,9 @@
 
 ### 📝 更新日誌 (Changelog)
 
+#### [2026-11-28] — 26.1128.1
+- **feat(multiref,krea2)**: 多圖參考（`multiref`）新增適配 **Krea 2（`ComfyUI-Krea2-StyleTransfer`）**，支援 1 張圖自動走 `Krea2StyleReference` → `Krea2StyleTransfer`、2 張圖自動走 `Krea2TwoStyleReferences` → `Krea2TwoStyleTransfer`（上限 2 張、無需 `<image1>` 標記），前端新增 `#refKrea2Row` 提供模式、裁切、風格強度、參考 K、雙圖主圖與一階段比例設定。
+
 #### [2026-11-27] — 26.1127.3
 - **feat(taglib)**: 「隨機」頁左側全面改為比照 LoRA 管理器內嵌外掛原生 UI（`Comfyui-Anima-Wardrobe-V6` 與 `Comfyui-K2-Editorial` 透過 `ui/plugin-host` 同源橋接滿版呈現），完整保留右側提示詞、LoRA 與生成欄並支援自動同步回寫與生成前重抽。
 

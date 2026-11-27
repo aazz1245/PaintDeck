@@ -929,7 +929,7 @@ function familyUI() {
   F("ctrlMossRow").hidden = !mossCtl;
   F("hiresBox").hidden = fam() === "custom" || !(S.mode === "txt2img" || S.mode === "img2img");
   F("ipMethodRow").hidden = noLllite;
-  const canRef = q || fam() === "moss";
+  const canRef = q || fam() === "moss" || fam() === "krea2";
   F("refFamilyWarn").hidden = canRef || fam() === "custom" || S.mode !== "multiref";
   if (F("refMossRow")) {
     const showMossRef = fam() === "moss" && S.mode === "multiref";
@@ -939,6 +939,9 @@ function familyUI() {
       F("refMossMount").hidden = mounted;
       F("refMossMount").textContent = mossEditLoraInList() ? "自動掛載編輯 LoRA" : "下載 chinoll 編輯 LoRA";
     }
+  }
+  if (F("refKrea2Row")) {
+    F("refKrea2Row").hidden = !(fam() === "krea2" && S.mode === "multiref");
   }
   // 工作流組：寬高只有文生圖照生成頁；遮罩擴張／柔化、放大模型這些都在工作流裡（「工作流參數」改），生成頁這幾塊沒作用就藏起來
   const cw = fam() === "custom";
@@ -1613,6 +1616,16 @@ export function collectParams() {
   if (layOn() && !editOn() && !(fam() === "moss" && S.mode === "multiref")) { const boxes = lay.usable(); if (boxes.length) p.layout = boxes; }
   if (editOn()) p.moss_edit = "auto";
   if (fam() === "moss" && S.mode === "multiref") p.moss_edit = F("refMossFormat")?.value || "auto";
+  if (fam() === "krea2" && S.mode === "multiref") {
+    p.krea2_style = {
+      mode: F("refKrea2Mode")?.value || "recommended",
+      fit: F("refKrea2Fit")?.value || "crop",
+      style_strength: parseFloat(F("refKrea2Str")?.value ?? "1.0") || 1.0,
+      ref_k_strength: parseFloat(F("refKrea2RefK")?.value ?? "1.06") || 1.06,
+      primary_reference: F("refKrea2Primary")?.value || "1",
+      first_phase_ratio: parseFloat(F("refKrea2Ratio")?.value ?? "0.75") || 0.75,
+    };
+  }
   if (fam() === "moss" && F("mossTe").value === "4b") p.moss_te = "4b";
   if (fam() === "custom") {
     // 工作流組：「工作流參數」面板改過的值（鍵是「節點編號.欄位」，後端最後套上）
@@ -1630,7 +1643,7 @@ export function baseParams() {
 }
 
 const FORM_IDS = ["promptPrefix", "prompt", "promptSuffix", "negative", "width", "height", "autoSize", "denoise", "ipMethod", "ipArea", "ipGrow", "ipBlur", "ipPad", "upModel", "upScale", "upRefine", "upDenoise",
-  "hiresOn", "hiresScale", "hiresDenoise", "hiresUpscaler", "ctrlOn", "ctrlType", "ctrlPre", "ctrlStr", "ctrlEnd", "ctrlInvert", "ctrlMossDepth", "ctrlMossColor", "mossTe", "refMossFormat", "model", "steps", "cfg", "sampler", "scheduler", "turboLora", "seed", "count", "refPixels",
+  "hiresOn", "hiresScale", "hiresDenoise", "hiresUpscaler", "ctrlOn", "ctrlType", "ctrlPre", "ctrlStr", "ctrlEnd", "ctrlInvert", "ctrlMossDepth", "ctrlMossColor", "mossTe", "refMossFormat", "refKrea2Mode", "refKrea2Fit", "refKrea2Str", "refKrea2RefK", "refKrea2Primary", "refKrea2Ratio", "model", "steps", "cfg", "sampler", "scheduler", "turboLora", "seed", "count", "refPixels",
   "stripTarget", "stripKeep", "stripRefine", "stripDenoise", "stripMerge", "stripExtra", "stripTags", "sheetReq",
   "opTop", "opBottom", "opLeft", "opRight", "opFeather", "autoDetail", "detailDenoise", "batchLines"];
 
@@ -1842,6 +1855,11 @@ function paramsToForm(p) {
   if (p.layout?.length) f.layout = p.layout;
   if (p.mode === "multiref" && p.refs) f.refs = p.refs.map((r) => ({ name: r.image, width: r.width, height: r.height, role: r.role || "person" }));
   if (p.mode === "multiref" && p.moss_edit) f.refMossFormat = p.moss_edit;
+  if (p.mode === "multiref" && p.krea2_style) {
+    put("refKrea2Mode", p.krea2_style.mode); put("refKrea2Fit", p.krea2_style.fit);
+    put("refKrea2Str", p.krea2_style.style_strength); put("refKrea2RefK", p.krea2_style.ref_k_strength);
+    put("refKrea2Primary", p.krea2_style.primary_reference); put("refKrea2Ratio", p.krea2_style.first_phase_ratio);
+  }
   return f;
 }
 
@@ -1883,9 +1901,15 @@ async function generate() {
       // 工作流組：參考圖放進標了 {{ref1}}、{{ref2}}… 的 Load Image，提示詞不用 <image1> 標記
       if (!refs.get().length) return toast("請先加入至少一張參考圖", "err");
     } else {
-      if (fam() !== "qwen21" && fam() !== "moss") return toast("多圖參考只支援 Qwen 2.1 與 MOSS-Image 模型：請切換模型或按「換成 Qwen 2.1 Turbo」", "err");
-      const bad = refs.check(full(p.prompt));
-      if (bad) return toast(bad, "err");
+      if (fam() !== "qwen21" && fam() !== "moss" && fam() !== "krea2") return toast("多圖參考只支援 Qwen 2.1、MOSS-Image 與 Krea 2 模型：請切換模型或按「換成 Qwen 2.1 Turbo」", "err");
+      if (fam() === "krea2") {
+        const n = refs.get().length;
+        if (!n) return toast("請先加入至少一張風格參考圖", "err");
+        if (n > 2) return toast("Krea 2 風格參考最多支援 2 張參考圖，請先移除多餘參考圖", "err");
+      } else {
+        const bad = refs.check(full(p.prompt));
+        if (bad) return toast(bad, "err");
+      }
       if (fam() === "moss" && !hasMossEditLora()) {
         if (mossEditLoraInList()) {
           mountMossEditLora();

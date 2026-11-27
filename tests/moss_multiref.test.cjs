@@ -25,14 +25,14 @@ test('index.html 包含 MOSS 多圖參考版面選單與提示', () => {
   assert.match(html, /id="refMossFormat"/);
   assert.match(html, /value="Moss-Image-Edit"/);
   assert.match(html, /id="refMossMount"/);
-  assert.match(html, /id="refFamilyWarn"[^>]*>多圖參考只支援 Qwen 2\.1 與 MOSS-Image 模型/);
+  assert.match(html, /id="refFamilyWarn"[^>]*>多圖參考只支援 Qwen 2\.1、MOSS-Image 與 Krea 2 模型/);
 });
 
 test('gen.js 允許 MOSS 家族進行多圖參考且帶入 moss_edit 參數', () => {
   const genSrc = fs.readFileSync(path.join(__dirname, '../ui/js/gen.js'), 'utf-8');
-  assert.match(genSrc, /const canRef = q \|\| fam\(\) === "moss";/);
+  assert.match(genSrc, /const canRef = q \|\| fam\(\) === "moss" \|\| fam\(\) === "krea2";/);
   assert.match(genSrc, /if \(fam\(\) === "moss" && S\.mode === "multiref"\) p\.moss_edit = F\("refMossFormat"\)\?\.value \|\| "auto";/);
-  assert.match(genSrc, /if \(fam\(\) !== "qwen21" && fam\(\) !== "moss"\)/);
+  assert.match(genSrc, /if \(fam\(\) !== "qwen21" && fam\(\) !== "moss" && fam\(\) !== "krea2"\)/);
   assert.match(genSrc, /"refMossFormat"/);
 });
 

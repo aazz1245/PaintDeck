@@ -1246,9 +1246,9 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
             (w, h) = (ow, oh);
         }
         "multiref" => {
-            // 多圖參考：支援 Qwen 2.1（TextEncodeQwenImage21）與 MOSS-Image（TextEncodeMOSSImageEdit + 編輯 LoRA）；最多 10 張參考圖
-            if !q && !g.moss() {
-                return err("多圖參考只支援 Qwen 2.1 與 MOSS-Image 模型，請先在「模型」換成 Qwen 2.1 或 MOSS-Image");
+            // 多圖參考：支援 Qwen 2.1（TextEncodeQwenImage21）、MOSS-Image（TextEncodeMOSSImageEdit + 編輯 LoRA）與 Krea 2（ComfyUI-Krea2-StyleTransfer 單圖／雙圖風格遷移）
+            if !q && !g.moss() && !g.krea2() {
+                return err("多圖參考只支援 Qwen 2.1、MOSS-Image 與 Krea 2 模型，請先在「模型」換成 Qwen 2.1、MOSS-Image 或 Krea 2");
             }
             let refs: Vec<&Value> = match p.get("refs") {
                 Some(Value::Array(a)) => a
@@ -1261,6 +1261,9 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
             if refs.is_empty() {
                 return err("請先加入至少一張參考圖");
             }
+            if g.krea2() && refs.len() > 2 {
+                return err("Krea 2 風格參考（ComfyUI-Krea2-StyleTransfer）最多支援 2 張參考圖，請移除多餘參考圖");
+            }
             let auto = s(p.get("size_mode"), "auto") == "auto";
             let (rw0, rh0) = image_size(&inp(&refs[0]["image"]))?;
             let default_px = if q { QWEN21_PIXELS } else { 1024.0 * 1024.0 };
@@ -1272,31 +1275,118 @@ pub fn build(p: &Value, input_dir: &Path, seed_offset: i64) -> R<(Map<String, Va
                     snap(f(p.get("height"), 0.0), step, 256),
                 )
             };
-            let mut imgs = vec![];
-            for (k, r) in refs.iter().enumerate() {
-                let (tw, th) = if k == 0 && auto {
-                    (w0, h0)
-                } else {
-                    let (iw, ih) = image_size(&inp(&r["image"]))?;
-                    fit_pixels(iw, ih, or_f(p, "ref_pixels", 512.0 * 1024.0), step)
+            let (model, pos, neg, lat) = if g.krea2() {
+                let mut model = model_chain(&mut g, p, vec![]);
+                let lat = g.empty_latent(w0, h0);
+                let pos = g.text(&prompt);
+                let neg = g.neg_text(&pos, &negative, f(p.get("cfg"), 0.0));
+                let vae = g.vae();
+                let ks = p.get("krea2_style").filter(|v| v.is_object()).unwrap_or(&empty);
+                let st_mode = match s(ks.get("mode"), "recommended") {
+                    "custom" => "custom",
+                    _ => "recommended",
                 };
-                let li = g.add("LoadImage", json!({"image": r["image"]}));
-                imgs.push(g.scale(&li, tw, th, "center", "lanczos"));
-            }
-            let model = model_chain(&mut g, p, vec![]);
-            let (pos, neg, lat) = if g.moss() {
-                let fmt = moss_multiref_format(p)?;
-                prompt = moss_ref_prompt(&prompt, &fmt);
-                g.moss_edit_text(&prompt, &negative, &fmt, &imgs, w0, h0)
-            } else {
-                let (a, b, mut c) = g.qtext(&prompt, &negative, &imgs);
-                if !auto {
-                    c = g.add(
-                        "EmptyLatentImage",
-                        json!({"width": w0, "height": h0, "batch_size": 1}),
+                let fit = match s(ks.get("fit"), "crop") {
+                    "contain" => "contain",
+                    "stretch" => "stretch",
+                    _ => "crop",
+                };
+                let style_str = f(ks.get("style_strength"), 1.0).clamp(0.0, 2.0);
+                let ref_k = f(ks.get("ref_k_strength"), 1.06).clamp(0.0, 5.0);
+                let mut ref_lats = vec![];
+                for r in &refs {
+                    let li = g.add("LoadImage", json!({"image": r["image"]}));
+                    let rl = g.add(
+                        "Krea2StyleReference",
+                        json!({"vae": vae, "target_latent": lat, "reference_image": li, "fit": fit, "upscale_method": "lanczos"}),
+                    );
+                    ref_lats.push(rl);
+                }
+                if ref_lats.len() == 1 {
+                    model = g.add(
+                        "Krea2StyleTransfer",
+                        json!({
+                            "model": model,
+                            "reference_latent": ref_lats[0],
+                            "ref_conditioning": pos,
+                            "mode": st_mode,
+                            "style_strength": style_str,
+                            "value_adain_strength": 0.65,
+                            "ref_value_mix": 1.0,
+                            "ref_k_strength": ref_k,
+                            "rf_mode": "flowturbo_pc",
+                            "gamma": 0.5,
+                            "beta": 2.5,
+                            "high_scale_start": 1.04,
+                            "high_scale_end": 0.0,
+                            "low_scale_start": 1.0,
+                            "low_scale_end": 1.10,
+                            "adain_strength": 0.85,
+                            "blocks": "7-27"
+                        }),
+                    );
+                } else {
+                    let primary = if s(ks.get("primary_reference"), "1") == "2" { "2" } else { "1" };
+                    let ratio = f(ks.get("first_phase_ratio"), 0.75).clamp(0.05, 0.95);
+                    let style_refs = g.add(
+                        "Krea2TwoStyleReferences",
+                        json!({"reference_latent_1": ref_lats[0], "reference_latent_2": ref_lats[1]}),
+                    );
+                    model = g.add(
+                        "Krea2TwoStyleTransfer",
+                        json!({
+                            "model": model,
+                            "style_refs": style_refs,
+                            "ref_conditioning": pos,
+                            "mode": st_mode,
+                            "primary_reference": primary,
+                            "style_strength": style_str,
+                            "ref_k_1": ref_k,
+                            "ref_k_2": ref_k,
+                            "stage_focus": 0.85,
+                            "ref_value_mix": 1.0,
+                            "low_scale_end": 1.10,
+                            "rf_mode": "flowturbo_pc",
+                            "gamma": 0.5,
+                            "beta": 2.5,
+                            "high_scale_start": 1.04,
+                            "high_scale_end": 0.0,
+                            "low_scale_start": 1.0,
+                            "adain_strength": 0.85,
+                            "blocks": "7-27",
+                            "first_phase_ratio": ratio
+                        }),
                     );
                 }
-                (a, b, c)
+                (model, pos, neg, lat)
+            } else {
+                let mut imgs = vec![];
+                for (k, r) in refs.iter().enumerate() {
+                    let (tw, th) = if k == 0 && auto {
+                        (w0, h0)
+                    } else {
+                        let (iw, ih) = image_size(&inp(&r["image"]))?;
+                        fit_pixels(iw, ih, or_f(p, "ref_pixels", 512.0 * 1024.0), step)
+                    };
+                    let li = g.add("LoadImage", json!({"image": r["image"]}));
+                    imgs.push(g.scale(&li, tw, th, "center", "lanczos"));
+                }
+                let model = model_chain(&mut g, p, vec![]);
+                let (pos, neg, lat) = if g.moss() {
+                    let fmt = moss_multiref_format(p)?;
+                    prompt = moss_ref_prompt(&prompt, &fmt);
+                    g.moss_edit_text(&prompt, &negative, &fmt, &imgs, w0, h0)
+                } else {
+                    let (a, b, mut c) = g.qtext(&prompt, &negative, &imgs);
+                    if !auto {
+                        c = g.add(
+                            "EmptyLatentImage",
+                            json!({"width": w0, "height": h0, "batch_size": 1}),
+                        );
+                    }
+                    (a, b, c)
+                };
+                (model, pos, neg, lat)
             };
             let smp = sample(
                 &mut g,
@@ -1709,6 +1799,43 @@ mod tests {
     }
 
     #[test]
+    fn krea2_multiref_style_transfer_graphs() {
+        let dir = play_dir("k2st", 1024, 1024, &[]);
+        let by = |n: &Map<String, Value>, c: &str| n.values().filter(|v| v["class_type"] == c).cloned().collect::<Vec<_>>();
+        // 單圖風格參考：Krea2StyleReference -> Krea2StyleTransfer
+        let p1 = json!({
+            "mode": "multiref", "family": "krea2", "model": "krea2_turbo_fp8_scaled.safetensors",
+            "prompt": "A woman drinking coffee in a sunlit cafe", "negative": "",
+            "seed": 42, "width": 1024, "height": 1024, "size_mode": "manual",
+            "steps": 8, "cfg": 1, "sampler": "euler_ancestral", "scheduler": "simple",
+            "refs": [{"image": "in.png"}],
+            "krea2_style": {"mode": "recommended", "fit": "crop", "style_strength": 1.0, "ref_k_strength": 1.06}
+        });
+        let (n1, info1) = build(&p1, &dir, 0).unwrap();
+        assert_eq!(info1["family"], "krea2");
+        assert_eq!(by(&n1, "Krea2StyleReference").len(), 1);
+        assert_eq!(by(&n1, "Krea2StyleTransfer").len(), 1);
+        assert_eq!(by(&n1, "Krea2StyleTransfer")[0]["inputs"]["mode"], "recommended");
+        assert_eq!(by(&n1, "ConditioningZeroOut").len(), 1);
+
+        // 雙圖風格參考：2x Krea2StyleReference -> Krea2TwoStyleReferences -> Krea2TwoStyleTransfer
+        let mut p2 = p1.clone();
+        p2["refs"] = json!([{"image": "in.png"}, {"image": "in.png"}]);
+        p2["krea2_style"] = json!({"mode": "custom", "fit": "contain", "style_strength": 1.1, "ref_k_strength": 1.08, "primary_reference": "2", "first_phase_ratio": 0.75});
+        let (n2, _) = build(&p2, &dir, 0).unwrap();
+        assert_eq!(by(&n2, "Krea2StyleReference").len(), 2);
+        assert_eq!(by(&n2, "Krea2TwoStyleReferences").len(), 1);
+        assert_eq!(by(&n2, "Krea2TwoStyleTransfer").len(), 1);
+        assert_eq!(by(&n2, "Krea2TwoStyleTransfer")[0]["inputs"]["primary_reference"], "2");
+        assert_eq!(by(&n2, "Krea2TwoStyleTransfer")[0]["inputs"]["first_phase_ratio"], 0.75);
+
+        // 超過 2 張參考圖報錯
+        let mut p3 = p1.clone();
+        p3["refs"] = json!([{"image": "in.png"}, {"image": "in.png"}, {"image": "in.png"}]);
+        assert!(build(&p3, &dir, 0).unwrap_err().0.contains("最多支援 2 張"));
+    }
+
+    #[test]
     fn sdxl_checkpoint_graphs() {
         // SDXL：CheckpointLoaderSimple 一顆給 MODEL／CLIP／VAE；LoRA 用 LoraLoader 連 CLIP 一起套；負面詞照常編碼
         let dir = play_dir("sdxl", 640, 480, &[(100, 100, 300, 300)]);
@@ -1888,7 +2015,7 @@ mod tests {
         a_ref["family"] = json!("anima");
         a_ref["mode"] = json!("multiref");
         a_ref["refs"] = json!([{"image": "aw_test_moss_i2i.png"}]);
-        assert!(build(&a_ref, &dir, 0).unwrap_err().0.contains("只支援 Qwen 2.1 與 MOSS-Image"));
+        assert!(build(&a_ref, &dir, 0).unwrap_err().0.contains("只支援 Qwen 2.1、MOSS-Image 與 Krea 2"));
         let _ = std::fs::remove_file(img);
     }
 
