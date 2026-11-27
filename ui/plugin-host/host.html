@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PaintDeck Plugin Host</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: #14161a; color: #e5e7eb;
+    font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+  }
+  #pdHostLoading {
+    display: grid; place-items: center; width: 100%; height: 100%;
+    font-size: 13px; color: #9ca3af;
+  }
+  #pdHostLoading.err { color: #fca5a5; padding: 16px; text-align: center; }
+
+  /* 讓兩個外掛的原生彈窗滿版平鋪在 iframe 內，比照 LoRA 管理器嵌入體驗 */
+  body > div[class*="mask"],
+  body > .k2ed-mask,
+  body > .av3-mask,
+  body > .aw-mask {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    display: flex !important;
+  }
+  body > div[class*="mask"] > div,
+  .k2ed-panel,
+  .av3-panel,
+  .aw-panel {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+</style>
+</head>
+<body>
+<div id="pdHostLoading">正在載入外掛原生介面…</div>
+<script type="module">
+import { app } from "/api/scripts/app.js";
+import { api } from "/api/scripts/api.js";
+
+const params = new URLSearchParams(location.search);
+const engine = params.get("engine") === "krea2" ? "krea2" : "anima";
+const CFG = engine === "krea2"
+  ? {
+      nodeName: "K2EditorialBuilder",
+      scriptUrl: "/api/k2ed/ext/k2ed_panel.js",
+      storageKey: "pd_native_widgets_k2ed_v1",
+      openRe: /打开设置面板|设置面板/,
+    }
+  : {
+      nodeName: "AnimaV6RandomPrompt",
+      scriptUrl: "/api/wardrobe/ext/anima_wardrobe_v4_studio.js",
+      storageKey: "pd_native_widgets_wardrobe_v1",
+      openRe: /打开随机面板|随机面板/,
+    };
+
+const loadingEl = document.getElementById("pdHostLoading");
+let latestText = "";
+let mockNode = null;
+let openButton = null;
+
+function notifyParent(type, payload = {}) {
+  try {
+    window.parent?.postMessage({ type, engine, ...payload }, "*");
+  } catch { /* ignore */ }
+}
+
+window.__pdOnPluginPrompt = (text, eng, meta) => {
+  latestText = String(text || "");
+  notifyParent("PAINTDECK_PLUGIN_PROMPT", { text: latestText, source: eng || engine, meta: { words: meta?.words, paras: meta?.paras } });
+};
+
+function loadSavedValues() {
+  try { return JSON.parse(localStorage.getItem(CFG.storageKey) || "{}") || {}; } catch { return {}; }
+}
+function saveWidgetValues(node) {
+  try {
+    const out = {};
+    for (const w of node.widgets || []) {
+      if (w.type === "button" || w.serialize === false) continue;
+      out[w.name] = w.value;
+    }
+    localStorage.setItem(CFG.storageKey, JSON.stringify(out));
+  } catch { /* ignore */ }
+}
+
+function buildWidgetsFromObjectInfo(info) {
+  const saved = loadSavedValues();
+  const widgets = [];
+  const def = info?.[CFG.nodeName]?.input || {};
+  const addGroup = (group) => {
+    for (const [name, spec] of Object.entries(group || {})) {
+      if (!Array.isArray(spec) || !spec.length) continue;
+      const first = spec[0];
+      const opts = spec[1] && typeof spec[1] === "object" ? spec[1] : {};
+      let type = "text";
+      let value = opts.default;
+      let widgetOpts = { ...opts };
+      if (Array.isArray(first)) {
+        type = "combo";
+        widgetOpts.values = first;
+        if (value === undefined) value = first[0] ?? "";
+      } else if (first === "INT" || first === "FLOAT") {
+        type = "number";
+        if (value === undefined) value = 0;
+      } else if (first === "BOOLEAN") {
+        type = "toggle";
+        if (value === undefined) value = false;
+      } else {
+        type = "text";
+        if (value === undefined) value = "";
+      }
+      if (Object.prototype.hasOwnProperty.call(saved, name)) {
+        value = saved[name];
+      }
+      let current = value;
+      const w = {
+        name,
+        label: name,
+        type,
+        options: widgetOpts,
+        serialize: true,
+        callback: null,
+        computeSize: () => [200, 24],
+        get value() { return current; },
+        set value(v) {
+          current = v;
+          if (mockNode) saveWidgetValues(mockNode);
+        },
+      };
+      widgets.push(w);
+    }
+  };
+  addGroup(def.required);
+  addGroup(def.optional);
+  return widgets;
+}
+
+function findPanelRollButton() {
+  const buttons = [...document.querySelectorAll("button")].filter((b) => b.offsetParent !== null);
+  if (engine === "krea2") {
+    return buttons.find((b) => /随机/.test(b.textContent || "") && !/关闭|清/.test(b.textContent || ""))
+      || buttons.find((b) => /生成预览|预览|组/.test(b.textContent || ""));
+  }
+  return buttons.find((b) => /再抽|全部随机|立即随机|抽一/.test(b.textContent || ""))
+    || buttons.find((b) => /🎲/.test(b.textContent || ""));
+}
+
+async function triggerReroll(reqId) {
+  const before = latestText;
+  let resolved = false;
+  const finish = (text, err) => {
+    if (resolved) return;
+    resolved = true;
+    notifyParent("PAINTDECK_PLUGIN_REROLL_DONE", { id: reqId, text: text || latestText, error: err || "" });
+  };
+  const prevHook = window.__pdOnPluginPrompt;
+  const timer = setTimeout(() => {
+    window.__pdOnPluginPrompt = prevHook;
+    finish(latestText !== before ? latestText : latestText, "");
+  }, 12000);
+  window.__pdOnPluginPrompt = (text, eng, meta) => {
+    prevHook(text, eng, meta);
+    clearTimeout(timer);
+    window.__pdOnPluginPrompt = prevHook;
+    finish(text, "");
+  };
+  try {
+    const btn = findPanelRollButton();
+    if (btn) {
+      btn.click();
+    } else if (engine === "anima" && mockNode) {
+      const getVal = (n, d = "") => (mockNode.widgets || []).find((w) => w.name === n)?.value ?? d;
+      const r = await api.fetchApi("/anima-wardrobe-v6/roll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          section: "all",
+          seed: Math.floor(Math.random() * 2147483000),
+          nsfw_level: getVal("nsfw_level", "sfw"),
+          weights_json: getVal("weights_json", ""),
+        }),
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    } else {
+      clearTimeout(timer);
+      window.__pdOnPluginPrompt = prevHook;
+      finish(latestText, "");
+    }
+  } catch (e) {
+    clearTimeout(timer);
+    window.__pdOnPluginPrompt = prevHook;
+    finish("", e.message || String(e));
+  }
+}
+
+window.addEventListener("message", (e) => {
+  if (e.data?.type === "PAINTDECK_PLUGIN_REROLL") {
+    triggerReroll(e.data.id);
+  } else if (e.data?.type === "PAINTDECK_PLUGIN_GET_PROMPT") {
+    const ta = document.querySelector("#k2ed-ta");
+    const txt = (ta && ta.value.trim()) ? ta.value.trim() : latestText;
+    notifyParent("PAINTDECK_PLUGIN_PROMPT", { text: txt, explicit: true });
+  }
+});
+
+// 監聽面板若被使用者按到右上角「×」關掉，自動重新展開以免畫面變空
+function installKeepOpenObserver() {
+  const reopen = () => {
+    if (!openButton) return;
+    const hasVisibleMask = [...document.body.children].some((el) => el.id !== "pdHostLoading" && getComputedStyle(el).display !== "none");
+    if (!hasVisibleMask) setTimeout(() => openButton?.callback?.(), 50);
+  };
+  const mo = new MutationObserver(reopen);
+  mo.observe(document.body, { childList: true, attributes: true, subtree: true, attributeFilter: ["style"] });
+}
+
+// 監聽 K2 預覽文字框手動編輯
+document.addEventListener("input", (e) => {
+  if (e.target && e.target.id === "k2ed-ta") {
+    latestText = e.target.value || "";
+    notifyParent("PAINTDECK_PLUGIN_PROMPT", { text: latestText, source: "krea2" });
+  }
+});
+
+async function boot() {
+  try {
+    const infoResp = await window.fetch(`/api/plugin-ui/object_info/${CFG.nodeName}`);
+    if (!infoResp.ok) throw new Error(`無法取得 ${CFG.nodeName} 節點定義（HTTP ${infoResp.status}）`);
+    const info = await infoResp.json();
+    if (!info?.[CFG.nodeName]) throw new Error(`ComfyUI 尚未載入節點 ${CFG.nodeName}，請確認外掛已安裝並重開 ComfyUI`);
+
+    await import(CFG.scriptUrl);
+
+    function MockNode() {
+      this.id = 1;
+      this.type = CFG.nodeName;
+      this.comfyClass = CFG.nodeName;
+      this.size = [320, 200];
+      this.widgets = buildWidgetsFromObjectInfo(info);
+      this.widgets_values = this.widgets.map((w) => w.value);
+    }
+    MockNode.prototype.addWidget = function (type, name, value, callback, options) {
+      const w = { type, name, label: name, value, callback, options: options || {}, serialize: type !== "button" };
+      this.widgets.push(w);
+      return w;
+    };
+    MockNode.prototype.setSize = function (sz) { this.size = sz; };
+    MockNode.prototype.setDirtyCanvas = function () {};
+    MockNode.prototype.onNodeCreated = function () {};
+
+    for (const ext of app.extensions) {
+      if (typeof ext.beforeRegisterNodeDef === "function") {
+        await ext.beforeRegisterNodeDef(MockNode, { name: CFG.nodeName });
+      }
+    }
+
+    mockNode = new MockNode();
+    app.graph._nodes = [mockNode];
+    app.graph.nodes = [mockNode];
+    mockNode.onNodeCreated();
+
+    openButton = (mockNode.widgets || []).find((w) => w.type === "button" && CFG.openRe.test(w.name || ""))
+      || (mockNode.widgets || []).find((w) => w.type === "button");
+    if (!openButton || typeof openButton.callback !== "function") {
+      throw new Error(`找不到外掛面板開啟按鈕（${CFG.nodeName}）`);
+    }
+
+    loadingEl.remove();
+    await openButton.callback();
+    installKeepOpenObserver();
+    notifyParent("PAINTDECK_PLUGIN_READY");
+  } catch (err) {
+    loadingEl.className = "err";
+    loadingEl.textContent = "載入外掛原生介面失敗：" + (err?.message || String(err));
+    notifyParent("PAINTDECK_PLUGIN_ERROR", { error: err?.message || String(err) });
+  }
+}
+
+boot();
+</script>
+</body>
+</html>

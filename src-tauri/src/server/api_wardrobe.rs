@@ -81,6 +81,76 @@ pub async fn forward(State(app): State<Shared>, method: Method, UrlPath(rest): U
     Ok((status, [(header::CONTENT_TYPE, ct), (header::CACHE_CONTROL, cache.to_string())], bytes).into_response())
 }
 
+/// 共用：安全讀取外掛 js/ 資料夾裡的檔案（只允許普通路徑段、防跳出目錄）
+pub async fn serve_plugin_js(dir: PathBuf, rest: String) -> Result<Response, ApiError> {
+    let segs = safe_segments(&rest).ok_or_else(|| bad("路徑不對"))?;
+    let mut path = dir.join("js");
+    for s in segs {
+        path.push(s);
+    }
+    let bytes = blocking(move || std::fs::read(&path).map_err(|_| "找不到外掛前端檔案".to_string()))
+        .await
+        .map_err(|m| ApiError(StatusCode::NOT_FOUND, m))?;
+    let ct = if rest.ends_with(".css") {
+        "text/css; charset=utf-8"
+    } else if rest.ends_with(".json") {
+        "application/json; charset=utf-8"
+    } else {
+        "application/javascript; charset=utf-8"
+    };
+    Ok((StatusCode::OK, [(header::CONTENT_TYPE, ct), (header::CACHE_CONTROL, "no-store")], bytes).into_response())
+}
+
+/// GET /api/wardrobe/ext/<file> → 讀取本機 Comfyui-Anima-Wardrobe-V6/js/<file>
+pub async fn ext_file(State(app): State<Shared>, UrlPath(rest): UrlPath<String>) -> Result<Response, ApiError> {
+    serve_plugin_js(node_dir(&app), rest).await
+}
+
+/// GET /plugin-host/host.html → 讀取原生外掛 UI 宿主頁
+pub async fn host_html(State(app): State<Shared>) -> Result<Response, ApiError> {
+    let path = app.paths.web.join("plugin-host").join("host.html");
+    let bytes = blocking(move || std::fs::read(&path).map_err(|_| "找不到外掛宿主頁".to_string()))
+        .await
+        .map_err(|m| ApiError(StatusCode::NOT_FOUND, m))?;
+    Ok((
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "text/html; charset=utf-8"), (header::CACHE_CONTROL, "no-store")],
+        bytes,
+    )
+        .into_response())
+}
+
+/// GET /api/scripts/<app.js|api.js> → 提供給原生外掛 JS 匯入的輕量 ComfyUI 橋接模組
+pub async fn shim_script(State(app): State<Shared>, UrlPath(file): UrlPath<String>) -> Result<Response, ApiError> {
+    if file != "app.js" && file != "api.js" {
+        return Err(ApiError(StatusCode::NOT_FOUND, "找不到腳本".into()));
+    }
+    let path = app.paths.web.join("plugin-host").join("scripts").join(&file);
+    let bytes = blocking(move || std::fs::read(&path).map_err(|_| "找不到橋接腳本".to_string()))
+        .await
+        .map_err(|m| ApiError(StatusCode::NOT_FOUND, m))?;
+    Ok((
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "application/javascript; charset=utf-8"), (header::CACHE_CONTROL, "no-store")],
+        bytes,
+    )
+        .into_response())
+}
+
+/// GET /api/plugin-ui/object_info/<node> → 轉送本機 ComfyUI 的節點定義（白名單）
+pub async fn object_info(State(app): State<Shared>, UrlPath(node): UrlPath<String>) -> Result<Response, ApiError> {
+    if node != "AnimaV6RandomPrompt" && node != "K2EditorialBuilder" {
+        return Err(bad("不支援的節點名稱"));
+    }
+    if !app.comfy.live().online {
+        return Err(ApiError(StatusCode::SERVICE_UNAVAILABLE, "本機的 ComfyUI 沒有連線".into()));
+    }
+    let url = reqwest::Url::parse(&format!("{}/object_info/{node}", app.comfy.url())).map_err(|e| bad(e.to_string()))?;
+    let (code, ct, bytes) = app.comfy.forward(reqwest::Method::GET, url, None).await.map_err(|e| ApiError(StatusCode::BAD_GATEWAY, e.0))?;
+    let status = StatusCode::from_u16(code).unwrap_or(StatusCode::BAD_GATEWAY);
+    Ok((status, [(header::CONTENT_TYPE, ct), (header::CACHE_CONTROL, "no-store".to_string())], bytes).into_response())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

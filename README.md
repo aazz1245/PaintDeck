@@ -342,6 +342,9 @@
 
 ### 📝 更新日誌 (Changelog)
 
+#### [2026-11-27] — 26.1127.3
+- **feat(taglib)**: 「隨機」頁左側全面改為比照 LoRA 管理器內嵌外掛原生 UI（`Comfyui-Anima-Wardrobe-V6` 與 `Comfyui-K2-Editorial` 透過 `ui/plugin-host` 同源橋接滿版呈現），完整保留右側提示詞、LoRA 與生成欄並支援自動同步回寫與生成前重抽。
+
 #### [2026-11-27] — 26.1127.2
 - **feat(taglib,krea2)**: 隨機頁新增 `.piano.row` 琴鍵切換 **Anima 隨機** 與 **Krea 2 隨機（`Comfyui-K2-Editorial`）**，維持原 Anima 隨機頁與 `wardrobe.js` 完全不變；後端自動搜尋並安全解壓本機資料夾內的 `Comfyui-K2-Editorial.zip`（不內嵌至專案倉庫）並代理 `/k2ed/*` API，前端 `k2ed.js` 沿用一致的 `.wd` 風格與生成前重抽聯動。
 

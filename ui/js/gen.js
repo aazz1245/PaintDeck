@@ -11,8 +11,7 @@ import * as pe from "./pe.js";
 import * as promptx from "./promptx.js";
 import * as promptsec from "./promptsec.js";
 import * as taglib from "./taglib.js";
-import * as wardrobe from "./wardrobe.js";
-import * as k2ed from "./k2ed.js";
+import * as taglibPage from "./taglibpage.js";
 import * as library from "./library.js";
 import { pickFromGallery, openLightboxRecord } from "./gallery.js";
 import * as deck from "./deck.js";
@@ -1863,7 +1862,7 @@ async function generate() {
   try {
     // 隨機頁的隨機產生器勾了「每次生成前重抽」：先抽一組套進提示詞，再照常跑 AI 改寫（只在隨機頁按生成時）
     if (app.page === "taglib" && S.mode !== "strip" && S.mode !== "sheet" && !batch) {
-      await (store.get("tl_engine", "anima") === "krea2" ? k2ed : wardrobe).beforeGenerate();
+      await taglibPage.beforeGenerate();
     }
     ok = S.mode === "strip" || S.mode === "sheet" || batch || await pe.beforeGenerate();
   } finally { F("genBtn").disabled = false; }

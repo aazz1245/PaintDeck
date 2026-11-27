@@ -2,67 +2,41 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const { pathToFileURL } = require("node:url");
 
 const root = path.resolve(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "ui", "index.html"), "utf8");
 const taglibJs = fs.readFileSync(path.join(root, "ui", "js", "taglibpage.js"), "utf8");
 const genJs = fs.readFileSync(path.join(root, "ui", "js", "gen.js"), "utf8");
+const hostHtml = fs.readFileSync(path.join(root, "ui", "plugin-host", "host.html"), "utf8");
+const apiShim = fs.readFileSync(path.join(root, "ui", "plugin-host", "scripts", "api.js"), "utf8");
+const appShim = fs.readFileSync(path.join(root, "ui", "plugin-host", "scripts", "app.js"), "utf8");
 
-test("ui/index.html adds piano engine switcher while keeping #tlWardrobe intact", () => {
+test("ui/index.html embeds native plugin iframes while preserving right generate pane", () => {
   assert.match(html, /<div class="piano row" id="tlEngineTabs" role="tablist" aria-label="隨機引擎">/);
   assert.match(html, /<button data-eng="anima" class="on" type="button" role="tab" aria-selected="true">Anima 隨機<\/button>/);
   assert.match(html, /<button data-eng="krea2" type="button" role="tab" aria-selected="false">Krea 2 隨機<\/button>/);
-  assert.match(html, /<div class="wd" id="tlWardrobe"><\/div>/);
-  assert.match(html, /<div class="wd" id="tlK2ed" hidden><\/div>/);
+  assert.match(html, /<iframe id="tlWardrobeFrame" class="tlp-frame"/);
+  assert.match(html, /<iframe id="tlK2edFrame" class="tlp-frame"/);
+  assert.match(html, /<div id="tlPluginFallback" class="tlp-fallback" hidden><\/div>/);
+  // 右側提示詞、生成鈕與模型參數欄必須保留
+  assert.match(html, /id="tlBorrowMid"/);
+  assert.match(html, /id="tlBorrowGen"/);
+  assert.match(html, /id="tlBorrowSide"/);
 });
 
-test("taglibpage.js and gen.js route engine switching and beforeGenerate cleanly", () => {
-  assert.match(taglibJs, /store\.get\("tl_engine",\s*"anima"\)/);
-  assert.match(taglibJs, /k2ed\.init\(\{\s*box:\s*\$\("#tlK2ed"\),\s*onApply:\s*applyPrompt\s*\}\)/);
-  assert.match(genJs, /store\.get\("tl_engine",\s*"anima"\)\s*===\s*"krea2"\s*\?\s*k2ed\s*:\s*wardrobe/);
+test("taglibpage.js and gen.js drive native iframe hosts and beforeGenerate bridge", () => {
+  assert.match(taglibJs, /anima:\s*"\/plugin-host\/host\.html\?engine=anima"/);
+  assert.match(taglibJs, /krea2:\s*"\/plugin-host\/host\.html\?engine=krea2"/);
+  assert.match(taglibJs, /PAINTDECK_PLUGIN_PROMPT/);
+  assert.match(taglibJs, /PAINTDECK_PLUGIN_REROLL/);
+  assert.match(genJs, /await taglibPage\.beforeGenerate\(\)/);
 });
 
-const vm = require("node:vm");
-
-function loadK2ed() {
-  const source = fs.readFileSync(path.join(root, "ui", "js", "k2ed.js"), "utf8")
-    .replace(/^import .*;\r?\n/gm, "").replace(/^export /gm, "")
-    .replace(/import\.meta\.url/g, '"file:///ui/js/k2ed.js"').replace(/\bimport\(/g, "(async () => ({}))(");
-  const context = vm.createContext({
-    console, URL, URLSearchParams,
-    store: { get: (k, d) => d, set() {} }, toast() {}, el: () => ({}), api: async () => ({}), fixHair: (s) => s,
-  });
-  vm.runInContext(source + "\nglobalThis.subject = { buildQuery, pickRandomItem };", context, { filename: "k2ed.js" });
-  return context.subject;
-}
-
-test("k2ed.js pure helpers buildQuery and pickRandomItem work as expected", () => {
-  const mod = loadK2ed();
-
-  const qs1 = mod.buildQuery(
-    { aspect: "auto", costume: "auto", textMode: "all", display: "HELLO", pinItem: "lib:coat1" },
-    { motif: "k2x_still_section", char: "miku", motifRatio: "2:3" },
-  );
-  const p1 = new URLSearchParams(qs1);
-  assert.equal(p1.get("motif"), "k2x_still_section");
-  assert.equal(p1.get("char"), "miku");
-  assert.equal(p1.get("aspect"), "2:3");
-  assert.equal(p1.get("costume"), "auto");
-  assert.equal(p1.get("item"), "lib:coat1");
-  assert.equal(p1.get("display"), "HELLO");
-  assert.equal(p1.get("notext"), null);
-
-  const qs2 = mod.buildQuery(
-    { aspect: "16:9", costume: "keep", textMode: "notext", display: "", pinItem: "" },
-    { motif: "m1", char: "keep", motifRatio: "2:3" },
-  );
-  const p2 = new URLSearchParams(qs2);
-  assert.equal(p2.get("aspect"), "16:9");
-  assert.equal(p2.get("costume"), "keep");
-  assert.equal(p2.get("notext"), "1");
-
-  assert.equal(mod.pickRandomItem(["a", "b", "c"], "pinned", ["b"]), "pinned");
-  assert.equal(mod.pickRandomItem(["a", "b", "c"], "", ["b", "c"], () => 0.9), "c");
-  assert.equal(mod.pickRandomItem(["a", "b", "c"], "", [], () => 0.0), "a");
+test("plugin-host shim supports both Wardrobe V6 and K2-Editorial native scripts", () => {
+  assert.match(hostHtml, /\/api\/wardrobe\/ext\/anima_wardrobe_v4_studio\.js/);
+  assert.match(hostHtml, /\/api\/k2ed\/ext\/k2ed_panel\.js/);
+  assert.match(hostHtml, /\/api\/plugin-ui\/object_info\/\$\{CFG\.nodeName\}/);
+  assert.match(apiShim, /\/anima-wardrobe-v6\/roll/);
+  assert.match(apiShim, /\/k2ed\/build/);
+  assert.match(appShim, /registerExtension/);
 });

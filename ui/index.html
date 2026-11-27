@@ -614,14 +614,23 @@
 <main id="page-taglib" class="page">
   <div class="tlp">
     <section class="panel screws tlp-lib" aria-label="隨機產生器">
-      <div class="tlp-eng-bar">
+      <div class="tlp-eng-bar row wrap gap">
         <div class="piano row" id="tlEngineTabs" role="tablist" aria-label="隨機引擎">
           <button data-eng="anima" class="on" type="button" role="tab" aria-selected="true">Anima 隨機</button>
           <button data-eng="krea2" type="button" role="tab" aria-selected="false">Krea 2 隨機</button>
         </div>
+        <span class="grow"></span>
+        <label class="check inline" title="在原生面板中按隨機／組裝後自動同步到右側提示詞框"><input type="checkbox" id="tlAutoSync" checked> 自動填入</label>
+        <select id="tlApplyMode" class="sm" aria-label="套用方式"><option value="replace">取代提示詞</option><option value="append">接在後面</option></select>
+        <button class="akey sm go" id="tlApplyPrompt" type="button" title="將目前外掛面板最新生成的提示詞套用到右側提示詞框">套用到提示詞</button>
+        <label class="check inline" title="在隨機頁按「生成」時先請目前外掛重抽一次再畫"><input type="checkbox" id="tlAutoRoll"> 生成前重抽</label>
+        <button class="akey sm" id="tlReloadPlugin" type="button" title="重新載入目前外掛的原生介面">重整</button>
       </div>
-      <div class="wd" id="tlWardrobe"></div>
-      <div class="wd" id="tlK2ed" hidden></div>
+      <div class="tlp-host-wrap">
+        <iframe id="tlWardrobeFrame" class="tlp-frame" src="about:blank" title="Comfyui-Anima-Wardrobe-V6"></iframe>
+        <iframe id="tlK2edFrame" class="tlp-frame" src="about:blank" title="Comfyui-K2-Editorial" hidden></iframe>
+        <div id="tlPluginFallback" class="tlp-fallback" hidden></div>
+      </div>
     </section>
     <div class="tlp-right">
       <section class="panel screws tlp-mid" aria-label="提示詞與生成">

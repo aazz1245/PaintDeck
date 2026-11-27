@@ -220,6 +220,11 @@ pub async fn forward(
     Ok((status, [(header::CONTENT_TYPE, ct), (header::CACHE_CONTROL, cache.to_string())], bytes).into_response())
 }
 
+/// GET /api/k2ed/ext/<file> → 讀取本機 Comfyui-K2-Editorial/js/<file>
+pub async fn ext_file(State(app): State<Shared>, UrlPath(rest): UrlPath<String>) -> Result<Response, ApiError> {
+    super::api_wardrobe::serve_plugin_js(node_dir(&app), rest).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
