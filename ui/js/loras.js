@@ -250,7 +250,7 @@ const baseName = (name) => (name || "").replace(/\\/g, "/").split("/").pop().rep
 const title = (l) => l.title || baseName(l.name);
 const famName = (l) => app.state?.models?.family_names?.[l.family] || "";
 // 卡片的底模小標和「模型」篩選：照站上判斷的家族分組，名稱用 Civitai 的寫法（2026-10-28 使用者：同一個底模出現「Anima」「Anima（動漫）」、「MOSS」「MOSS Image」兩個選項）
-const FAM_LABEL = { anima: "Anima", moss: "MOSS Image", qwen21: "Qwen 2.1", sdxl: "SDXL", sd15: "SD1.5", flux: "Flux", sd3: "SD3" };
+const FAM_LABEL = { anima: "Anima", moss: "MOSS Image", qwen21: "Qwen 2.1", krea2: "Krea 2", sdxl: "SDXL", sd15: "SD1.5", flux: "Flux", sd3: "SD3" };
 const tagsOf = (l) => (Array.isArray(l.tags) ? l.tags.filter((x) => typeof x === "string" && x.trim()) : []);
 const categoryOf = (l) => {
   if (l.category) return l.category;

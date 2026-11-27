@@ -1146,12 +1146,12 @@ export function setCtrl(r, o = {}) {
 }
 
 const baseName = (name) => (name || "").replace(/\\/g, "/").split("/").pop().replace(/\.(safetensors|pt|bin|ckpt)$/i, "");
+const isPathTitle = (t, name) => !t || t === name || /\.(safetensors|pt|bin|ckpt)$/i.test(t);
 
 const loraDisplayTitle = (l) => {
   const meta = (app.state?.models?.loras || []).find((x) => x.name === l.name);
-  const t = meta?.title || l.title || baseName(l.name);
-  if (t && !t.includes("/") && !t.includes("\\")) return t;
-  return baseName(t || l.name);
+  const t = String(meta?.title || l.title || "").trim();
+  return isPathTitle(t, l.name) ? baseName(t || l.name) : t;
 };
 
 // ---------------------------------------------------------------- LoRA 疊加

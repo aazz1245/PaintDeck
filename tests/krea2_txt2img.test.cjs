@@ -17,3 +17,9 @@ test("ui/js/gen.js applies Krea 2 Turbo defaults for krea2_turbo_fp8_scaled", ()
   assert.match(genJs, /else if \(fam\(\) === "krea2"\) \{ F\("steps"\)\.value = isTurboModel\(\) \? 8 : 30; F\("cfg"\)\.value = isTurboModel\(\) \? 1 : 4; pick\("sampler", "euler"\); pick\("scheduler", "simple"\); \}/);
   assert.match(genJs, /fam\(\) === "custom" \|\| fam\(\) === "krea2" \? ""/);
 });
+
+test("loraDisplayTitle keeps slash-separated model titles like wlop Anima/krea2/moss", () => {
+  const lorasJs = fs.readFileSync(path.join(root, "ui", "js", "loras.js"), "utf8");
+  assert.match(lorasJs, /krea2:\s*"Krea 2"/);
+  assert.match(genJs, /const isPathTitle = \(t, name\) => !t \|\| t === name \|\| \/\\\.\(safetensors\|pt\|bin\|ckpt\)\$\/i\.test\(t\);/);
+});
