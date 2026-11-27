@@ -613,7 +613,16 @@
      右＝借來的模型與輸入、尺寸與模式、取樣（步數、CFG、張數、種子、整套設定）、附加（高解析修復、構圖控制、自動修臉、X/Y）。borrow.js 搬過來、離開這頁就還回去 -->
 <main id="page-taglib" class="page">
   <div class="tlp">
-    <section class="panel screws tlp-lib" aria-label="隨機產生器"><div class="wd" id="tlWardrobe"></div></section>
+    <section class="panel screws tlp-lib" aria-label="隨機產生器">
+      <div class="tlp-eng-bar">
+        <div class="piano row" id="tlEngineTabs" role="tablist" aria-label="隨機引擎">
+          <button data-eng="anima" class="on" type="button" role="tab" aria-selected="true">Anima 隨機</button>
+          <button data-eng="krea2" type="button" role="tab" aria-selected="false">Krea 2 隨機</button>
+        </div>
+      </div>
+      <div class="wd" id="tlWardrobe"></div>
+      <div class="wd" id="tlK2ed" hidden></div>
+    </section>
     <div class="tlp-right">
       <section class="panel screws tlp-mid" aria-label="提示詞與生成">
         <div class="tlp-top row gap wrap">

@@ -3,13 +3,15 @@
 // 右＝借來的模型與輸入、尺寸與模式、取樣（步數、CFG、張數、種子、整套設定）、附加（高解析修復、構圖控制、自動修臉、X/Y）。
 // 進這頁借、離開還（main.js 的 showPage，borrow.js）；「AI 組成完整提示詞」＝把提示詞框的 tag 交給 AI 改寫（pe.js）。
 // 2026-11-17 晚：使用者「把詞庫刪掉。僅保留那個隨機產生器，好用。把右邊的生成頁多加一些參數設定」「重新設計版面，使其好用」→ 拿掉詞庫分頁（生成頁的「詞」抽屜照留）。
-import { $ } from "./util.js";
+import { $, store } from "./util.js";
 import { app } from "./state.js";
 import { makeBorrower } from "./borrow.js";
 import * as pe from "./pe.js";
 import * as wardrobe from "./wardrobe.js";
+import * as k2ed from "./k2ed.js";
 
 let lenders = [];
+let engine = store.get("tl_engine", "anima") === "krea2" ? "krea2" : "anima";
 
 /** 隨機產生器抽出來的整組提示詞 → 提示詞框（取代或接在後面），發 input 讓分段、自動完成那些跟著更新 */
 function applyPrompt(text, how) {
@@ -21,6 +23,18 @@ function applyPrompt(text, how) {
 
 const docks = (ids) => ids.map((id) => $(`[data-dock="${id}"]`)).filter(Boolean);
 
+function syncEngineUI(load = false) {
+  const isK2 = engine === "krea2";
+  $("#tlWardrobe").hidden = isK2;
+  $("#tlK2ed").hidden = !isK2;
+  for (const b of document.querySelectorAll("#tlEngineTabs button[data-eng]")) {
+    const on = b.dataset.eng === engine;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-selected", on ? "true" : "false");
+  }
+  if (load) (isK2 ? k2ed : wardrobe).show();
+}
+
 export function init() {
   lenders = [
     makeBorrower(docks(["prompt", "lora"]), $("#tlBorrowMid")),
@@ -28,6 +42,17 @@ export function init() {
     makeBorrower(docks(["source", "params", "sampler", "extra"]), $("#tlBorrowSide")),
   ];
   wardrobe.init({ box: $("#tlWardrobe"), onApply: applyPrompt });
+  k2ed.init({ box: $("#tlK2ed"), onApply: applyPrompt });
+  for (const b of document.querySelectorAll("#tlEngineTabs button[data-eng]")) {
+    b.onclick = () => {
+      const next = b.dataset.eng === "krea2" ? "krea2" : "anima";
+      if (next === engine) return;
+      engine = next;
+      store.set("tl_engine", engine);
+      syncEngineUI(true);
+    };
+  }
+  syncEngineUI(false);
   $("#tlCompose").onclick = () => pe.composeFromPrompt();
   // 最新一張成品：跟著看圖區換；點了回生成頁看大圖
   const img = $("#viewImg"), last = $("#tlLast");
@@ -43,7 +68,7 @@ let scrolls = [];
 export function show() {
   if (!lenders[0].lent) scrolls = [...document.querySelectorAll("#page-gen .dock-zbody, #page-gen .dock-body")].map((e) => [e, e.scrollTop]);
   for (const b of lenders) b.lend();
-  wardrobe.show();
+  syncEngineUI(true);
 }
 
 export function hide() {

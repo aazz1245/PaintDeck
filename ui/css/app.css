@@ -458,6 +458,7 @@ input[type=range]:focus-visible { outline-offset: 0; }
 .tlp { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; min-height: 0; }
 .tlp-right { display: grid; grid-template-columns: 430px 350px; gap: 12px; min-height: 0; }
 .tlp-lib, .tlp-mid, .tlp-side { min-height: 0; overflow-y: auto; padding: 12px; }
+.tlp-eng-bar { margin-bottom: 8px; }
 .tlp-mid { display: flex; flex-direction: column; gap: 12px; padding-bottom: 0; }
 .tlp-borrow { display: flex; flex-direction: column; gap: 12px; }
 .tlp-gen { position: sticky; bottom: 0; z-index: 2; margin-top: auto; display: flex; gap: 10px; align-items: stretch; padding: 10px 0 12px; background: var(--case-2); border-top: 1px dashed rgba(141,255,176,.25); }

@@ -28,6 +28,7 @@ mod api_pe;
 mod api_play;
 mod api_refmod;
 mod api_wardrobe;
+mod api_k2ed;
 mod api_runninghub;
 mod api_sdapi;
 mod api_studio;
@@ -486,6 +487,9 @@ pub fn router(app: Shared) -> Router {
         .route("/api/wardrobe/status", get(api_wardrobe::status))
         .route("/api/wardrobe/install", post(api_wardrobe::install))
         .route("/api/wardrobe/x/{*rest}", get(api_wardrobe::forward).post(api_wardrobe::forward))
+        .route("/api/k2ed/status", get(api_k2ed::status))
+        .route("/api/k2ed/install", post(api_k2ed::install))
+        .route("/api/k2ed/x/{*rest}", get(api_k2ed::forward).post(api_k2ed::forward))
         .route("/api/runninghub", get(api_runninghub::get))
         .route("/api/runninghub/config", post(api_runninghub::config))
         .route("/api/runninghub/test", post(api_runninghub::test))

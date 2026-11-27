@@ -342,6 +342,9 @@
 
 ### 📝 更新日誌 (Changelog)
 
+#### [2026-11-27] — 26.1127.2
+- **feat(taglib,krea2)**: 隨機頁新增 `.piano.row` 琴鍵切換 **Anima 隨機** 與 **Krea 2 隨機（`Comfyui-K2-Editorial`）**，維持原 Anima 隨機頁與 `wardrobe.js` 完全不變；後端自動搜尋並安全解壓本機資料夾內的 `Comfyui-K2-Editorial.zip`（不內嵌至專案倉庫）並代理 `/k2ed/*` API，前端 `k2ed.js` 沿用一致的 `.wd` 風格與生成前重抽聯動。
+
 #### [2026-11-27] — 26.1127.1
 - **feat(txt2img,krea2)**: 完善 **Krea 2 Turbo（`krea2_turbo_fp8_scaled` 等版本）** 文生圖相容適配：後端 `LOADER_ALTS` 補齊 `KREA2_TE` 自動替代匹配（支援 `qwen3vl_4b_fp8_scaled`、`qwen3vl_4b_int8`、`qwen3vl_4b_bf16` 等同系列文字編碼器與中文缺檔指引），前端 `BASIC_NEEDS` 納入 `krea2` 缺檔自檢並補齊單元測試。
 
