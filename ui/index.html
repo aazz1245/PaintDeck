@@ -2114,6 +2114,10 @@
     <label class="sub" for="vidPrompt">動作和聲音（英文效果最好）</label>
     <textarea id="vidPrompt" rows="5" spellcheck="false" placeholder="例：The woman slowly turns her head toward the camera and smiles, her hair swaying in the wind. The camera pushes in slowly. Sound of wind and distant birds."></textarea>
     <div class="muted sm">寫「接下來發生什麼」：誰怎麼動、鏡頭怎麼移、聽得到什麼聲音。不用再描述圖裡已經有的東西。</div>
+    <div class="row gap wrap" id="vidRewriteRow">
+      <button class="akey sm" id="vidRewrite" type="button" data-ic="chip" title="用本機 9B 視覺模型看著這張圖，把你的想法改寫成英文動作與聲音提示詞">AI 改寫</button>
+      <span class="muted sm" id="vidRewriteMsg"></span>
+    </div>
     <div id="vidModelBox" hidden><span class="sub">影片模型</span><select id="vidModel" aria-label="影片模型"></select></div><div id="vidWhereBox" hidden><span class="sub">在哪裡跑</span><select id="vidWhere" aria-label="在哪裡跑"><option value="local">本機</option><option value="cloud">雲端（要先開好雲端、裝 H3 包）</option></select></div>
     <div class="muted sm" id="vidEngine"></div>
     <div class="wf-grid" id="vidParams" hidden></div>

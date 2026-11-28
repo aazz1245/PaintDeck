@@ -2537,6 +2537,7 @@ async function openVideo(rec) {
   F("vidPrompt").focus();
   vidEng = vidSet = vidAll = null;
   F("vidEngine").textContent = "";
+  if (F("vidRewriteMsg")) F("vidRewriteMsg").textContent = "";
   try { vidAll = await videoEngines(); vidEng = vidSet = vidAll.cur; } catch (e) { F("vidEngine").textContent = "讀不到影片模型的設定：" + e.message; return; }
   paintVidEngine();
   // 本機有 H3 模型就列出來可以指定（讀不到就只有設定裡的）
@@ -2560,6 +2561,42 @@ function paintVidEngine() {
   F("vidSecsBox").hidden = custom && !i?.seconds;
 }
 F("vidModel").onchange = () => { store.set("vidModel", F("vidModel").value); pickVidEng(); paintVidModel(); };
+if (F("vidRewrite")) {
+  F("vidRewrite").onclick = async () => {
+    const idea = F("vidPrompt").value.trim();
+    if (!idea) return toast("請先輸入想讓畫面怎麼動的中文想法", "err");
+    if (!vidRec?.id) return toast("找不到目前預覽的圖片", "err");
+    const btn = F("vidRewrite"), msg = F("vidRewriteMsg");
+    btn.disabled = true;
+    if (msg) msg.textContent = "本機 9B 看圖改寫中…";
+    try {
+      const inp = await api("/api/to_input", { json: { id: vidRec.id } });
+      const res = await api("/api/h3/write", {
+        json: {
+          idea,
+          mode: "i2v",
+          seconds: +F("vidSecs").value || 5,
+          media: [{ name: inp.name, label: "First frame" }],
+          brain: "9b",
+        },
+        timeout: 180000,
+      });
+      if (res?.prompt) {
+        F("vidPrompt").value = res.prompt;
+        F("vidPrompt").focus();
+        if (msg) msg.textContent = "已由本機 9B 改寫完成";
+        toast("已用本機 9B 改寫動作提示詞", "ok");
+      } else {
+        if (msg) msg.textContent = "";
+      }
+    } catch (e) {
+      if (msg) msg.textContent = "";
+      toast("AI 改寫失敗：" + e.message, "err");
+    } finally {
+      btn.disabled = false;
+    }
+  };
+}
 F("vidGo").onclick = async () => {
   const prompt = F("vidPrompt").value.trim();
   if (!prompt) return toast("請寫動作和聲音的描述", "err");
